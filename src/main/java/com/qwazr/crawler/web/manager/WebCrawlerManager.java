@@ -49,7 +49,7 @@ public class WebCrawlerManager {
 		if (INSTANCE != null)
 			throw new IOException("Already loaded");
 		try {
-			INSTANCE = new WebCrawlerManager(server, directory);
+			INSTANCE = new WebCrawlerManager();
 		} catch (URISyntaxException e) {
 			throw new IOException(e);
 		}
@@ -59,8 +59,7 @@ public class WebCrawlerManager {
 	private final HashMap<String, WebCrawlThread> crawlSessionMap;
 	private final ThreadGroup threadGroup;
 
-	private WebCrawlerManager(AbstractServer server, File rootDirectory)
-			throws IOException, URISyntaxException {
+	private WebCrawlerManager() throws IOException, URISyntaxException {
 		threadGroup = new ThreadGroup("CrawlThreads");
 		crawlSessionMap = new HashMap<String, WebCrawlThread>();
 	}
