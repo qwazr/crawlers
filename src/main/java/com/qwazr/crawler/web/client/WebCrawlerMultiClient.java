@@ -40,10 +40,10 @@ public class WebCrawlerMultiClient extends
 	private static final Logger logger = LoggerFactory
 			.getLogger(WebCrawlerMultiClient.class);
 
-	public WebCrawlerMultiClient(Collection<String> urls, int msTimeOut)
+	public WebCrawlerMultiClient(String[] urls, int msTimeOut)
 			throws URISyntaxException {
 		// TODO Pass executor
-		super(null, new WebCrawlerSingleClient[urls.size()], urls, msTimeOut);
+		super(null, new WebCrawlerSingleClient[urls.length], urls, msTimeOut);
 	}
 
 	@Override

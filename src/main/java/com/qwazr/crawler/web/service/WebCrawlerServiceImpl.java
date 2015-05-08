@@ -30,18 +30,14 @@ public class WebCrawlerServiceImpl implements WebCrawlerServiceInterface {
 	public TreeMap<String, WebCrawlStatus> getSessions(Boolean local) {
 
 		// Read the sessions in the local node
-		TreeMap<String, WebCrawlStatus> localSessions = WebCrawlerManager.INSTANCE
-				.getSessions();
-		if (local != null && local)
-			return localSessions;
+		if (local)
+			return WebCrawlerManager.INSTANCE.getSessions();
 
 		// Read the sessions present in the remote nodes
 		try {
 			TreeMap<String, WebCrawlStatus> globalSessions = new TreeMap<String, WebCrawlStatus>();
-			if (localSessions != null)
-				globalSessions.putAll(localSessions);
-			globalSessions.putAll(WebCrawlerManager.getClient(true)
-					.getSessions(false));
+			globalSessions.putAll(WebCrawlerManager.getClient().getSessions(
+					false));
 			return globalSessions;
 		} catch (URISyntaxException e) {
 			throw ServerException.getJsonException(e);
@@ -51,14 +47,15 @@ public class WebCrawlerServiceImpl implements WebCrawlerServiceInterface {
 	@Override
 	public WebCrawlStatus getSession(String session_name, Boolean local) {
 		try {
-			WebCrawlStatus status = WebCrawlerManager.INSTANCE
-					.getSession(session_name);
-			if (status != null)
-				return status;
-			if (local != null && local)
+			if (local) {
+				WebCrawlStatus status = WebCrawlerManager.INSTANCE
+						.getSession(session_name);
+				if (status != null)
+					return status;
 				throw new ServerException(Status.NOT_FOUND, "Session not found");
-			return WebCrawlerManager.getClient(true).getSession(session_name,
-					false);
+			}
+			return WebCrawlerManager.getClient()
+					.getSession(session_name, false);
 		} catch (URISyntaxException | ServerException e) {
 			throw ServerException.getJsonException(e);
 		}
@@ -72,8 +69,8 @@ public class WebCrawlerServiceImpl implements WebCrawlerServiceInterface {
 				WebCrawlerManager.INSTANCE.abortSession(session_name);
 				return Response.accepted().build();
 			}
-			return WebCrawlerManager.getClient(false).abortSession(
-					session_name, false);
+			return WebCrawlerManager.getClient().abortSession(session_name,
+					false);
 		} catch (ServerException | URISyntaxException e) {
 			throw ServerException.getTextException(e);
 		}

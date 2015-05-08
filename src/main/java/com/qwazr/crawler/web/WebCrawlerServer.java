@@ -37,7 +37,7 @@ import com.qwazr.utils.server.ServletApplication;
 
 public class WebCrawlerServer extends AbstractServer {
 
-	public final static String SERVICE_NAME = "webcrawler";
+	public final static String SERVICE_NAME_WEBCRAWLER = "webcrawler";
 
 	private final static ServerDefinition serverDefinition = new ServerDefinition();
 	static {
@@ -81,7 +81,7 @@ public class WebCrawlerServer extends AbstractServer {
 	public static void main(String[] args) throws IOException, ParseException,
 			ServletException {
 		new WebCrawlerServer().start(args);
-		ClusterManager.INSTANCE.registerMe(SERVICE_NAME);
+		ClusterManager.INSTANCE.registerMe(SERVICE_NAME_WEBCRAWLER);
 	}
 
 	@Override

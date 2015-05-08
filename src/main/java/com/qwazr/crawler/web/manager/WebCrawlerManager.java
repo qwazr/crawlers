@@ -19,7 +19,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -132,14 +131,9 @@ public class WebCrawlerManager {
 		}
 	}
 
-	public static WebCrawlerMultiClient getClient(boolean removeMe)
-			throws URISyntaxException {
-		HashSet<String> nodes = new HashSet<String>(ClusterManager.INSTANCE
+	public static WebCrawlerMultiClient getClient() throws URISyntaxException {
+		return new WebCrawlerMultiClient(ClusterManager.INSTANCE
 				.getClusterClient().getActiveNodes(
-						WebCrawlerServer.SERVICE_NAME));
-		if (removeMe)
-			nodes.remove(ClusterManager.INSTANCE.myAddress);
-		return new WebCrawlerMultiClient(nodes, 60000);
+						WebCrawlerServer.SERVICE_NAME_WEBCRAWLER), 60000);
 	}
-
 }
