@@ -16,7 +16,6 @@
 package com.qwazr.crawler.web.client;
 
 import java.net.URISyntaxException;
-import java.util.Collection;
 import java.util.TreeMap;
 
 import javax.ws.rs.WebApplicationException;
@@ -34,7 +33,7 @@ import com.qwazr.utils.json.client.JsonMultiClientAbstract;
 import com.qwazr.utils.server.ServerException;
 
 public class WebCrawlerMultiClient extends
-		JsonMultiClientAbstract<WebCrawlerSingleClient> implements
+		JsonMultiClientAbstract<String, WebCrawlerSingleClient> implements
 		WebCrawlerServiceInterface {
 
 	private static final Logger logger = LoggerFactory
