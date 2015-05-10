@@ -72,8 +72,7 @@ public class WebCrawlerServer extends AbstractServer {
 
 	@Override
 	public void load() throws IOException {
-		ClusterServer.load(getWebServicePublicAddress(), getCurrentDataDir(),
-				null);
+		ClusterServer.load(getWebServicePublicAddress(), getCurrentDataDir());
 		ScriptManager.load(getCurrentDataDir());
 		load(this);
 	}
