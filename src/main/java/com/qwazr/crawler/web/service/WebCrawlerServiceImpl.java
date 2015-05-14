@@ -30,7 +30,7 @@ public class WebCrawlerServiceImpl implements WebCrawlerServiceInterface {
 	public TreeMap<String, WebCrawlStatus> getSessions(Boolean local) {
 
 		// Read the sessions in the local node
-		if (local)
+		if (local != null && local)
 			return WebCrawlerManager.INSTANCE.getSessions();
 
 		// Read the sessions present in the remote nodes
@@ -47,7 +47,7 @@ public class WebCrawlerServiceImpl implements WebCrawlerServiceInterface {
 	@Override
 	public WebCrawlStatus getSession(String session_name, Boolean local) {
 		try {
-			if (local) {
+			if (local != null && local) {
 				WebCrawlStatus status = WebCrawlerManager.INSTANCE
 						.getSession(session_name);
 				if (status != null)
