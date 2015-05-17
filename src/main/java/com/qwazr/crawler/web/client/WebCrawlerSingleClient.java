@@ -25,7 +25,6 @@ import javax.ws.rs.core.Response.Status;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Request;
-import org.apache.http.client.utils.URIBuilder;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.qwazr.crawler.web.service.WebCrawlDefinition;
@@ -47,45 +46,27 @@ public class WebCrawlerSingleClient extends JsonClientAbstract implements
 
 	@Override
 	public TreeMap<String, WebCrawlStatus> getSessions(Boolean local) {
-		try {
-			URIBuilder uriBuilder = getBaseUrl("/crawler/web/sessions");
-			if (local != null)
-				uriBuilder.setParameter("local", local.toString());
-			Request request = Request.Get(uriBuilder.build());
-			return (TreeMap<String, WebCrawlStatus>) execute(request, null,
-					msTimeOut, TreeMapStringCrawlTypeRef, 200);
-		} catch (HttpResponseEntityException e) {
-			throw e.getWebApplicationException();
-		} catch (URISyntaxException | IOException e) {
-			throw new WebApplicationException(e.getMessage(), e,
-					Status.INTERNAL_SERVER_ERROR);
-		}
+		UBuilder uriBuilder = new UBuilder("/crawler/web/sessions")
+				.setParameters(local, null);
+		Request request = Request.Get(uriBuilder.build());
+		return (TreeMap<String, WebCrawlStatus>) commonServiceRequest(request,
+				null, msTimeOut, TreeMapStringCrawlTypeRef, 200);
 	}
 
 	@Override
 	public WebCrawlStatus getSession(String session_name, Boolean local) {
-		try {
-			URIBuilder uriBuilder = getBaseUrl("/crawler/web/sessions/",
-					session_name);
-			if (local != null)
-				uriBuilder.setParameter("local", local.toString());
-			Request request = Request.Get(uriBuilder.build());
-			return execute(request, null, msTimeOut, WebCrawlStatus.class, 200);
-		} catch (HttpResponseEntityException e) {
-			throw e.getWebApplicationException();
-		} catch (URISyntaxException | IOException e) {
-			throw new WebApplicationException(e.getMessage(), e,
-					Status.INTERNAL_SERVER_ERROR);
-		}
+		UBuilder uriBuilder = new UBuilder("/crawler/web/sessions/",
+				session_name).setParameters(local, null);
+		Request request = Request.Get(uriBuilder.build());
+		return commonServiceRequest(request, null, msTimeOut,
+				WebCrawlStatus.class, 200);
 	}
 
 	@Override
 	public Response abortSession(String session_name, Boolean local) {
 		try {
-			URIBuilder uriBuilder = getBaseUrl("/crawler/web/sessions/",
-					session_name);
-			if (local != null)
-				uriBuilder.setParameter("local", local.toString());
+			UBuilder uriBuilder = new UBuilder("/crawler/web/sessions/",
+					session_name).setParameters(local, null);
 			Request request = Request.Delete(uriBuilder.build());
 			HttpResponse response = execute(request, null, msTimeOut);
 			HttpUtils.checkStatusCodes(response, 200, 202);
@@ -93,7 +74,7 @@ public class WebCrawlerSingleClient extends JsonClientAbstract implements
 					.build();
 		} catch (HttpResponseEntityException e) {
 			throw e.getWebApplicationException();
-		} catch (URISyntaxException | IOException e) {
+		} catch (IOException e) {
 			throw new WebApplicationException(e.getMessage(), e,
 					Status.INTERNAL_SERVER_ERROR);
 		}
@@ -102,19 +83,11 @@ public class WebCrawlerSingleClient extends JsonClientAbstract implements
 	@Override
 	public WebCrawlStatus runSession(String session_name,
 			WebCrawlDefinition crawlDefinition) {
-		try {
-			URIBuilder uriBuilder = getBaseUrl("/crawler/web/sessions/",
-					session_name);
-			Request request = Request.Post(uriBuilder.build());
-			return execute(request, crawlDefinition, msTimeOut,
-					WebCrawlStatus.class, 200, 202);
-		} catch (HttpResponseEntityException e) {
-			throw e.getWebApplicationException();
-		} catch (URISyntaxException | IOException e) {
-			throw new WebApplicationException(e.getMessage(), e,
-					Status.INTERNAL_SERVER_ERROR);
-		}
-
+		UBuilder uriBuilder = new UBuilder("/crawler/web/sessions/",
+				session_name);
+		Request request = Request.Post(uriBuilder.build());
+		return commonServiceRequest(request, crawlDefinition, msTimeOut,
+				WebCrawlStatus.class, 200, 202);
 	}
 
 }
