@@ -17,6 +17,6 @@ package com.qwazr.crawler.web.driver;
 
 public class AdditionalCapabilities {
 
-	public static final String QWAZR_BROWER_LANGUAGE = "qwazr.browser.language";
+	public static final String QWAZR_BROWSER_LANGUAGE = "qwazr.browser.language";
 
 }

@@ -80,7 +80,7 @@ public class BrowserDriverBuilder {
 			if (crawlDefinition.browser_language != null) {
 				capabilities = checkCapabilities(capabilities);
 				capabilities.setCapability(
-						AdditionalCapabilities.QWAZR_BROWER_LANGUAGE,
+						AdditionalCapabilities.QWAZR_BROWSER_LANGUAGE,
 						crawlDefinition.browser_language);
 			}
 
@@ -94,7 +94,9 @@ public class BrowserDriverBuilder {
 				capabilities
 						.setJavascriptEnabled(crawlDefinition.javascript_enabled);
 			}
+
 		}
+
 		return browserType.getNewInstance(capabilities);
 	}
 }

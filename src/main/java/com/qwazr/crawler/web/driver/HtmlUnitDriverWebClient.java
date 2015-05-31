@@ -31,7 +31,7 @@ public class HtmlUnitDriverWebClient extends HtmlUnitDriver {
 		super(capabilities);
 		if (capabilities != null) {
 			String language = (String) capabilities
-					.getCapability(AdditionalCapabilities.QWAZR_BROWER_LANGUAGE);
+					.getCapability(AdditionalCapabilities.QWAZR_BROWSER_LANGUAGE);
 			if (language != null) {
 				BrowserVersion version = getWebClient().getBrowserVersion();
 				version.setBrowserLanguage(language);
@@ -42,8 +42,10 @@ public class HtmlUnitDriverWebClient extends HtmlUnitDriver {
 	}
 
 	@Override
-	protected WebClient newWebClient(BrowserVersion version) {
-		return super.newWebClient(version.clone());
+	protected WebClient modifyWebClient(WebClient webClient) {
+		webClient = super.modifyWebClient(webClient);
+		webClient.setRefreshHandler(null);
+		return webClient;
 	}
 
 	@Override
