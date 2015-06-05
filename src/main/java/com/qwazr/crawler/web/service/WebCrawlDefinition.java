@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.qwazr.crawler.web.driver.BrowserDriverEnum;
@@ -129,6 +130,11 @@ public class WebCrawlDefinition {
 		 * format is <code>http://hostname.com:1234/pacfile</code>
 		 */
 		public String proxy_autoconfig_url = null;
+
+		public ProxyDefinition setHttpProxy(String http_proxy) {
+			this.http_proxy = http_proxy;
+			return this;
+		}
 	}
 
 	/**
@@ -242,6 +248,13 @@ public class WebCrawlDefinition {
 	public WebCrawlDefinition setBrowser_language(String browser_language) {
 		this.browser_language = browser_language;
 		return this;
+	}
+
+	@JsonIgnore
+	public ProxyDefinition newProxy() {
+		if (proxy == null)
+			proxy = new ProxyDefinition();
+		return proxy;
 	}
 
 	public WebCrawlDefinition addVariable(String name, String value) {
