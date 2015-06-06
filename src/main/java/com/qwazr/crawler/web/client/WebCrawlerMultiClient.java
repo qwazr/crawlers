@@ -46,7 +46,7 @@ public class WebCrawlerMultiClient extends
 	}
 
 	@Override
-	protected WebCrawlerSingleClient newClient(String url, int msTimeOut)
+	protected WebCrawlerSingleClient newClient(String url, Integer msTimeOut)
 			throws URISyntaxException {
 		return new WebCrawlerSingleClient(url, msTimeOut);
 	}

@@ -37,7 +37,8 @@ import com.qwazr.utils.json.client.JsonClientAbstract;
 public class WebCrawlerSingleClient extends JsonClientAbstract implements
 		WebCrawlerServiceInterface {
 
-	WebCrawlerSingleClient(String url, int msTimeOut) throws URISyntaxException {
+	WebCrawlerSingleClient(String url, Integer msTimeOut)
+			throws URISyntaxException {
 		super(url, msTimeOut);
 	}
 
