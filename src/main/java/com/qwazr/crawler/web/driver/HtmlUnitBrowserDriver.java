@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,18 +15,20 @@
  **/
 package com.qwazr.crawler.web.driver;
 
+import com.gargoylesoftware.htmlunit.Page;
+import com.gargoylesoftware.htmlunit.WebClient;
+import com.gargoylesoftware.htmlunit.WebResponse;
+import com.gargoylesoftware.htmlunit.WebWindow;
+import com.qwazr.crawler.web.service.WebRequestDefinition;
+import org.apache.commons.io.IOUtils;
+import org.openqa.selenium.Capabilities;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.io.IOUtils;
-import org.openqa.selenium.Capabilities;
-
-import com.gargoylesoftware.htmlunit.Page;
-import com.gargoylesoftware.htmlunit.WebClient;
-import com.gargoylesoftware.htmlunit.WebResponse;
-import com.gargoylesoftware.htmlunit.WebWindow;
+import static com.qwazr.utils.json.JsonMapper.MAPPER;
 
 public class HtmlUnitBrowserDriver extends
 		BrowserDriver<HtmlUnitDriverWebClient> {
@@ -95,6 +97,11 @@ public class HtmlUnitBrowserDriver extends
 		if (inputStream == null)
 			inputStreamList.add(inputStream);
 		return inputStream;
+	}
+
+	public Page request(String json) throws IOException {
+		WebRequestDefinition webRequestDef = MAPPER.readValue(json, WebRequestDefinition.class);
+		return getWebClient().getPage(webRequestDef.getNewWebRequest());
 	}
 
 }
