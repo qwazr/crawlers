@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,22 +15,25 @@
  **/
 package com.qwazr.crawler.web.client;
 
-import java.net.URISyntaxException;
-import java.util.TreeMap;
+import com.qwazr.cluster.manager.ClusterManager;
+import com.qwazr.crawler.web.driver.BrowserDriver;
+import com.qwazr.crawler.web.driver.BrowserDriverBuilder;
+import com.qwazr.crawler.web.service.WebCrawlDefinition;
+import com.qwazr.crawler.web.service.WebCrawlStatus;
+import com.qwazr.crawler.web.service.WebCrawlerServiceInterface;
+import com.qwazr.utils.IOUtils;
+import com.qwazr.utils.json.JsonMapper;
+import com.qwazr.utils.json.client.JsonMultiClientAbstract;
+import com.qwazr.utils.server.ServerException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.qwazr.cluster.manager.ClusterManager;
-import com.qwazr.crawler.web.service.WebCrawlDefinition;
-import com.qwazr.crawler.web.service.WebCrawlStatus;
-import com.qwazr.crawler.web.service.WebCrawlerServiceInterface;
-import com.qwazr.utils.json.client.JsonMultiClientAbstract;
-import com.qwazr.utils.server.ServerException;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.util.TreeMap;
 
 public class WebCrawlerMultiClient extends
 		JsonMultiClientAbstract<String, WebCrawlerSingleClient> implements
@@ -39,7 +42,7 @@ public class WebCrawlerMultiClient extends
 	private static final Logger logger = LoggerFactory
 			.getLogger(WebCrawlerMultiClient.class);
 
-	public WebCrawlerMultiClient(String[] urls, int msTimeOut)
+	public WebCrawlerMultiClient(String[] urls, Integer msTimeOut)
 			throws URISyntaxException {
 		// TODO Pass executor
 		super(null, new WebCrawlerSingleClient[urls.length], urls, msTimeOut);
@@ -136,7 +139,7 @@ public class WebCrawlerMultiClient extends
 
 	@Override
 	public WebCrawlStatus runSession(String session_name,
-			WebCrawlDefinition crawlDefinition) {
+									 WebCrawlDefinition crawlDefinition) {
 		WebAppExceptionHolder exceptionHolder = new WebAppExceptionHolder(
 				logger);
 		for (WebCrawlerSingleClient client : this) {
@@ -153,6 +156,11 @@ public class WebCrawlerMultiClient extends
 
 	public WebCrawlDefinition getNewWebCrawl() {
 		return new WebCrawlDefinition();
+	}
+
+	public BrowserDriver getNewWebDriver(IOUtils.CloseableContext context, String json) throws ReflectiveOperationException, SecurityException, IOException {
+		WebCrawlDefinition webCrawlDef = JsonMapper.MAPPER.readValue(json, WebCrawlDefinition.class);
+		return new BrowserDriverBuilder(webCrawlDef).build();
 	}
 
 }

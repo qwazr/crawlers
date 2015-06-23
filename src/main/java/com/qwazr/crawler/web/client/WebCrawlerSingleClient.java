@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,17 +15,6 @@
  **/
 package com.qwazr.crawler.web.client;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.util.TreeMap;
-
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
-
-import org.apache.http.HttpResponse;
-import org.apache.http.client.fluent.Request;
-
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.qwazr.crawler.web.service.WebCrawlDefinition;
 import com.qwazr.crawler.web.service.WebCrawlStatus;
@@ -33,6 +22,15 @@ import com.qwazr.crawler.web.service.WebCrawlerServiceInterface;
 import com.qwazr.utils.http.HttpResponseEntityException;
 import com.qwazr.utils.http.HttpUtils;
 import com.qwazr.utils.json.client.JsonClientAbstract;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.fluent.Request;
+
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.util.TreeMap;
 
 public class WebCrawlerSingleClient extends JsonClientAbstract implements
 		WebCrawlerServiceInterface {
@@ -83,7 +81,7 @@ public class WebCrawlerSingleClient extends JsonClientAbstract implements
 
 	@Override
 	public WebCrawlStatus runSession(String session_name,
-			WebCrawlDefinition crawlDefinition) {
+									 WebCrawlDefinition crawlDefinition) {
 		UBuilder uriBuilder = new UBuilder("/crawler/web/sessions/",
 				session_name);
 		Request request = Request.Post(uriBuilder.build());

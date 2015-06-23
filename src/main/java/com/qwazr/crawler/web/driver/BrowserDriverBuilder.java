@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,13 +15,10 @@
  **/
 package com.qwazr.crawler.web.driver;
 
-import java.lang.reflect.InvocationTargetException;
-
+import com.qwazr.crawler.web.service.WebCrawlDefinition;
 import org.openqa.selenium.Proxy;
 import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.DesiredCapabilities;
-
-import com.qwazr.crawler.web.service.WebCrawlDefinition;
 
 /**
  * This class is responsible of creating a WebDriver build the capabilities by
@@ -31,10 +28,7 @@ public class BrowserDriverBuilder {
 
 	private final WebCrawlDefinition crawlDefinition;
 
-	public BrowserDriverBuilder(WebCrawlDefinition crawlDefinition)
-			throws InstantiationException, IllegalAccessException,
-			IllegalArgumentException, InvocationTargetException,
-			NoSuchMethodException, SecurityException {
+	public BrowserDriverBuilder(WebCrawlDefinition crawlDefinition) {
 		this.crawlDefinition = crawlDefinition;
 	}
 
@@ -45,9 +39,7 @@ public class BrowserDriverBuilder {
 		return capabilities;
 	}
 
-	public BrowserDriver<?> build() throws InstantiationException,
-			IllegalAccessException, IllegalArgumentException,
-			InvocationTargetException, NoSuchMethodException, SecurityException {
+	public BrowserDriver<?> build() throws ReflectiveOperationException, SecurityException {
 		BrowserDriverEnum browserType = BrowserDriverEnum.html_unit;
 		DesiredCapabilities capabilities = null;
 		if (crawlDefinition != null) {

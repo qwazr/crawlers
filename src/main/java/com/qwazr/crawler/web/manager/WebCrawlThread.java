@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,32 +14,6 @@
  * limitations under the License.
  **/
 package com.qwazr.crawler.web.manager;
-
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
-
-import javax.script.ScriptException;
-import javax.ws.rs.core.Response.Status;
-
-import org.apache.commons.lang3.StringUtils;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.utils.URIBuilder;
-import org.apache.http.client.utils.URIUtils;
-import org.openqa.selenium.By;
-import org.openqa.selenium.WebElement;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.qwazr.cluster.manager.ClusterManager;
 import com.qwazr.crawler.web.driver.BrowserDriver;
@@ -52,6 +26,24 @@ import com.qwazr.crawler.web.service.WebCrawlStatus.UrlStatus;
 import com.qwazr.job.script.ScriptManager;
 import com.qwazr.job.script.ScriptRunThread;
 import com.qwazr.utils.server.ServerException;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.client.utils.URIUtils;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebElement;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.script.ScriptException;
+import javax.ws.rs.core.Response.Status;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 public class WebCrawlThread extends Thread {
 
@@ -68,7 +60,7 @@ public class WebCrawlThread extends Thread {
 	private BrowserDriver<?> driver = null;
 
 	WebCrawlThread(ThreadGroup threadGroup, String sessionName,
-			WebCrawlDefinition crawlDefinition) throws ServerException {
+				   WebCrawlDefinition crawlDefinition) throws ServerException {
 		super(threadGroup, "oss-web-crawler " + sessionName);
 		this.session = new CurrentSession(sessionName,
 				crawlDefinition.variables);
@@ -117,7 +109,7 @@ public class WebCrawlThread extends Thread {
 	}
 
 	private final static boolean checkMatcher(String value,
-			List<Matcher> matcherList) {
+											  List<Matcher> matcherList) {
 		for (Matcher matcher : matcherList) {
 			matcher.reset(value);
 			if (matcher.find())
@@ -128,7 +120,7 @@ public class WebCrawlThread extends Thread {
 
 	/**
 	 * Check the inclusion list. Returns TRUE if the inclusion list is empty.
-	 * 
+	 *
 	 * @param uriString
 	 * @return
 	 */
@@ -140,7 +132,7 @@ public class WebCrawlThread extends Thread {
 
 	/**
 	 * Check the exclusion list. Returns FALSE if the exclusion list is empty.
-	 * 
+	 *
 	 * @param uriString
 	 * @return
 	 */
@@ -156,7 +148,7 @@ public class WebCrawlThread extends Thread {
 
 	/**
 	 * Remove the fragment if remove_framents is set to true
-	 * 
+	 *
 	 * @param uriBuilder
 	 */
 	private void checkRemoveFragment(URIBuilder uriBuilder) {
@@ -168,7 +160,7 @@ public class WebCrawlThread extends Thread {
 
 	/**
 	 * Remove any query parameter which match the parameters_matcher list
-	 * 
+	 *
 	 * @param uriBuilder
 	 */
 	private void checkRemoveParameter(URIBuilder uriBuilder) {
@@ -186,7 +178,7 @@ public class WebCrawlThread extends Thread {
 
 	/**
 	 * Remove the fragment and the query parameters following the configuration
-	 * 
+	 *
 	 * @param uri
 	 * @return
 	 */
@@ -311,9 +303,9 @@ public class WebCrawlThread extends Thread {
 
 	/**
 	 * Execute the script related to the passed event.
-	 * 
+	 *
 	 * @param event
-	 * @param currentCrawl
+	 * @param currentURI
 	 * @throws ServerException
 	 */
 	private void script(EventEnum event, CurrentURI currentURI)
@@ -337,10 +329,8 @@ public class WebCrawlThread extends Thread {
 			throw new ServerException(scriptRunThread.getException());
 	}
 
-	private void runner() throws InstantiationException, URISyntaxException,
-			IOException, ScriptException, IllegalAccessException,
-			IllegalArgumentException, InvocationTargetException,
-			NoSuchMethodException, SecurityException, ServerException {
+	private void runner() throws URISyntaxException,
+			IOException, ScriptException, ServerException, ReflectiveOperationException {
 		try {
 			driver = new BrowserDriverBuilder(crawlDefinition).build();
 			script(EventEnum.before_session, null);
