@@ -20,11 +20,10 @@ import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.WebResponse;
 import com.gargoylesoftware.htmlunit.WebWindow;
 import com.qwazr.crawler.web.service.WebRequestDefinition;
-import org.apache.commons.io.IOUtils;
+import com.qwazr.utils.IOUtils;
 import org.openqa.selenium.Capabilities;
 
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -97,6 +96,23 @@ public class HtmlUnitBrowserDriver extends
 		if (inputStream == null)
 			inputStreamList.add(inputStream);
 		return inputStream;
+	}
+
+	public void saveResponse(String path) throws IOException {
+		InputStream inputStream = getInputStream();
+		if (inputStream == null)
+			return;
+		try {
+			File file = new File(path);
+			FileOutputStream fos = new FileOutputStream(file);
+			try {
+				IOUtils.copy(inputStream, fos);
+			} finally {
+				IOUtils.close(fos);
+			}
+		} finally {
+			IOUtils.close(inputStream);
+		}
 	}
 
 	public Page request(String json) throws IOException {
