@@ -256,6 +256,7 @@ public class WebCrawlThread extends Thread {
 			if (href == null)
 				continue;
 			try {
+				href = StringUtils.replace(href, " ", "%20");
 				URI linkURI = URIUtils.resolve(uri, href);
 				if (linkURI != null) {
 					linkURI = checkLink(linkURI);
