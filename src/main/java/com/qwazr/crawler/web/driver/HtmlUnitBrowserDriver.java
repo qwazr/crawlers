@@ -98,12 +98,11 @@ public class HtmlUnitBrowserDriver extends
 		return inputStream;
 	}
 
-	public void saveResponse(String path) throws IOException {
+	public void saveResponseFile(File file) throws IOException {
 		InputStream inputStream = getInputStream();
 		if (inputStream == null)
 			return;
 		try {
-			File file = new File(path);
 			FileOutputStream fos = new FileOutputStream(file);
 			try {
 				IOUtils.copy(inputStream, fos);
@@ -113,6 +112,10 @@ public class HtmlUnitBrowserDriver extends
 		} finally {
 			IOUtils.close(inputStream);
 		}
+	}
+
+	public void saveResponse(String path) throws IOException {
+		saveResponseFile(new File(path));
 	}
 
 	public Page request(String json) throws IOException {
