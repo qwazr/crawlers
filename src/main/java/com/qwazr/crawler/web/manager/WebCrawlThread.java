@@ -290,9 +290,9 @@ public class WebCrawlThread extends Thread {
 		script(EventEnum.after_crawl, currentURI);
 
 		// Check if we reach the max depth
-		depth = currentURI.getDepth() + 1;
+		depth++;
 		if (crawlDefinition.max_depth == null
-				|| depth >= crawlDefinition.max_depth)
+				|| depth > crawlDefinition.max_depth)
 			return;
 
 		// Let's crawl the childs
