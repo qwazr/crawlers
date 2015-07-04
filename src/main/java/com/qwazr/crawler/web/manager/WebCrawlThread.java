@@ -31,6 +31,7 @@ import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.client.utils.URIUtils;
 import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -220,7 +221,13 @@ public class WebCrawlThread extends Thread {
 
 		// Load the URL
 		logger.info("Crawling " + uri);
-		driver.get(uriString);
+		try {
+			driver.get(uriString);
+		} catch (WebDriverException e) {
+			session.incErrorCount();
+			currentURI.setError(e);
+			return;
+		}
 
 		try {
 			uri = new URI(uriString);

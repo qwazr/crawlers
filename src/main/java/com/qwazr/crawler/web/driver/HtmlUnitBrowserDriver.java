@@ -15,10 +15,7 @@
  **/
 package com.qwazr.crawler.web.driver;
 
-import com.gargoylesoftware.htmlunit.Page;
-import com.gargoylesoftware.htmlunit.WebClient;
-import com.gargoylesoftware.htmlunit.WebResponse;
-import com.gargoylesoftware.htmlunit.WebWindow;
+import com.gargoylesoftware.htmlunit.*;
 import com.qwazr.crawler.web.service.WebRequestDefinition;
 import com.qwazr.utils.IOUtils;
 import org.openqa.selenium.Capabilities;
@@ -59,14 +56,18 @@ public class HtmlUnitBrowserDriver extends
 		return driver.getWebClient();
 	}
 
-	public WebResponse getWebResponse() {
+	public Page getEnclosedPage() {
 		WebClient webClient = getWebClient();
 		if (webClient == null)
 			return null;
 		WebWindow webWindow = webClient.getCurrentWindow();
 		if (webWindow == null)
 			return null;
-		Page page = webWindow.getEnclosedPage();
+		return webWindow.getEnclosedPage();
+	}
+
+	public WebResponse getWebResponse() {
+		Page page = getEnclosedPage();
 		if (page == null)
 			return null;
 		return page.getWebResponse();
@@ -84,6 +85,13 @@ public class HtmlUnitBrowserDriver extends
 		if (response == null)
 			return null;
 		return response.getContentType();
+	}
+
+	public boolean isUnexpectedPage() {
+		Page page = getEnclosedPage();
+		if (page == null)
+			return false;
+		return page instanceof UnexpectedPage;
 	}
 
 	public InputStream getInputStream() throws IOException {
