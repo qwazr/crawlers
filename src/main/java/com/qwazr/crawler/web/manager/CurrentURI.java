@@ -15,6 +15,9 @@
  **/
 package com.qwazr.crawler.web.manager;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.http.client.utils.URIUtils;
+
 import java.net.URI;
 import java.util.Collection;
 
@@ -31,7 +34,7 @@ public class CurrentURI {
 
 	private String error = null;
 
-	private Collection<URI> links = null;
+	private volatile Collection<URI> links = null;
 
 	CurrentURI(URI uri, Integer depth) {
 		this.initialURI = uri;
@@ -84,12 +87,25 @@ public class CurrentURI {
 		return error;
 	}
 
-	void setLinks(Collection<URI> links) {
+	public void setLinks(Collection<URI> links) {
 		this.links = links;
 	}
 
 	public Collection<URI> getLinks() {
 		return links;
 	}
+
+	public void hrefToURICollection(Collection<String> hrefCollection, Collection<URI> uriCollection) {
+		if (hrefCollection == null)
+			return;
+		URI uri = getURI();
+		for (String href : hrefCollection) {
+			href = StringUtils.replace(href, " ", "%20");
+			URI resolvedURI = URIUtils.resolve(getURI(), href);
+			if (resolvedURI != null)
+				uriCollection.add(resolvedURI);
+		}
+	}
+
 
 }

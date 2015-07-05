@@ -29,10 +29,7 @@ import com.qwazr.utils.server.ServerException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URIBuilder;
-import org.apache.http.client.utils.URIUtils;
-import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriverException;
-import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -195,6 +192,17 @@ public class WebCrawlThread extends Thread {
 		}
 	}
 
+	private Collection<URI> checkLinks(Collection<URI> uris) {
+		if (uris == null) return null;
+		Map<String, URI> linkMap = new LinkedHashMap<String, URI>();
+		for (URI linkURI : uris) {
+			linkURI = checkLink(linkURI);
+			if (linkURI != null)
+				linkMap.put(linkURI.toString(), linkURI);
+		}
+		return linkMap.values();
+	}
+
 	private void crawl(CurrentURI currentURI) {
 
 		if (session.isAborting())
@@ -255,29 +263,13 @@ public class WebCrawlThread extends Thread {
 		currentURI.setCrawled();
 
 		// Let's look for the a tags
-		List<WebElement> links = driver.findElements(By.tagName("a"));
-		if (links == null || links.isEmpty())
+		Set<String> hrefSet = new LinkedHashSet<String>();
+		driver.findLinks(driver, hrefSet);
+		if (hrefSet.isEmpty())
 			return;
-
-		// Building the URI list
-		Map<String, URI> linkMap = new TreeMap<String, URI>();
-		for (WebElement link : links) {
-			String href = link.getAttribute("href");
-			if (href == null)
-				continue;
-			try {
-				href = StringUtils.replace(href, " ", "%20");
-				URI linkURI = URIUtils.resolve(uri, href);
-				if (linkURI != null) {
-					linkURI = checkLink(linkURI);
-					if (linkURI != null)
-						linkMap.put(linkURI.toString(), linkURI);
-				}
-			} catch (IllegalArgumentException e) {
-				logger.warn(e.getMessage(), e);
-			}
-		}
-		currentURI.setLinks(linkMap.values());
+		ArrayList<URI> uris = new ArrayList<URI>(hrefSet.size());
+		currentURI.hrefToURICollection(hrefSet, uris);
+		currentURI.setLinks(uris);
 	}
 
 	private void crawl(Set<URI> crawledURIs, URI uri, int depth)
@@ -306,7 +298,9 @@ public class WebCrawlThread extends Thread {
 				|| depth > crawlDefinition.max_depth)
 			return;
 
-		// Let's crawl the childs
+		currentURI.setLinks(checkLinks(currentURI.getLinks()));
+
+		// Let's crawl the childs if any
 		if (currentURI.getLinks() != null)
 			for (URI uriLink : currentURI.getLinks())
 				crawl(crawledURIs, uriLink, depth);

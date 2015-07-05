@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,27 +15,19 @@
  **/
 package com.qwazr.crawler.web.driver;
 
+import org.openqa.selenium.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-
-import javax.imageio.ImageIO;
-
-import org.openqa.selenium.By;
-import org.openqa.selenium.Capabilities;
-import org.openqa.selenium.Dimension;
-import org.openqa.selenium.JavascriptExecutor;
-import org.openqa.selenium.OutputType;
-import org.openqa.selenium.TakesScreenshot;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebDriverException;
-import org.openqa.selenium.WebElement;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public abstract class BrowserDriver<T extends WebDriver> implements WebDriver,
 		Closeable {
@@ -75,7 +67,7 @@ public abstract class BrowserDriver<T extends WebDriver> implements WebDriver,
 	}
 
 	public Object executeScript(String javascript, boolean faultTolerant,
-			Object... objects) {
+								Object... objects) {
 		try {
 			if (!(driver instanceof JavascriptExecutor))
 				throw new WebDriverException(
@@ -164,5 +156,26 @@ public abstract class BrowserDriver<T extends WebDriver> implements WebDriver,
 	@Override
 	final public Options manage() {
 		return driver.manage();
+	}
+
+	/**
+	 * Fill a list with all the href attributes found in a tag, relative to the given rootElement
+	 *
+	 * @param searchContext  the root of the search
+	 * @param hrefCollection the collection filled with the href content
+	 */
+	final public void findLinks(SearchContext searchContext, Collection<String> hrefCollection) {
+		// Let's look for the a tags
+		List<WebElement> links = driver.findElements(By.tagName("a"));
+		if (links == null || links.isEmpty())
+			return;
+
+		// Building the URI list
+		for (WebElement link : links) {
+			String href = link.getAttribute("href");
+			if (href == null)
+				continue;
+			hrefCollection.add(href);
+		}
 	}
 }
