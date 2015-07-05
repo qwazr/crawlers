@@ -15,8 +15,8 @@
  **/
 package com.qwazr.crawler.web.manager;
 
+import com.qwazr.utils.LinkUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.http.client.utils.URIUtils;
 
 import java.net.URI;
 import java.util.Collection;
@@ -101,7 +101,7 @@ public class CurrentURI {
 		URI uri = getURI();
 		for (String href : hrefCollection) {
 			href = StringUtils.replace(href, " ", "%20");
-			URI resolvedURI = URIUtils.resolve(getURI(), href);
+			URI resolvedURI = LinkUtils.resolveQuietly(uri, href);
 			if (resolvedURI != null)
 				uriCollection.add(resolvedURI);
 		}
