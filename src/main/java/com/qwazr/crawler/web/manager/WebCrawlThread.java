@@ -197,6 +197,9 @@ public class WebCrawlThread extends Thread {
 
 	private void crawl(CurrentURI currentURI) {
 
+		if (session.isAborting())
+			return;
+
 		URI uri = currentURI.getInitialUri();
 		String uriString = uri.toString();
 		session.setCurrentUri(uriString);
@@ -279,6 +282,7 @@ public class WebCrawlThread extends Thread {
 
 	private void crawl(Set<URI> crawledURIs, URI uri, int depth)
 			throws ServerException {
+
 		if (session.isAborting())
 			return;
 
