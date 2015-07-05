@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,17 +15,17 @@
  **/
 package com.qwazr.crawler.web.service;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.qwazr.crawler.web.driver.BrowserDriverEnum;
+
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.qwazr.crawler.web.driver.BrowserDriverEnum;
 
 @JsonInclude(Include.NON_EMPTY)
 public class WebCrawlDefinition {
@@ -72,6 +72,16 @@ public class WebCrawlDefinition {
 	 * The language used by the browser
 	 */
 	public String browser_language = null;
+
+	/**
+	 * The version of the browser
+	 */
+	public String browser_version = null;
+
+	/**
+	 * The name of the browser
+	 */
+	public String browser_name = null;
 
 	/**
 	 * Enable or disable javascript
@@ -136,6 +146,15 @@ public class WebCrawlDefinition {
 			return this;
 		}
 	}
+
+	/**
+	 *
+	 */
+	public Integer implicitly_wait = null;
+
+	public Integer script_timeout = null;
+
+	public Integer page_load_timeout = null;
 
 	/**
 	 * The global variables shared by all the scripts.
@@ -245,6 +264,16 @@ public class WebCrawlDefinition {
 		return this;
 	}
 
+	public WebCrawlDefinition setBrowser_name(String browser_name) {
+		this.browser_name = browser_name;
+		return this;
+	}
+
+	public WebCrawlDefinition setBrowser_version(String browser_version) {
+		this.browser_version = browser_version;
+		return this;
+	}
+
 	public WebCrawlDefinition setBrowser_language(String browser_language) {
 		this.browser_language = browser_language;
 		return this;
@@ -276,4 +305,18 @@ public class WebCrawlDefinition {
 		return URLEncoder.encode(value, "UTF-8");
 	}
 
+	public WebCrawlDefinition setImplicitly_wait(Integer wait) {
+		this.implicitly_wait = wait;
+		return this;
+	}
+
+	public WebCrawlDefinition setScript_timeout(Integer timeout) {
+		this.script_timeout = timeout;
+		return this;
+	}
+
+	public WebCrawlDefinition setPage_load_timeout(Integer timeout) {
+		this.page_load_timeout = timeout;
+		return this;
+	}
 }

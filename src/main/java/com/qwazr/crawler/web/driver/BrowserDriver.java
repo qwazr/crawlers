@@ -100,8 +100,10 @@ public abstract class BrowserDriver<T extends WebDriver> implements WebDriver,
 		driver.manage().window().setSize(new Dimension(width, height));
 	}
 
-	final public void setTimeouts(Integer pageLoad, Integer script) {
+	final public void setTimeouts(Integer impWait, Integer pageLoad, Integer script) {
 		Timeouts timeOuts = driver.manage().timeouts();
+		if (impWait != null)
+			timeOuts.implicitlyWait(impWait, TimeUnit.SECONDS);
 		if (pageLoad != null)
 			timeOuts.pageLoadTimeout(pageLoad, TimeUnit.SECONDS);
 		if (script != null)

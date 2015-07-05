@@ -41,6 +41,7 @@ public class BrowserDriverBuilder {
 
 	public BrowserDriver<?> build() throws ReflectiveOperationException, SecurityException {
 		BrowserDriverEnum browserType = BrowserDriverEnum.html_unit;
+
 		DesiredCapabilities capabilities = null;
 		if (crawlDefinition != null) {
 
@@ -80,6 +81,17 @@ public class BrowserDriverBuilder {
 			if (crawlDefinition.browser_type != null)
 				browserType = crawlDefinition.browser_type;
 
+			// Choose a browser name
+			if (crawlDefinition.browser_name != null) {
+				capabilities = checkCapabilities(capabilities);
+				capabilities.setBrowserName(crawlDefinition.browser_name);
+			}
+
+			if (crawlDefinition.browser_version != null) {
+				capabilities = checkCapabilities(capabilities);
+				capabilities.setVersion(crawlDefinition.browser_version);
+			}
+
 			// Javascript capability
 			if (crawlDefinition.javascript_enabled != null) {
 				capabilities = checkCapabilities(capabilities);
@@ -89,6 +101,9 @@ public class BrowserDriverBuilder {
 
 		}
 
-		return browserType.getNewInstance(capabilities);
+		BrowserDriver driver = browserType.getNewInstance(capabilities);
+		driver.setTimeouts(crawlDefinition.implicitly_wait,
+				crawlDefinition.page_load_timeout, crawlDefinition.script_timeout);
+		return driver;
 	}
 }
