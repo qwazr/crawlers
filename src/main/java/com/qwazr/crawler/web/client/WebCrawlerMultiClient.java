@@ -16,13 +16,9 @@
 package com.qwazr.crawler.web.client;
 
 import com.qwazr.cluster.manager.ClusterManager;
-import com.qwazr.crawler.web.driver.BrowserDriver;
-import com.qwazr.crawler.web.driver.BrowserDriverBuilder;
 import com.qwazr.crawler.web.service.WebCrawlDefinition;
 import com.qwazr.crawler.web.service.WebCrawlStatus;
 import com.qwazr.crawler.web.service.WebCrawlerServiceInterface;
-import com.qwazr.utils.IOUtils;
-import com.qwazr.utils.json.JsonMapper;
 import com.qwazr.utils.json.client.JsonMultiClientAbstract;
 import com.qwazr.utils.server.ServerException;
 import org.slf4j.Logger;
@@ -31,7 +27,6 @@ import org.slf4j.LoggerFactory;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
-import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.TreeMap;
 
@@ -152,15 +147,6 @@ public class WebCrawlerMultiClient extends
 		if (exceptionHolder.getException() != null)
 			throw exceptionHolder.getException();
 		return null;
-	}
-
-	public WebCrawlDefinition getNewWebCrawl() {
-		return new WebCrawlDefinition();
-	}
-
-	public BrowserDriver getNewWebDriver(IOUtils.CloseableContext context, String json) throws ReflectiveOperationException, SecurityException, IOException {
-		WebCrawlDefinition webCrawlDef = JsonMapper.MAPPER.readValue(json, WebCrawlDefinition.class);
-		return new BrowserDriverBuilder(webCrawlDef).build();
 	}
 
 }

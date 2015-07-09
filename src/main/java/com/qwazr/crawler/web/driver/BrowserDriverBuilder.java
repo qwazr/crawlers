@@ -66,7 +66,7 @@ public class BrowserDriverBuilder {
 				if (crawlDefinition.proxy.proxy_autoconfig_url != null)
 					proxy.setProxyAutoconfigUrl(crawlDefinition.proxy.proxy_autoconfig_url);
 				capabilities.setCapability(CapabilityType.PROXY,
-						crawlDefinition.proxy);
+						proxy);
 			}
 
 			// Setup the language

@@ -22,13 +22,10 @@ import com.qwazr.crawler.web.driver.BrowserDriverEnum;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @JsonInclude(Include.NON_EMPTY)
-public class WebCrawlDefinition {
+public class WebCrawlDefinition implements Cloneable {
 
 	/**
 	 * The entry point URL of the crawl.
@@ -94,7 +91,7 @@ public class WebCrawlDefinition {
 	public ProxyDefinition proxy = null;
 
 	@JsonInclude(Include.NON_EMPTY)
-	public class ProxyDefinition {
+	public class ProxyDefinition implements Cloneable {
 
 		/**
 		 * the proxy host for FTP connections, expected format is
@@ -141,10 +138,30 @@ public class WebCrawlDefinition {
 		 */
 		public String proxy_autoconfig_url = null;
 
+		public ProxyDefinition() {
+		}
+
+		protected ProxyDefinition(ProxyDefinition src) {
+			ftp_proxy = src.ftp_proxy;
+			http_proxy = src.http_proxy;
+			no_proxy = src.no_proxy;
+			ssl_proxy = src.ssl_proxy;
+			socks_proxy = src.socks_proxy;
+			socks_username = src.socks_username;
+			socks_password = src.socks_password;
+			proxy_autoconfig_url = src.proxy_autoconfig_url;
+		}
+
+		@Override
+		public Object clone() {
+			return new ProxyDefinition(this);
+		}
+
 		public ProxyDefinition setHttpProxy(String http_proxy) {
 			this.http_proxy = http_proxy;
 			return this;
 		}
+
 	}
 
 	/**
@@ -190,7 +207,7 @@ public class WebCrawlDefinition {
 	}
 
 	@JsonInclude(Include.NON_EMPTY)
-	public static class Script {
+	public static class Script implements Cloneable {
 
 		/**
 		 * The path to the script
@@ -203,11 +220,20 @@ public class WebCrawlDefinition {
 		public Map<String, String> variables = null;
 
 		public Script() {
-			this(null);
 		}
 
 		public Script(String name) {
 			this.name = name;
+		}
+
+		protected Script(Script src) {
+			this.name = src.name;
+			this.variables = src.variables == null ? null : new HashMap<String, String>(src.variables);
+		}
+
+		@Override
+		public Object clone() {
+			return new Script(this);
 		}
 
 		public Script addVariable(String name, String value) {
@@ -216,6 +242,40 @@ public class WebCrawlDefinition {
 			variables.put(name, value);
 			return this;
 		}
+
+	}
+
+	public WebCrawlDefinition() {
+	}
+
+	protected WebCrawlDefinition(WebCrawlDefinition src) {
+		entry_url = src.entry_url;
+		max_depth = src.max_depth;
+		parameters_patterns = src.parameters_patterns == null ? null : new ArrayList<String>(src.parameters_patterns);
+		inclusion_patterns = src.inclusion_patterns == null ? null : new ArrayList<String>(src.inclusion_patterns);
+		exclusion_patterns = src.exclusion_patterns == null ? null : new ArrayList<String>(src.exclusion_patterns);
+		remove_fragments = src.remove_fragments;
+		browser_name = src.browser_name;
+		browser_language = src.browser_language;
+		browser_version = src.browser_version;
+		browser_type = src.browser_type;
+		javascript_enabled = src.javascript_enabled;
+		proxy = src.proxy == null ? null : new ProxyDefinition(src.proxy);
+		implicitly_wait = src.implicitly_wait;
+		script_timeout = src.script_timeout;
+		page_load_timeout = src.page_load_timeout;
+		variables = src.variables == null ? null : new LinkedHashMap<String, String>(src.variables);
+		if (src.scripts == null) {
+			scripts = null;
+		} else {
+			scripts = new HashMap<EventEnum, Script>();
+			for (Map.Entry<EventEnum, Script> entry : src.scripts.entrySet())
+				scripts.put(entry.getKey(), new Script(entry.getValue()));
+		}
+	}
+
+	public Object clone() {
+		return new WebCrawlDefinition(this);
 	}
 
 	public WebCrawlDefinition setEntry_url(String entry_url) {
