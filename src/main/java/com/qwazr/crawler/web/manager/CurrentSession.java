@@ -38,7 +38,9 @@ public class CurrentSession {
 		abort = new AtomicBoolean(false);
 		this.variables = new ConcurrentHashMap<>();
 		if (variables != null)
-			this.variables.putAll(variables);
+			for (Map.Entry<String, String> entry : variables.entrySet())
+				if (entry.getKey() != null && entry.getValue() != null)
+					this.variables.put(entry.getKey(), entry.getValue());
 	}
 
 	/**

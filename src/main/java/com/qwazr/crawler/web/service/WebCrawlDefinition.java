@@ -369,6 +369,8 @@ public class WebCrawlDefinition implements Cloneable {
 	}
 
 	public WebCrawlDefinition addVariable(String name, String value) {
+		if (name == null || value == null)
+			return this;
 		if (variables == null)
 			variables = new HashMap<String, String>();
 		variables.put(name, value);
