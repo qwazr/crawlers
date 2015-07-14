@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -30,7 +30,7 @@ public class CurrentSession {
 	private volatile int ignoredCount = 0;
 	private volatile int errorCount = 0;
 	private volatile int crawledCount = 0;
-	private volatile String currentUri = null;
+	private volatile String currentURI = null;
 
 	CurrentSession(String name, Map<String, String> variables) {
 		this.name = name;
@@ -42,8 +42,7 @@ public class CurrentSession {
 	}
 
 	/**
-	 * @param name
-	 *            the name of the variable
+	 * @param name the name of the variable
 	 * @return the value of the variable
 	 */
 	public String getVariable(String name) {
@@ -51,10 +50,8 @@ public class CurrentSession {
 	}
 
 	/**
-	 * @param name
-	 *            the name of the variable to set
-	 * @param value
-	 *            the value to set
+	 * @param name  the name of the variable to set
+	 * @param value the value to set
 	 * @return the previous value if any
 	 */
 	public String setVariable(String name, String value) {
@@ -64,8 +61,7 @@ public class CurrentSession {
 	}
 
 	/**
-	 * @param name
-	 *            the name of the variable to remove
+	 * @param name the name of the variable to remove
 	 * @return the value of the variable if any
 	 */
 	public String removeVariable(String name) {
@@ -74,9 +70,8 @@ public class CurrentSession {
 
 	/**
 	 * Causes the currently executing thread to sleep
-	 * 
-	 * @param millis
-	 *            the number of milliseconds
+	 *
+	 * @param millis the number of milliseconds
 	 */
 	public void sleep(int millis) {
 		try {
@@ -97,7 +92,7 @@ public class CurrentSession {
 
 	/**
 	 * Check if the session is currently aborting
-	 * 
+	 *
 	 * @return
 	 */
 	public boolean isAborting() {
@@ -154,15 +149,14 @@ public class CurrentSession {
 	/**
 	 * @return the currentUri
 	 */
-	public String getCurrentUri() {
-		return currentUri;
+	public String getCurrentURI() {
+		return currentURI;
 	}
 
 	/**
-	 * @param currentUri
-	 *            the currentUri to set
+	 * @param currentURI the currentURI to set
 	 */
-	public void setCurrentUri(String currentUri) {
-		this.currentUri = currentUri;
+	public void setCurrentURI(String currentURI) {
+		this.currentURI = currentURI;
 	}
 }

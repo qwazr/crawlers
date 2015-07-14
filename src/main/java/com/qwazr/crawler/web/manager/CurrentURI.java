@@ -41,7 +41,7 @@ public class CurrentURI {
 		this.depth = depth;
 	}
 
-	public URI getInitialUri() {
+	public URI getInitialURI() {
 		return initialURI;
 	}
 

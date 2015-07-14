@@ -25,7 +25,9 @@ import com.qwazr.crawler.web.service.WebCrawlStatus;
 import com.qwazr.crawler.web.service.WebCrawlStatus.UrlStatus;
 import com.qwazr.job.script.ScriptManager;
 import com.qwazr.job.script.ScriptRunThread;
+import com.qwazr.utils.WildcardMatcher;
 import com.qwazr.utils.server.ServerException;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URIBuilder;
@@ -52,8 +54,8 @@ public class WebCrawlThread extends Thread {
 	final WebCrawlDefinition crawlDefinition;
 
 	private final List<Matcher> parametersMatcherList;
-	private final List<Matcher> exclusionMatcherList;
-	private final List<Matcher> inclusionMatcherList;
+	private final List<WildcardMatcher> exclusionMatcherList;
+	private final List<WildcardMatcher> inclusionMatcherList;
 
 	private BrowserDriver<?> driver = null;
 
@@ -69,12 +71,13 @@ public class WebCrawlThread extends Thread {
 		if (crawlDefinition.entry_url == null)
 			throw new ServerException(Status.NOT_ACCEPTABLE,
 					"The entry_url is missing");
-		parametersMatcherList = getMatcherList(crawlDefinition.parameters_patterns);
-		exclusionMatcherList = getMatcherList(crawlDefinition.exclusion_patterns);
-		inclusionMatcherList = getMatcherList(crawlDefinition.inclusion_patterns);
+		parametersMatcherList = getRegExpMatcherList(crawlDefinition.parameters_patterns);
+		exclusionMatcherList = getWildcardMatcherList(crawlDefinition.exclusion_patterns);
+		inclusionMatcherList = getWildcardMatcherList(crawlDefinition.inclusion_patterns);
+		FilenameUtils.wildcardMatch("test", "test");
 	}
 
-	private final static List<Matcher> getMatcherList(List<String> patternList)
+	private final static List<Matcher> getRegExpMatcherList(List<String> patternList)
 			throws ServerException {
 		if (patternList == null || patternList.isEmpty())
 			return null;
@@ -92,6 +95,16 @@ public class WebCrawlThread extends Thread {
 		}
 	}
 
+	private final static List<WildcardMatcher> getWildcardMatcherList(List<String> patternList) {
+		if (patternList == null || patternList.isEmpty())
+			return null;
+		List<WildcardMatcher> matcherList = new ArrayList<WildcardMatcher>(
+				patternList.size());
+		for (String pattern : patternList)
+			matcherList.add(new WildcardMatcher(pattern));
+		return matcherList;
+	}
+
 	String getSessionName() {
 		return session.getName();
 	}
@@ -106,13 +119,21 @@ public class WebCrawlThread extends Thread {
 		session.abort();
 	}
 
-	private final static boolean checkMatcher(String value,
-											  List<Matcher> matcherList) {
+	private final static boolean checkRegExpMatcher(String value,
+													List<Matcher> matcherList) {
 		for (Matcher matcher : matcherList) {
 			matcher.reset(value);
 			if (matcher.find())
 				return true;
 		}
+		return false;
+	}
+
+	private final static boolean checkWildcardMatcher(String value,
+													  List<WildcardMatcher> matcherList) {
+		for (WildcardMatcher matcher : matcherList)
+			if (matcher.match(value))
+				return true;
 		return false;
 	}
 
@@ -125,7 +146,7 @@ public class WebCrawlThread extends Thread {
 	private boolean checkInclusion(String uriString) {
 		if (inclusionMatcherList == null || inclusionMatcherList.isEmpty())
 			return true;
-		return checkMatcher(uriString, inclusionMatcherList);
+		return checkWildcardMatcher(uriString, inclusionMatcherList);
 	}
 
 	/**
@@ -137,11 +158,21 @@ public class WebCrawlThread extends Thread {
 	private boolean checkExclusion(String uriString) {
 		if (exclusionMatcherList == null || exclusionMatcherList.isEmpty())
 			return false;
-		return checkMatcher(uriString, exclusionMatcherList);
+		return checkWildcardMatcher(uriString, exclusionMatcherList);
 	}
 
 	private boolean checkPatterns(String uriString) {
-		return checkInclusion(uriString) && !checkExclusion(uriString);
+		if (!checkInclusion(uriString)) {
+			if (logger.isInfoEnabled())
+				logger.info("Ignored (inclusion pattern) " + uriString);
+			return false;
+		}
+		if (checkExclusion(uriString)) {
+			if (logger.isInfoEnabled())
+				logger.info("Ignored (exclusion pattern) " + uriString);
+			return false;
+		}
+		return true;
 	}
 
 	/**
@@ -169,7 +200,7 @@ public class WebCrawlThread extends Thread {
 			return;
 		uriBuilder.clearParameters();
 		for (NameValuePair param : oldParams)
-			if (!checkMatcher(param.getName() + "=" + param.getValue(),
+			if (!checkRegExpMatcher(param.getName() + "=" + param.getValue(),
 					parametersMatcherList))
 				uriBuilder.addParameter(param.getName(), param.getValue());
 	}
@@ -208,9 +239,9 @@ public class WebCrawlThread extends Thread {
 		if (session.isAborting())
 			return;
 
-		URI uri = currentURI.getInitialUri();
+		URI uri = currentURI.getInitialURI();
 		String uriString = uri.toString();
-		session.setCurrentUri(uriString);
+		session.setCurrentURI(uriString);
 
 		// Check if the URL is well formated
 		String scheme = uri.getScheme();
@@ -218,7 +249,8 @@ public class WebCrawlThread extends Thread {
 				&& !"https".equalsIgnoreCase(scheme)) {
 			session.incIgnoredCount();
 			currentURI.setIgnored();
-			logger.info("Ignored (not http) " + uri);
+			if (logger.isInfoEnabled())
+				logger.info("Ignored (not http) " + uri);
 			return;
 		}
 
@@ -226,12 +258,12 @@ public class WebCrawlThread extends Thread {
 		if (!checkPatterns(uriString)) {
 			session.incIgnoredCount();
 			currentURI.setIgnored();
-			logger.info("Ignored (pattern lists) " + uri);
 			return;
 		}
 
 		// Load the URL
-		logger.info("Crawling " + uri);
+		if (logger.isInfoEnabled())
+			logger.info("Crawling " + uri + " (" + currentURI.getDepth() + ")");
 		try {
 			driver.get(uriString);
 		} catch (WebDriverException e) {
@@ -241,6 +273,7 @@ public class WebCrawlThread extends Thread {
 		}
 
 		try {
+			uriString = driver.getCurrentUrl();
 			uri = new URI(uriString);
 			currentURI.setFinalURI(uri);
 		} catch (URISyntaxException e) {
@@ -251,12 +284,14 @@ public class WebCrawlThread extends Thread {
 
 		// Check again with exclusion/inclusion list
 		// in case of redirection
-		uriString = driver.getCurrentUrl();
-		if (!checkPatterns(uriString)) {
-			session.incIgnoredCount();
-			currentURI.setIgnored();
-			logger.info("Ignored (pattern lists after redirection) " + uri);
-			return;
+		if (currentURI.isRedirected()) {
+			if (logger.isInfoEnabled())
+				logger.info("Redirected " + currentURI.getInitialURI() + " to " + uriString);
+			if (!checkPatterns(uriString)) {
+				session.incIgnoredCount();
+				currentURI.setIgnored();
+				return;
+			}
 		}
 
 		session.incCrawledCount();
@@ -270,6 +305,8 @@ public class WebCrawlThread extends Thread {
 		ArrayList<URI> uris = new ArrayList<URI>(hrefSet.size());
 		currentURI.hrefToURICollection(hrefSet, uris);
 		currentURI.setLinks(uris);
+		if (logger.isInfoEnabled())
+			logger.info("Link founds " + uri + " : " + uris.size());
 	}
 
 	private void crawl(Set<URI> crawledURIs, URI uri, int depth)
@@ -288,8 +325,12 @@ public class WebCrawlThread extends Thread {
 		CurrentURI currentURI = new CurrentURI(uri, depth);
 
 		script(EventEnum.before_crawl, currentURI);
-		if (!currentURI.isIgnored())
+		if (!currentURI.isIgnored()) {
 			crawl(currentURI);
+			// Store the final URI (in case of redirection)
+			if (crawledURIs != null)
+				crawledURIs.add(currentURI.getURI());
+		}
 		script(EventEnum.after_crawl, currentURI);
 
 		// Check if we reach the max depth

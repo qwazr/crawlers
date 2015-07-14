@@ -19,7 +19,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.qwazr.crawler.web.driver.BrowserDriverEnum;
+import com.qwazr.utils.StringUtils;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.*;
@@ -299,6 +301,26 @@ public class WebCrawlDefinition implements Cloneable {
 		if (inclusion_patterns == null)
 			inclusion_patterns = new ArrayList<String>();
 		inclusion_patterns.add(inclusion_pattern);
+		return this;
+	}
+
+	public WebCrawlDefinition setInclusion_pattern(String inclusion_pattern_text) throws IOException {
+		if (inclusion_pattern_text == null) {
+			inclusion_patterns = null;
+			return this;
+		}
+		inclusion_patterns = new ArrayList<String>();
+		StringUtils.linesCollector(inclusion_pattern_text, false, inclusion_patterns);
+		return this;
+	}
+
+	public WebCrawlDefinition setExclusion_pattern(String exclusion_pattern_text) throws IOException {
+		if (exclusion_pattern_text == null) {
+			exclusion_patterns = null;
+			return this;
+		}
+		exclusion_patterns = new ArrayList<String>();
+		StringUtils.linesCollector(exclusion_pattern_text, false, exclusion_patterns);
 		return this;
 	}
 
