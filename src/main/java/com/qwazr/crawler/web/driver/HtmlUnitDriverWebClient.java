@@ -16,6 +16,7 @@
 package com.qwazr.crawler.web.driver;
 
 import com.gargoylesoftware.htmlunit.BrowserVersion;
+import com.gargoylesoftware.htmlunit.NicelyResynchronizingAjaxController;
 import com.gargoylesoftware.htmlunit.WebClient;
 import org.openqa.selenium.Capabilities;
 import org.openqa.selenium.htmlunit.HtmlUnitDriver;
@@ -38,12 +39,15 @@ public class HtmlUnitDriverWebClient extends HtmlUnitDriver {
 				version.setUserLanguage(language);
 			}
 		}
+
 	}
 
 	@Override
 	protected WebClient modifyWebClient(WebClient webClient) {
 		webClient = super.modifyWebClient(webClient);
 		webClient.setRefreshHandler(null);
+		webClient.getOptions().setThrowExceptionOnScriptError(false);
+		webClient.setAjaxController(new NicelyResynchronizingAjaxController());
 		return webClient;
 	}
 
