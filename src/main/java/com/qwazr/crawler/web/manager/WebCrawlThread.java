@@ -27,7 +27,6 @@ import com.qwazr.job.script.ScriptManager;
 import com.qwazr.job.script.ScriptRunThread;
 import com.qwazr.utils.WildcardMatcher;
 import com.qwazr.utils.server.ServerException;
-import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URIBuilder;
@@ -74,7 +73,6 @@ public class WebCrawlThread extends Thread {
 		parametersMatcherList = getRegExpMatcherList(crawlDefinition.parameters_patterns);
 		exclusionMatcherList = getWildcardMatcherList(crawlDefinition.exclusion_patterns);
 		inclusionMatcherList = getWildcardMatcherList(crawlDefinition.inclusion_patterns);
-		FilenameUtils.wildcardMatch("test", "test");
 	}
 
 	private final static List<Matcher> getRegExpMatcherList(List<String> patternList)
