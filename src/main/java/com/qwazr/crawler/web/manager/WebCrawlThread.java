@@ -15,6 +15,7 @@
  **/
 package com.qwazr.crawler.web.manager;
 
+import com.google.common.net.InternetDomainName;
 import com.qwazr.cluster.manager.ClusterManager;
 import com.qwazr.crawler.web.driver.BrowserDriver;
 import com.qwazr.crawler.web.driver.BrowserDriverBuilder;
@@ -51,6 +52,7 @@ public class WebCrawlThread extends Thread {
 
 	private final CurrentSession session;
 	final WebCrawlDefinition crawlDefinition;
+	private final InternetDomainName internetDomainName;
 
 	private final List<Matcher> parametersMatcherList;
 	private final List<WildcardMatcher> exclusionMatcherList;
@@ -61,8 +63,7 @@ public class WebCrawlThread extends Thread {
 	WebCrawlThread(ThreadGroup threadGroup, String sessionName,
 				   WebCrawlDefinition crawlDefinition) throws ServerException {
 		super(threadGroup, "oss-web-crawler " + sessionName);
-		this.session = new CurrentSession(sessionName,
-				crawlDefinition.variables);
+		this.session = new CurrentSession(crawlDefinition, sessionName);
 		this.crawlDefinition = crawlDefinition;
 		if (crawlDefinition.browser_type == null)
 			throw new ServerException(Status.NOT_ACCEPTABLE,
@@ -73,6 +74,11 @@ public class WebCrawlThread extends Thread {
 		parametersMatcherList = getRegExpMatcherList(crawlDefinition.parameters_patterns);
 		exclusionMatcherList = getWildcardMatcherList(crawlDefinition.exclusion_patterns);
 		inclusionMatcherList = getWildcardMatcherList(crawlDefinition.inclusion_patterns);
+		try {
+			internetDomainName = InternetDomainName.from(new URI(crawlDefinition.entry_url).getHost());
+		} catch (URISyntaxException e) {
+			throw new ServerException(Status.NOT_ACCEPTABLE, e.getMessage());
+		}
 	}
 
 	private final static List<Matcher> getRegExpMatcherList(List<String> patternList)
@@ -218,9 +224,19 @@ public class WebCrawlThread extends Thread {
 		return linkMap.values();
 	}
 
+	private boolean matchesInitialDomain(URI uri) {
+		String host = uri.getHost();
+		if (!InternetDomainName.isValid(host))
+			return false;
+		return internetDomainName.equals(InternetDomainName.from(host));
+	}
+
 	private String scriptBeforeCrawl(CurrentURI currentURI, String uriString) throws ServerException {
+		URI uri = currentURI.getURI();
 		if (uriString == null)
-			uriString = currentURI.getURI().toString();
+			uriString = uri.toString();
+		currentURI.setStartDomain(matchesInitialDomain(uri));
+		//currentURI.setStartSubDomain(matchesInitialSubDomain(uri));
 		currentURI.setInInclusion(matchesInclusion(uriString));
 		currentURI.setInExclusion(matchesExclusion(uriString));
 		script(EventEnum.before_crawl, currentURI);

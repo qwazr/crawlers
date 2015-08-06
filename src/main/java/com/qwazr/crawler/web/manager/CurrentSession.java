@@ -15,6 +15,9 @@
  **/
 package com.qwazr.crawler.web.manager;
 
+import com.qwazr.crawler.web.service.WebCrawlDefinition;
+import org.apache.commons.collections.CollectionUtils;
+
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -22,6 +25,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class CurrentSession {
 
+	private final WebCrawlDefinition crawlDefinition;
 	private final String name;
 	private final Date startTime;
 	private final AtomicBoolean abort;
@@ -32,13 +36,14 @@ public class CurrentSession {
 	private volatile int crawledCount = 0;
 	private volatile String currentURI = null;
 
-	CurrentSession(String name, Map<String, String> variables) {
+	CurrentSession(WebCrawlDefinition crawlDefinition, String name) {
+		this.crawlDefinition = crawlDefinition;
 		this.name = name;
 		startTime = new Date();
 		abort = new AtomicBoolean(false);
 		this.variables = new ConcurrentHashMap<>();
-		if (variables != null)
-			for (Map.Entry<String, String> entry : variables.entrySet())
+		if (crawlDefinition.variables != null)
+			for (Map.Entry<String, String> entry : crawlDefinition.variables.entrySet())
 				if (entry.getKey() != null && entry.getValue() != null)
 					this.variables.put(entry.getKey(), entry.getValue());
 	}
@@ -160,5 +165,14 @@ public class CurrentSession {
 	 */
 	public void setCurrentURI(String currentURI) {
 		this.currentURI = currentURI;
+	}
+
+	public WebCrawlDefinition getCrawlDefinition() {
+		return crawlDefinition;
+	}
+
+	public boolean isURLPatterns() {
+		return crawlDefinition != null && !CollectionUtils.isEmpty(crawlDefinition.inclusion_patterns) &&
+				!CollectionUtils.isEmpty(crawlDefinition.exclusion_patterns);
 	}
 }

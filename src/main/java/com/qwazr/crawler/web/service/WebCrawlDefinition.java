@@ -46,13 +46,13 @@ public class WebCrawlDefinition implements Cloneable {
 	public List<String> parameters_patterns = null;
 
 	/**
-	 * A list of regular expression patterns. An URL is crawled only if it
+	 * A list of regular expression patterns. An URL may be crawled only if it
 	 * matches any pattern.
 	 */
 	public List<String> inclusion_patterns = null;
 
 	/**
-	 * A list of regular expression patterns. An URL will not be crawled if it
+	 * A list of regular expression patterns. An URL may not be crawled if it
 	 * matches any pattern.
 	 */
 	public List<String> exclusion_patterns = null;

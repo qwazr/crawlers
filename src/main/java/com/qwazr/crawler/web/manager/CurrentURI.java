@@ -33,6 +33,8 @@ public class CurrentURI {
 	private volatile boolean isRedirected = false;
 	private volatile boolean isInInclusion = false;
 	private volatile boolean isInExclusion = false;
+	private volatile boolean isStartDomain = false;
+	private volatile boolean isStartSubDomain = false;
 
 	private String error = null;
 
@@ -111,6 +113,22 @@ public class CurrentURI {
 
 	public Collection<URI> getLinks() {
 		return links;
+	}
+
+	void setStartDomain(boolean isStartDomain) {
+		this.isStartDomain = isStartDomain;
+	}
+
+	public boolean isStartDomain() {
+		return isStartDomain;
+	}
+
+	void setStartSubDomain(boolean isStartSubDomain) {
+		this.isStartSubDomain = isStartSubDomain;
+	}
+
+	public boolean isStartSubDomain() {
+		return isStartSubDomain;
 	}
 
 	public void hrefToURICollection(Collection<String> hrefCollection, Collection<URI> uriCollection) {
