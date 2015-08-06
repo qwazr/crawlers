@@ -141,7 +141,7 @@ public class WebCrawlThread extends Thread {
 	 * @param uriString
 	 * @return
 	 */
-	private boolean checkInclusion(String uriString) {
+	private boolean matchesInclusion(String uriString) {
 		if (inclusionMatcherList == null || inclusionMatcherList.isEmpty())
 			return true;
 		return checkWildcardMatcher(uriString, inclusionMatcherList);
@@ -153,24 +153,10 @@ public class WebCrawlThread extends Thread {
 	 * @param uriString
 	 * @return
 	 */
-	private boolean checkExclusion(String uriString) {
+	private boolean matchesExclusion(String uriString) {
 		if (exclusionMatcherList == null || exclusionMatcherList.isEmpty())
 			return false;
 		return checkWildcardMatcher(uriString, exclusionMatcherList);
-	}
-
-	private boolean checkPatterns(String uriString) {
-		if (!checkInclusion(uriString)) {
-			if (logger.isInfoEnabled())
-				logger.info("Ignored (inclusion pattern) " + uriString);
-			return false;
-		}
-		if (checkExclusion(uriString)) {
-			if (logger.isInfoEnabled())
-				logger.info("Ignored (exclusion pattern) " + uriString);
-			return false;
-		}
-		return true;
 	}
 
 	/**
@@ -232,6 +218,15 @@ public class WebCrawlThread extends Thread {
 		return linkMap.values();
 	}
 
+	private String scriptBeforeCrawl(CurrentURI currentURI, String uriString) throws ServerException {
+		if (uriString == null)
+			uriString = currentURI.getURI().toString();
+		currentURI.setInInclusion(matchesInclusion(uriString));
+		currentURI.setInExclusion(matchesExclusion(uriString));
+		script(EventEnum.before_crawl, currentURI);
+		return uriString;
+	}
+
 	private void crawl(CurrentURI currentURI) {
 
 		if (session.isAborting())
@@ -249,13 +244,6 @@ public class WebCrawlThread extends Thread {
 			currentURI.setIgnored();
 			if (logger.isInfoEnabled())
 				logger.info("Ignored (not http) " + uri);
-			return;
-		}
-
-		// Check with exclusion/inclusion list
-		if (!checkPatterns(uriString)) {
-			session.incIgnoredCount();
-			currentURI.setIgnored();
 			return;
 		}
 
@@ -285,9 +273,15 @@ public class WebCrawlThread extends Thread {
 		if (currentURI.isRedirected()) {
 			if (logger.isInfoEnabled())
 				logger.info("Redirected " + currentURI.getInitialURI() + " to " + uriString);
-			if (!checkPatterns(uriString)) {
+			try {
+				scriptBeforeCrawl(currentURI, uriString);
+			} catch (Exception e) {
+				session.incErrorCount();
+				currentURI.setError(e);
+				return;
+			}
+			if (currentURI.isIgnored()) {
 				session.incIgnoredCount();
-				currentURI.setIgnored();
 				return;
 			}
 		}
@@ -322,7 +316,7 @@ public class WebCrawlThread extends Thread {
 
 		CurrentURI currentURI = new CurrentURI(uri, depth);
 
-		script(EventEnum.before_crawl, currentURI);
+		scriptBeforeCrawl(currentURI, null);
 		if (!currentURI.isIgnored()) {
 			crawl(currentURI);
 			// Store the final URI (in case of redirection)
@@ -349,17 +343,18 @@ public class WebCrawlThread extends Thread {
 	/**
 	 * Execute the script related to the passed event.
 	 *
-	 * @param event
-	 * @param currentURI
-	 * @throws ServerException
+	 * @param event      the expected event
+	 * @param currentURI the current URI description
+	 * @return true if the script was executed, false if no script is attached to the event
+	 * @throws ServerException if the execution of the script failed
 	 */
-	private void script(EventEnum event, CurrentURI currentURI)
+	private boolean script(EventEnum event, CurrentURI currentURI)
 			throws ServerException {
 		if (crawlDefinition.scripts == null)
-			return;
+			return false;
 		Script script = crawlDefinition.scripts.get(event);
 		if (script == null)
-			return;
+			return false;
 		Map<String, Object> objects = new TreeMap<String, Object>();
 		objects.put("session", session);
 		if (script.variables != null)
@@ -372,6 +367,7 @@ public class WebCrawlThread extends Thread {
 				script.name, objects);
 		if (scriptRunThread.getException() != null)
 			throw new ServerException(scriptRunThread.getException());
+		return true;
 	}
 
 	private void runner() throws URISyntaxException,
