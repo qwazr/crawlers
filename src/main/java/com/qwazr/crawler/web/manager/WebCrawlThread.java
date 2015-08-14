@@ -226,6 +226,8 @@ public class WebCrawlThread extends Thread {
 
 	private boolean matchesInitialDomain(URI uri) {
 		String host = uri.getHost();
+		if (StringUtils.isEmpty(host))
+			return false;
 		if (!InternetDomainName.isValid(host))
 			return false;
 		return internetDomainName.equals(InternetDomainName.from(host));
