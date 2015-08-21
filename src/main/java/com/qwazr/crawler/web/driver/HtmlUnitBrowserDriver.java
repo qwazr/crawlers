@@ -53,6 +53,7 @@ public class HtmlUnitBrowserDriver extends
 				IOUtils.closeQuietly(inputStream);
 			inputStreamList.clear();
 		}
+		super.close();
 	}
 
 	public WebClient getWebClient() {
