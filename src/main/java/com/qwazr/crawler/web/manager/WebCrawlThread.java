@@ -319,7 +319,7 @@ public class WebCrawlThread extends Thread {
 			logger.info("Link founds " + uri + " : " + uris.size());
 	}
 
-	private void crawl(Set<URI> crawledURIs, URI uri, int depth)
+	private void crawlOne(final Set<URI> crawledURIs, URI uri, final Set<URI> nextLevelURIs, final int depth)
 			throws ServerException {
 
 		if (session.isAborting())
@@ -343,18 +343,37 @@ public class WebCrawlThread extends Thread {
 		}
 		script(EventEnum.after_crawl, currentURI);
 
+
+		Collection<URI> newLinks = checkLinks(currentURI.getLinks());
+		currentURI.setLinks(newLinks);
+		if (newLinks != null)
+			nextLevelURIs.addAll(newLinks);
+
+	}
+
+	private void crawlLevel(Set<URI> crawledURIs, Collection<URI> levelURIs, int depth)
+			throws ServerException {
+
+		if (session.isAborting())
+			return;
+
+		if (levelURIs == null || levelURIs.isEmpty())
+			return;
+
+		final Set<URI> nextLevelURIs = new HashSet<URI>();
+
+		// Crawl all URLs from the level
+		for (URI uri : levelURIs)
+			crawlOne(crawledURIs, uri, nextLevelURIs, depth);
+
 		// Check if we reach the max depth
 		depth++;
 		if (crawlDefinition.max_depth == null
 				|| depth > crawlDefinition.max_depth)
 			return;
 
-		currentURI.setLinks(checkLinks(currentURI.getLinks()));
-
-		// Let's crawl the childs if any
-		if (currentURI.getLinks() != null)
-			for (URI uriLink : currentURI.getLinks())
-				crawl(crawledURIs, uriLink, depth);
+		// Let's crawl the next level if any
+		crawlLevel(crawledURIs, nextLevelURIs, depth);
 
 	}
 
@@ -393,8 +412,8 @@ public class WebCrawlThread extends Thread {
 		try {
 			driver = new BrowserDriverBuilder(crawlDefinition).build();
 			script(EventEnum.before_session, null);
-			Set<URI> crawledURIs = new HashSet<URI>();
-			crawl(crawledURIs, new URI(crawlDefinition.entry_url), 0);
+			final Set<URI> crawledURIs = new HashSet<URI>();
+			crawlLevel(crawledURIs, Arrays.asList(new URI(crawlDefinition.entry_url)), 0);
 		} finally {
 			if (driver != null)
 				driver.close();
