@@ -58,8 +58,13 @@ public class WebCrawlerTool extends AbstractTool {
 		return config == null ? new WebCrawlDefinition() : (WebCrawlDefinition) config.clone();
 	}
 
-	public BrowserDriver getNewWebDriver(IOUtils.CloseableContext context, String json) throws ReflectiveOperationException, SecurityException, IOException {
+	public BrowserDriver getNewWebDriver(IOUtils.CloseableContext context, String json)
+			throws ReflectiveOperationException, SecurityException, IOException {
 		WebCrawlDefinition webCrawlDef = JsonMapper.MAPPER.readValue(json, WebCrawlDefinition.class);
 		return new BrowserDriverBuilder(webCrawlDef).build();
+	}
+
+	public BrowserDriver getNewWebDriver(IOUtils.CloseableContext context) throws ReflectiveOperationException {
+		return new BrowserDriverBuilder(config).build();
 	}
 }
