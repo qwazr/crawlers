@@ -142,24 +142,24 @@ public class WebCrawlThread extends Thread {
 	}
 
 	/**
-	 * Check the inclusion list. Returns TRUE if the inclusion list is empty.
+	 * Check the inclusion list. Returns null if the inclusion list is empty.
 	 *
 	 * @param uriString
 	 * @return
 	 */
-	private boolean matchesInclusion(String uriString) {
+	private Boolean matchesInclusion(String uriString) {
 		if (inclusionMatcherList == null || inclusionMatcherList.isEmpty())
-			return true;
+			return null;
 		return checkWildcardMatcher(uriString, inclusionMatcherList);
 	}
 
 	/**
-	 * Check the exclusion list. Returns FALSE if the exclusion list is empty.
+	 * Check the exclusion list. Returns null if the exclusion list is empty.
 	 *
 	 * @param uriString
 	 * @return
 	 */
-	private boolean matchesExclusion(String uriString) {
+	private Boolean matchesExclusion(String uriString) {
 		if (exclusionMatcherList == null || exclusionMatcherList.isEmpty())
 			return false;
 		return checkWildcardMatcher(uriString, exclusionMatcherList);

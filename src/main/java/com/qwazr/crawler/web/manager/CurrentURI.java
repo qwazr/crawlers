@@ -31,8 +31,8 @@ public class CurrentURI {
 	private volatile boolean isIgnored = false;
 	private volatile boolean isCrawled = false;
 	private volatile boolean isRedirected = false;
-	private volatile boolean isInInclusion = false;
-	private volatile boolean isInExclusion = false;
+	private volatile Boolean isInInclusion = null;
+	private volatile Boolean isInExclusion = null;
 	private volatile boolean isStartDomain = false;
 	private volatile boolean isStartSubDomain = false;
 
@@ -63,19 +63,19 @@ public class CurrentURI {
 			isRedirected = !finalURI.equals(initialURI);
 	}
 
-	public void setInInclusion(boolean isInInclusion) {
+	public void setInInclusion(Boolean isInInclusion) {
 		this.isInInclusion = isInInclusion;
 	}
 
-	public boolean isInInclusion() {
+	public Boolean isInInclusion() {
 		return isInInclusion;
 	}
 
-	public void setInExclusion(boolean isInExclusion) {
+	public void setInExclusion(Boolean isInExclusion) {
 		this.isInExclusion = isInExclusion;
 	}
 
-	public boolean isInExclusion() {
+	public Boolean isInExclusion() {
 		return isInExclusion;
 	}
 
