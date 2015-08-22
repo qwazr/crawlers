@@ -79,8 +79,8 @@ public class CurrentURI {
 		return isInExclusion;
 	}
 
-	public void setIgnored() {
-		isIgnored = true;
+	public void setIgnored(boolean ignored) {
+		isIgnored = ignored;
 	}
 
 	public boolean isIgnored() {

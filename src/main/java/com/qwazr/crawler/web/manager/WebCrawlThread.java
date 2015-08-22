@@ -237,10 +237,21 @@ public class WebCrawlThread extends Thread {
 		URI uri = currentURI.getURI();
 		if (uriString == null)
 			uriString = uri.toString();
+
+
 		currentURI.setStartDomain(matchesInitialDomain(uri));
 		//currentURI.setStartSubDomain(matchesInitialSubDomain(uri));
+
+		//We check the inclusion/exclusion.
 		currentURI.setInInclusion(matchesInclusion(uriString));
 		currentURI.setInExclusion(matchesExclusion(uriString));
+
+		if (currentURI.isInInclusion() != null && !currentURI.isInInclusion())
+			currentURI.setIgnored(true);
+
+		if (currentURI.isInExclusion() != null && currentURI.isInExclusion())
+			currentURI.setIgnored(true);
+
 		script(EventEnum.before_crawl, currentURI);
 		return uriString;
 	}
@@ -259,7 +270,7 @@ public class WebCrawlThread extends Thread {
 		if (!"http".equalsIgnoreCase(scheme)
 				&& !"https".equalsIgnoreCase(scheme)) {
 			session.incIgnoredCount();
-			currentURI.setIgnored();
+			currentURI.setIgnored(true);
 			if (logger.isInfoEnabled())
 				logger.info("Ignored (not http) " + uri);
 			return;
@@ -334,7 +345,9 @@ public class WebCrawlThread extends Thread {
 
 		CurrentURI currentURI = new CurrentURI(uri, depth);
 
+		// Give the hand to the "before_crawl" script
 		scriptBeforeCrawl(currentURI, null);
+
 		if (!currentURI.isIgnored()) {
 			crawl(currentURI);
 			// Store the final URI (in case of redirection)
