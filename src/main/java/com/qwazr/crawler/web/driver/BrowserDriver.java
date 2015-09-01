@@ -168,7 +168,7 @@ public abstract class BrowserDriver<T extends WebDriver> implements WebDriver,
 	 */
 	final public void findLinks(SearchContext searchContext, Collection<String> hrefCollection) {
 		// Let's look for the a tags
-		List<WebElement> links = driver.findElements(By.tagName("a"));
+		List<WebElement> links = searchContext.findElements(By.tagName("a"));
 		if (links == null || links.isEmpty())
 			return;
 

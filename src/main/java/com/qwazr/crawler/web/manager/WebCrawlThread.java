@@ -356,6 +356,11 @@ public class WebCrawlThread extends Thread {
 		}
 		script(EventEnum.after_crawl, currentURI);
 
+		Collection<URI> sameLevelLinks = checkLinks(currentURI.getSameLevelLinks());
+		if (sameLevelLinks != null)
+			for (URI sameLevelURI : sameLevelLinks)
+				crawlOne(crawledURIs, sameLevelURI, nextLevelURIs, depth);
+
 
 		Collection<URI> newLinks = checkLinks(currentURI.getLinks());
 		currentURI.setLinks(newLinks);

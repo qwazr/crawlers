@@ -38,7 +38,8 @@ public class CurrentURI {
 
 	private String error = null;
 
-	private volatile Collection<URI> links = null;
+	private volatile Collection<URI> sameLevelLinks = null;
+	private volatile Collection<URI> nextLevelLinks = null;
 
 	CurrentURI(URI uri, Integer depth) {
 		this.initialURI = uri;
@@ -107,12 +108,20 @@ public class CurrentURI {
 		return error;
 	}
 
+	public void setSameLevelLinks(Collection<URI> links) {
+		this.sameLevelLinks = links;
+	}
+
+	public Collection<URI> getSameLevelLinks() {
+		return sameLevelLinks;
+	}
+
 	public void setLinks(Collection<URI> links) {
-		this.links = links;
+		this.nextLevelLinks = links;
 	}
 
 	public Collection<URI> getLinks() {
-		return links;
+		return nextLevelLinks;
 	}
 
 	void setStartDomain(boolean isStartDomain) {
@@ -142,6 +151,5 @@ public class CurrentURI {
 				uriCollection.add(resolvedURI);
 		}
 	}
-
 
 }
