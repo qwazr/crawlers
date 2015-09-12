@@ -51,12 +51,14 @@ public class WebCrawlStatus {
 		final public int ignored;
 		final public int error;
 		final public String current_uri;
+		final public Integer current_depth;
 
 		public UrlStatus() {
 			crawled = 0;
 			ignored = 0;
 			error = 0;
 			current_uri = null;
+			current_depth = null;
 		}
 
 		public UrlStatus(CurrentSession session) {
@@ -64,6 +66,7 @@ public class WebCrawlStatus {
 			this.ignored = session.getIgnoredCount();
 			this.error = session.getErrorCount();
 			this.current_uri = session.getCurrentURI();
+			this.current_depth = session.getCurrentDepth();
 		}
 	}
 }

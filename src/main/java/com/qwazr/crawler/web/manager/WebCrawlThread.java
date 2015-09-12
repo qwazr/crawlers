@@ -263,7 +263,7 @@ public class WebCrawlThread extends Thread {
 
 		URI uri = currentURI.getInitialURI();
 		String uriString = uri.toString();
-		session.setCurrentURI(uriString);
+		session.setCurrentURI(uriString, currentURI.getDepth());
 
 		// Check if the URL is well formated
 		String scheme = uri.getScheme();
@@ -315,8 +315,11 @@ public class WebCrawlThread extends Thread {
 			}
 		}
 
-		session.incCrawledCount();
+		int crawledCount = session.incCrawledCount();
 		currentURI.setCrawled();
+		if (crawlDefinition.max_url_number != null && crawledCount >= crawlDefinition.max_url_number)
+			abort();
+
 
 		// Let's look for the a tags
 		Set<String> hrefSet = new LinkedHashSet<String>();

@@ -40,6 +40,11 @@ public class WebCrawlDefinition implements Cloneable {
 	public Integer max_depth = null;
 
 	/**
+	 * The maximum number of URLs
+	 */
+	public Integer max_url_number = null;
+
+	/**
 	 * A list of regular expression patterns. Any parameters which matches is
 	 * removed.
 	 */

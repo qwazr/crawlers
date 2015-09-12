@@ -35,6 +35,7 @@ public class CurrentSession {
 	private volatile int errorCount = 0;
 	private volatile int crawledCount = 0;
 	private volatile String currentURI = null;
+	private volatile Integer currentDepth = null;
 
 	CurrentSession(WebCrawlDefinition crawlDefinition, String name) {
 		this.crawlDefinition = crawlDefinition;
@@ -106,8 +107,8 @@ public class CurrentSession {
 		return abort.get();
 	}
 
-	void incIgnoredCount() {
-		ignoredCount++;
+	synchronized int incIgnoredCount() {
+		return ignoredCount++;
 	}
 
 	/**
@@ -117,8 +118,8 @@ public class CurrentSession {
 		return ignoredCount;
 	}
 
-	void incCrawledCount() {
-		crawledCount++;
+	synchronized int incCrawledCount() {
+		return crawledCount++;
 	}
 
 	/**
@@ -128,8 +129,8 @@ public class CurrentSession {
 		return crawledCount;
 	}
 
-	void incErrorCount() {
-		errorCount++;
+	synchronized int incErrorCount() {
+		return errorCount++;
 	}
 
 	/**
@@ -161,10 +162,18 @@ public class CurrentSession {
 	}
 
 	/**
+	 * @return the currentDepth
+	 */
+	public Integer getCurrentDepth() {
+		return currentDepth;
+	}
+
+	/**
 	 * @param currentURI the currentURI to set
 	 */
-	public void setCurrentURI(String currentURI) {
+	synchronized public void setCurrentURI(String currentURI, Integer currentDepth) {
 		this.currentURI = currentURI;
+		this.currentDepth = currentDepth;
 	}
 
 	public WebCrawlDefinition getCrawlDefinition() {
