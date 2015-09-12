@@ -295,6 +295,11 @@ public class WebCrawlDefinition implements Cloneable {
 		return this;
 	}
 
+	public WebCrawlDefinition setMax_url_number(Integer max_url_number) {
+		this.max_url_number = max_url_number;
+		return this;
+	}
+
 	public WebCrawlDefinition addParameters_pattern(String parameters_pattern) {
 		if (parameters_patterns == null)
 			parameters_patterns = new ArrayList<String>();
