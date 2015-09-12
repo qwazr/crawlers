@@ -29,19 +29,28 @@ public class WebCrawlStatus {
 	final public Date start_time;
 	final public State state;
 	final public String entry_url;
+	final public Boolean aborting;
+	final public String aborting_reason;
 	final public UrlStatus urls;
 
 	public WebCrawlStatus() {
-		this(null, null, null, null, null);
+		node_address = null;
+		start_time = null;
+		state = null;
+		entry_url = null;
+		aborting = null;
+		aborting_reason = null;
+		urls = null;
 	}
 
-	public WebCrawlStatus(String node_address, String entry_url,
-						  Date start_time, State state, UrlStatus urls) {
+	public WebCrawlStatus(String node_address, String entry_url, State state, CurrentSession session) {
 		this.node_address = node_address;
 		this.entry_url = entry_url;
-		this.start_time = start_time;
+		this.start_time = session.getStartTime();
 		this.state = state;
-		this.urls = urls;
+		this.aborting = session.isAborting();
+		this.aborting_reason = session.getAbortingReason();
+		this.urls = new UrlStatus(session);
 	}
 
 	@JsonInclude(Include.NON_EMPTY)
@@ -61,7 +70,7 @@ public class WebCrawlStatus {
 			current_depth = null;
 		}
 
-		public UrlStatus(CurrentSession session) {
+		private UrlStatus(CurrentSession session) {
 			this.crawled = session.getCrawledCount();
 			this.ignored = session.getIgnoredCount();
 			this.error = session.getErrorCount();

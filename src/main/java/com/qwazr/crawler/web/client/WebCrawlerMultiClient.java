@@ -104,7 +104,7 @@ public class WebCrawlerMultiClient extends
 	}
 
 	@Override
-	public Response abortSession(String session_name, Boolean local) {
+	public Response abortSession(String session_name, String reason, Boolean local) {
 
 		// Is it local ?
 		if (local != null && local) {
@@ -113,14 +113,14 @@ public class WebCrawlerMultiClient extends
 				throw new ServerException(Status.NOT_ACCEPTABLE,
 						"Node not valid: " + ClusterManager.INSTANCE.myAddress)
 						.getJsonException();
-			return client.abortSession(session_name, true);
+			return client.abortSession(session_name, reason, true);
 		}
 
 		// Global, we abort on every nodes
 		boolean aborted = false;
 		for (WebCrawlerSingleClient client : this) {
 			try {
-				int code = client.abortSession(session_name, true).getStatus();
+				int code = client.abortSession(session_name, reason, true).getStatus();
 				if (code == 200 || code == 202)
 					aborted = true;
 			} catch (WebApplicationException e) {

@@ -86,15 +86,16 @@ public class WebCrawlerManager {
 		}
 	}
 
-	public void abortSession(String session_name) throws ServerException {
+	public void abortSession(String session_name, String abortingReason) throws ServerException {
 		rwlSessionMap.r.lock();
 		try {
 			WebCrawlThread crawlThread = crawlSessionMap.get(session_name);
 			if (crawlThread == null)
 				throw new ServerException(Status.NOT_FOUND,
 						"Session not found: " + session_name);
-			logger.info("Aborting session: " + session_name);
-			crawlThread.abort();
+			if (logger.isInfoEnabled())
+				logger.info("Aborting session: " + session_name + " - " + abortingReason);
+			crawlThread.abort(abortingReason);
 		} finally {
 			rwlSessionMap.r.unlock();
 		}
@@ -107,7 +108,8 @@ public class WebCrawlerManager {
 			if (crawlSessionMap.containsKey(session_name))
 				throw new ServerException(Status.CONFLICT,
 						"The session already exists: " + session_name);
-			logger.info("Create session: " + session_name);
+			if (logger.isInfoEnabled())
+				logger.info("Create session: " + session_name);
 			WebCrawlThread crawlThread = new WebCrawlThread(threadGroup,
 					session_name, crawlJson);
 			crawlSessionMap.put(session_name, crawlThread);
@@ -122,7 +124,8 @@ public class WebCrawlerManager {
 		rwlSessionMap.w.lock();
 		try {
 			String sessionName = crawlThread.getSessionName();
-			logger.info("Remove session: " + sessionName);
+			if (logger.isInfoEnabled())
+				logger.info("Remove session: " + sessionName);
 			crawlSessionMap.remove(sessionName, crawlThread);
 		} finally {
 			rwlSessionMap.w.unlock();

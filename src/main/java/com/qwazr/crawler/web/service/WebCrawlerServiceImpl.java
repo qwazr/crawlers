@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,14 +15,13 @@
  **/
 package com.qwazr.crawler.web.service;
 
-import java.net.URISyntaxException;
-import java.util.TreeMap;
+import com.qwazr.crawler.web.manager.WebCrawlerManager;
+import com.qwazr.utils.server.ServerException;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
-
-import com.qwazr.crawler.web.manager.WebCrawlerManager;
-import com.qwazr.utils.server.ServerException;
+import java.net.URISyntaxException;
+import java.util.TreeMap;
 
 public class WebCrawlerServiceImpl implements WebCrawlerServiceInterface {
 
@@ -63,13 +62,13 @@ public class WebCrawlerServiceImpl implements WebCrawlerServiceInterface {
 	}
 
 	@Override
-	public Response abortSession(String session_name, Boolean local) {
+	public Response abortSession(String session_name, String reason, Boolean local) {
 		try {
 			if (local != null && local) {
-				WebCrawlerManager.INSTANCE.abortSession(session_name);
+				WebCrawlerManager.INSTANCE.abortSession(session_name, reason);
 				return Response.accepted().build();
 			}
-			return WebCrawlerManager.getClient().abortSession(session_name,
+			return WebCrawlerManager.getClient().abortSession(session_name, reason,
 					false);
 		} catch (ServerException | URISyntaxException e) {
 			throw ServerException.getTextException(e);
@@ -78,7 +77,7 @@ public class WebCrawlerServiceImpl implements WebCrawlerServiceInterface {
 
 	@Override
 	public WebCrawlStatus runSession(String session_name,
-			WebCrawlDefinition crawlDefinition) {
+									 WebCrawlDefinition crawlDefinition) {
 		try {
 			return WebCrawlerManager.INSTANCE.runSession(session_name,
 					crawlDefinition);

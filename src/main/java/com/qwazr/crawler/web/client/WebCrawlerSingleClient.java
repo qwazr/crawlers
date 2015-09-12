@@ -40,8 +40,9 @@ public class WebCrawlerSingleClient extends JsonClientAbstract implements
 		super(url, msTimeOut);
 	}
 
-	public final static TypeReference<TreeMap<String, WebCrawlStatus>> TreeMapStringCrawlTypeRef = new TypeReference<TreeMap<String, WebCrawlStatus>>() {
-	};
+	public final static TypeReference<TreeMap<String, WebCrawlStatus>> TreeMapStringCrawlTypeRef =
+			new TypeReference<TreeMap<String, WebCrawlStatus>>() {
+			};
 
 	@Override
 	public TreeMap<String, WebCrawlStatus> getSessions(Boolean local) {
@@ -62,10 +63,10 @@ public class WebCrawlerSingleClient extends JsonClientAbstract implements
 	}
 
 	@Override
-	public Response abortSession(String session_name, Boolean local) {
+	public Response abortSession(String session_name, String reason, Boolean local) {
 		try {
 			UBuilder uriBuilder = new UBuilder("/crawler/web/sessions/",
-					session_name).setParameters(local, null);
+					session_name).setParameters(local, null).setParameterObject("reason", reason);
 			Request request = Request.Delete(uriBuilder.build());
 			HttpResponse response = execute(request, null, msTimeOut);
 			HttpUtils.checkStatusCodes(response, 200, 202);

@@ -23,7 +23,6 @@ import com.qwazr.crawler.web.service.WebCrawlDefinition;
 import com.qwazr.crawler.web.service.WebCrawlDefinition.EventEnum;
 import com.qwazr.crawler.web.service.WebCrawlDefinition.Script;
 import com.qwazr.crawler.web.service.WebCrawlStatus;
-import com.qwazr.crawler.web.service.WebCrawlStatus.UrlStatus;
 import com.qwazr.job.script.ScriptManager;
 import com.qwazr.job.script.ScriptRunThread;
 import com.qwazr.utils.WildcardMatcher;
@@ -115,12 +114,11 @@ public class WebCrawlThread extends Thread {
 
 	WebCrawlStatus getStatus() {
 		return new WebCrawlStatus(ClusterManager.INSTANCE.myAddress,
-				crawlDefinition.entry_url, session.getStartTime(),
-				this.getState(), new UrlStatus(session));
+				crawlDefinition.entry_url, this.getState(), session);
 	}
 
-	void abort() {
-		session.abort();
+	void abort(String reason) {
+		session.abort(reason);
 	}
 
 	private final static boolean checkRegExpMatcher(String value,
@@ -318,7 +316,7 @@ public class WebCrawlThread extends Thread {
 		int crawledCount = session.incCrawledCount();
 		currentURI.setCrawled();
 		if (crawlDefinition.max_url_number != null && crawledCount >= crawlDefinition.max_url_number)
-			abort();
+			abort("Max URL number reached: " + crawlDefinition.max_url_number);
 
 
 		// Let's look for the a tags
