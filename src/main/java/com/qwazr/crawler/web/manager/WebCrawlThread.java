@@ -424,7 +424,8 @@ public class WebCrawlThread extends Thread {
 	}
     }
 
-    @Override final public void run() {
+    @Override
+    final public void run() {
 	try {
 	    runner();
 	} catch (Exception e) {
