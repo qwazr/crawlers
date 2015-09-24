@@ -161,7 +161,7 @@ public abstract class BrowserDriver<T extends WebDriver> implements WebDriver, C
      * @param searchContext  the root of the search
      * @param hrefCollection the collection filled with the href content
      */
-    final public void findLinks(SearchContext searchContext, Collection<String> hrefCollection) {
+    public void findLinks(SearchContext searchContext, Collection<String> hrefCollection) {
 	// Let's look for the a tags
 	List<WebElement> links = searchContext.findElements(By.tagName("a"));
 	if (links == null || links.isEmpty())
@@ -177,4 +177,5 @@ public abstract class BrowserDriver<T extends WebDriver> implements WebDriver, C
 	    hrefCollection.add(href);
 	}
     }
+
 }
