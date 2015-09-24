@@ -71,7 +71,11 @@ public class WebCrawlThread extends Thread {
 	exclusionMatcherList = getWildcardMatcherList(crawlDefinition.exclusion_patterns);
 	inclusionMatcherList = getWildcardMatcherList(crawlDefinition.inclusion_patterns);
 	try {
-	    internetDomainName = InternetDomainName.from(new URI(crawlDefinition.entry_url).getHost());
+	    URI uri = new URI(crawlDefinition.entry_url);
+	    String host = uri.getHost();
+	    if (host == null)
+		throw new URISyntaxException(crawlDefinition.entry_url, "No host found.", -1);
+	    internetDomainName = InternetDomainName.from(host);
 	} catch (URISyntaxException e) {
 	    throw new ServerException(Status.NOT_ACCEPTABLE, e.getMessage());
 	}
