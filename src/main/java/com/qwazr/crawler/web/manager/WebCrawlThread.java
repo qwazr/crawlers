@@ -320,6 +320,8 @@ public class WebCrawlThread extends Thread {
 	    }
 	} catch (org.openqa.selenium.NoSuchElementException e) {
 	    // OK that's not en error
+	} catch (Exception e) {
+	    logger.warn("Cannot locate base href for " + uriString, e);
 	}
 
 	int crawledCount = session.incCrawledCount();
@@ -329,7 +331,11 @@ public class WebCrawlThread extends Thread {
 
 	// Let's look for the a tags
 	Set<String> hrefSet = new LinkedHashSet<String>();
-	driver.findLinks(driver, hrefSet);
+	try {
+	    driver.findLinks(driver, hrefSet);
+	} catch (Exception e) {
+	    logger.warn("Cannot extract links from " + uriString, e);
+	}
 	if (hrefSet.isEmpty())
 	    return;
 	ArrayList<URI> uris = new ArrayList<URI>(hrefSet.size());
