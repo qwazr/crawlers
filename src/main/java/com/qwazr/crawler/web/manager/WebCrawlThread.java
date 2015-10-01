@@ -30,7 +30,9 @@ import com.qwazr.utils.server.ServerException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URIBuilder;
+import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriverException;
+import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,7 +61,7 @@ public class WebCrawlThread extends Thread {
     private BrowserDriver<?> driver = null;
 
     WebCrawlThread(ThreadGroup threadGroup, String sessionName, WebCrawlDefinition crawlDefinition)
-		    throws ServerException {
+	    throws ServerException {
 	super(threadGroup, "oss-web-crawler " + sessionName);
 	this.session = new CurrentSession(crawlDefinition, sessionName);
 	this.crawlDefinition = crawlDefinition;
@@ -111,7 +113,7 @@ public class WebCrawlThread extends Thread {
 
     WebCrawlStatus getStatus() {
 	return new WebCrawlStatus(ClusterManager.INSTANCE.myAddress, crawlDefinition.entry_url, this.getState(),
-			session);
+		session);
     }
 
     void abort(String reason) {
@@ -231,9 +233,9 @@ public class WebCrawlThread extends Thread {
 	    uriString = uri.toString();
 
 	currentURI.setStartDomain(matchesInitialDomain(uri));
-	//currentURI.setStartSubDomain(matchesInitialSubDomain(uri));
+	// currentURI.setStartSubDomain(matchesInitialSubDomain(uri));
 
-	//We check the inclusion/exclusion.
+	// We check the inclusion/exclusion.
 	currentURI.setInInclusion(matchesInclusion(uriString));
 	currentURI.setInExclusion(matchesExclusion(uriString));
 
@@ -305,6 +307,21 @@ public class WebCrawlThread extends Thread {
 	    }
 	}
 
+	// Support of the base/href element
+	try {
+	    WebElement baseElement = driver.findElement(By.tagName("base"));
+	    if (baseElement != null) {
+		String href = baseElement.getAttribute("href");
+		try {
+		    currentURI.setBaseURI(new URI(href));
+		} catch (URISyntaxException e) {
+		    logger.warn("Invalid URI in base HREF: " + href + " in " + uriString);
+		}
+	    }
+	} catch (org.openqa.selenium.NoSuchElementException e) {
+	    // OK that's not en error
+	}
+
 	int crawledCount = session.incCrawledCount();
 	currentURI.setCrawled();
 	if (crawlDefinition.max_url_number != null && crawledCount >= crawlDefinition.max_url_number)
@@ -323,7 +340,7 @@ public class WebCrawlThread extends Thread {
     }
 
     private void crawlOne(final Set<URI> crawledURIs, URI uri, final Set<URI> nextLevelURIs, final int depth)
-		    throws ServerException, IOException {
+	    throws ServerException, IOException {
 
 	if (session.isAborting())
 	    return;
@@ -360,8 +377,8 @@ public class WebCrawlThread extends Thread {
 
     }
 
-    private void crawlLevel(Set<URI> crawledURIs, Collection<URI> levelURIs, int depth)
-		    throws ServerException, IOException {
+    private void crawlLevel(Set<URI> crawledURIs, Collection<URI> levelURIs, int depth) throws ServerException,
+	    IOException {
 
 	if (session.isAborting())
 	    return;
@@ -388,11 +405,16 @@ public class WebCrawlThread extends Thread {
     /**
      * Execute the script related to the passed event.
      *
-     * @param event      the expected event
-     * @param currentURI the current URI description
-     * @return true if the script was executed, false if no script is attached to the event
-     * @throws ServerException if the execution of the script failed
-     * @throws IOException     if any I/O exception occurs
+     * @param event
+     *            the expected event
+     * @param currentURI
+     *            the current URI description
+     * @return true if the script was executed, false if no script is attached
+     *         to the event
+     * @throws ServerException
+     *             if the execution of the script failed
+     * @throws IOException
+     *             if any I/O exception occurs
      */
     private boolean script(EventEnum event, CurrentURI currentURI) throws ServerException, IOException {
 	if (crawlDefinition.scripts == null)
@@ -415,7 +437,7 @@ public class WebCrawlThread extends Thread {
     }
 
     private void runner() throws URISyntaxException, IOException, ScriptException, ServerException,
-		    ReflectiveOperationException {
+	    ReflectiveOperationException {
 	try {
 	    driver = new BrowserDriverBuilder(crawlDefinition).build();
 	    script(EventEnum.before_session, null);
