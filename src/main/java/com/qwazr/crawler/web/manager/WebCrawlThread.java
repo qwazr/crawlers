@@ -319,9 +319,11 @@ public class WebCrawlThread extends Thread {
 		}
 	    }
 	} catch (org.openqa.selenium.NoSuchElementException e) {
-	    // OK that's not en error
+	    // OK that's not really an error
+	} catch (IllegalStateException e) {
+	    logger.warn("Cannot locate base href for " + uriString + " " + e.getMessage());
 	} catch (Exception e) {
-	    logger.warn("Cannot locate base href for " + uriString, e);
+	    logger.warn("Cannot locate base href for " + uriString + " " + e.getMessage());
 	}
 
 	int crawledCount = session.incCrawledCount();
