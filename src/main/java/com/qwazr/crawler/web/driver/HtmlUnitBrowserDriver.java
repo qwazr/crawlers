@@ -16,9 +16,11 @@
 package com.qwazr.crawler.web.driver;
 
 import com.gargoylesoftware.htmlunit.*;
+import com.gargoylesoftware.htmlunit.html.DomElement;
 import com.qwazr.crawler.web.service.WebRequestDefinition;
 import com.qwazr.utils.IOUtils;
 import org.openqa.selenium.Capabilities;
+import org.openqa.selenium.WebElement;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -132,6 +134,10 @@ public class HtmlUnitBrowserDriver extends BrowserDriver<HtmlUnitDriverWebClient
     public Page request(String json) throws IOException {
 	WebRequestDefinition webRequestDef = MAPPER.readValue(json, WebRequestDefinition.class);
 	return getWebClient().getPage(webRequestDef.getNewWebRequest());
+    }
+
+    public WebElement convertNode(DomElement node) {
+	return driver.convertNode(node);
     }
 
 }
