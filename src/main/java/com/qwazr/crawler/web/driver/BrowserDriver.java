@@ -156,25 +156,36 @@ public abstract class BrowserDriver<T extends WebDriver> implements WebDriver, C
     }
 
     /**
-     * Fill a list with all the href attributes found in a tag, relative to the given rootElement
+     * Fill a list with all the href attributes found in a tag, relative to the
+     * given rootElement
      *
-     * @param searchContext  the root of the search
-     * @param hrefCollection the collection filled with the href content
+     * @param searchContext
+     *            the root of the search
+     * @param hrefCollection
+     *            the collection filled with the href content
      */
     public void findLinks(SearchContext searchContext, Collection<String> hrefCollection) {
+	extractLinks(searchContext, hrefCollection, "a", "href", "data-href");
+	extractLinks(searchContext, hrefCollection, "div", "data-href");
+    }
+
+    private void extractLinks(SearchContext searchContext, Collection<String> hrefCollection, String tag,
+	    String... attrs) {
+
 	// Let's look for the a tags
-	List<WebElement> links = searchContext.findElements(By.tagName("a"));
+	List<WebElement> links = searchContext.findElements(By.tagName(tag));
 	if (links == null || links.isEmpty())
 	    return;
 
 	// Building the URI list
 	for (WebElement link : links) {
-	    String href = link.getAttribute("href");
-	    if (href == null)
-		href = link.getAttribute("data-href");
-	    if (href == null)
-		continue;
-	    hrefCollection.add(href);
+	    for (String attr : attrs) {
+		String href = link.getAttribute(attr);
+		if (href != null) {
+		    hrefCollection.add(href);
+		    break;
+		}
+	    }
 	}
     }
 
