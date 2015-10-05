@@ -31,7 +31,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URIBuilder;
 import org.openqa.selenium.By;
-import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -273,7 +272,7 @@ public class WebCrawlThread extends Thread {
 	    logger.info("Crawling " + uri + " (" + currentURI.getDepth() + ")");
 	try {
 	    driver.get(uriString);
-	} catch (WebDriverException e) {
+	} catch (Exception e) {
 	    session.incErrorCount();
 	    currentURI.setError(e);
 	    return;
