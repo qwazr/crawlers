@@ -167,6 +167,7 @@ public abstract class BrowserDriver<T extends WebDriver> implements WebDriver, C
     public void findLinks(SearchContext searchContext, Collection<String> hrefCollection) {
 	extractLinks(searchContext, hrefCollection, "a", "href", "data-href");
 	extractLinks(searchContext, hrefCollection, "div", "data-href");
+	extractLinks(searchContext, hrefCollection, "frame", "src");
     }
 
     private void extractLinks(SearchContext searchContext, Collection<String> hrefCollection, String tag,
