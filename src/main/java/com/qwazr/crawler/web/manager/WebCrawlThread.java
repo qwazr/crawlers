@@ -232,7 +232,6 @@ public class WebCrawlThread extends Thread {
 	    uriString = uri.toString();
 
 	currentURI.setStartDomain(matchesInitialDomain(uri));
-	// currentURI.setStartSubDomain(matchesInitialSubDomain(uri));
 
 	// We check the inclusion/exclusion.
 	currentURI.setInInclusion(matchesInclusion(uriString));

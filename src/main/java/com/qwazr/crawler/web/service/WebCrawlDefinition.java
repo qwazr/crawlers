@@ -18,8 +18,6 @@ package com.qwazr.crawler.web.service;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.gargoylesoftware.htmlunit.BrowserVersion;
-import com.gargoylesoftware.htmlunit.javascript.configuration.BrowserName;
 import com.qwazr.crawler.web.driver.BrowserDriverEnum;
 import com.qwazr.utils.StringUtils;
 
