@@ -31,163 +31,161 @@ import java.util.concurrent.TimeUnit;
 
 public abstract class BrowserDriver<T extends WebDriver> implements WebDriver, Closeable {
 
-    private static final Logger logger = LoggerFactory.getLogger(BrowserDriver.class);
+	private static final Logger logger = LoggerFactory.getLogger(BrowserDriver.class);
 
-    protected final BrowserDriverEnum type;
-    protected T driver = null;
+	protected final BrowserDriverEnum type;
+	protected T driver = null;
 
-    protected BrowserDriver(BrowserDriverEnum type, Capabilities cap) {
-	this.type = type;
-	driver = initialize(cap);
-	Timeouts timeouts = driver.manage().timeouts();
-	timeouts.implicitlyWait(1, TimeUnit.MINUTES);
-	timeouts.setScriptTimeout(2, TimeUnit.MINUTES);
-	timeouts.pageLoadTimeout(3, TimeUnit.MINUTES);
-    }
-
-    protected abstract T initialize(Capabilities cap);
-
-    @Override
-    public void close() {
-	if (driver == null)
-	    return;
-	driver.quit();
-	driver = null;
-    }
-
-    @Override
-    final public void get(String sUrl) {
-	driver.get(sUrl);
-    }
-
-    public BrowserDriverEnum getType() {
-	return type;
-    }
-
-    public Object executeScript(String javascript, boolean faultTolerant, Object... objects) {
-	try {
-	    if (!(driver instanceof JavascriptExecutor))
-		throw new WebDriverException("The Web driver does not support javascript execution");
-	    JavascriptExecutor js = (JavascriptExecutor) driver;
-	    return js.executeScript(javascript, objects);
-	} catch (WebDriverException e) {
-	    if (!faultTolerant)
-		throw e;
-	    logger.warn(e.getMessage(), e);
-	    return null;
+	protected BrowserDriver(BrowserDriverEnum type, Capabilities cap) {
+		this.type = type;
+		driver = initialize(cap);
+		Timeouts timeouts = driver.manage().timeouts();
+		timeouts.implicitlyWait(1, TimeUnit.MINUTES);
+		timeouts.setScriptTimeout(2, TimeUnit.MINUTES);
+		timeouts.pageLoadTimeout(3, TimeUnit.MINUTES);
 	}
-    }
 
-    final public BufferedImage getScreenshot() throws IOException {
-	if (!(driver instanceof TakesScreenshot))
-	    throw new WebDriverException("This browser driver does not support screenshot");
-	TakesScreenshot takesScreenshot = (TakesScreenshot) driver;
-	byte[] data = takesScreenshot.getScreenshotAs(OutputType.BYTES);
-	return ImageIO.read(new ByteArrayInputStream(data));
-    }
+	protected abstract T initialize(Capabilities cap);
 
-    @Override
-    final public String getTitle() {
-	return driver.getTitle();
-    }
+	@Override
+	public void close() {
+		if (driver == null)
+			return;
+		driver.quit();
+		driver = null;
+	}
 
-    final public void setSize(int width, int height) {
-	driver.manage().window().setSize(new Dimension(width, height));
-    }
+	@Override
+	final public void get(String sUrl) {
+		driver.get(sUrl);
+	}
 
-    final public void setTimeouts(Integer impWait, Integer pageLoad, Integer script) {
-	Timeouts timeOuts = driver.manage().timeouts();
-	if (impWait != null)
-	    timeOuts.implicitlyWait(impWait, TimeUnit.SECONDS);
-	if (pageLoad != null)
-	    timeOuts.pageLoadTimeout(pageLoad, TimeUnit.SECONDS);
-	if (script != null)
-	    timeOuts.setScriptTimeout(script, TimeUnit.SECONDS);
-    }
+	public BrowserDriverEnum getType() {
+		return type;
+	}
 
-    @Override
-    final public List<WebElement> findElements(By by) {
-	return driver.findElements(by);
-    }
-
-    @Override
-    final public String getWindowHandle() {
-	return driver.getWindowHandle();
-    }
-
-    @Override
-    final public String getCurrentUrl() {
-	return driver.getCurrentUrl();
-    }
-
-    @Override
-    final public WebElement findElement(By by) {
-	return driver.findElement(by);
-    }
-
-    @Override
-    final public String getPageSource() {
-	return driver.getPageSource();
-    }
-
-    @Override
-    final public void quit() {
-	driver.quit();
-    }
-
-    @Override
-    final public Set<String> getWindowHandles() {
-	return driver.getWindowHandles();
-    }
-
-    @Override
-    final public TargetLocator switchTo() {
-	return driver.switchTo();
-    }
-
-    @Override
-    final public Navigation navigate() {
-	return driver.navigate();
-    }
-
-    @Override
-    final public Options manage() {
-	return driver.manage();
-    }
-
-    /**
-     * Fill a list with all the href attributes found in a tag, relative to the
-     * given rootElement
-     *
-     * @param searchContext
-     *            the root of the search
-     * @param hrefCollection
-     *            the collection filled with the href content
-     */
-    public void findLinks(SearchContext searchContext, Collection<String> hrefCollection) {
-	extractLinks(searchContext, hrefCollection, "a", "href", "data-href");
-	extractLinks(searchContext, hrefCollection, "div", "data-href");
-	extractLinks(searchContext, hrefCollection, "frame", "src");
-    }
-
-    private void extractLinks(SearchContext searchContext, Collection<String> hrefCollection, String tag,
-	    String... attrs) {
-
-	// Let's look for the a tags
-	List<WebElement> links = searchContext.findElements(By.tagName(tag));
-	if (links == null || links.isEmpty())
-	    return;
-
-	// Building the URI list
-	for (WebElement link : links) {
-	    for (String attr : attrs) {
-		String href = link.getAttribute(attr);
-		if (href != null) {
-		    hrefCollection.add(href);
-		    break;
+	public Object executeScript(String javascript, boolean faultTolerant, Object... objects) {
+		try {
+			if (!(driver instanceof JavascriptExecutor))
+				throw new WebDriverException("The Web driver does not support javascript execution");
+			JavascriptExecutor js = (JavascriptExecutor) driver;
+			return js.executeScript(javascript, objects);
+		} catch (WebDriverException e) {
+			if (!faultTolerant)
+				throw e;
+			logger.warn(e.getMessage(), e);
+			return null;
 		}
-	    }
 	}
-    }
+
+	final public BufferedImage getScreenshot() throws IOException {
+		if (!(driver instanceof TakesScreenshot))
+			throw new WebDriverException("This browser driver does not support screenshot");
+		TakesScreenshot takesScreenshot = (TakesScreenshot) driver;
+		byte[] data = takesScreenshot.getScreenshotAs(OutputType.BYTES);
+		return ImageIO.read(new ByteArrayInputStream(data));
+	}
+
+	@Override
+	final public String getTitle() {
+		return driver.getTitle();
+	}
+
+	final public void setSize(int width, int height) {
+		driver.manage().window().setSize(new Dimension(width, height));
+	}
+
+	final public void setTimeouts(Integer impWait, Integer pageLoad, Integer script) {
+		Timeouts timeOuts = driver.manage().timeouts();
+		if (impWait != null)
+			timeOuts.implicitlyWait(impWait, TimeUnit.SECONDS);
+		if (pageLoad != null)
+			timeOuts.pageLoadTimeout(pageLoad, TimeUnit.SECONDS);
+		if (script != null)
+			timeOuts.setScriptTimeout(script, TimeUnit.SECONDS);
+	}
+
+	@Override
+	final public List<WebElement> findElements(By by) {
+		return driver.findElements(by);
+	}
+
+	@Override
+	final public String getWindowHandle() {
+		return driver.getWindowHandle();
+	}
+
+	@Override
+	final public String getCurrentUrl() {
+		return driver.getCurrentUrl();
+	}
+
+	@Override
+	final public WebElement findElement(By by) {
+		return driver.findElement(by);
+	}
+
+	@Override
+	final public String getPageSource() {
+		return driver.getPageSource();
+	}
+
+	@Override
+	final public void quit() {
+		driver.quit();
+	}
+
+	@Override
+	final public Set<String> getWindowHandles() {
+		return driver.getWindowHandles();
+	}
+
+	@Override
+	final public TargetLocator switchTo() {
+		return driver.switchTo();
+	}
+
+	@Override
+	final public Navigation navigate() {
+		return driver.navigate();
+	}
+
+	@Override
+	final public Options manage() {
+		return driver.manage();
+	}
+
+	/**
+	 * Fill a list with all the href attributes found in a tag, relative to the
+	 * given rootElement
+	 *
+	 * @param searchContext  the root of the search
+	 * @param hrefCollection the collection filled with the href content
+	 */
+	public void findLinks(SearchContext searchContext, Collection<String> hrefCollection) {
+		extractLinks(searchContext, hrefCollection, "a", "href", "data-href");
+		extractLinks(searchContext, hrefCollection, "div", "data-href");
+		extractLinks(searchContext, hrefCollection, "frame", "src");
+	}
+
+	private void extractLinks(SearchContext searchContext, Collection<String> hrefCollection, String tag,
+					String... attrs) {
+
+		// Let's look for the a tags
+		List<WebElement> links = searchContext.findElements(By.tagName(tag));
+		if (links == null || links.isEmpty())
+			return;
+
+		// Building the URI list
+		for (WebElement link : links) {
+			for (String attr : attrs) {
+				String href = link.getAttribute(attr);
+				if (href != null) {
+					hrefCollection.add(href);
+					break;
+				}
+			}
+		}
+	}
 
 }
