@@ -15,6 +15,7 @@
  **/
 package com.qwazr.crawler.web.driver;
 
+import com.qwazr.utils.StringUtils;
 import org.openqa.selenium.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -166,6 +167,38 @@ public abstract class BrowserDriver<T extends WebDriver> implements WebDriver, C
 		extractLinks(searchContext, hrefCollection, "a", "href", "data-href");
 		extractLinks(searchContext, hrefCollection, "div", "data-href");
 		extractLinks(searchContext, hrefCollection, "frame", "src");
+	}
+
+	public String getSnippet(SearchContext searchContext, int sizeLimit) {
+		List<WebElement> elements = searchContext.findElements(By.tagName("p"));
+		if (elements == null)
+			return null;
+		StringBuilder sb = new StringBuilder();
+		for (WebElement element : elements) {
+			String text = element.getText();
+			if (text == null)
+				continue;
+			text = StringUtils.join(StringUtils.split(text, " \r\n\t"), ' ');
+			sb.append(text);
+			if (!text.endsWith("."))
+				sb.append(' ');
+			sb.append(' ');
+			if (sb.length() > sizeLimit)
+				break;
+		}
+		if (sb.length() <= sizeLimit)
+			return sb.toString().trim();
+		int i = 0;
+		int last = -1;
+		for (; ; ) {
+			i = sb.indexOf(" ", i + 1);
+			if (i == -1 || i > sizeLimit)
+				break;
+			last = i;
+		}
+		if (last == -1)
+			last = sizeLimit;
+		return sb.substring(0, last) + "…";
 	}
 
 	private void extractLinks(SearchContext searchContext, Collection<String> hrefCollection, String tag,

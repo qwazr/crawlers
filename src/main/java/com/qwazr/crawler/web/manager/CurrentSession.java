@@ -1,12 +1,12 @@
 /**
  * Copyright 2014-2015 Emmanuel Keller / QWAZR
- *
+ * <p/>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * <p/>
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p/>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -29,7 +29,7 @@ public class CurrentSession {
 	private final String name;
 	private final Date startTime;
 	private final AtomicBoolean abort;
-	private final ConcurrentHashMap<String, String> variables;
+	private final ConcurrentHashMap<String, Object> variables;
 
 	private volatile int ignoredCount = 0;
 	private volatile int errorCount = 0;
@@ -54,7 +54,7 @@ public class CurrentSession {
 	 * @param name the name of the variable
 	 * @return the value of the variable
 	 */
-	public String getVariable(String name) {
+	public Object getVariable(String name) {
 		return variables.get(name);
 	}
 
@@ -63,7 +63,7 @@ public class CurrentSession {
 	 * @param value the value to set
 	 * @return the previous value if any
 	 */
-	public String setVariable(String name, String value) {
+	public Object setVariable(String name, Object value) {
 		if (value == null)
 			return removeVariable(name);
 		return variables.put(name, value);
@@ -73,7 +73,7 @@ public class CurrentSession {
 	 * @param name the name of the variable to remove
 	 * @return the value of the variable if any
 	 */
-	public String removeVariable(String name) {
+	public Object removeVariable(String name) {
 		return variables.remove(name);
 	}
 
@@ -202,6 +202,6 @@ public class CurrentSession {
 
 	public boolean isURLPatterns() {
 		return crawlDefinition != null && !CollectionUtils.isEmpty(crawlDefinition.inclusion_patterns) &&
-				!CollectionUtils.isEmpty(crawlDefinition.exclusion_patterns);
+						!CollectionUtils.isEmpty(crawlDefinition.exclusion_patterns);
 	}
 }
