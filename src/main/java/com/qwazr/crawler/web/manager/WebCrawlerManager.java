@@ -1,12 +1,12 @@
 /**
  * Copyright 2014-2015 Emmanuel Keller / QWAZR
- *
+ * <p/>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * <p/>
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p/>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -36,13 +36,11 @@ import java.util.TreeMap;
 
 public class WebCrawlerManager {
 
-	private static final Logger logger = LoggerFactory
-			.getLogger(WebCrawlerManager.class);
+	private static final Logger logger = LoggerFactory.getLogger(WebCrawlerManager.class);
 
 	public static volatile WebCrawlerManager INSTANCE = null;
 
-	public static void load(AbstractServer server, File directory)
-			throws IOException {
+	public static void load(AbstractServer server, File directory) throws IOException {
 		if (INSTANCE != null)
 			throw new IOException("Already loaded");
 		try {
@@ -65,8 +63,7 @@ public class WebCrawlerManager {
 		TreeMap<String, WebCrawlStatus> map = new TreeMap<String, WebCrawlStatus>();
 		rwlSessionMap.r.lock();
 		try {
-			for (Map.Entry<String, WebCrawlThread> entry : crawlSessionMap
-					.entrySet())
+			for (Map.Entry<String, WebCrawlThread> entry : crawlSessionMap.entrySet())
 				map.put(entry.getKey(), entry.getValue().getStatus());
 			return map;
 		} finally {
@@ -91,8 +88,7 @@ public class WebCrawlerManager {
 		try {
 			WebCrawlThread crawlThread = crawlSessionMap.get(session_name);
 			if (crawlThread == null)
-				throw new ServerException(Status.NOT_FOUND,
-						"Session not found: " + session_name);
+				throw new ServerException(Status.NOT_FOUND, "Session not found: " + session_name);
 			if (logger.isInfoEnabled())
 				logger.info("Aborting session: " + session_name + " - " + abortingReason);
 			crawlThread.abort(abortingReason);
@@ -101,17 +97,15 @@ public class WebCrawlerManager {
 		}
 	}
 
-	public WebCrawlStatus runSession(String session_name,
-									 WebCrawlDefinition crawlJson) throws ServerException {
+	public WebCrawlStatus runSession(String session_name, WebCrawlDefinition crawlJson) throws ServerException {
 		rwlSessionMap.w.lock();
 		try {
 			if (crawlSessionMap.containsKey(session_name))
-				throw new ServerException(Status.CONFLICT,
-						"The session already exists: " + session_name);
+				throw new ServerException(Status.CONFLICT, "The session already exists: " + session_name);
 			if (logger.isInfoEnabled())
 				logger.info("Create session: " + session_name);
-			WebCrawlThread crawlThread = new WebCrawlThread(threadGroup,
-					session_name, crawlJson);
+
+			WebCrawlThread crawlThread = new WebCrawlThread(threadGroup, session_name, crawlJson);
 			crawlSessionMap.put(session_name, crawlThread);
 			crawlThread.start();
 			return crawlThread.getStatus();
@@ -133,8 +127,7 @@ public class WebCrawlerManager {
 	}
 
 	public static WebCrawlerMultiClient getClient() throws URISyntaxException {
-		return new WebCrawlerMultiClient(ClusterManager.INSTANCE
-				.getClusterClient().getActiveNodes(
-						WebCrawlerServer.SERVICE_NAME_WEBCRAWLER), 60000);
+		return new WebCrawlerMultiClient(ClusterManager.INSTANCE.getClusterClient()
+						.getActiveNodes(WebCrawlerServer.SERVICE_NAME_WEBCRAWLER), 60000);
 	}
 }
