@@ -1,12 +1,12 @@
 /**
  * Copyright 2014-2015 Emmanuel Keller / QWAZR
- * <p/>
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * <p/>
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p/>
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,6 +19,7 @@ import com.qwazr.utils.StringUtils;
 import org.openqa.selenium.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.w3c.css.sac.CSSException;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -175,7 +176,13 @@ public abstract class BrowserDriver<T extends WebDriver> implements WebDriver, C
 			return null;
 		StringBuilder sb = new StringBuilder();
 		for (WebElement element : elements) {
-			String text = element.getText();
+			String text = null;
+			try {
+				text = element.getText();
+			} catch (CSSException e) {
+				if (logger.isWarnEnabled())
+					logger.warn("Cannot extract snippet: " + e.getMessage(), e);
+			}
 			if (text == null)
 				continue;
 			text = StringUtils.join(StringUtils.split(text, " \r\n\t"), ' ');
