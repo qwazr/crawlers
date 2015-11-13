@@ -1,12 +1,12 @@
 /**
  * Copyright 2014-2015 Emmanuel Keller / QWAZR
- * <p/>
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * <p/>
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p/>
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -32,114 +32,114 @@ import java.net.URISyntaxException;
 import java.util.TreeMap;
 
 public class WebCrawlerMultiClient extends JsonMultiClientAbstract<String, WebCrawlerSingleClient>
-		implements WebCrawlerServiceInterface {
+				implements WebCrawlerServiceInterface {
 
-    private static final Logger logger = LoggerFactory.getLogger(WebCrawlerMultiClient.class);
+	private static final Logger logger = LoggerFactory.getLogger(WebCrawlerMultiClient.class);
 
-    public WebCrawlerMultiClient(String[] urls, Integer msTimeOut) throws URISyntaxException {
-	// TODO Pass executor
-	super(null, new WebCrawlerSingleClient[urls.length], urls, msTimeOut);
-    }
-
-    @Override
-    protected WebCrawlerSingleClient newClient(String url, Integer msTimeOut) throws URISyntaxException {
-	return new WebCrawlerSingleClient(url, msTimeOut);
-    }
-
-    @Override
-    public TreeMap<String, WebCrawlStatus> getSessions(Boolean local) {
-
-	// If not global, just request the local node
-	if (local != null && local) {
-	    WebCrawlerSingleClient client = getClientByUrl(ClusterManager.INSTANCE.myAddress);
-	    if (client == null)
-		throw new ServerException(Status.NOT_ACCEPTABLE, "Node not valid: " + ClusterManager.INSTANCE.myAddress)
-				.getJsonException();
-	    return client.getSessions(true);
+	public WebCrawlerMultiClient(String[] urls, Integer msTimeOut) throws URISyntaxException {
+		// TODO Pass executor
+		super(null, new WebCrawlerSingleClient[urls.length], urls, msTimeOut);
 	}
 
-	// We merge the result of all the nodes
-	TreeMap<String, WebCrawlStatus> globalSessions = new TreeMap<String, WebCrawlStatus>();
-	for (WebCrawlerSingleClient client : this) {
-	    try {
-		TreeMap<String, WebCrawlStatus> localSessions = client.getSessions(true);
-		if (localSessions == null)
-		    continue;
-		globalSessions.putAll(localSessions);
-	    } catch (WebApplicationException e) {
-		logger.warn(e.getMessage(), e);
-	    }
-	}
-	return globalSessions;
-    }
-
-    @Override
-    public WebCrawlStatus getSession(String session_name, Boolean local) {
-
-	// If not global, just request the local node
-	if (local != null && local) {
-	    WebCrawlerSingleClient client = getClientByUrl(ClusterManager.INSTANCE.myAddress);
-	    if (client == null)
-		throw new ServerException(Status.NOT_ACCEPTABLE, "Node not valid: " + ClusterManager.INSTANCE.myAddress)
-				.getJsonException();
-	    return client.getSession(session_name, true);
+	@Override
+	protected WebCrawlerSingleClient newClient(String url, Integer msTimeOut) throws URISyntaxException {
+		return new WebCrawlerSingleClient(url, msTimeOut);
 	}
 
-	for (WebCrawlerSingleClient client : this) {
-	    try {
-		return client.getSession(session_name, true);
-	    } catch (WebApplicationException e) {
-		if (e.getResponse().getStatus() != 404)
-		    throw e;
-	    }
-	}
-	throw new ServerException(Status.NOT_FOUND, "Session " + session_name + " not found").getJsonException();
-    }
+	@Override
+	public TreeMap<String, WebCrawlStatus> getSessions(Boolean local) {
 
-    @Override
-    public Response abortSession(String session_name, String reason, Boolean local) {
+		// If not global, just request the local node
+		if (local != null && local) {
+			WebCrawlerSingleClient client = getClientByUrl(ClusterManager.INSTANCE.myAddress);
+			if (client == null)
+				throw new ServerException(Status.NOT_ACCEPTABLE, "Node not valid: " + ClusterManager.INSTANCE.myAddress)
+								.getJsonException();
+			return client.getSessions(true);
+		}
 
-	// Is it local ?
-	if (local != null && local) {
-	    WebCrawlerSingleClient client = getClientByUrl(ClusterManager.INSTANCE.myAddress);
-	    if (client == null)
-		throw new ServerException(Status.NOT_ACCEPTABLE, "Node not valid: " + ClusterManager.INSTANCE.myAddress)
-				.getJsonException();
-	    return client.abortSession(session_name, reason, true);
+		// We merge the result of all the nodes
+		TreeMap<String, WebCrawlStatus> globalSessions = new TreeMap<String, WebCrawlStatus>();
+		for (WebCrawlerSingleClient client : this) {
+			try {
+				TreeMap<String, WebCrawlStatus> localSessions = client.getSessions(true);
+				if (localSessions == null)
+					continue;
+				globalSessions.putAll(localSessions);
+			} catch (WebApplicationException e) {
+				logger.warn(e.getMessage(), e);
+			}
+		}
+		return globalSessions;
 	}
 
-	// Global, we abort on every nodes
-	boolean aborted = false;
-	for (WebCrawlerSingleClient client : this) {
-	    try {
-		int code = client.abortSession(session_name, reason, true).getStatus();
-		if (code == 200 || code == 202)
-		    aborted = true;
-	    } catch (WebApplicationException e) {
-		if (e.getResponse().getStatus() != 404)
-		    throw e;
-	    }
-	}
-	return Response.status(aborted ? Status.ACCEPTED : Status.NOT_FOUND).build();
-    }
+	@Override
+	public WebCrawlStatus getSession(String session_name, Boolean local) {
 
-    @Override
-    public WebCrawlStatus runSession(String session_name, WebCrawlDefinition crawlDefinition) {
-	WebAppExceptionHolder exceptionHolder = new WebAppExceptionHolder(logger);
-	for (WebCrawlerSingleClient client : this) {
-	    try {
-		return client.runSession(session_name, crawlDefinition);
-	    } catch (WebApplicationException e) {
-		exceptionHolder.switchAndWarn(e);
-	    }
+		// If not global, just request the local node
+		if (local != null && local) {
+			WebCrawlerSingleClient client = getClientByUrl(ClusterManager.INSTANCE.myAddress);
+			if (client == null)
+				throw new ServerException(Status.NOT_ACCEPTABLE, "Node not valid: " + ClusterManager.INSTANCE.myAddress)
+								.getJsonException();
+			return client.getSession(session_name, true);
+		}
+
+		for (WebCrawlerSingleClient client : this) {
+			try {
+				return client.getSession(session_name, true);
+			} catch (WebApplicationException e) {
+				if (e.getResponse().getStatus() != 404)
+					throw e;
+			}
+		}
+		throw new ServerException(Status.NOT_FOUND, "Session " + session_name + " not found").getJsonException();
 	}
-	WebApplicationException e = exceptionHolder.getException();
-	if (e == null)
-	    return null;
-	HttpResponseEntityException hree = HttpResponseEntityException.findFirstCause(e);
-	if (hree != null)
-	    throw hree.getWebApplicationException();
-	throw e;
-    }
+
+	@Override
+	public Response abortSession(String session_name, String reason, Boolean local) {
+
+		// Is it local ?
+		if (local != null && local) {
+			WebCrawlerSingleClient client = getClientByUrl(ClusterManager.INSTANCE.myAddress);
+			if (client == null)
+				throw new ServerException(Status.NOT_ACCEPTABLE, "Node not valid: " + ClusterManager.INSTANCE.myAddress)
+								.getJsonException();
+			return client.abortSession(session_name, reason, true);
+		}
+
+		// Global, we abort on every nodes
+		boolean aborted = false;
+		for (WebCrawlerSingleClient client : this) {
+			try {
+				int code = client.abortSession(session_name, reason, true).getStatus();
+				if (code == 200 || code == 202)
+					aborted = true;
+			} catch (WebApplicationException e) {
+				if (e.getResponse().getStatus() != 404)
+					throw e;
+			}
+		}
+		return Response.status(aborted ? Status.ACCEPTED : Status.NOT_FOUND).build();
+	}
+
+	@Override
+	public WebCrawlStatus runSession(String session_name, WebCrawlDefinition crawlDefinition) {
+		WebAppExceptionHolder exceptionHolder = new WebAppExceptionHolder(logger);
+		for (WebCrawlerSingleClient client : this) {
+			try {
+				return client.runSession(session_name, crawlDefinition);
+			} catch (WebApplicationException e) {
+				exceptionHolder.switchAndWarn(e);
+			}
+		}
+		WebApplicationException e = exceptionHolder.getException();
+		if (e == null)
+			return null;
+		HttpResponseEntityException hree = HttpResponseEntityException.findFirstCause(e);
+		if (hree != null)
+			throw hree.getWebApplicationException();
+		throw e;
+	}
 
 }

@@ -346,6 +346,19 @@ public class WebCrawlThread extends Thread {
 		currentURI.setLinks(uris);
 		if (logger.isInfoEnabled())
 			logger.info("Link founds " + uri + " : " + uris.size());
+
+		ArrayList<URI> filteredURIs = new ArrayList<URI>();
+		for (URI u : uris) {
+			String us = u.toString();
+			Boolean inc = matchesInclusion(us);
+			if (inc != null && !inc)
+				continue;
+			Boolean exc = matchesExclusion(us);
+			if (exc != null && exc)
+				continue;
+			filteredURIs.add(u);
+		}
+		currentURI.setFilteredLinks(filteredURIs);
 	}
 
 	private void crawlOne(final Set<URI> crawledURIs, URI uri, final Set<URI> nextLevelURIs, final int depth)

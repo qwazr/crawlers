@@ -74,6 +74,7 @@ public class HtmlUnitBrowserDriver extends BrowserDriver<HtmlUnitDriverWebClient
 	public void test() {
 		getWebClient().getCurrentWindow().getTopWindow();
 	}
+
 	public WebResponse getWebResponse() {
 		Page page = getEnclosedPage();
 		if (page == null)
