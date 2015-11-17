@@ -36,6 +36,11 @@ public class WebCrawlDefinition implements Cloneable {
 	public String entry_url = null;
 
 	/**
+	 * A set of URL to crawl
+	 */
+	public List<String> urls = null;
+
+	/**
 	 * The maximum depth of the crawl.
 	 */
 	public Integer max_depth = null;
@@ -263,6 +268,7 @@ public class WebCrawlDefinition implements Cloneable {
 
 	protected WebCrawlDefinition(WebCrawlDefinition src) {
 		entry_url = src.entry_url;
+		urls = src.urls == null ? null : new ArrayList<String>(src.urls);
 		max_depth = src.max_depth;
 		parameters_patterns = src.parameters_patterns == null ? null : new ArrayList<String>(src.parameters_patterns);
 		inclusion_patterns = src.inclusion_patterns == null ? null : new ArrayList<String>(src.inclusion_patterns);
@@ -293,6 +299,18 @@ public class WebCrawlDefinition implements Cloneable {
 
 	public WebCrawlDefinition setEntry_url(String entry_url) {
 		this.entry_url = entry_url;
+		return this;
+	}
+
+	public WebCrawlDefinition setUrls(List<String> urls) {
+		this.urls = urls;
+		return this;
+	}
+
+	public WebCrawlDefinition addUrl(String url) {
+		if (urls == null)
+			urls = new ArrayList<String>();
+		urls.add(url);
 		return this;
 	}
 
@@ -432,4 +450,5 @@ public class WebCrawlDefinition implements Cloneable {
 	public static WebCrawlDefinition newInstance(String json) throws IOException {
 		return JsonMapper.MAPPER.readValue(json, WebCrawlDefinition.class);
 	}
+	
 }

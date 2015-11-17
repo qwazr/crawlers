@@ -454,13 +454,27 @@ public class WebCrawlThread extends Thread {
 		return true;
 	}
 
+	private List<URI> buildURIList(List<String> uris) throws URISyntaxException {
+		if (uris == null)
+			return null;
+		List<URI> uriList = new ArrayList<URI>(uris.size());
+		for (String uri : uris)
+			uriList.add(new URI(uri));
+		return uriList;
+	}
+
 	private void runner() throws URISyntaxException, IOException, ScriptException, ServerException,
 					ReflectiveOperationException {
 		try {
 			driver = new BrowserDriverBuilder(crawlDefinition).build();
 			script(EventEnum.before_session, null);
 			final Set<URI> crawledURIs = new HashSet<URI>();
-			crawlLevel(crawledURIs, Arrays.asList(new URI(crawlDefinition.entry_url)), 0);
+			final List<URI> uriList;
+			if (crawlDefinition.urls != null && !crawlDefinition.urls.isEmpty())
+				uriList = buildURIList(crawlDefinition.urls);
+			else
+				uriList = Arrays.asList(new URI(crawlDefinition.entry_url));
+			crawlLevel(crawledURIs, uriList, 0);
 		} finally {
 			if (driver != null)
 				driver.close();

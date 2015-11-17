@@ -52,6 +52,10 @@ public class CurrentURI {
 		return initialURI;
 	}
 
+	public URI getUri() {
+		return getURI();
+	}
+
 	public URI getURI() {
 		return finalURI != null ? finalURI : initialURI;
 	}

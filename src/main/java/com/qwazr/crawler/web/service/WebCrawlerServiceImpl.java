@@ -20,6 +20,7 @@ import com.qwazr.utils.server.ServerException;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.TreeMap;
 
@@ -79,4 +80,9 @@ public class WebCrawlerServiceImpl implements WebCrawlerServiceInterface {
 			throw ServerException.getJsonException(e);
 		}
 	}
+
+	public WebCrawlStatus runSession(String session_name, String jsonCrawlDefinition) throws IOException {
+		return runSession(session_name, WebCrawlDefinition.newInstance(jsonCrawlDefinition));
+	}
+
 }

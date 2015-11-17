@@ -79,4 +79,9 @@ public class WebCrawlerSingleClient extends JsonClientAbstract implements WebCra
 		return commonServiceRequest(request, crawlDefinition, msTimeOut, WebCrawlStatus.class, 200, 202);
 	}
 
+	@Override
+	public WebCrawlStatus runSession(String session_name, String jsonCrawlDefinition) throws IOException {
+		return runSession(session_name, WebCrawlDefinition.newInstance(jsonCrawlDefinition));
+	}
+
 }

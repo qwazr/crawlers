@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.TreeMap;
 
@@ -140,6 +141,11 @@ public class WebCrawlerMultiClient extends JsonMultiClientAbstract<String, WebCr
 		if (hree != null)
 			throw hree.getWebApplicationException();
 		throw e;
+	}
+
+	@Override
+	public WebCrawlStatus runSession(String session_name, String jsonCrawlDefinition) throws IOException {
+		return runSession(session_name, WebCrawlDefinition.newInstance(jsonCrawlDefinition));
 	}
 
 }
