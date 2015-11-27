@@ -16,6 +16,7 @@
 package com.qwazr.crawler.web.driver;
 
 import com.qwazr.crawler.web.service.WebCrawlDefinition;
+import org.apache.commons.lang3.RandomUtils;
 import org.openqa.selenium.Cookie;
 import org.openqa.selenium.Proxy;
 import org.openqa.selenium.remote.CapabilityType;
@@ -47,26 +48,34 @@ public class BrowserDriverBuilder {
 		DesiredCapabilities capabilities = null;
 		if (crawlDefinition != null) {
 
+			final WebCrawlDefinition.ProxyDefinition proxyDef;
+			if (crawlDefinition.proxies != null && !crawlDefinition.proxies.isEmpty())
+				proxyDef = crawlDefinition.proxies.get(RandomUtils.nextInt(0, crawlDefinition.proxies.size()));
+			else if (crawlDefinition.proxy != null)
+				proxyDef = crawlDefinition.proxy;
+			else
+				proxyDef = null;
+
 			// Setup the proxy
-			if (crawlDefinition.proxy != null) {
+			if (proxyDef != null) {
 				capabilities = checkCapabilities(capabilities);
 				org.openqa.selenium.Proxy proxy = new Proxy();
-				if (crawlDefinition.proxy.http_proxy != null)
-					proxy.setHttpProxy(crawlDefinition.proxy.http_proxy);
-				if (crawlDefinition.proxy.ftp_proxy != null)
-					proxy.setFtpProxy(crawlDefinition.proxy.ftp_proxy);
-				if (crawlDefinition.proxy.ssl_proxy != null)
-					proxy.setSslProxy(crawlDefinition.proxy.ssl_proxy);
-				if (crawlDefinition.proxy.socks_proxy != null)
-					proxy.setSocksProxy(crawlDefinition.proxy.socks_proxy);
-				if (crawlDefinition.proxy.socks_username != null)
-					proxy.setSocksUsername(crawlDefinition.proxy.socks_username);
-				if (crawlDefinition.proxy.socks_password != null)
-					proxy.setSocksPassword(crawlDefinition.proxy.socks_password);
-				if (crawlDefinition.proxy.no_proxy != null)
-					proxy.setNoProxy(crawlDefinition.proxy.no_proxy);
-				if (crawlDefinition.proxy.proxy_autoconfig_url != null)
-					proxy.setProxyAutoconfigUrl(crawlDefinition.proxy.proxy_autoconfig_url);
+				if (proxyDef.http_proxy != null)
+					proxy.setHttpProxy(proxyDef.http_proxy);
+				if (proxyDef.ftp_proxy != null)
+					proxy.setFtpProxy(proxyDef.ftp_proxy);
+				if (proxyDef.ssl_proxy != null)
+					proxy.setSslProxy(proxyDef.ssl_proxy);
+				if (proxyDef.socks_proxy != null)
+					proxy.setSocksProxy(proxyDef.socks_proxy);
+				if (proxyDef.socks_username != null)
+					proxy.setSocksUsername(proxyDef.socks_username);
+				if (proxyDef.socks_password != null)
+					proxy.setSocksPassword(proxyDef.socks_password);
+				if (proxyDef.no_proxy != null)
+					proxy.setNoProxy(proxyDef.no_proxy);
+				if (proxyDef.proxy_autoconfig_url != null)
+					proxy.setProxyAutoconfigUrl(proxyDef.proxy_autoconfig_url);
 				capabilities.setCapability(CapabilityType.PROXY, proxy);
 			}
 
@@ -97,7 +106,6 @@ public class BrowserDriverBuilder {
 				capabilities = checkCapabilities(capabilities);
 				capabilities.setJavascriptEnabled(crawlDefinition.javascript_enabled);
 			}
-
 		}
 
 		BrowserDriver driver = browserType.getNewInstance(capabilities);

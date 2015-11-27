@@ -59,6 +59,9 @@ public class WebCrawlThread extends Thread {
 
 	private BrowserDriver<?> driver = null;
 
+	private final Map<URI, RobotsTxt> robotsTxtMap;
+	private final String robotsTxtUserAgent;
+
 	WebCrawlThread(ThreadGroup threadGroup, String sessionName, WebCrawlDefinition crawlDefinition)
 					throws ServerException {
 		super(threadGroup, "oss-web-crawler " + sessionName);
@@ -71,6 +74,13 @@ public class WebCrawlThread extends Thread {
 		parametersMatcherList = getRegExpMatcherList(crawlDefinition.parameters_patterns);
 		exclusionMatcherList = getWildcardMatcherList(crawlDefinition.exclusion_patterns);
 		inclusionMatcherList = getWildcardMatcherList(crawlDefinition.inclusion_patterns);
+		if (crawlDefinition.robots_txt_enabled != null && crawlDefinition.robots_txt_enabled)
+			robotsTxtMap = new HashMap<>();
+		else
+			robotsTxtMap = null;
+		robotsTxtUserAgent = crawlDefinition.robots_txt_useragent == null ?
+						"QWAZR_BOT" :
+						crawlDefinition.robots_txt_useragent;
 		try {
 			URI uri = new URI(crawlDefinition.entry_url);
 			String host = uri.getHost();
@@ -361,8 +371,21 @@ public class WebCrawlThread extends Thread {
 		currentURI.setFilteredLinks(filteredURIs);
 	}
 
+	private RobotsTxt.RobotsTxtStatus checkRobotsTxt(CurrentURI currentURI) throws IOException, URISyntaxException {
+		if (robotsTxtMap == null)
+			return null;
+		URI uri = currentURI.getURI();
+		URI robotsTxtURI = RobotsTxt.getRobotsURI(uri);
+		RobotsTxt robotsTxt = robotsTxtMap.get(robotsTxtURI);
+		if (robotsTxt == null) {
+			robotsTxt = RobotsTxt.download(robotsTxtUserAgent, robotsTxtURI);
+			robotsTxtMap.put(robotsTxtURI, robotsTxt);
+		}
+		return robotsTxt.getStatus(uri);
+	}
+
 	private void crawlOne(final Set<URI> crawledURIs, URI uri, final Set<URI> nextLevelURIs, final int depth)
-					throws ServerException, IOException {
+					throws ServerException, IOException, URISyntaxException {
 
 		if (session.isAborting())
 			return;
@@ -380,7 +403,12 @@ public class WebCrawlThread extends Thread {
 		scriptBeforeCrawl(currentURI, null);
 
 		if (!currentURI.isIgnored()) {
-			crawl(currentURI);
+
+			// Check the robotsTxt status
+			RobotsTxt.RobotsTxtStatus robotsTxtStatus = checkRobotsTxt(currentURI);
+			if (robotsTxtStatus == null || robotsTxtStatus.isCrawlable)
+				crawl(currentURI);
+
 			// Store the final URI (in case of redirection)
 			if (crawledURIs != null)
 				crawledURIs.add(currentURI.getURI());
@@ -400,7 +428,7 @@ public class WebCrawlThread extends Thread {
 	}
 
 	private void crawlLevel(Set<URI> crawledURIs, Collection<URI> levelURIs, int depth)
-					throws ServerException, IOException {
+					throws ServerException, IOException, URISyntaxException {
 
 		if (session.isAborting())
 			return;

@@ -15,15 +15,18 @@
  **/
 package com.qwazr.crawler.web.manager;
 
+import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.LinkUtils;
+import org.apache.http.client.HttpResponseException;
+import org.apache.http.client.fluent.Request;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.StringTokenizer;
@@ -31,50 +34,67 @@ import java.util.StringTokenizer;
 public class RobotsTxt {
 
 	private final UserAgentMap userAgentMap;
+	private final String userAgent;
+	private final int httpStatusCode;
 
-	 RobotsTxt(InputStream input) {
+	RobotsTxt(String userAgent, InputStream input) throws IOException {
+		this.userAgent = userAgent;
 		this.userAgentMap = new UserAgentMap(input);
+		this.httpStatusCode = 200;
+	}
+
+	RobotsTxt(String userAgent, int statusCode) {
+		this.userAgent = userAgent;
+		this.userAgentMap = null;
+		this.httpStatusCode = statusCode;
 	}
 
 	/**
 	 * Construit l'URL d'accès au fichier robots.txt à partir d'une URL donnée
 	 *
-	 * @param url
+	 * @param uri
 	 * @return
 	 * @throws MalformedURLException
 	 * @throws URISyntaxException
 	 */
-	public static URL getRobotsUrl(URL url) throws MalformedURLException, URISyntaxException {
+	static URI getRobotsURI(URI uri) throws MalformedURLException, URISyntaxException {
 		StringBuilder sb = new StringBuilder();
-		sb.append(url.getProtocol());
+		sb.append(uri.getScheme());
 		sb.append("://");
-		sb.append(url.getHost());
-		if (url.getPort() != -1) {
+		sb.append(uri.getHost());
+		if (uri.getPort() != -1) {
 			sb.append(':');
-			sb.append(url.getPort());
+			sb.append(uri.getPort());
 		}
 		sb.append("/robots.txt");
-		return LinkUtils.newEncodedURL(sb.toString());
+		return LinkUtils.newEncodedURI(sb.toString());
 	}
 
 	public enum RobotsTxtStatus {
-		ERROR, NO_ROBOTSTXT, ALLOW, DISALLOW;
+
+		ERROR(false), NO_ROBOTSTXT(true), ALLOW(true), DISALLOW(false);
+
+		final boolean isCrawlable;
+
+		private RobotsTxtStatus(boolean isCrawlable) {
+			this.isCrawlable = isCrawlable;
+		}
+
+		boolean isCrawlable() {
+			return isCrawlable;
+		}
 	}
 
 	/**
 	 * Return the status of the specified URL
 	 *
-	 * @param url
-	 * @param userAgent
-	 * @return
+	 * @param uri
+	 * @return the robotsTxt status
 	 * @throws MalformedURLException
 	 * @throws URISyntaxException
 	 */
-	RobotsTxtStatus getStatus(String userAgent, URL url, Integer responseCode)
-					throws MalformedURLException, URISyntaxException {
-		if (responseCode == null)
-			return RobotsTxtStatus.ERROR;
-		switch (responseCode) {
+	RobotsTxtStatus getStatus(URI uri) throws MalformedURLException, URISyntaxException {
+		switch (httpStatusCode) {
 		case 400:
 		case 404:
 			return RobotsTxtStatus.NO_ROBOTSTXT;
@@ -90,7 +110,7 @@ public class RobotsTxt {
 			clauseSet = userAgentMap.get("*");
 		if (clauseSet == null)
 			return RobotsTxtStatus.ALLOW;
-		if (clauseSet.isAllowed(url.getFile()))
+		if (clauseSet.isAllowed(uri.toURL().getFile()))
 			return RobotsTxtStatus.ALLOW;
 		return RobotsTxtStatus.DISALLOW;
 	}
@@ -102,8 +122,8 @@ public class RobotsTxt {
 
 		private final Map<String, ClauseSet> clauseMap;
 
-		public UserAgentMap(InputStream input) {
-			clauseMap = null;
+		public UserAgentMap(InputStream input) throws IOException {
+			clauseMap = parseContent(input);
 		}
 
 		/**
@@ -124,7 +144,7 @@ public class RobotsTxt {
 		 * @param input
 		 * @throws IOException
 		 */
-		private void parseContent(InputStream input) throws IOException {
+		private Map<String, ClauseSet> parseContent(InputStream input) throws IOException {
 			Map<String, ClauseSet> clauseMap = new LinkedHashMap<>();
 			BufferedReader br = new BufferedReader(new InputStreamReader(input));
 			try {
@@ -160,11 +180,11 @@ public class RobotsTxt {
 							currentClauseSet.add(value, true);
 					}
 				}
+				return clauseMap;
 			} finally {
 				br.close();
 			}
 		}
-
 	}
 
 	private class ClauseSet {
@@ -209,6 +229,20 @@ public class RobotsTxt {
 				return true;
 			}
 		}
-
 	}
+
+	static RobotsTxt download(String userAgent, URI uri) throws IOException {
+		InputStream is = null;
+		try {
+			is = Request.Get(uri.toString()).connectTimeout(60000).socketTimeout(60000).execute().returnContent()
+							.asStream();
+			return new RobotsTxt(userAgent, is);
+		} catch (HttpResponseException e) {
+			return new RobotsTxt(userAgent, e.getStatusCode());
+		} finally {
+			if (is != null)
+				IOUtils.closeQuietly(is);
+		}
+	}
+
 }

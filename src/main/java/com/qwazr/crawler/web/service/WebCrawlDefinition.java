@@ -104,12 +104,20 @@ public class WebCrawlDefinition implements Cloneable {
 	public Map<String, String> cookies = null;
 
 	/**
-	 * The proxy definition
+	 * The proxy definition(s)
 	 */
 	public ProxyDefinition proxy = null;
 
+	public List<ProxyDefinition> proxies = null;
+
+	/**
+	 * Support of robots.txt protocol
+	 */
+	public Boolean robots_txt_enabled = null;
+	public String robots_txt_useragent = null;
+
 	@JsonInclude(Include.NON_EMPTY)
-	public class ProxyDefinition implements Cloneable {
+	public static class ProxyDefinition implements Cloneable {
 
 		/**
 		 * the proxy host for FTP connections, expected format is
@@ -279,7 +287,10 @@ public class WebCrawlDefinition implements Cloneable {
 		browser_version = src.browser_version;
 		browser_type = src.browser_type;
 		javascript_enabled = src.javascript_enabled;
+		robots_txt_enabled = src.robots_txt_enabled;
+		robots_txt_useragent = src.robots_txt_useragent;
 		proxy = src.proxy == null ? null : new ProxyDefinition(src.proxy);
+		proxies = src.proxies == null ? null : new ArrayList<ProxyDefinition>(src.proxies);
 		implicitly_wait = src.implicitly_wait;
 		script_timeout = src.script_timeout;
 		page_load_timeout = src.page_load_timeout;
@@ -375,6 +386,16 @@ public class WebCrawlDefinition implements Cloneable {
 		return this;
 	}
 
+	public WebCrawlDefinition setRobots_txt_enabled(Boolean robots_txt_enabled) {
+		this.robots_txt_enabled = robots_txt_enabled;
+		return this;
+	}
+
+	public WebCrawlDefinition setRobots_txt_useragent(String robots_txt_useragent) {
+		this.robots_txt_useragent = robots_txt_useragent;
+		return this;
+	}
+
 	public WebCrawlDefinition setBrowser_type(String browser_type) {
 		this.browser_type = BrowserDriverEnum.valueOf(browser_type);
 		return this;
@@ -400,6 +421,15 @@ public class WebCrawlDefinition implements Cloneable {
 		if (proxy == null)
 			proxy = new ProxyDefinition();
 		return proxy;
+	}
+
+	public WebCrawlDefinition addProxy(ProxyDefinition proxy) {
+		if (proxy == null)
+			return this;
+		if (proxies == null)
+			proxies = new ArrayList<ProxyDefinition>();
+		proxies.add(proxy);
+		return this;
 	}
 
 	public WebCrawlDefinition addVariable(String name, String value) {
@@ -450,5 +480,5 @@ public class WebCrawlDefinition implements Cloneable {
 	public static WebCrawlDefinition newInstance(String json) throws IOException {
 		return JsonMapper.MAPPER.readValue(json, WebCrawlDefinition.class);
 	}
-	
+
 }
