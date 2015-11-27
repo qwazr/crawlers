@@ -221,6 +221,7 @@ public abstract class BrowserDriver<T extends WebDriver> implements WebDriver, C
 			for (String attr : attrs) {
 				String href = link.getAttribute(attr);
 				if (href != null) {
+					href = StringUtils.replace(href, " ", "+");
 					hrefCollection.add(href);
 					break;
 				}

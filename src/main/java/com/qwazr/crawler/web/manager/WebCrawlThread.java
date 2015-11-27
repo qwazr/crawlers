@@ -406,12 +406,16 @@ public class WebCrawlThread extends Thread {
 
 			// Check the robotsTxt status
 			RobotsTxt.RobotsTxtStatus robotsTxtStatus = checkRobotsTxt(currentURI);
-			if (robotsTxtStatus == null || robotsTxtStatus.isCrawlable)
+			if (robotsTxtStatus != null && !robotsTxtStatus.isCrawlable)
+				currentURI.setIgnored(true);
+
+			if (!currentURI.isIgnored()) {
 				crawl(currentURI);
 
-			// Store the final URI (in case of redirection)
-			if (crawledURIs != null)
-				crawledURIs.add(currentURI.getURI());
+				// Store the final URI (in case of redirection)
+				if (crawledURIs != null)
+					crawledURIs.add(currentURI.getURI());
+			}
 		}
 		script(EventEnum.after_crawl, currentURI);
 
