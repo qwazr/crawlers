@@ -1,5 +1,6 @@
 package com.qwazr.crawler.web;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.qwazr.cluster.manager.ClusterManager;
 import com.qwazr.crawler.web.client.WebCrawlerMultiClient;
@@ -13,7 +14,6 @@ import com.qwazr.utils.json.JsonMapper;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
-
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class WebCrawlerTool extends AbstractTool {
@@ -35,6 +35,7 @@ public class WebCrawlerTool extends AbstractTool {
 	 * @return a new WebCrawlerMultiClient instance
 	 * @throws URISyntaxException
 	 */
+	@JsonIgnore
 	public WebCrawlerMultiClient getNewWebCrawlerClient() throws URISyntaxException {
 		return getNewWebCrawlerClient(null);
 	}
@@ -47,23 +48,25 @@ public class WebCrawlerTool extends AbstractTool {
 	 * @return a new WebCrawlerMultiClient instance
 	 * @throws URISyntaxException
 	 */
-	public WebCrawlerMultiClient getNewWebCrawlerClient(Integer msTimeout)
-			throws URISyntaxException {
-		return new WebCrawlerMultiClient(ClusterManager.INSTANCE
-				.getClusterClient().getActiveNodes(
-						WebCrawlerServer.SERVICE_NAME_WEBCRAWLER), msTimeout);
+	@JsonIgnore
+	public WebCrawlerMultiClient getNewWebCrawlerClient(Integer msTimeout) throws URISyntaxException {
+		return new WebCrawlerMultiClient(ClusterManager.INSTANCE.getClusterClient()
+						.getActiveNodes(WebCrawlerServer.SERVICE_NAME_WEBCRAWLER), msTimeout);
 	}
 
+	@JsonIgnore
 	public WebCrawlDefinition getNewWebCrawlDefinition() {
 		return config == null ? new WebCrawlDefinition() : (WebCrawlDefinition) config.clone();
 	}
 
+	@JsonIgnore
 	public BrowserDriver getNewWebDriver(IOUtils.CloseableContext context, String json)
-			throws ReflectiveOperationException, SecurityException, IOException {
+					throws ReflectiveOperationException, SecurityException, IOException {
 		WebCrawlDefinition webCrawlDef = JsonMapper.MAPPER.readValue(json, WebCrawlDefinition.class);
 		return new BrowserDriverBuilder(webCrawlDef).build();
 	}
 
+	@JsonIgnore
 	public BrowserDriver getNewWebDriver(IOUtils.CloseableContext context) throws ReflectiveOperationException {
 		return new BrowserDriverBuilder(config).build();
 	}

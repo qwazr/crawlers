@@ -18,6 +18,7 @@ package com.qwazr.crawler.web.service;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.crawler.web.driver.BrowserDriverEnum;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.json.JsonMapper;
@@ -156,6 +157,7 @@ public class WebCrawlDefinition implements Cloneable {
 		/**
 		 * the SOCKS proxy's password
 		 */
+		@JsonIgnore
 		public String socks_password = null;
 
 		/**
@@ -176,6 +178,11 @@ public class WebCrawlDefinition implements Cloneable {
 			socks_username = src.socks_username;
 			socks_password = src.socks_password;
 			proxy_autoconfig_url = src.proxy_autoconfig_url;
+		}
+
+		@JsonProperty("socks_password")
+		private void setSocks_password(String socks_password) {
+			this.socks_password = socks_password;
 		}
 
 		@Override
