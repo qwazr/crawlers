@@ -15,6 +15,7 @@
  **/
 package com.qwazr.crawler.web.driver;
 
+import com.qwazr.crawler.web.service.WebCrawlDefinition;
 import com.qwazr.utils.StringUtils;
 import org.openqa.selenium.*;
 import org.slf4j.Logger;
@@ -35,6 +36,7 @@ public abstract class BrowserDriver<T extends WebDriver> implements WebDriver, C
 
 	private static final Logger logger = LoggerFactory.getLogger(BrowserDriver.class);
 
+	private WebCrawlDefinition.ProxyDefinition currentProxy;
 	protected final BrowserDriverEnum type;
 	protected T driver = null;
 
@@ -105,6 +107,14 @@ public abstract class BrowserDriver<T extends WebDriver> implements WebDriver, C
 			timeOuts.pageLoadTimeout(pageLoad, TimeUnit.SECONDS);
 		if (script != null)
 			timeOuts.setScriptTimeout(script, TimeUnit.SECONDS);
+	}
+
+	final void setProxy(WebCrawlDefinition.ProxyDefinition proxy) {
+		this.currentProxy = proxy;
+	}
+
+	final public WebCrawlDefinition.ProxyDefinition getProxy() {
+		return this.currentProxy;
 	}
 
 	@Override

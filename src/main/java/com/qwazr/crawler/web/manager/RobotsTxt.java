@@ -15,6 +15,7 @@
  **/
 package com.qwazr.crawler.web.manager;
 
+import com.qwazr.crawler.web.service.WebCrawlDefinition;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.LinkUtils;
 import org.apache.http.client.HttpResponseException;
@@ -231,11 +232,17 @@ public class RobotsTxt {
 		}
 	}
 
-	static RobotsTxt download(String userAgent, URI uri) throws IOException {
+	static RobotsTxt download(WebCrawlDefinition.ProxyDefinition proxy, String userAgent, URI uri) throws IOException {
 		InputStream is = null;
 		try {
-			is = Request.Get(uri.toString()).connectTimeout(60000).socketTimeout(60000).execute().returnContent()
-							.asStream();
+			Request request = Request.Get(uri.toString()).connectTimeout(60000).socketTimeout(60000);
+			if (proxy != null) {
+				if (proxy.http_proxy != null && !proxy.http_proxy.isEmpty())
+					request = request.viaProxy(proxy.http_proxy);
+				if ("https".equals(uri.getScheme()) && proxy.ssl_proxy != null && !proxy.ssl_proxy.isEmpty())
+					request = request.viaProxy(proxy.ssl_proxy);
+			}
+			is = request.execute().returnContent().asStream();
 			return new RobotsTxt(userAgent, is);
 		} catch (HttpResponseException e) {
 			return new RobotsTxt(userAgent, e.getStatusCode());

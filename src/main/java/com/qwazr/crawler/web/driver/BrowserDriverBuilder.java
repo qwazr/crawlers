@@ -44,11 +44,10 @@ public class BrowserDriverBuilder {
 
 	public BrowserDriver<?> build() throws ReflectiveOperationException, SecurityException {
 		BrowserDriverEnum browserType = BrowserDriverEnum.html_unit;
-
+		final WebCrawlDefinition.ProxyDefinition proxyDef;
 		DesiredCapabilities capabilities = null;
 		if (crawlDefinition != null) {
 
-			final WebCrawlDefinition.ProxyDefinition proxyDef;
 			if (crawlDefinition.proxies != null && !crawlDefinition.proxies.isEmpty())
 				proxyDef = crawlDefinition.proxies.get(RandomUtils.nextInt(0, crawlDefinition.proxies.size()));
 			else if (crawlDefinition.proxy != null)
@@ -106,9 +105,11 @@ public class BrowserDriverBuilder {
 				capabilities = checkCapabilities(capabilities);
 				capabilities.setJavascriptEnabled(crawlDefinition.javascript_enabled);
 			}
-		}
+		} else
+			proxyDef = null;
 
 		BrowserDriver driver = browserType.getNewInstance(capabilities);
+		driver.setProxy(proxyDef);
 		driver.setTimeouts(crawlDefinition.implicitly_wait, crawlDefinition.page_load_timeout,
 						crawlDefinition.script_timeout);
 

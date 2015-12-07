@@ -378,7 +378,7 @@ public class WebCrawlThread extends Thread {
 		URI robotsTxtURI = RobotsTxt.getRobotsURI(uri);
 		RobotsTxt robotsTxt = robotsTxtMap.get(robotsTxtURI);
 		if (robotsTxt == null) {
-			robotsTxt = RobotsTxt.download(robotsTxtUserAgent, robotsTxtURI);
+			robotsTxt = RobotsTxt.download(driver.getProxy(), robotsTxtUserAgent, robotsTxtURI);
 			robotsTxtMap.put(robotsTxtURI, robotsTxt);
 		}
 		return robotsTxt.getStatus(uri);
