@@ -20,6 +20,8 @@ import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.LinkUtils;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.fluent.Request;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -33,6 +35,8 @@ import java.util.Map;
 import java.util.StringTokenizer;
 
 public class RobotsTxt {
+
+	private static final Logger logger = LoggerFactory.getLogger(RobotsTxt.class);
 
 	private final UserAgentMap userAgentMap;
 	private final String userAgent;
@@ -245,7 +249,10 @@ public class RobotsTxt {
 			is = request.execute().returnContent().asStream();
 			return new RobotsTxt(userAgent, is);
 		} catch (HttpResponseException e) {
-			return new RobotsTxt(userAgent, e.getStatusCode());
+			int sc = e.getStatusCode();
+			if (sc != 404)
+				logger.warn("Get wrong status (" + sc + " code for: " + uri);
+			return new RobotsTxt(userAgent, sc);
 		} finally {
 			if (is != null)
 				IOUtils.closeQuietly(is);
