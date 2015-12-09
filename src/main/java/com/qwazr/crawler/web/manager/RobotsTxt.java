@@ -99,6 +99,13 @@ public class RobotsTxt {
 	 * @throws URISyntaxException
 	 */
 	RobotsTxtStatus getStatus(URI uri) throws MalformedURLException, URISyntaxException {
+		RobotsTxtStatus status = getStatusNoLogs(uri);
+		if (logger.isInfoEnabled())
+			logger.info("Check robots.txt returns " + status.name() + " for " + uri);
+		return status;
+	}
+
+	private RobotsTxtStatus getStatusNoLogs(URI uri) throws MalformedURLException, URISyntaxException {
 		switch (httpStatusCode) {
 		case 400:
 		case 404:
@@ -247,11 +254,18 @@ public class RobotsTxt {
 					request = request.viaProxy(proxy.ssl_proxy);
 			}
 			is = request.execute().returnContent().asStream();
+			if (logger.isInfoEnabled())
+				logger.info("Download robots.txt " + uri);
 			return new RobotsTxt(userAgent, is);
 		} catch (HttpResponseException e) {
 			int sc = e.getStatusCode();
-			if (sc != 404)
-				logger.warn("Get wrong status (" + sc + " code for: " + uri);
+			if (sc != 404) {
+				if (logger.isWarnEnabled())
+					logger.warn("Get wrong status (" + sc + " code for: " + uri);
+			} else {
+				if (logger.isInfoEnabled())
+					logger.info("Get wrong status (" + sc + " code for: " + uri);
+			}
 			return new RobotsTxt(userAgent, sc);
 		} finally {
 			if (is != null)
