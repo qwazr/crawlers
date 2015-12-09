@@ -253,9 +253,11 @@ public class RobotsTxt {
 				if ("https".equals(uri.getScheme()) && proxy.ssl_proxy != null && !proxy.ssl_proxy.isEmpty())
 					request = request.viaProxy(proxy.ssl_proxy);
 			}
+			if (logger.isInfoEnabled())
+				logger.info("Try to download robots.txt " + uri);
 			is = request.execute().returnContent().asStream();
 			if (logger.isInfoEnabled())
-				logger.info("Download robots.txt " + uri);
+				logger.info("Robots.txt downloaded: " + uri);
 			return new RobotsTxt(userAgent, is);
 		} catch (HttpResponseException e) {
 			int sc = e.getStatusCode();
