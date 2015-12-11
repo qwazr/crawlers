@@ -38,7 +38,7 @@ public class WebCrawlerServiceImpl implements WebCrawlerServiceInterface {
 			TreeMap<String, WebCrawlStatus> globalSessions = new TreeMap<String, WebCrawlStatus>();
 			globalSessions.putAll(WebCrawlerManager.getClient().getSessions(false));
 			return globalSessions;
-		} catch (URISyntaxException e) {
+		} catch (IOException | URISyntaxException e) {
 			throw ServerException.getJsonException(e);
 		}
 	}
@@ -53,7 +53,7 @@ public class WebCrawlerServiceImpl implements WebCrawlerServiceInterface {
 				throw new ServerException(Status.NOT_FOUND, "Session not found");
 			}
 			return WebCrawlerManager.getClient().getSession(session_name, false);
-		} catch (URISyntaxException | ServerException e) {
+		} catch (URISyntaxException | IOException | ServerException e) {
 			throw ServerException.getJsonException(e);
 		}
 
@@ -67,7 +67,7 @@ public class WebCrawlerServiceImpl implements WebCrawlerServiceInterface {
 				return Response.accepted().build();
 			}
 			return WebCrawlerManager.getClient().abortSession(session_name, reason, false);
-		} catch (ServerException | URISyntaxException e) {
+		} catch (IOException | ServerException | URISyntaxException e) {
 			throw ServerException.getTextException(e);
 		}
 	}

@@ -20,6 +20,7 @@ import com.qwazr.crawler.web.WebCrawlerServer;
 import com.qwazr.crawler.web.client.WebCrawlerMultiClient;
 import com.qwazr.crawler.web.service.WebCrawlDefinition;
 import com.qwazr.crawler.web.service.WebCrawlStatus;
+import com.qwazr.crawler.web.service.WebCrawlerServiceInterface;
 import com.qwazr.utils.LockUtils;
 import com.qwazr.utils.server.AbstractServer;
 import com.qwazr.utils.server.ServerException;
@@ -126,7 +127,9 @@ public class WebCrawlerManager {
 		}
 	}
 
-	public static WebCrawlerMultiClient getClient() throws URISyntaxException {
+	public static WebCrawlerServiceInterface getClient() throws IOException, URISyntaxException {
+		if (!ClusterManager.INSTANCE.isCluster())
+			throw new IOException("Web Crawler Interface not available");
 		return new WebCrawlerMultiClient(ClusterManager.INSTANCE.getClusterClient()
 						.getActiveNodes(WebCrawlerServer.SERVICE_NAME_WEBCRAWLER), 60000);
 	}
