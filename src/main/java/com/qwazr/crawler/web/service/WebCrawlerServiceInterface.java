@@ -32,27 +32,25 @@ public interface WebCrawlerServiceInterface {
 	@GET
 	@Path("/sessions")
 	@Produces(MediaType.APPLICATION_JSON)
-	public TreeMap<String, WebCrawlStatus> getSessions(@QueryParam("local") Boolean local);
+	TreeMap<String, WebCrawlStatus> getSessions(@QueryParam("local") Boolean local);
 
 	@GET
 	@Path("/sessions/{session_name}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public WebCrawlStatus getSession(@PathParam("session_name") String session_name,
-					@QueryParam("local") Boolean local);
+	WebCrawlStatus getSession(@PathParam("session_name") String session_name, @QueryParam("local") Boolean local);
 
 	@DELETE
 	@Path("/sessions/{session_name}")
-	public Response abortSession(@PathParam("session_name") String session_name,
-					@QueryParam("reason") String aborting_reason, @QueryParam("local") Boolean local);
+	Response abortSession(@PathParam("session_name") String session_name, @QueryParam("reason") String aborting_reason,
+					@QueryParam("local") Boolean local);
 
 	@POST
 	@PUT
 	@Path("/sessions/{session_name}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public WebCrawlStatus runSession(@PathParam("session_name") String session_name,
-					WebCrawlDefinition crawlDefinition);
+	WebCrawlStatus runSession(@PathParam("session_name") String session_name, WebCrawlDefinition crawlDefinition);
 
-	public WebCrawlStatus runSession(String session_name, String jsonCrawlDefinition) throws IOException;
+	WebCrawlStatus runSession(String session_name, String jsonCrawlDefinition) throws IOException;
 
 }

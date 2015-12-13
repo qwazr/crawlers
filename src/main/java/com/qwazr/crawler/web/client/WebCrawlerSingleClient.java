@@ -45,7 +45,7 @@ public class WebCrawlerSingleClient extends JsonClientAbstract implements WebCra
 	public TreeMap<String, WebCrawlStatus> getSessions(Boolean local) {
 		UBuilder uriBuilder = new UBuilder("/crawler/web/sessions").setParameters(local, null);
 		Request request = Request.Get(uriBuilder.build());
-		return (TreeMap<String, WebCrawlStatus>) commonServiceRequest(request, null, msTimeOut,
+		return commonServiceRequest(request, null, msTimeOut,
 						TreeMapStringCrawlTypeRef, 200);
 	}
 

@@ -216,7 +216,7 @@ public class WebCrawlDefinition implements Cloneable {
 	 */
 	public Map<EventEnum, Script> scripts = null;
 
-	public static enum EventEnum {
+	public enum EventEnum {
 
 		/**
 		 * Executed before the crawl session start

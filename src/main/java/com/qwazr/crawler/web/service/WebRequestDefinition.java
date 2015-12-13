@@ -43,8 +43,8 @@ public class WebRequestDefinition {
 
 	public final FormEncodingType form_encoding_type;
 
-	public static enum FormEncodingType {
-		URL_ENCODED, MULTIPART;
+	public enum FormEncodingType {
+		URL_ENCODED, MULTIPART
 	}
 
 	public WebRequestDefinition() {

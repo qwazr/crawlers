@@ -42,7 +42,7 @@ public enum BrowserDriverEnum {
 
     private final String label;
 
-    private BrowserDriverEnum(Class<? extends BrowserDriver<?>> driverClass, String label) {
+    BrowserDriverEnum(Class<? extends BrowserDriver<?>> driverClass, String label) {
 	this.driverClass = driverClass;
 	this.label = label;
     }

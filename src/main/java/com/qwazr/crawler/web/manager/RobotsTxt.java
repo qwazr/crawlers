@@ -81,7 +81,7 @@ public class RobotsTxt {
 
 		final boolean isCrawlable;
 
-		private RobotsTxtStatus(boolean isCrawlable) {
+		RobotsTxtStatus(boolean isCrawlable) {
 			this.isCrawlable = isCrawlable;
 		}
 
