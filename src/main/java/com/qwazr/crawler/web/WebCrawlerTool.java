@@ -51,7 +51,7 @@ public class WebCrawlerTool extends AbstractTool {
 	@JsonIgnore
 	public WebCrawlerMultiClient getNewWebCrawlerClient(Integer msTimeout) throws URISyntaxException {
 		return new WebCrawlerMultiClient(ClusterManager.INSTANCE.getClusterClient()
-						.getActiveNodes(WebCrawlerServer.SERVICE_NAME_WEBCRAWLER), msTimeout);
+						.getActiveNodesByService(WebCrawlerServer.SERVICE_NAME_WEBCRAWLER), msTimeout);
 	}
 
 	@JsonIgnore
