@@ -246,7 +246,8 @@ public class RobotsTxt {
 	static RobotsTxt download(WebCrawlDefinition.ProxyDefinition proxy, String userAgent, URI uri) throws IOException {
 		InputStream is = null;
 		try {
-			Request request = Request.Get(uri.toString()).connectTimeout(60000).socketTimeout(60000);
+			Request request = Request.Get(uri.toString()).addHeader("Connection", "close")
+					.addHeader("User-Agent", userAgent).connectTimeout(60000).socketTimeout(60000);
 			if (proxy != null) {
 				if (proxy.http_proxy != null && !proxy.http_proxy.isEmpty())
 					request = request.viaProxy(proxy.http_proxy);
