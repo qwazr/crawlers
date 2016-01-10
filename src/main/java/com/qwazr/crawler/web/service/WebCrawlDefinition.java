@@ -243,12 +243,12 @@ public class WebCrawlDefinition implements Cloneable {
 	public static class Script implements Cloneable {
 
 		/**
-		 * The path to the script
+		 * The path to the scripts
 		 */
 		public String name = null;
 
 		/**
-		 * The local variables passed to the script
+		 * The local variables passed to the scripts
 		 */
 		public Map<String, String> variables = null;
 

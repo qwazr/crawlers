@@ -23,8 +23,8 @@ import com.qwazr.crawler.web.service.WebCrawlDefinition;
 import com.qwazr.crawler.web.service.WebCrawlDefinition.EventEnum;
 import com.qwazr.crawler.web.service.WebCrawlDefinition.Script;
 import com.qwazr.crawler.web.service.WebCrawlStatus;
-import com.qwazr.job.script.ScriptManager;
-import com.qwazr.job.script.ScriptRunThread;
+import com.qwazr.scripts.ScriptManager;
+import com.qwazr.scripts.ScriptRunThread;
 import com.qwazr.utils.WildcardMatcher;
 import com.qwazr.utils.server.ServerException;
 import org.apache.commons.lang3.StringUtils;
@@ -63,7 +63,7 @@ public class WebCrawlThread extends Thread {
 	private final String robotsTxtUserAgent;
 
 	WebCrawlThread(ThreadGroup threadGroup, String sessionName, WebCrawlDefinition crawlDefinition)
-					throws ServerException {
+			throws ServerException {
 		super(threadGroup, "oss-web-crawler " + sessionName);
 		this.session = new CurrentSession(crawlDefinition, sessionName);
 		this.crawlDefinition = crawlDefinition;
@@ -78,9 +78,8 @@ public class WebCrawlThread extends Thread {
 			robotsTxtMap = new HashMap<>();
 		else
 			robotsTxtMap = null;
-		robotsTxtUserAgent = crawlDefinition.robots_txt_useragent == null ?
-						"QWAZR_BOT" :
-						crawlDefinition.robots_txt_useragent;
+		robotsTxtUserAgent =
+				crawlDefinition.robots_txt_useragent == null ? "QWAZR_BOT" : crawlDefinition.robots_txt_useragent;
 		try {
 			URI uri = new URI(crawlDefinition.entry_url);
 			String host = uri.getHost();
@@ -122,7 +121,7 @@ public class WebCrawlThread extends Thread {
 
 	WebCrawlStatus getStatus() {
 		return new WebCrawlStatus(ClusterManager.INSTANCE.myAddress, crawlDefinition.entry_url, this.getState(),
-						session);
+				session);
 	}
 
 	void abort(String reason) {
@@ -385,7 +384,7 @@ public class WebCrawlThread extends Thread {
 	}
 
 	private void crawlOne(final Set<URI> crawledURIs, URI uri, final Set<URI> nextLevelURIs, final int depth)
-					throws ServerException, IOException, URISyntaxException {
+			throws ServerException, IOException, URISyntaxException {
 
 		if (session.isAborting())
 			return;
@@ -399,7 +398,7 @@ public class WebCrawlThread extends Thread {
 
 		CurrentURI currentURI = new CurrentURI(uri, depth);
 
-		// Give the hand to the "before_crawl" script
+		// Give the hand to the "before_crawl" scripts
 		scriptBeforeCrawl(currentURI, null);
 
 		if (!currentURI.isIgnored()) {
@@ -432,7 +431,7 @@ public class WebCrawlThread extends Thread {
 	}
 
 	private void crawlLevel(Set<URI> crawledURIs, Collection<URI> levelURIs, int depth)
-					throws ServerException, IOException, URISyntaxException {
+			throws ServerException, IOException, URISyntaxException {
 
 		if (session.isAborting())
 			return;
@@ -457,13 +456,13 @@ public class WebCrawlThread extends Thread {
 	}
 
 	/**
-	 * Execute the script related to the passed event.
+	 * Execute the scripts related to the passed event.
 	 *
 	 * @param event      the expected event
 	 * @param currentURI the current URI description
-	 * @return true if the script was executed, false if no script is attached
+	 * @return true if the scripts was executed, false if no scripts is attached
 	 * to the event
-	 * @throws ServerException if the execution of the script failed
+	 * @throws ServerException if the execution of the scripts failed
 	 * @throws IOException     if any I/O exception occurs
 	 */
 	private boolean script(EventEnum event, CurrentURI currentURI) throws ServerException, IOException {
@@ -495,8 +494,8 @@ public class WebCrawlThread extends Thread {
 		return uriList;
 	}
 
-	private void runner() throws URISyntaxException, IOException, ScriptException, ServerException,
-					ReflectiveOperationException {
+	private void runner()
+			throws URISyntaxException, IOException, ScriptException, ServerException, ReflectiveOperationException {
 		try {
 			driver = new BrowserDriverBuilder(crawlDefinition).build();
 			script(EventEnum.before_session, null);
