@@ -16,19 +16,17 @@
 package com.qwazr.crawler.web.manager;
 
 import com.qwazr.cluster.manager.ClusterManager;
-import com.qwazr.crawler.web.WebCrawlerServer;
 import com.qwazr.crawler.web.client.WebCrawlerMultiClient;
 import com.qwazr.crawler.web.service.WebCrawlDefinition;
 import com.qwazr.crawler.web.service.WebCrawlStatus;
+import com.qwazr.crawler.web.service.WebCrawlerServiceImpl;
 import com.qwazr.crawler.web.service.WebCrawlerServiceInterface;
 import com.qwazr.utils.LockUtils;
-import com.qwazr.utils.server.AbstractServer;
 import com.qwazr.utils.server.ServerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.Response.Status;
-import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.HashMap;
@@ -37,18 +35,27 @@ import java.util.TreeMap;
 
 public class WebCrawlerManager {
 
+	public final static String SERVICE_NAME_WEBCRAWLER = "webcrawler";
+
 	private static final Logger logger = LoggerFactory.getLogger(WebCrawlerManager.class);
 
-	public static volatile WebCrawlerManager INSTANCE = null;
+	static WebCrawlerManager INSTANCE = null;
 
-	public static void load(AbstractServer server, File directory) throws IOException {
+	public synchronized static Class<? extends WebCrawlerServiceInterface> load() throws IOException {
 		if (INSTANCE != null)
 			throw new IOException("Already loaded");
 		try {
 			INSTANCE = new WebCrawlerManager();
+			return WebCrawlerServiceImpl.class;
 		} catch (URISyntaxException e) {
 			throw new IOException(e);
 		}
+	}
+
+	public static WebCrawlerManager getInstance() {
+		if (WebCrawlerManager.INSTANCE == null)
+			throw new RuntimeException("The web crawler service is not enabled");
+		return WebCrawlerManager.INSTANCE;
 	}
 
 	private final LockUtils.ReadWriteLock rwlSessionMap = new LockUtils.ReadWriteLock();
@@ -128,9 +135,10 @@ public class WebCrawlerManager {
 	}
 
 	public static WebCrawlerServiceInterface getClient() throws IOException, URISyntaxException {
-		if (!ClusterManager.INSTANCE.isCluster())
+		if (!ClusterManager.getInstance().isCluster())
 			throw new IOException("Web Crawler Interface not available");
-		return new WebCrawlerMultiClient(ClusterManager.INSTANCE.getClusterClient()
-				.getActiveNodesByService(WebCrawlerServer.SERVICE_NAME_WEBCRAWLER), 60000);
+		return new WebCrawlerMultiClient(
+				ClusterManager.getInstance().getClusterClient().getActiveNodesByService(SERVICE_NAME_WEBCRAWLER),
+				60000);
 	}
 }

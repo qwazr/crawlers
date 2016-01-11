@@ -6,6 +6,7 @@ import com.qwazr.cluster.manager.ClusterManager;
 import com.qwazr.crawler.web.client.WebCrawlerMultiClient;
 import com.qwazr.crawler.web.driver.BrowserDriver;
 import com.qwazr.crawler.web.driver.BrowserDriverBuilder;
+import com.qwazr.crawler.web.manager.WebCrawlerManager;
 import com.qwazr.crawler.web.service.WebCrawlDefinition;
 import com.qwazr.tools.AbstractTool;
 import com.qwazr.utils.IOUtils;
@@ -50,8 +51,8 @@ public class WebCrawlerTool extends AbstractTool {
 	 */
 	@JsonIgnore
 	public WebCrawlerMultiClient getNewWebCrawlerClient(Integer msTimeout) throws URISyntaxException {
-		return new WebCrawlerMultiClient(ClusterManager.INSTANCE.getClusterClient()
-						.getActiveNodesByService(WebCrawlerServer.SERVICE_NAME_WEBCRAWLER), msTimeout);
+		return new WebCrawlerMultiClient(ClusterManager.getInstance().getClusterClient()
+				.getActiveNodesByService(WebCrawlerManager.SERVICE_NAME_WEBCRAWLER), msTimeout);
 	}
 
 	@JsonIgnore
@@ -61,7 +62,7 @@ public class WebCrawlerTool extends AbstractTool {
 
 	@JsonIgnore
 	public BrowserDriver getNewWebDriver(IOUtils.CloseableContext context, String json)
-					throws ReflectiveOperationException, SecurityException, IOException {
+			throws ReflectiveOperationException, SecurityException, IOException {
 		WebCrawlDefinition webCrawlDef = JsonMapper.MAPPER.readValue(json, WebCrawlDefinition.class);
 		return new BrowserDriverBuilder(webCrawlDef).build();
 	}

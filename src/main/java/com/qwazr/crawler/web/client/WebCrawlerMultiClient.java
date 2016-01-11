@@ -33,7 +33,7 @@ import java.net.URISyntaxException;
 import java.util.TreeMap;
 
 public class WebCrawlerMultiClient extends JsonMultiClientAbstract<String, WebCrawlerSingleClient>
-				implements WebCrawlerServiceInterface {
+		implements WebCrawlerServiceInterface {
 
 	private static final Logger logger = LoggerFactory.getLogger(WebCrawlerMultiClient.class);
 
@@ -52,10 +52,10 @@ public class WebCrawlerMultiClient extends JsonMultiClientAbstract<String, WebCr
 
 		// If not global, just request the local node
 		if (local != null && local) {
-			WebCrawlerSingleClient client = getClientByUrl(ClusterManager.INSTANCE.myAddress);
+			WebCrawlerSingleClient client = getClientByUrl(ClusterManager.getInstance().myAddress);
 			if (client == null)
-				throw new ServerException(Status.NOT_ACCEPTABLE, "Node not valid: " + ClusterManager.INSTANCE.myAddress)
-								.getJsonException();
+				throw new ServerException(Status.NOT_ACCEPTABLE,
+						"Node not valid: " + ClusterManager.getInstance().myAddress).getJsonException();
 			return client.getSessions(true);
 		}
 
@@ -79,10 +79,10 @@ public class WebCrawlerMultiClient extends JsonMultiClientAbstract<String, WebCr
 
 		// If not global, just request the local node
 		if (local != null && local) {
-			WebCrawlerSingleClient client = getClientByUrl(ClusterManager.INSTANCE.myAddress);
+			WebCrawlerSingleClient client = getClientByUrl(ClusterManager.getInstance().myAddress);
 			if (client == null)
-				throw new ServerException(Status.NOT_ACCEPTABLE, "Node not valid: " + ClusterManager.INSTANCE.myAddress)
-								.getJsonException();
+				throw new ServerException(Status.NOT_ACCEPTABLE,
+						"Node not valid: " + ClusterManager.getInstance().myAddress).getJsonException();
 			return client.getSession(session_name, true);
 		}
 
@@ -102,10 +102,10 @@ public class WebCrawlerMultiClient extends JsonMultiClientAbstract<String, WebCr
 
 		// Is it local ?
 		if (local != null && local) {
-			WebCrawlerSingleClient client = getClientByUrl(ClusterManager.INSTANCE.myAddress);
+			WebCrawlerSingleClient client = getClientByUrl(ClusterManager.getInstance().myAddress);
 			if (client == null)
-				throw new ServerException(Status.NOT_ACCEPTABLE, "Node not valid: " + ClusterManager.INSTANCE.myAddress)
-								.getJsonException();
+				throw new ServerException(Status.NOT_ACCEPTABLE,
+						"Node not valid: " + ClusterManager.getInstance().myAddress).getJsonException();
 			return client.abortSession(session_name, reason, true);
 		}
 

@@ -120,7 +120,7 @@ public class WebCrawlThread extends Thread {
 	}
 
 	WebCrawlStatus getStatus() {
-		return new WebCrawlStatus(ClusterManager.INSTANCE.myAddress, crawlDefinition.entry_url, this.getState(),
+		return new WebCrawlStatus(ClusterManager.getInstance().myAddress, crawlDefinition.entry_url, this.getState(),
 				session);
 	}
 
@@ -479,7 +479,7 @@ public class WebCrawlThread extends Thread {
 			objects.put("driver", driver);
 		if (currentURI != null)
 			objects.put("current", currentURI);
-		ScriptRunThread scriptRunThread = ScriptManager.INSTANCE.runSync(script.name, objects);
+		ScriptRunThread scriptRunThread = ScriptManager.getInstance().runSync(script.name, objects);
 		if (scriptRunThread.getException() != null)
 			throw new ServerException(scriptRunThread.getException());
 		return true;

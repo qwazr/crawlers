@@ -15,17 +15,16 @@
  **/
 package com.qwazr.crawler.web.service;
 
-import com.qwazr.crawler.web.WebCrawlerServer;
+import com.qwazr.crawler.web.manager.WebCrawlerManager;
 
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
-import java.util.Map;
 import java.util.TreeMap;
 
-@RolesAllowed(WebCrawlerServer.SERVICE_NAME_WEBCRAWLER)
+@RolesAllowed(WebCrawlerManager.SERVICE_NAME_WEBCRAWLER)
 @Path("/crawler/web")
 public interface WebCrawlerServiceInterface {
 
@@ -42,10 +41,9 @@ public interface WebCrawlerServiceInterface {
 	@DELETE
 	@Path("/sessions/{session_name}")
 	Response abortSession(@PathParam("session_name") String session_name, @QueryParam("reason") String aborting_reason,
-					@QueryParam("local") Boolean local);
+			@QueryParam("local") Boolean local);
 
 	@POST
-	@PUT
 	@Path("/sessions/{session_name}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)

@@ -31,7 +31,7 @@ public class WebCrawlerServiceImpl implements WebCrawlerServiceInterface {
 
 		// Read the sessions in the local node
 		if (local != null && local)
-			return WebCrawlerManager.INSTANCE.getSessions();
+			return WebCrawlerManager.getInstance().getSessions();
 
 		// Read the sessions present in the remote nodes
 		try {
@@ -47,7 +47,7 @@ public class WebCrawlerServiceImpl implements WebCrawlerServiceInterface {
 	public WebCrawlStatus getSession(String session_name, Boolean local) {
 		try {
 			if (local != null && local) {
-				WebCrawlStatus status = WebCrawlerManager.INSTANCE.getSession(session_name);
+				WebCrawlStatus status = WebCrawlerManager.getInstance().getSession(session_name);
 				if (status != null)
 					return status;
 				throw new ServerException(Status.NOT_FOUND, "Session not found");
@@ -63,7 +63,7 @@ public class WebCrawlerServiceImpl implements WebCrawlerServiceInterface {
 	public Response abortSession(String session_name, String reason, Boolean local) {
 		try {
 			if (local != null && local) {
-				WebCrawlerManager.INSTANCE.abortSession(session_name, reason);
+				WebCrawlerManager.getInstance().abortSession(session_name, reason);
 				return Response.accepted().build();
 			}
 			return WebCrawlerManager.getClient().abortSession(session_name, reason, false);
@@ -75,7 +75,7 @@ public class WebCrawlerServiceImpl implements WebCrawlerServiceInterface {
 	@Override
 	public WebCrawlStatus runSession(String session_name, WebCrawlDefinition crawlDefinition) {
 		try {
-			return WebCrawlerManager.INSTANCE.runSession(session_name, crawlDefinition);
+			return WebCrawlerManager.getInstance().runSession(session_name, crawlDefinition);
 		} catch (ServerException e) {
 			throw ServerException.getJsonException(e);
 		}
