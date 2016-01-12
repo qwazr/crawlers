@@ -138,7 +138,7 @@ public class WebCrawlerManager {
 		if (!ClusterManager.getInstance().isCluster())
 			throw new IOException("Web Crawler Interface not available");
 		return new WebCrawlerMultiClient(
-				ClusterManager.getInstance().getClusterClient().getActiveNodesByService(SERVICE_NAME_WEBCRAWLER),
+				ClusterManager.getInstance().getClusterClient().getActiveNodesByService(SERVICE_NAME_WEBCRAWLER, null),
 				60000);
 	}
 }
