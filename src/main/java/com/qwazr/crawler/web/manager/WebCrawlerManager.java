@@ -47,7 +47,7 @@ public class WebCrawlerManager {
 			throw new IOException("Already loaded");
 		try {
 			INSTANCE = new WebCrawlerManager(executor);
-			return ClusterManager.getInstance().isCluster() ?
+			return ClusterManager.INSTANCE.isCluster() ?
 					WebCrawlerClusterServiceImpl.class :
 					WebCrawlerSingleServiceImpl.class;
 		} catch (URISyntaxException e) {
@@ -137,7 +137,7 @@ public class WebCrawlerManager {
 	}
 
 	public WebCrawlerMultiClient getMultiClient(String group, Integer msTimeout) throws URISyntaxException {
-		String[] urls = ClusterManager.getInstance().getClusterClient()
+		String[] urls = ClusterManager.INSTANCE.getClusterClient()
 				.getActiveNodesByService(SERVICE_NAME_WEBCRAWLER, group);
 		return new WebCrawlerMultiClient(executorService, urls, msTimeout);
 	}

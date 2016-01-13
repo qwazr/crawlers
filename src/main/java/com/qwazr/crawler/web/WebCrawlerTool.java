@@ -11,7 +11,6 @@ import com.qwazr.crawler.web.service.WebCrawlDefinition;
 import com.qwazr.crawler.web.service.WebCrawlerServiceInterface;
 import com.qwazr.crawler.web.service.WebCrawlerSingleServiceImpl;
 import com.qwazr.tools.AbstractTool;
-import com.qwazr.tools.ToolsManagerImpl;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.json.JsonMapper;
 
@@ -55,13 +54,13 @@ public class WebCrawlerTool extends AbstractTool {
 	@JsonIgnore
 	public WebCrawlerServiceInterface getNewWebCrawlerClient(String group, Integer msTimeout)
 			throws URISyntaxException {
-		if (!ClusterManager.getInstance().isCluster()) {
+		if (!ClusterManager.INSTANCE.isCluster()) {
 			WebCrawlerManager.getInstance();
 			return new WebCrawlerSingleServiceImpl();
 		}
-		String[] urls = ClusterManager.getInstance().getClusterClient()
+		String[] urls = ClusterManager.INSTANCE.getClusterClient()
 				.getActiveNodesByService(WebCrawlerManager.SERVICE_NAME_WEBCRAWLER, group);
-		return new WebCrawlerMultiClient(ToolsManagerImpl.getInstance().executorService, urls, msTimeout);
+		return new WebCrawlerMultiClient(ClusterManager.INSTANCE.executor, urls, msTimeout);
 	}
 
 	@JsonIgnore

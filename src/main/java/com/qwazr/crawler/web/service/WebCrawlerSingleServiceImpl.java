@@ -22,26 +22,22 @@ import com.qwazr.utils.server.ServerException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
-import java.util.Collections;
 import java.util.TreeMap;
 
 public class WebCrawlerSingleServiceImpl implements WebCrawlerServiceInterface {
 
-	private final static TreeMap<String, WebCrawlStatus> emptySessions = (TreeMap<String, WebCrawlStatus>) Collections
-			.unmodifiableMap(new TreeMap<String, WebCrawlStatus>());
-
 	@Override
 	public TreeMap<String, WebCrawlStatus> getSessions(Boolean local, String group, Integer msTimeout) {
 		// Read the sessions in the local node
-		if (!ClusterManager.getInstance().isGroup(group))
-			return emptySessions;
+		if (!ClusterManager.INSTANCE.isGroup(group))
+			return new TreeMap<String, WebCrawlStatus>();
 		return WebCrawlerManager.getInstance().getSessions();
 	}
 
 	@Override
 	public WebCrawlStatus getSession(String session_name, Boolean local, String group, Integer msTimeout) {
 		try {
-			WebCrawlStatus status = ClusterManager.getInstance().isGroup(group) ?
+			WebCrawlStatus status = ClusterManager.INSTANCE.isGroup(group) ?
 					WebCrawlerManager.getInstance().getSession(session_name) :
 					null;
 			if (status != null)
@@ -55,7 +51,7 @@ public class WebCrawlerSingleServiceImpl implements WebCrawlerServiceInterface {
 	@Override
 	public Response abortSession(String session_name, String reason, Boolean local, String group, Integer msTimeout) {
 		try {
-			if (!ClusterManager.getInstance().isGroup(group))
+			if (!ClusterManager.INSTANCE.isGroup(group))
 				throw new ServerException(Status.NOT_FOUND, "Session not found");
 			WebCrawlerManager.getInstance().abortSession(session_name, reason);
 			return Response.accepted().build();

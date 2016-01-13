@@ -118,7 +118,7 @@ public class WebCrawlThread implements Runnable {
 	}
 
 	WebCrawlStatus getStatus() {
-		return new WebCrawlStatus(ClusterManager.getInstance().myAddress, crawlDefinition.entry_url, session);
+		return new WebCrawlStatus(ClusterManager.INSTANCE.myAddress, crawlDefinition.entry_url, session);
 	}
 
 	void abort(String reason) {
