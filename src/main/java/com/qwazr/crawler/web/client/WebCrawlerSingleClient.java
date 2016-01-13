@@ -42,27 +42,27 @@ public class WebCrawlerSingleClient extends JsonClientAbstract implements WebCra
 	};
 
 	@Override
-	public TreeMap<String, WebCrawlStatus> getSessions(Boolean local) {
-		UBuilder uriBuilder = new UBuilder("/crawler/web/sessions").setParameters(local, null);
+	public TreeMap<String, WebCrawlStatus> getSessions(Boolean local, String group, Integer msTimeout) {
+		UBuilder uriBuilder = new UBuilder("/crawler/web/sessions").setParameters(local, group, msTimeout);
 		Request request = Request.Get(uriBuilder.build());
-		return commonServiceRequest(request, null, msTimeOut,
-						TreeMapStringCrawlTypeRef, 200);
+		return commonServiceRequest(request, null, null, TreeMapStringCrawlTypeRef, 200);
 	}
 
 	@Override
-	public WebCrawlStatus getSession(String session_name, Boolean local) {
-		UBuilder uriBuilder = new UBuilder("/crawler/web/sessions/", session_name).setParameters(local, null);
+	public WebCrawlStatus getSession(String session_name, Boolean local, String group, Integer msTimeout) {
+		UBuilder uriBuilder = new UBuilder("/crawler/web/sessions/", session_name)
+				.setParameters(local, group, msTimeout);
 		Request request = Request.Get(uriBuilder.build());
-		return commonServiceRequest(request, null, msTimeOut, WebCrawlStatus.class, 200);
+		return commonServiceRequest(request, null, null, WebCrawlStatus.class, 200);
 	}
 
 	@Override
-	public Response abortSession(String session_name, String reason, Boolean local) {
+	public Response abortSession(String session_name, String reason, Boolean local, String group, Integer msTimeout) {
 		try {
-			UBuilder uriBuilder = new UBuilder("/crawler/web/sessions/", session_name).setParameters(local, null)
-							.setParameterObject("reason", reason);
+			UBuilder uriBuilder = new UBuilder("/crawler/web/sessions/", session_name)
+					.setParameters(local, group, msTimeout).setParameterObject("reason", reason);
 			Request request = Request.Delete(uriBuilder.build());
-			HttpResponse response = execute(request, null, msTimeOut);
+			HttpResponse response = execute(request, null, null);
 			HttpUtils.checkStatusCodes(response, 200, 202);
 			return Response.status(response.getStatusLine().getStatusCode()).build();
 		} catch (HttpResponseEntityException e) {
@@ -76,7 +76,7 @@ public class WebCrawlerSingleClient extends JsonClientAbstract implements WebCra
 	public WebCrawlStatus runSession(String session_name, WebCrawlDefinition crawlDefinition) {
 		UBuilder uriBuilder = new UBuilder("/crawler/web/sessions/", session_name);
 		Request request = Request.Post(uriBuilder.build());
-		return commonServiceRequest(request, crawlDefinition, msTimeOut, WebCrawlStatus.class, 200, 202);
+		return commonServiceRequest(request, crawlDefinition, null, WebCrawlStatus.class, 200, 202);
 	}
 
 	@Override

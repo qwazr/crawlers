@@ -45,7 +45,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-public class WebCrawlThread extends Thread {
+public class WebCrawlThread implements Runnable {
 
 	private static final Logger logger = LoggerFactory.getLogger(WebCrawlThread.class);
 
@@ -62,9 +62,7 @@ public class WebCrawlThread extends Thread {
 	private final Map<URI, RobotsTxt> robotsTxtMap;
 	private final String robotsTxtUserAgent;
 
-	WebCrawlThread(ThreadGroup threadGroup, String sessionName, WebCrawlDefinition crawlDefinition)
-			throws ServerException {
-		super(threadGroup, "oss-web-crawler " + sessionName);
+	WebCrawlThread(String sessionName, WebCrawlDefinition crawlDefinition) throws ServerException {
 		this.session = new CurrentSession(crawlDefinition, sessionName);
 		this.crawlDefinition = crawlDefinition;
 		if (crawlDefinition.browser_type == null)
@@ -120,8 +118,7 @@ public class WebCrawlThread extends Thread {
 	}
 
 	WebCrawlStatus getStatus() {
-		return new WebCrawlStatus(ClusterManager.getInstance().myAddress, crawlDefinition.entry_url, this.getState(),
-				session);
+		return new WebCrawlStatus(ClusterManager.getInstance().myAddress, crawlDefinition.entry_url, session);
 	}
 
 	void abort(String reason) {

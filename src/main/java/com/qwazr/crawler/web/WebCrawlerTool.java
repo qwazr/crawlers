@@ -8,7 +8,10 @@ import com.qwazr.crawler.web.driver.BrowserDriver;
 import com.qwazr.crawler.web.driver.BrowserDriverBuilder;
 import com.qwazr.crawler.web.manager.WebCrawlerManager;
 import com.qwazr.crawler.web.service.WebCrawlDefinition;
+import com.qwazr.crawler.web.service.WebCrawlerServiceInterface;
+import com.qwazr.crawler.web.service.WebCrawlerSingleServiceImpl;
 import com.qwazr.tools.AbstractTool;
+import com.qwazr.tools.ToolsManagerImpl;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.json.JsonMapper;
 
@@ -37,8 +40,8 @@ public class WebCrawlerTool extends AbstractTool {
 	 * @throws URISyntaxException
 	 */
 	@JsonIgnore
-	public WebCrawlerMultiClient getNewWebCrawlerClient() throws URISyntaxException {
-		return getNewWebCrawlerClient(null);
+	public WebCrawlerServiceInterface getNewWebCrawlerClient() throws URISyntaxException {
+		return getNewWebCrawlerClient(null, null);
 	}
 
 	/**
@@ -50,9 +53,15 @@ public class WebCrawlerTool extends AbstractTool {
 	 * @throws URISyntaxException
 	 */
 	@JsonIgnore
-	public WebCrawlerMultiClient getNewWebCrawlerClient(Integer msTimeout) throws URISyntaxException {
-		return new WebCrawlerMultiClient(ClusterManager.getInstance().getClusterClient()
-				.getActiveNodesByService(WebCrawlerManager.SERVICE_NAME_WEBCRAWLER, null), msTimeout);
+	public WebCrawlerServiceInterface getNewWebCrawlerClient(String group, Integer msTimeout)
+			throws URISyntaxException {
+		if (!ClusterManager.getInstance().isCluster()) {
+			WebCrawlerManager.getInstance();
+			return new WebCrawlerSingleServiceImpl();
+		}
+		String[] urls = ClusterManager.getInstance().getClusterClient()
+				.getActiveNodesByService(WebCrawlerManager.SERVICE_NAME_WEBCRAWLER, group);
+		return new WebCrawlerMultiClient(ToolsManagerImpl.getInstance().executorService, urls, msTimeout);
 	}
 
 	@JsonIgnore

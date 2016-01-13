@@ -15,59 +15,51 @@
  **/
 package com.qwazr.crawler.web.service;
 
+import com.qwazr.cluster.manager.ClusterManager;
 import com.qwazr.crawler.web.manager.WebCrawlerManager;
 import com.qwazr.utils.server.ServerException;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
-import java.net.URISyntaxException;
+import java.util.Collections;
 import java.util.TreeMap;
 
-public class WebCrawlerServiceImpl implements WebCrawlerServiceInterface {
+public class WebCrawlerSingleServiceImpl implements WebCrawlerServiceInterface {
+
+	private final static TreeMap<String, WebCrawlStatus> emptySessions = (TreeMap<String, WebCrawlStatus>) Collections
+			.unmodifiableMap(new TreeMap<String, WebCrawlStatus>());
 
 	@Override
-	public TreeMap<String, WebCrawlStatus> getSessions(Boolean local) {
-
+	public TreeMap<String, WebCrawlStatus> getSessions(Boolean local, String group, Integer msTimeout) {
 		// Read the sessions in the local node
-		if (local != null && local)
-			return WebCrawlerManager.getInstance().getSessions();
+		if (!ClusterManager.getInstance().isGroup(group))
+			return emptySessions;
+		return WebCrawlerManager.getInstance().getSessions();
+	}
 
-		// Read the sessions present in the remote nodes
+	@Override
+	public WebCrawlStatus getSession(String session_name, Boolean local, String group, Integer msTimeout) {
 		try {
-			TreeMap<String, WebCrawlStatus> globalSessions = new TreeMap<String, WebCrawlStatus>();
-			globalSessions.putAll(WebCrawlerManager.getClient().getSessions(false));
-			return globalSessions;
-		} catch (IOException | URISyntaxException e) {
+			WebCrawlStatus status = ClusterManager.getInstance().isGroup(group) ?
+					WebCrawlerManager.getInstance().getSession(session_name) :
+					null;
+			if (status != null)
+				return status;
+			throw new ServerException(Status.NOT_FOUND, "Session not found");
+		} catch (ServerException e) {
 			throw ServerException.getJsonException(e);
 		}
 	}
 
 	@Override
-	public WebCrawlStatus getSession(String session_name, Boolean local) {
+	public Response abortSession(String session_name, String reason, Boolean local, String group, Integer msTimeout) {
 		try {
-			if (local != null && local) {
-				WebCrawlStatus status = WebCrawlerManager.getInstance().getSession(session_name);
-				if (status != null)
-					return status;
+			if (!ClusterManager.getInstance().isGroup(group))
 				throw new ServerException(Status.NOT_FOUND, "Session not found");
-			}
-			return WebCrawlerManager.getClient().getSession(session_name, false);
-		} catch (URISyntaxException | IOException | ServerException e) {
-			throw ServerException.getJsonException(e);
-		}
-
-	}
-
-	@Override
-	public Response abortSession(String session_name, String reason, Boolean local) {
-		try {
-			if (local != null && local) {
-				WebCrawlerManager.getInstance().abortSession(session_name, reason);
-				return Response.accepted().build();
-			}
-			return WebCrawlerManager.getClient().abortSession(session_name, reason, false);
-		} catch (IOException | ServerException | URISyntaxException e) {
+			WebCrawlerManager.getInstance().abortSession(session_name, reason);
+			return Response.accepted().build();
+		} catch (ServerException e) {
 			throw ServerException.getTextException(e);
 		}
 	}

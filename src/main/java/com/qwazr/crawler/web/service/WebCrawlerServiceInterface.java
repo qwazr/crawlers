@@ -31,17 +31,20 @@ public interface WebCrawlerServiceInterface {
 	@GET
 	@Path("/sessions")
 	@Produces(MediaType.APPLICATION_JSON)
-	TreeMap<String, WebCrawlStatus> getSessions(@QueryParam("local") Boolean local);
+	TreeMap<String, WebCrawlStatus> getSessions(@QueryParam("local") Boolean local, @QueryParam("group") String group,
+			@QueryParam("timeout") Integer msTimeout);
 
 	@GET
 	@Path("/sessions/{session_name}")
 	@Produces(MediaType.APPLICATION_JSON)
-	WebCrawlStatus getSession(@PathParam("session_name") String session_name, @QueryParam("local") Boolean local);
+	WebCrawlStatus getSession(@PathParam("session_name") String session_name, @QueryParam("local") Boolean local,
+			@QueryParam("group") String group, @QueryParam("timeout") Integer msTimeout);
 
 	@DELETE
 	@Path("/sessions/{session_name}")
 	Response abortSession(@PathParam("session_name") String session_name, @QueryParam("reason") String aborting_reason,
-			@QueryParam("local") Boolean local);
+			@QueryParam("local") Boolean local, @QueryParam("group") String group,
+			@QueryParam("timeout") Integer msTimeout);
 
 	@POST
 	@Path("/sessions/{session_name}")

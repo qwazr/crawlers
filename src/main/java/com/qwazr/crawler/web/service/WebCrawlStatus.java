@@ -1,12 +1,12 @@
 /**
  * Copyright 2014-2016 Emmanuel Keller / QWAZR
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,7 +19,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.qwazr.crawler.web.manager.CurrentSession;
 
-import java.lang.Thread.State;
 import java.util.Date;
 
 @JsonInclude(Include.NON_EMPTY)
@@ -27,7 +26,6 @@ public class WebCrawlStatus {
 
 	final public String node_address;
 	final public Date start_time;
-	final public State state;
 	final public String entry_url;
 	final public Boolean aborting;
 	final public String aborting_reason;
@@ -36,18 +34,16 @@ public class WebCrawlStatus {
 	public WebCrawlStatus() {
 		node_address = null;
 		start_time = null;
-		state = null;
 		entry_url = null;
 		aborting = null;
 		aborting_reason = null;
 		urls = null;
 	}
 
-	public WebCrawlStatus(String node_address, String entry_url, State state, CurrentSession session) {
+	public WebCrawlStatus(String node_address, String entry_url, CurrentSession session) {
 		this.node_address = node_address;
 		this.entry_url = entry_url;
 		this.start_time = session.getStartTime();
-		this.state = state;
 		this.aborting = session.isAborting();
 		this.aborting_reason = session.getAbortingReason();
 		this.urls = new UrlStatus(session);

@@ -17,10 +17,7 @@ package com.qwazr.crawler.web.manager;
 
 import com.qwazr.cluster.manager.ClusterManager;
 import com.qwazr.crawler.web.client.WebCrawlerMultiClient;
-import com.qwazr.crawler.web.service.WebCrawlDefinition;
-import com.qwazr.crawler.web.service.WebCrawlStatus;
-import com.qwazr.crawler.web.service.WebCrawlerServiceImpl;
-import com.qwazr.crawler.web.service.WebCrawlerServiceInterface;
+import com.qwazr.crawler.web.service.*;
 import com.qwazr.utils.LockUtils;
 import com.qwazr.utils.server.ServerException;
 import org.slf4j.Logger;
@@ -32,6 +29,7 @@ import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.ExecutorService;
 
 public class WebCrawlerManager {
 
@@ -41,12 +39,17 @@ public class WebCrawlerManager {
 
 	static WebCrawlerManager INSTANCE = null;
 
-	public synchronized static Class<? extends WebCrawlerServiceInterface> load() throws IOException {
+	private final ExecutorService executorService;
+
+	public synchronized static Class<? extends WebCrawlerServiceInterface> load(ExecutorService executor)
+			throws IOException {
 		if (INSTANCE != null)
 			throw new IOException("Already loaded");
 		try {
-			INSTANCE = new WebCrawlerManager();
-			return WebCrawlerServiceImpl.class;
+			INSTANCE = new WebCrawlerManager(executor);
+			return ClusterManager.getInstance().isCluster() ?
+					WebCrawlerClusterServiceImpl.class :
+					WebCrawlerSingleServiceImpl.class;
 		} catch (URISyntaxException e) {
 			throw new IOException(e);
 		}
@@ -60,10 +63,9 @@ public class WebCrawlerManager {
 
 	private final LockUtils.ReadWriteLock rwlSessionMap = new LockUtils.ReadWriteLock();
 	private final HashMap<String, WebCrawlThread> crawlSessionMap;
-	private final ThreadGroup threadGroup;
 
-	private WebCrawlerManager() throws IOException, URISyntaxException {
-		threadGroup = new ThreadGroup("CrawlThreads");
+	private WebCrawlerManager(ExecutorService executor) throws IOException, URISyntaxException {
+		this.executorService = executor;
 		crawlSessionMap = new HashMap<String, WebCrawlThread>();
 	}
 
@@ -113,9 +115,9 @@ public class WebCrawlerManager {
 			if (logger.isInfoEnabled())
 				logger.info("Create session: " + session_name);
 
-			WebCrawlThread crawlThread = new WebCrawlThread(threadGroup, session_name, crawlJson);
+			WebCrawlThread crawlThread = new WebCrawlThread(session_name, crawlJson);
 			crawlSessionMap.put(session_name, crawlThread);
-			crawlThread.start();
+			executorService.execute(crawlThread);
 			return crawlThread.getStatus();
 		} finally {
 			rwlSessionMap.w.unlock();
@@ -134,11 +136,10 @@ public class WebCrawlerManager {
 		}
 	}
 
-	public static WebCrawlerServiceInterface getClient() throws IOException, URISyntaxException {
-		if (!ClusterManager.getInstance().isCluster())
-			throw new IOException("Web Crawler Interface not available");
-		return new WebCrawlerMultiClient(
-				ClusterManager.getInstance().getClusterClient().getActiveNodesByService(SERVICE_NAME_WEBCRAWLER, null),
-				60000);
+	public WebCrawlerMultiClient getMultiClient(String group, Integer msTimeout) throws URISyntaxException {
+		String[] urls = ClusterManager.getInstance().getClusterClient()
+				.getActiveNodesByService(SERVICE_NAME_WEBCRAWLER, group);
+		return new WebCrawlerMultiClient(executorService, urls, msTimeout);
 	}
+
 }

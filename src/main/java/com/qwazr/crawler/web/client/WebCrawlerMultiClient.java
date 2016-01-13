@@ -15,13 +15,14 @@
  **/
 package com.qwazr.crawler.web.client;
 
-import com.qwazr.cluster.manager.ClusterManager;
 import com.qwazr.crawler.web.service.WebCrawlDefinition;
 import com.qwazr.crawler.web.service.WebCrawlStatus;
 import com.qwazr.crawler.web.service.WebCrawlerServiceInterface;
+import com.qwazr.crawler.web.service.WebCrawlerSingleServiceImpl;
 import com.qwazr.utils.http.HttpResponseEntityException;
 import com.qwazr.utils.json.client.JsonMultiClientAbstract;
 import com.qwazr.utils.server.ServerException;
+import com.qwazr.utils.server.WebAppExceptionHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,15 +32,15 @@ import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.TreeMap;
+import java.util.concurrent.ExecutorService;
 
 public class WebCrawlerMultiClient extends JsonMultiClientAbstract<String, WebCrawlerSingleClient>
 		implements WebCrawlerServiceInterface {
 
 	private static final Logger logger = LoggerFactory.getLogger(WebCrawlerMultiClient.class);
 
-	public WebCrawlerMultiClient(String[] urls, Integer msTimeOut) throws URISyntaxException {
-		// TODO Pass executor
-		super(null, new WebCrawlerSingleClient[urls.length], urls, msTimeOut);
+	public WebCrawlerMultiClient(ExecutorService executor, String[] urls, Integer msTimeOut) throws URISyntaxException {
+		super(executor, new WebCrawlerSingleClient[urls.length], urls, msTimeOut);
 	}
 
 	@Override
@@ -48,22 +49,17 @@ public class WebCrawlerMultiClient extends JsonMultiClientAbstract<String, WebCr
 	}
 
 	@Override
-	public TreeMap<String, WebCrawlStatus> getSessions(Boolean local) {
+	public TreeMap<String, WebCrawlStatus> getSessions(Boolean local, String group, Integer msTimeout) {
 
 		// If not global, just request the local node
-		if (local != null && local) {
-			WebCrawlerSingleClient client = getClientByUrl(ClusterManager.getInstance().myAddress);
-			if (client == null)
-				throw new ServerException(Status.NOT_ACCEPTABLE,
-						"Node not valid: " + ClusterManager.getInstance().myAddress).getJsonException();
-			return client.getSessions(true);
-		}
+		if (local != null && local)
+			return new WebCrawlerSingleServiceImpl().getSessions(local, group, msTimeout);
 
 		// We merge the result of all the nodes
 		TreeMap<String, WebCrawlStatus> globalSessions = new TreeMap<String, WebCrawlStatus>();
 		for (WebCrawlerSingleClient client : this) {
 			try {
-				TreeMap<String, WebCrawlStatus> localSessions = client.getSessions(true);
+				TreeMap<String, WebCrawlStatus> localSessions = client.getSessions(true, group, msTimeout);
 				if (localSessions == null)
 					continue;
 				globalSessions.putAll(localSessions);
@@ -75,20 +71,15 @@ public class WebCrawlerMultiClient extends JsonMultiClientAbstract<String, WebCr
 	}
 
 	@Override
-	public WebCrawlStatus getSession(String session_name, Boolean local) {
+	public WebCrawlStatus getSession(String session_name, Boolean local, String group, Integer msTimeout) {
 
 		// If not global, just request the local node
-		if (local != null && local) {
-			WebCrawlerSingleClient client = getClientByUrl(ClusterManager.getInstance().myAddress);
-			if (client == null)
-				throw new ServerException(Status.NOT_ACCEPTABLE,
-						"Node not valid: " + ClusterManager.getInstance().myAddress).getJsonException();
-			return client.getSession(session_name, true);
-		}
+		if (local != null && local)
+			return new WebCrawlerSingleServiceImpl().getSession(session_name, local, group, msTimeout);
 
 		for (WebCrawlerSingleClient client : this) {
 			try {
-				return client.getSession(session_name, true);
+				return client.getSession(session_name, true, group, msTimeout);
 			} catch (WebApplicationException e) {
 				if (e.getResponse().getStatus() != 404)
 					throw e;
@@ -98,22 +89,17 @@ public class WebCrawlerMultiClient extends JsonMultiClientAbstract<String, WebCr
 	}
 
 	@Override
-	public Response abortSession(String session_name, String reason, Boolean local) {
+	public Response abortSession(String session_name, String reason, Boolean local, String group, Integer msTimeout) {
 
 		// Is it local ?
-		if (local != null && local) {
-			WebCrawlerSingleClient client = getClientByUrl(ClusterManager.getInstance().myAddress);
-			if (client == null)
-				throw new ServerException(Status.NOT_ACCEPTABLE,
-						"Node not valid: " + ClusterManager.getInstance().myAddress).getJsonException();
-			return client.abortSession(session_name, reason, true);
-		}
+		if (local != null && local)
+			return new WebCrawlerSingleServiceImpl().abortSession(session_name, reason, local, group, msTimeout);
 
 		// Global, we abort on every nodes
 		boolean aborted = false;
 		for (WebCrawlerSingleClient client : this) {
 			try {
-				int code = client.abortSession(session_name, reason, true).getStatus();
+				int code = client.abortSession(session_name, reason, true, group, msTimeout).getStatus();
 				if (code == 200 || code == 202)
 					aborted = true;
 			} catch (WebApplicationException e) {
