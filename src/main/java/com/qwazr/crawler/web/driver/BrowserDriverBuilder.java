@@ -19,6 +19,7 @@ import com.qwazr.crawler.web.service.WebCrawlDefinition;
 import org.apache.commons.lang3.RandomUtils;
 import org.openqa.selenium.Cookie;
 import org.openqa.selenium.Proxy;
+import org.openqa.selenium.phantomjs.PhantomJSDriverService;
 import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.DesiredCapabilities;
 
@@ -81,8 +82,25 @@ public class BrowserDriverBuilder {
 			// Setup the language
 			if (crawlDefinition.browser_language != null) {
 				capabilities = checkCapabilities(capabilities);
-				capabilities.setCapability(AdditionalCapabilities.QWAZR_BROWSER_LANGUAGE,
+				capabilities
+						.setCapability(AdditionalCapabilities.QWAZR_BROWSER_LANGUAGE, crawlDefinition.browser_language);
+				capabilities
+						.setCapability(PhantomJSDriverService.PHANTOMJS_PAGE_CUSTOMHEADERS_PREFIX + "Accept-Language",
 								crawlDefinition.browser_language);
+			}
+
+			// Download images
+			if (crawlDefinition.download_images != null) {
+				capabilities = checkCapabilities(capabilities);
+				capabilities.setCapability(PhantomJSDriverService.PHANTOMJS_PAGE_SETTINGS_PREFIX + "loadImages",
+						crawlDefinition.download_images);
+			}
+
+			// Web security
+			if (crawlDefinition.web_security != null) {
+				capabilities = checkCapabilities(capabilities);
+				capabilities.setCapability(PhantomJSDriverService.PHANTOMJS_PAGE_SETTINGS_PREFIX + "webSecurityEnabled",
+						crawlDefinition.web_security);
 			}
 
 			// Choose a browser type
@@ -105,13 +123,14 @@ public class BrowserDriverBuilder {
 				capabilities = checkCapabilities(capabilities);
 				capabilities.setJavascriptEnabled(crawlDefinition.javascript_enabled);
 			}
+
 		} else
 			proxyDef = null;
 
 		BrowserDriver driver = browserType.getNewInstance(capabilities);
 		driver.setProxy(proxyDef);
 		driver.setTimeouts(crawlDefinition.implicitly_wait, crawlDefinition.page_load_timeout,
-						crawlDefinition.script_timeout);
+				crawlDefinition.script_timeout);
 
 		if (crawlDefinition.cookies != null) {
 			for (Map.Entry<String, String> cookie : crawlDefinition.cookies.entrySet())

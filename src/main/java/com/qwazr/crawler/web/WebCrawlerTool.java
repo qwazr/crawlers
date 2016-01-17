@@ -27,10 +27,6 @@ public class WebCrawlerTool extends AbstractTool {
 	public void load(File parentDir) {
 	}
 
-	@Override
-	public void unload() {
-	}
-
 	/**
 	 * Create a new WebCrawler client instance.
 	 * This API queries the cluster to get the current active node for the WebCrawler service.
