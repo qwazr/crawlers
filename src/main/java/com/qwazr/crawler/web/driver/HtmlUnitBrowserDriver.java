@@ -31,7 +31,7 @@ import java.util.List;
 
 import static com.qwazr.utils.json.JsonMapper.MAPPER;
 
-class HtmlUnitBrowserDriver extends BrowserDriver<HtmlUnitDriverWebClient> {
+public class HtmlUnitBrowserDriver extends BrowserDriver<HtmlUnitDriverWebClient> {
 
 	private List<InputStream> inputStreamList = null;
 

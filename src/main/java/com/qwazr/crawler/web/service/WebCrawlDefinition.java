@@ -306,6 +306,8 @@ public class WebCrawlDefinition implements Cloneable {
 		browser_version = src.browser_version;
 		browser_type = src.browser_type;
 		javascript_enabled = src.javascript_enabled;
+		download_images = src.download_images;
+		web_security = src.web_security;
 		robots_txt_enabled = src.robots_txt_enabled;
 		robots_txt_useragent = src.robots_txt_useragent;
 		proxy = src.proxy == null ? null : new ProxyDefinition(src.proxy);

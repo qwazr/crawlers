@@ -45,9 +45,16 @@ public class BrowserDriverBuilder {
 
 	public BrowserDriver<?> build() throws ReflectiveOperationException, SecurityException {
 		BrowserDriverEnum browserType = BrowserDriverEnum.html_unit;
+		
 		final WebCrawlDefinition.ProxyDefinition proxyDef;
+
 		DesiredCapabilities capabilities = null;
+
 		if (crawlDefinition != null) {
+
+			// Choose a browser type
+			if (crawlDefinition.browser_type != null)
+				browserType = crawlDefinition.browser_type;
 
 			if (crawlDefinition.proxies != null && !crawlDefinition.proxies.isEmpty())
 				proxyDef = crawlDefinition.proxies.get(RandomUtils.nextInt(0, crawlDefinition.proxies.size()));
@@ -84,28 +91,28 @@ public class BrowserDriverBuilder {
 				capabilities = checkCapabilities(capabilities);
 				capabilities
 						.setCapability(AdditionalCapabilities.QWAZR_BROWSER_LANGUAGE, crawlDefinition.browser_language);
-				capabilities
-						.setCapability(PhantomJSDriverService.PHANTOMJS_PAGE_CUSTOMHEADERS_PREFIX + "Accept-Language",
-								crawlDefinition.browser_language);
+				if (browserType == BrowserDriverEnum.phantomjs)
+					capabilities.setCapability(
+							PhantomJSDriverService.PHANTOMJS_PAGE_CUSTOMHEADERS_PREFIX + "Accept-Language",
+							crawlDefinition.browser_language);
 			}
 
 			// Download images
 			if (crawlDefinition.download_images != null) {
 				capabilities = checkCapabilities(capabilities);
-				capabilities.setCapability(PhantomJSDriverService.PHANTOMJS_PAGE_SETTINGS_PREFIX + "loadImages",
-						crawlDefinition.download_images);
+				if (browserType == BrowserDriverEnum.phantomjs)
+					capabilities.setCapability(PhantomJSDriverService.PHANTOMJS_PAGE_SETTINGS_PREFIX + "loadImages",
+							crawlDefinition.download_images);
 			}
 
 			// Web security
 			if (crawlDefinition.web_security != null) {
 				capabilities = checkCapabilities(capabilities);
-				capabilities.setCapability(PhantomJSDriverService.PHANTOMJS_PAGE_SETTINGS_PREFIX + "webSecurityEnabled",
-						crawlDefinition.web_security);
+				if (browserType == BrowserDriverEnum.phantomjs)
+					capabilities
+							.setCapability(PhantomJSDriverService.PHANTOMJS_PAGE_SETTINGS_PREFIX + "webSecurityEnabled",
+									crawlDefinition.web_security);
 			}
-
-			// Choose a browser type
-			if (crawlDefinition.browser_type != null)
-				browserType = crawlDefinition.browser_type;
 
 			// Choose a browser name
 			if (crawlDefinition.browser_name != null) {
@@ -122,20 +129,25 @@ public class BrowserDriverBuilder {
 			if (crawlDefinition.javascript_enabled != null) {
 				capabilities = checkCapabilities(capabilities);
 				capabilities.setJavascriptEnabled(crawlDefinition.javascript_enabled);
+				if (browserType == BrowserDriverEnum.phantomjs)
+					capabilities
+							.setCapability(PhantomJSDriverService.PHANTOMJS_PAGE_SETTINGS_PREFIX + "javascriptEnabled",
+									crawlDefinition.javascript_enabled);
+
 			}
 
 		} else
 			proxyDef = null;
 
-		BrowserDriver driver = browserType.getNewInstance(capabilities);
+		final BrowserDriver driver = browserType.getNewInstance(capabilities);
 		driver.setProxy(proxyDef);
 		driver.setTimeouts(crawlDefinition.implicitly_wait, crawlDefinition.page_load_timeout,
 				crawlDefinition.script_timeout);
 
-		if (crawlDefinition.cookies != null) {
+		if (crawlDefinition.cookies != null)
 			for (Map.Entry<String, String> cookie : crawlDefinition.cookies.entrySet())
 				driver.manage().addCookie(new Cookie(cookie.getKey(), cookie.getValue()));
-		}
+
 		return driver;
 	}
 }
