@@ -15,12 +15,15 @@
  **/
 package com.qwazr.crawler.web.driver;
 
-import com.gargoylesoftware.htmlunit.*;
+import com.gargoylesoftware.htmlunit.Page;
+import com.gargoylesoftware.htmlunit.WebClient;
+import com.gargoylesoftware.htmlunit.WebResponse;
+import com.gargoylesoftware.htmlunit.WebWindow;
 import com.gargoylesoftware.htmlunit.html.DomElement;
+import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.qwazr.crawler.web.service.WebRequestDefinition;
 import com.qwazr.utils.IOUtils;
 import org.openqa.selenium.Capabilities;
-import org.openqa.selenium.WebElement;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -57,12 +60,8 @@ public class HtmlUnitBrowserDriver extends BrowserDriver<HtmlUnitDriverWebClient
 		super.close();
 	}
 
-	public WebClient getWebClient() {
-		return driver.getWebClient();
-	}
-
-	public Page getEnclosedPage() {
-		WebClient webClient = getWebClient();
+	private Page getEnclosedPage() {
+		WebClient webClient = driver.getWebClient();
 		if (webClient == null)
 			return null;
 		WebWindow webWindow = webClient.getCurrentWindow();
@@ -72,10 +71,10 @@ public class HtmlUnitBrowserDriver extends BrowserDriver<HtmlUnitDriverWebClient
 	}
 
 	public void test() {
-		getWebClient().getCurrentWindow().getTopWindow();
+		driver.getWebClient().getCurrentWindow().getTopWindow();
 	}
 
-	public WebResponse getWebResponse() {
+	private WebResponse getWebResponse() {
 		Page page = getEnclosedPage();
 		if (page == null)
 			return null;
@@ -94,13 +93,6 @@ public class HtmlUnitBrowserDriver extends BrowserDriver<HtmlUnitDriverWebClient
 		if (response == null)
 			return null;
 		return response.getContentType();
-	}
-
-	public boolean isUnexpectedPage() {
-		Page page = getEnclosedPage();
-		if (page == null)
-			return false;
-		return page instanceof UnexpectedPage;
 	}
 
 	public InputStream getInputStream() throws IOException {
@@ -131,17 +123,27 @@ public class HtmlUnitBrowserDriver extends BrowserDriver<HtmlUnitDriverWebClient
 		}
 	}
 
+	@Override
+	public String getInnerHtmlByXPath(String xPath) {
+		Page page = getEnclosedPage();
+		if (page == null)
+			return null;
+		if (!(page instanceof HtmlPage))
+			return null;
+		HtmlPage htmlPage = (HtmlPage) page;
+		DomElement domElement = htmlPage.getFirstByXPath(xPath);
+		if (domElement == null)
+			return null;
+		return domElement.asXml();
+	}
+
 	public void saveResponse(String path) throws IOException {
 		saveResponseFile(new File(path));
 	}
 
 	public Page request(String json) throws IOException {
 		WebRequestDefinition webRequestDef = MAPPER.readValue(json, WebRequestDefinition.class);
-		return getWebClient().getPage(webRequestDef.getNewWebRequest());
-	}
-
-	public WebElement convertNode(DomElement node) {
-		return driver.convertNode(node);
+		return driver.getWebClient().getPage(webRequestDef.getNewWebRequest());
 	}
 
 }

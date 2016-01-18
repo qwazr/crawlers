@@ -27,6 +27,7 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -180,6 +181,25 @@ public abstract class BrowserDriver<T extends WebDriver> implements WebDriver, C
 		extractLinks(searchContext, hrefCollection, "frame", "src");
 	}
 
+	public void findRssItemLinks(SearchContext searchContext, Collection<String> linkCollection) {
+		List<WebElement> channels = driver.findElements(By.tagName("channel"));
+		for (WebElement channel : channels) {
+			List<WebElement> items = channel.findElements(By.tagName("item"));
+			for (WebElement item : items) {
+				List<WebElement> links = item.findElements(By.tagName("link"));
+				for (WebElement link : links) {
+					linkCollection.add(link.getText());
+				}
+			}
+		}
+	}
+
+	public List<String> getRssItemLinks() {
+		ArrayList<String> links = new ArrayList<String>();
+		findRssItemLinks(driver, links);
+		return links;
+	}
+
 	public String getSnippet(SearchContext searchContext, int sizeLimit) {
 		List<WebElement> elements = searchContext.findElements(By.tagName("p"));
 		if (elements == null)
@@ -219,7 +239,7 @@ public abstract class BrowserDriver<T extends WebDriver> implements WebDriver, C
 	}
 
 	private void extractLinks(SearchContext searchContext, Collection<String> hrefCollection, String tag,
-					String... attrs) {
+			String... attrs) {
 
 		// Let's look for the a tags
 		List<WebElement> links = searchContext.findElements(By.tagName(tag));
@@ -237,6 +257,45 @@ public abstract class BrowserDriver<T extends WebDriver> implements WebDriver, C
 				}
 			}
 		}
+	}
+
+	private WebElement findElementBy(By by) {
+		try {
+			return driver.findElement(by);
+		} catch (NoSuchElementException e) {
+			return null;
+		}
+	}
+
+	public String getInnerHtmlByXPath(String xPath) {
+		WebElement element = findElementBy(By.xpath(xPath));
+		if (element == null)
+			return null;
+		return element.getAttribute("innerHTML");
+	}
+
+	public WebElement findElementByXPath(String xPath) {
+		return findElementBy(By.xpath(xPath));
+	}
+
+	public WebElement findElementByTagName(String tagName) {
+		return findElementBy(By.tagName(tagName));
+	}
+
+	public WebElement findElementByCssSelector(String cssSelector) {
+		return findElementBy(By.cssSelector(cssSelector));
+	}
+
+	public List<WebElement> findElementsByXPath(String xPath) {
+		return driver.findElements(By.xpath(xPath));
+	}
+
+	public List<WebElement> findElementsByTagName(String tagName) {
+		return driver.findElements(By.tagName(tagName));
+	}
+
+	public List<WebElement> findElementsByCssSelector(String cssSelector) {
+		return driver.findElements(By.cssSelector(cssSelector));
 	}
 
 }

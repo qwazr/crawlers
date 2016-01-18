@@ -15,14 +15,13 @@
  **/
 package com.qwazr.crawler.web.driver;
 
-import org.openqa.selenium.Capabilities;
-import org.openqa.selenium.WebElement;
-import org.openqa.selenium.htmlunit.HtmlUnitDriver;
-
 import com.gargoylesoftware.htmlunit.BrowserVersion;
 import com.gargoylesoftware.htmlunit.NicelyResynchronizingAjaxController;
 import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.html.DomElement;
+import org.openqa.selenium.Capabilities;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.htmlunit.HtmlUnitDriver;
 
 public class HtmlUnitDriverWebClient extends HtmlUnitDriver {
 
@@ -61,5 +60,6 @@ public class HtmlUnitDriverWebClient extends HtmlUnitDriver {
 	WebElement convertNode(DomElement element) {
 		return newHtmlUnitWebElement(element);
 	}
+
 
 }
