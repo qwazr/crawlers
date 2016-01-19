@@ -18,7 +18,10 @@ package com.qwazr.crawler.web.manager;
 import com.qwazr.crawler.web.service.WebCrawlDefinition;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.LinkUtils;
+import com.qwazr.utils.http.HttpUtils;
+import org.apache.http.client.HttpClient;
 import org.apache.http.client.HttpResponseException;
+import org.apache.http.client.fluent.Executor;
 import org.apache.http.client.fluent.Request;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +33,9 @@ import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.StringTokenizer;
@@ -243,9 +249,12 @@ public class RobotsTxt {
 		}
 	}
 
-	static RobotsTxt download(WebCrawlDefinition.ProxyDefinition proxy, String userAgent, URI uri) throws IOException {
+	static RobotsTxt download(WebCrawlDefinition.ProxyDefinition proxy, String userAgent, URI uri)
+			throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
 		InputStream is = null;
+		final HttpClient httpClient = HttpUtils.createHttpClient_AcceptsUntrustedCerts();
 		try {
+			final Executor executor = Executor.newInstance(httpClient);
 			Request request = Request.Get(uri.toString()).addHeader("Connection", "close")
 					.addHeader("User-Agent", userAgent).connectTimeout(60000).socketTimeout(60000);
 			if (proxy != null) {
@@ -256,7 +265,7 @@ public class RobotsTxt {
 			}
 			if (logger.isInfoEnabled())
 				logger.info("Try to download robots.txt " + uri);
-			is = request.execute().returnContent().asStream();
+			is = executor.execute(request).returnContent().asStream();
 			if (logger.isInfoEnabled())
 				logger.info("Robots.txt downloaded: " + uri);
 			return new RobotsTxt(userAgent, is);
@@ -271,8 +280,9 @@ public class RobotsTxt {
 			}
 			return new RobotsTxt(userAgent, sc);
 		} finally {
-			if (is != null)
-				IOUtils.closeQuietly(is);
+			IOUtils.close(is);
+			if (httpClient != null && httpClient instanceof AutoCloseable)
+				IOUtils.close((AutoCloseable) httpClient);
 		}
 	}
 

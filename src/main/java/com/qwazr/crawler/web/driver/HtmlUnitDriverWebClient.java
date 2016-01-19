@@ -15,9 +15,7 @@
  **/
 package com.qwazr.crawler.web.driver;
 
-import com.gargoylesoftware.htmlunit.BrowserVersion;
-import com.gargoylesoftware.htmlunit.NicelyResynchronizingAjaxController;
-import com.gargoylesoftware.htmlunit.WebClient;
+import com.gargoylesoftware.htmlunit.*;
 import com.gargoylesoftware.htmlunit.html.DomElement;
 import org.openqa.selenium.Capabilities;
 import org.openqa.selenium.WebElement;
@@ -60,6 +58,5 @@ public class HtmlUnitDriverWebClient extends HtmlUnitDriver {
 	WebElement convertNode(DomElement element) {
 		return newHtmlUnitWebElement(element);
 	}
-
 
 }
