@@ -40,6 +40,9 @@ import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -367,7 +370,9 @@ public class WebCrawlThread implements Runnable {
 		currentURI.setFilteredLinks(filteredURIs);
 	}
 
-	private RobotsTxt.RobotsTxtStatus checkRobotsTxt(CurrentURI currentURI) throws IOException, URISyntaxException {
+	private RobotsTxt.RobotsTxtStatus checkRobotsTxt(CurrentURI currentURI)
+			throws IOException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException,
+			KeyManagementException {
 		if (robotsTxtMap == null)
 			return null;
 		URI uri = currentURI.getURI();
@@ -381,7 +386,8 @@ public class WebCrawlThread implements Runnable {
 	}
 
 	private void crawlOne(final Set<URI> crawledURIs, URI uri, final Set<URI> nextLevelURIs, final int depth)
-			throws ServerException, IOException, URISyntaxException {
+			throws ServerException, IOException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException,
+			KeyManagementException {
 
 		if (session.isAborting())
 			return;
@@ -428,7 +434,8 @@ public class WebCrawlThread implements Runnable {
 	}
 
 	private void crawlLevel(Set<URI> crawledURIs, Collection<URI> levelURIs, int depth)
-			throws ServerException, IOException, URISyntaxException {
+			throws ServerException, IOException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException,
+			KeyManagementException {
 
 		if (session.isAborting())
 			return;
@@ -492,7 +499,8 @@ public class WebCrawlThread implements Runnable {
 	}
 
 	private void runner()
-			throws URISyntaxException, IOException, ScriptException, ServerException, ReflectiveOperationException {
+			throws URISyntaxException, IOException, ScriptException, ServerException, ReflectiveOperationException,
+			NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
 		try {
 			driver = new BrowserDriverBuilder(crawlDefinition).build();
 			script(EventEnum.before_session, null);
