@@ -23,6 +23,8 @@ import org.openqa.selenium.phantomjs.PhantomJSDriverService;
 import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.DesiredCapabilities;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -43,9 +45,24 @@ public class BrowserDriverBuilder {
 		return capabilities;
 	}
 
+	private WebCrawlDefinition.ProxyDefinition selectProxy() {
+		if (crawlDefinition.proxy == null && (crawlDefinition.proxies == null || crawlDefinition.proxies.isEmpty()))
+			return null;
+		final List<WebCrawlDefinition.ProxyDefinition> activeProxies = new ArrayList<>();
+		if (crawlDefinition.proxy != null)
+			activeProxies.add(crawlDefinition.proxy);
+		if (crawlDefinition.proxies != null)
+			for (WebCrawlDefinition.ProxyDefinition proxy : crawlDefinition.proxies)
+				if (proxy.enabled == null || proxy.enabled)
+					activeProxies.add(proxy);
+		if (activeProxies.size() == 0)
+			return null;
+		return activeProxies.get(RandomUtils.nextInt(0, activeProxies.size()));
+	}
+
 	public BrowserDriver<?> build() throws ReflectiveOperationException, SecurityException {
 		BrowserDriverEnum browserType = BrowserDriverEnum.html_unit;
-		
+
 		final WebCrawlDefinition.ProxyDefinition proxyDef;
 
 		DesiredCapabilities capabilities = null;
@@ -56,12 +73,7 @@ public class BrowserDriverBuilder {
 			if (crawlDefinition.browser_type != null)
 				browserType = crawlDefinition.browser_type;
 
-			if (crawlDefinition.proxies != null && !crawlDefinition.proxies.isEmpty())
-				proxyDef = crawlDefinition.proxies.get(RandomUtils.nextInt(0, crawlDefinition.proxies.size()));
-			else if (crawlDefinition.proxy != null)
-				proxyDef = crawlDefinition.proxy;
-			else
-				proxyDef = null;
+			proxyDef = selectProxy();
 
 			// Setup the proxy
 			if (proxyDef != null) {
