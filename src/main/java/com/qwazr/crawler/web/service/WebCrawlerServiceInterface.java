@@ -16,40 +16,42 @@
 package com.qwazr.crawler.web.service;
 
 import com.qwazr.crawler.web.manager.WebCrawlerManager;
+import com.qwazr.utils.server.ServiceInterface;
+import com.qwazr.utils.server.ServiceName;
 
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.TreeMap;
 
 @RolesAllowed(WebCrawlerManager.SERVICE_NAME_WEBCRAWLER)
 @Path("/crawler/web")
-public interface WebCrawlerServiceInterface {
+@ServiceName(WebCrawlerManager.SERVICE_NAME_WEBCRAWLER)
+public interface WebCrawlerServiceInterface extends ServiceInterface {
 
 	@GET
 	@Path("/sessions")
-	@Produces(MediaType.APPLICATION_JSON)
+	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
 	TreeMap<String, WebCrawlStatus> getSessions(@QueryParam("local") Boolean local, @QueryParam("group") String group,
-			@QueryParam("timeout") Integer msTimeout);
+					@QueryParam("timeout") Integer msTimeout);
 
 	@GET
 	@Path("/sessions/{session_name}")
-	@Produces(MediaType.APPLICATION_JSON)
+	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
 	WebCrawlStatus getSession(@PathParam("session_name") String session_name, @QueryParam("local") Boolean local,
-			@QueryParam("group") String group, @QueryParam("timeout") Integer msTimeout);
+					@QueryParam("group") String group, @QueryParam("timeout") Integer msTimeout);
 
 	@DELETE
 	@Path("/sessions/{session_name}")
 	Response abortSession(@PathParam("session_name") String session_name, @QueryParam("reason") String aborting_reason,
-			@QueryParam("local") Boolean local, @QueryParam("group") String group,
-			@QueryParam("timeout") Integer msTimeout);
+					@QueryParam("local") Boolean local, @QueryParam("group") String group,
+					@QueryParam("timeout") Integer msTimeout);
 
 	@POST
 	@Path("/sessions/{session_name}")
-	@Consumes(MediaType.APPLICATION_JSON)
-	@Produces(MediaType.APPLICATION_JSON)
+	@Consumes(ServiceInterface.APPLICATION_JSON_UTF8)
+	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
 	WebCrawlStatus runSession(@PathParam("session_name") String session_name, WebCrawlDefinition crawlDefinition);
 
 	WebCrawlStatus runSession(String session_name, String jsonCrawlDefinition) throws IOException;

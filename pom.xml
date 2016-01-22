@@ -15,7 +15,7 @@
     </parent>
 
     <properties>
-        <selenium.version>2.48.2</selenium.version>
+        <selenium.version>2.49.1</selenium.version>
     </properties>
 
     <dependencies>
