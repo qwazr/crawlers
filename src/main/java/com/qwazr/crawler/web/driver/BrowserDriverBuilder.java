@@ -151,6 +151,12 @@ public class BrowserDriverBuilder {
 		} else
 			proxyDef = null;
 
+		if (browserType == BrowserDriverEnum.phantomjs) {
+			capabilities = checkCapabilities(capabilities);
+			String[] phantomArgs = new String[] { "--webdriver-loglevel=NONE" };
+			capabilities.setCapability(PhantomJSDriverService.PHANTOMJS_CLI_ARGS, phantomArgs);
+		}
+
 		final BrowserDriver driver = browserType.getNewInstance(capabilities);
 		driver.setProxy(proxyDef);
 		driver.setTimeouts(crawlDefinition.implicitly_wait, crawlDefinition.page_load_timeout,

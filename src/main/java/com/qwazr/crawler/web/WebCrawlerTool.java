@@ -2,14 +2,10 @@ package com.qwazr.crawler.web;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.qwazr.cluster.manager.ClusterManager;
-import com.qwazr.crawler.web.client.WebCrawlerMultiClient;
 import com.qwazr.crawler.web.driver.BrowserDriver;
 import com.qwazr.crawler.web.driver.BrowserDriverBuilder;
-import com.qwazr.crawler.web.manager.WebCrawlerManager;
 import com.qwazr.crawler.web.service.WebCrawlDefinition;
 import com.qwazr.crawler.web.service.WebCrawlerServiceInterface;
-import com.qwazr.crawler.web.service.WebCrawlerSingleServiceImpl;
 import com.qwazr.tools.AbstractTool;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.json.JsonMapper;
@@ -21,42 +17,26 @@ import java.net.URISyntaxException;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class WebCrawlerTool extends AbstractTool {
 
-	public WebCrawlDefinition config;
+	final public WebCrawlDefinition config = null;
 
 	@Override
 	public void load(File parentDir) {
 	}
 
 	/**
-	 * Create a new WebCrawler client instance.
+	 * Create a new web crawler client instance.
 	 * This API queries the cluster to get the current active node for the WebCrawler service.
 	 *
-	 * @return a new WebCrawlerMultiClient instance
-	 * @throws URISyntaxException
-	 */
-	@JsonIgnore
-	public WebCrawlerServiceInterface getNewWebCrawlerClient() throws URISyntaxException {
-		return getNewWebCrawlerClient(null, null);
-	}
-
-	/**
-	 * Create a new WebCrawler client instance.
-	 * This API queries the cluster to get the current active node for the WebCrawler service.
-	 *
+	 * @param local     Set to true to target the local service
+	 * @param group     the targeted group
 	 * @param msTimeout the default timeout used by the client
-	 * @return a new WebCrawlerMultiClient instance
+	 * @return a new WebCrawlerServiceInterface instance
 	 * @throws URISyntaxException
 	 */
 	@JsonIgnore
-	public WebCrawlerServiceInterface getNewWebCrawlerClient(String group, Integer msTimeout)
+	public WebCrawlerServiceInterface getClient(Boolean local, String group, Integer msTimeout)
 			throws URISyntaxException {
-		if (!ClusterManager.INSTANCE.isCluster()) {
-			WebCrawlerManager.getInstance();
-			return new WebCrawlerSingleServiceImpl();
-		}
-		String[] urls = ClusterManager.INSTANCE.getClusterClient()
-				.getActiveNodesByService(WebCrawlerManager.SERVICE_NAME_WEBCRAWLER, group);
-		return new WebCrawlerMultiClient(ClusterManager.INSTANCE.executor, urls, msTimeout);
+		return WebCrawlerServiceInterface.getClient(local, group, msTimeout);
 	}
 
 	@JsonIgnore

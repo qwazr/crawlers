@@ -17,12 +17,7 @@ public class PhantomJSBrowserDriver extends BrowserDriver<PhantomJSDriver> {
 
 	@Override
 	protected PhantomJSDriver initialize(Capabilities capabilities) {
-		final PhantomJSDriver driver;
-		if (capabilities == null)
-			driver = new PhantomJSDriver();
-		else
-			driver = new PhantomJSDriver(capabilities);
-		return driver;
+		return new PhantomJSDriver(capabilities);
 	}
 
 	private String JS_FIND_RESOURCE =

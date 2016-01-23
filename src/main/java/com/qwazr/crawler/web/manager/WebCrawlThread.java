@@ -25,6 +25,7 @@ import com.qwazr.crawler.web.service.WebCrawlDefinition.Script;
 import com.qwazr.crawler.web.service.WebCrawlStatus;
 import com.qwazr.scripts.ScriptManager;
 import com.qwazr.scripts.ScriptRunThread;
+import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.WildcardMatcher;
 import com.qwazr.utils.server.ServerException;
 import org.apache.commons.lang3.StringUtils;
@@ -512,8 +513,7 @@ public class WebCrawlThread implements Runnable {
 				uriList = Arrays.asList(new URI(crawlDefinition.entry_url));
 			crawlLevel(crawledURIs, uriList, 0);
 		} finally {
-			if (driver != null)
-				driver.close();
+			IOUtils.close(driver);
 			script(EventEnum.after_session, null);
 		}
 	}
