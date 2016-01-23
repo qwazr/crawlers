@@ -44,6 +44,7 @@ public class HtmlUnitDriverWebClient extends HtmlUnitDriver {
 	@Override
 	protected WebClient modifyWebClient(WebClient webClient) {
 		webClient = super.modifyWebClient(webClient);
+		webClient.setCssErrorHandler(new SilentCssErrorHandler());
 		webClient.setRefreshHandler(null);
 		webClient.getOptions().setThrowExceptionOnScriptError(false);
 		webClient.setAjaxController(new NicelyResynchronizingAjaxController());

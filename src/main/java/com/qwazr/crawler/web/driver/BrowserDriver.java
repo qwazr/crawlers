@@ -35,7 +35,7 @@ import java.util.concurrent.TimeUnit;
 
 public abstract class BrowserDriver<T extends WebDriver> implements WebDriver, Closeable {
 
-	private static final Logger logger = LoggerFactory.getLogger(BrowserDriver.class);
+	protected static final Logger logger = LoggerFactory.getLogger(BrowserDriver.class);
 
 	private WebCrawlDefinition.ProxyDefinition currentProxy;
 	protected final BrowserDriverEnum type;
@@ -200,6 +200,12 @@ public abstract class BrowserDriver<T extends WebDriver> implements WebDriver, C
 		return links;
 	}
 
+	public String getTextSafe(WebElement webElement) {
+		if (webElement == null)
+			return null;
+		return webElement.getText();
+	}
+
 	public String getSnippet(SearchContext searchContext, int sizeLimit) {
 		List<WebElement> elements = searchContext.findElements(By.tagName("p"));
 		if (elements == null)
@@ -208,7 +214,7 @@ public abstract class BrowserDriver<T extends WebDriver> implements WebDriver, C
 		for (WebElement element : elements) {
 			String text = null;
 			try {
-				text = element.getText();
+				text = getTextSafe(element);
 			} catch (CSSException e) {
 				if (logger.isWarnEnabled())
 					logger.warn("Cannot extract snippet: " + e.getMessage(), e);

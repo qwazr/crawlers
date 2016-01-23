@@ -15,15 +15,14 @@
  **/
 package com.qwazr.crawler.web.driver;
 
-import com.gargoylesoftware.htmlunit.Page;
-import com.gargoylesoftware.htmlunit.WebClient;
-import com.gargoylesoftware.htmlunit.WebResponse;
-import com.gargoylesoftware.htmlunit.WebWindow;
+import com.gargoylesoftware.htmlunit.*;
 import com.gargoylesoftware.htmlunit.html.DomElement;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.qwazr.crawler.web.service.WebRequestDefinition;
 import com.qwazr.utils.IOUtils;
 import org.openqa.selenium.Capabilities;
+import org.openqa.selenium.WebElement;
+import org.w3c.css.sac.CSSException;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -144,6 +143,26 @@ public class HtmlUnitBrowserDriver extends BrowserDriver<HtmlUnitDriverWebClient
 	public Page request(String json) throws IOException {
 		WebRequestDefinition webRequestDef = MAPPER.readValue(json, WebRequestDefinition.class);
 		return driver.getWebClient().getPage(webRequestDef.getNewWebRequest());
+	}
+
+	@Override
+	public String getTextSafe(WebElement webElement) {
+		if (webElement == null)
+			return null;
+		WebClientOptions options = driver.getWebClient().getOptions();
+		boolean cssEnabled = options.isCssEnabled();
+		try {
+			try {
+				return webElement.getText();
+			} catch (CSSException e) {
+				if (logger.isWarnEnabled())
+					logger.warn("Temporary disabling CSS", e);
+			}
+			options.setCssEnabled(false);
+			return webElement.getText();
+		} finally {
+			options.setCssEnabled(cssEnabled);
+		}
 	}
 
 }
