@@ -19,10 +19,12 @@ import com.qwazr.crawler.web.service.WebCrawlDefinition;
 import org.apache.commons.lang3.RandomUtils;
 import org.openqa.selenium.Cookie;
 import org.openqa.selenium.Proxy;
+import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.phantomjs.PhantomJSDriverService;
 import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.DesiredCapabilities;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -34,9 +36,11 @@ import java.util.Map;
 public class BrowserDriverBuilder {
 
 	private final WebCrawlDefinition crawlDefinition;
+	private final File logs_directory;
 
-	public BrowserDriverBuilder(WebCrawlDefinition crawlDefinition) {
+	public BrowserDriverBuilder(WebCrawlDefinition crawlDefinition, File logs_directory) {
 		this.crawlDefinition = crawlDefinition;
+		this.logs_directory = logs_directory;
 	}
 
 	private DesiredCapabilities checkCapabilities(DesiredCapabilities capabilities) {
@@ -60,7 +64,7 @@ public class BrowserDriverBuilder {
 		return activeProxies.get(RandomUtils.nextInt(0, activeProxies.size()));
 	}
 
-	public BrowserDriver<?> build() throws ReflectiveOperationException, SecurityException {
+	public BrowserDriver build() throws ReflectiveOperationException, SecurityException {
 		BrowserDriverEnum browserType = BrowserDriverEnum.html_unit;
 
 		final WebCrawlDefinition.ProxyDefinition proxyDef;
@@ -153,19 +157,19 @@ public class BrowserDriverBuilder {
 
 		if (browserType == BrowserDriverEnum.phantomjs) {
 			capabilities = checkCapabilities(capabilities);
-			String[] phantomArgs = new String[] { "--webdriver-loglevel=NONE" };
-			capabilities.setCapability(PhantomJSDriverService.PHANTOMJS_CLI_ARGS, phantomArgs);
+			capabilities.setCapability(PhantomJSDriverService.PHANTOMJS_CLI_ARGS,
+					new String[] { "--webdriver-loglevel=NONE" });
 		}
 
-		final BrowserDriver driver = browserType.getNewInstance(capabilities);
-		driver.setProxy(proxyDef);
-		driver.setTimeouts(crawlDefinition.implicitly_wait, crawlDefinition.page_load_timeout,
+		final WebDriver driver = browserType.getNewInstance(capabilities);
+		final BrowserDriver browserDriver = new BrowserDriver(browserType, driver, proxyDef);
+		browserDriver.setTimeouts(crawlDefinition.implicitly_wait, crawlDefinition.page_load_timeout,
 				crawlDefinition.script_timeout);
 
 		if (crawlDefinition.cookies != null)
 			for (Map.Entry<String, String> cookie : crawlDefinition.cookies.entrySet())
 				driver.manage().addCookie(new Cookie(cookie.getKey(), cookie.getValue()));
 
-		return driver;
+		return browserDriver;
 	}
 }

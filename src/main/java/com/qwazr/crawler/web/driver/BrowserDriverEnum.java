@@ -16,6 +16,7 @@
 package com.qwazr.crawler.web.driver;
 
 import org.openqa.selenium.Capabilities;
+import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.ie.InternetExplorerDriver;
@@ -25,30 +26,32 @@ import java.lang.reflect.InvocationTargetException;
 
 public enum BrowserDriverEnum {
 
-	chrome(ChromeBrowserDriver.class, "Chrome"),
+	chrome(ChromeDriver.class, "Chrome"),
 
-	firefox(FirefoxBrowserDriver.class, "Firefox"),
+	firefox(FirefoxDriver.class, "Firefox"),
 
 	html_unit(HtmlUnitBrowserDriver.class, "HtmlUnit"),
 
-	internet_explorer(InternetExplorerBrowserDriver.class, "Internet Exlorer"),
+	internet_explorer(InternetExplorerDriver.class, "Internet Exlorer"),
 
 	phantomjs(PhantomJSBrowserDriver.class, "PhantomJS"),
 
-	safari(SafariBrowserDriver.class, "Safari");
+	safari(SafariDriver.class, "Safari");
 
-	private final Class<? extends BrowserDriver<?>> driverClass;
+	private final Class<? extends WebDriver> driverClass;
 
 	private final String label;
 
-	BrowserDriverEnum(Class<? extends BrowserDriver<?>> driverClass, String label) {
+	BrowserDriverEnum(Class<? extends WebDriver> driverClass, String label) {
 		this.driverClass = driverClass;
 		this.label = label;
 	}
 
-	public BrowserDriver<?> getNewInstance(Capabilities cap)
+	public WebDriver getNewInstance(Capabilities cap)
 			throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException,
 			NoSuchMethodException, SecurityException {
+		if (cap == null)
+			return driverClass.newInstance();
 		return driverClass.getConstructor(Capabilities.class).newInstance(cap);
 	}
 
@@ -69,62 +72,4 @@ public enum BrowserDriverEnum {
 		return name();
 	}
 
-	public static class ChromeBrowserDriver extends BrowserDriver<ChromeDriver> {
-
-		public ChromeBrowserDriver(Capabilities capabilities) {
-			super(BrowserDriverEnum.chrome, capabilities);
-		}
-
-		@Override
-		protected ChromeDriver initialize(Capabilities capabilities) {
-			if (capabilities == null)
-				return new ChromeDriver();
-			else
-				return new ChromeDriver(capabilities);
-		}
-	}
-
-	public static class FirefoxBrowserDriver extends BrowserDriver<FirefoxDriver> {
-
-		public FirefoxBrowserDriver(Capabilities capabilities) {
-			super(BrowserDriverEnum.firefox, capabilities);
-		}
-
-		@Override
-		protected FirefoxDriver initialize(Capabilities capabilities) {
-			if (capabilities == null)
-				return new FirefoxDriver();
-			else
-				return new FirefoxDriver(capabilities);
-		}
-	}
-
-	public static class InternetExplorerBrowserDriver extends BrowserDriver<InternetExplorerDriver> {
-
-		public InternetExplorerBrowserDriver(Capabilities capabilities) {
-			super(BrowserDriverEnum.internet_explorer, capabilities);
-		}
-
-		@Override
-		protected InternetExplorerDriver initialize(Capabilities capabilities) {
-			return new InternetExplorerDriver();
-		}
-
-	}
-
-	public static class SafariBrowserDriver extends BrowserDriver<SafariDriver> {
-
-		public SafariBrowserDriver(Capabilities capabilities) {
-			super(BrowserDriverEnum.safari, capabilities);
-		}
-
-		@Override
-		public SafariDriver initialize(Capabilities capabilities) {
-			if (capabilities == null)
-				return new SafariDriver();
-			else
-				return new SafariDriver(capabilities);
-		}
-
-	}
 }

@@ -23,10 +23,6 @@ import org.openqa.selenium.htmlunit.HtmlUnitDriver;
 
 public class HtmlUnitDriverWebClient extends HtmlUnitDriver {
 
-	public HtmlUnitDriverWebClient() {
-		super(false);
-	}
-
 	public HtmlUnitDriverWebClient(Capabilities capabilities) {
 		super(capabilities);
 		if (capabilities != null) {

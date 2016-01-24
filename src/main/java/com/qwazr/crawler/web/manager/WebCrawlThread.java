@@ -25,7 +25,6 @@ import com.qwazr.crawler.web.service.WebCrawlDefinition.Script;
 import com.qwazr.crawler.web.service.WebCrawlStatus;
 import com.qwazr.scripts.ScriptManager;
 import com.qwazr.scripts.ScriptRunThread;
-import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.WildcardMatcher;
 import com.qwazr.utils.server.ServerException;
 import org.apache.commons.lang3.StringUtils;
@@ -38,6 +37,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.script.ScriptException;
 import javax.ws.rs.core.Response.Status;
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -55,19 +55,21 @@ public class WebCrawlThread implements Runnable {
 
 	private final CurrentSession session;
 	final WebCrawlDefinition crawlDefinition;
+	private final File logs_directory;
 	private final InternetDomainName internetDomainName;
 
 	private final List<Matcher> parametersMatcherList;
 	private final List<WildcardMatcher> exclusionMatcherList;
 	private final List<WildcardMatcher> inclusionMatcherList;
 
-	private BrowserDriver<?> driver = null;
+	private BrowserDriver driver = null;
 
 	private final Map<URI, RobotsTxt> robotsTxtMap;
 	private final String robotsTxtUserAgent;
 
-	WebCrawlThread(String sessionName, WebCrawlDefinition crawlDefinition) throws ServerException {
+	WebCrawlThread(String sessionName, WebCrawlDefinition crawlDefinition, File logs_directory) throws ServerException {
 		this.session = new CurrentSession(crawlDefinition, sessionName);
+		this.logs_directory = logs_directory;
 		this.crawlDefinition = crawlDefinition;
 		if (crawlDefinition.browser_type == null)
 			throw new ServerException(Status.NOT_ACCEPTABLE, "The browser_type is missing");
@@ -503,7 +505,7 @@ public class WebCrawlThread implements Runnable {
 			throws URISyntaxException, IOException, ScriptException, ServerException, ReflectiveOperationException,
 			NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
 		try {
-			driver = new BrowserDriverBuilder(crawlDefinition).build();
+			driver = new BrowserDriverBuilder(crawlDefinition, logs_directory).build();
 			script(EventEnum.before_session, null);
 			final Set<URI> crawledURIs = new HashSet<URI>();
 			final List<URI> uriList;
@@ -513,7 +515,11 @@ public class WebCrawlThread implements Runnable {
 				uriList = Arrays.asList(new URI(crawlDefinition.entry_url));
 			crawlLevel(crawledURIs, uriList, 0);
 		} finally {
-			IOUtils.close(driver);
+			try {
+				driver.quit();
+			} catch (Exception e) {
+				logger.warn(e.getMessage(), e);
+			}
 			script(EventEnum.after_session, null);
 		}
 	}

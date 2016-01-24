@@ -22,45 +22,29 @@ import com.qwazr.crawler.web.service.WebRequestDefinition;
 import com.qwazr.utils.IOUtils;
 import org.openqa.selenium.Capabilities;
 import org.openqa.selenium.WebElement;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.css.sac.CSSException;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
 
 import static com.qwazr.utils.json.JsonMapper.MAPPER;
 
-public class HtmlUnitBrowserDriver extends BrowserDriver<HtmlUnitDriverWebClient> {
+public class HtmlUnitBrowserDriver extends HtmlUnitDriverWebClient
+		implements AdditionalCapabilities.ResponseHeader, AdditionalCapabilities.SafeText,
+		AdditionalCapabilities.InnerHtml, AdditionalCapabilities.SaveBinaryFile {
 
-	private List<InputStream> inputStreamList = null;
+	protected static final Logger logger = LoggerFactory.getLogger(HtmlUnitBrowserDriver.class);
 
 	public HtmlUnitBrowserDriver(Capabilities capabilities) {
-		super(BrowserDriverEnum.html_unit, capabilities);
-	}
-
-	@Override
-	public HtmlUnitDriverWebClient initialize(Capabilities capabilities) {
-		if (capabilities == null)
-			return new HtmlUnitDriverWebClient();
-		else
-			return new HtmlUnitDriverWebClient(capabilities);
-	}
-
-	@Override
-	public void close() {
-		if (inputStreamList != null) {
-			for (InputStream inputStream : inputStreamList)
-				IOUtils.closeQuietly(inputStream);
-			inputStreamList.clear();
-		}
-		super.close();
+		super(capabilities);
 	}
 
 	private Page getEnclosedPage() {
-		WebClient webClient = driver.getWebClient();
+		WebClient webClient = getWebClient();
 		if (webClient == null)
 			return null;
 		WebWindow webWindow = webClient.getCurrentWindow();
@@ -70,7 +54,7 @@ public class HtmlUnitBrowserDriver extends BrowserDriver<HtmlUnitDriverWebClient
 	}
 
 	public void test() {
-		driver.getWebClient().getCurrentWindow().getTopWindow();
+		getWebClient().getCurrentWindow().getTopWindow();
 	}
 
 	private WebResponse getWebResponse() {
@@ -80,6 +64,7 @@ public class HtmlUnitBrowserDriver extends BrowserDriver<HtmlUnitDriverWebClient
 		return page.getWebResponse();
 	}
 
+	@Override
 	public Integer getStatusCode() {
 		WebResponse response = getWebResponse();
 		if (response == null)
@@ -87,39 +72,12 @@ public class HtmlUnitBrowserDriver extends BrowserDriver<HtmlUnitDriverWebClient
 		return response.getStatusCode();
 	}
 
+	@Override
 	public String getContentType() {
 		WebResponse response = getWebResponse();
 		if (response == null)
 			return null;
 		return response.getContentType();
-	}
-
-	public InputStream getInputStream() throws IOException {
-		WebResponse response = getWebResponse();
-		if (response == null)
-			return null;
-		if (inputStreamList == null)
-			inputStreamList = new ArrayList<InputStream>();
-		InputStream inputStream = response.getContentAsStream();
-		if (inputStream == null)
-			inputStreamList.add(inputStream);
-		return inputStream;
-	}
-
-	public void saveResponseFile(File file) throws IOException {
-		InputStream inputStream = getInputStream();
-		if (inputStream == null)
-			return;
-		try {
-			FileOutputStream fos = new FileOutputStream(file);
-			try {
-				IOUtils.copy(inputStream, fos);
-			} finally {
-				IOUtils.close(fos);
-			}
-		} finally {
-			IOUtils.close(inputStream);
-		}
 	}
 
 	@Override
@@ -136,20 +94,36 @@ public class HtmlUnitBrowserDriver extends BrowserDriver<HtmlUnitDriverWebClient
 		return domElement.asXml();
 	}
 
-	public void saveResponse(String path) throws IOException {
-		saveResponseFile(new File(path));
+	@Override
+	public void saveBinaryFile(File file) throws IOException {
+		WebResponse response = getWebResponse();
+		if (response == null)
+			return;
+		InputStream inputStream = response.getContentAsStream();
+		if (inputStream == null)
+			return;
+		try {
+			FileOutputStream fos = new FileOutputStream(file);
+			try {
+				IOUtils.copy(inputStream, fos);
+			} finally {
+				IOUtils.close(fos);
+			}
+		} finally {
+			IOUtils.close(inputStream);
+		}
 	}
 
 	public Page request(String json) throws IOException {
 		WebRequestDefinition webRequestDef = MAPPER.readValue(json, WebRequestDefinition.class);
-		return driver.getWebClient().getPage(webRequestDef.getNewWebRequest());
+		return getWebClient().getPage(webRequestDef.getNewWebRequest());
 	}
 
 	@Override
 	public String getTextSafe(WebElement webElement) {
 		if (webElement == null)
 			return null;
-		WebClientOptions options = driver.getWebClient().getOptions();
+		WebClientOptions options = getWebClient().getOptions();
 		boolean cssEnabled = options.isCssEnabled();
 		try {
 			try {

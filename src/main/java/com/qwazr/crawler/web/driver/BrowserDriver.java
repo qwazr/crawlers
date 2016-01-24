@@ -16,7 +16,12 @@
 package com.qwazr.crawler.web.driver;
 
 import com.qwazr.crawler.web.service.WebCrawlDefinition;
+import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.StringUtils;
+import com.qwazr.utils.http.HttpUtils;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.fluent.Executor;
+import org.apache.http.client.fluent.Request;
 import org.openqa.selenium.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,40 +29,41 @@ import org.w3c.css.sac.CSSException;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
-import java.io.Closeable;
-import java.io.IOException;
+import java.io.*;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-public abstract class BrowserDriver<T extends WebDriver> implements WebDriver, Closeable {
+final public class BrowserDriver implements WebDriver, Closeable, AdditionalCapabilities.All {
 
 	protected static final Logger logger = LoggerFactory.getLogger(BrowserDriver.class);
 
-	private WebCrawlDefinition.ProxyDefinition currentProxy;
-	protected final BrowserDriverEnum type;
-	protected T driver = null;
+	private final WebCrawlDefinition.ProxyDefinition currentProxy;
+	private final BrowserDriverEnum type;
+	private final WebDriver driver;
 
-	protected BrowserDriver(BrowserDriverEnum type, Capabilities cap) {
+	BrowserDriver(BrowserDriverEnum type, WebDriver driver, WebCrawlDefinition.ProxyDefinition currentProxy) {
 		this.type = type;
-		driver = initialize(cap);
+		this.driver = driver;
+		this.currentProxy = currentProxy;
 		Timeouts timeouts = driver.manage().timeouts();
 		timeouts.implicitlyWait(1, TimeUnit.MINUTES);
 		timeouts.setScriptTimeout(2, TimeUnit.MINUTES);
 		timeouts.pageLoadTimeout(3, TimeUnit.MINUTES);
 	}
 
-	protected abstract T initialize(Capabilities cap);
-
 	@Override
 	public void close() {
 		if (driver == null)
 			return;
-		driver.quit();
-		driver = null;
+		driver.close();
 	}
 
 	@Override
@@ -110,10 +116,6 @@ public abstract class BrowserDriver<T extends WebDriver> implements WebDriver, C
 			timeOuts.setScriptTimeout(script, TimeUnit.SECONDS);
 	}
 
-	final void setProxy(WebCrawlDefinition.ProxyDefinition proxy) {
-		this.currentProxy = proxy;
-	}
-
 	final public WebCrawlDefinition.ProxyDefinition getProxy() {
 		return this.currentProxy;
 	}
@@ -144,7 +146,7 @@ public abstract class BrowserDriver<T extends WebDriver> implements WebDriver, C
 	}
 
 	@Override
-	final public void quit() {
+	public void quit() {
 		driver.quit();
 	}
 
@@ -200,9 +202,12 @@ public abstract class BrowserDriver<T extends WebDriver> implements WebDriver, C
 		return links;
 	}
 
+	@Override
 	public String getTextSafe(WebElement webElement) {
 		if (webElement == null)
 			return null;
+		if (driver instanceof AdditionalCapabilities.SafeText)
+			return ((AdditionalCapabilities.SafeText) driver).getTextSafe(webElement);
 		return webElement.getText();
 	}
 
@@ -304,4 +309,65 @@ public abstract class BrowserDriver<T extends WebDriver> implements WebDriver, C
 		return driver.findElements(By.cssSelector(cssSelector));
 	}
 
+	@Override
+	public void saveBinaryFile(File file) throws IOException {
+		if (file == null)
+			return;
+		if (driver instanceof AdditionalCapabilities.SaveBinaryFile) {
+			((AdditionalCapabilities.SaveBinaryFile) driver).saveBinaryFile(file);
+			return;
+		}
+		try {
+			httpClientDownload(getCurrentUrl(), null, file);
+		} catch (NoSuchAlgorithmException | KeyStoreException | KeyManagementException | URISyntaxException e) {
+			throw new IOException(e);
+		}
+	}
+
+	void httpClientDownload(String url, String userAgent, File file)
+			throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException, IOException,
+			URISyntaxException {
+		URI uri = new URI(url);
+		final HttpClient httpClient = HttpUtils.createHttpClient_AcceptsUntrustedCerts();
+		try {
+			final Executor executor = Executor.newInstance(httpClient);
+			Request request = Request.Get(uri.toString()).addHeader("Connection", "close").connectTimeout(60000)
+					.socketTimeout(60000);
+			if (userAgent != null)
+				request = request.addHeader("User-Agent", userAgent);
+			if (currentProxy != null) {
+				if (currentProxy.http_proxy != null && !currentProxy.http_proxy.isEmpty())
+					request = request.viaProxy(currentProxy.http_proxy);
+				if ("https".equals(uri.getScheme()) && currentProxy.ssl_proxy != null && !currentProxy.ssl_proxy
+						.isEmpty())
+					request = request.viaProxy(currentProxy.ssl_proxy);
+			}
+			executor.execute(request).saveContent(file);
+		} finally {
+			if (httpClient != null && httpClient instanceof AutoCloseable)
+				IOUtils.close((AutoCloseable) httpClient);
+		}
+	}
+
+	public void savePageSource(String path) throws IOException {
+		savePageSource(new File(path));
+	}
+
+	public void savePageSource(File file) throws IOException {
+		IOUtils.writeStringAsFile(getPageSource(), file);
+	}
+
+	@Override
+	public Integer getStatusCode() {
+		if (driver instanceof AdditionalCapabilities.ResponseHeader)
+			return ((AdditionalCapabilities.ResponseHeader) driver).getStatusCode();
+		throw new WebDriverException("GetStatusCode is not implemented in " + driver.getClass());
+	}
+
+	@Override
+	public String getContentType() {
+		if (driver instanceof AdditionalCapabilities.ResponseHeader)
+			return ((AdditionalCapabilities.ResponseHeader) driver).getContentType();
+		throw new WebDriverException("GetStatusCode is not implemented in " + driver.getClass());
+	}
 }
