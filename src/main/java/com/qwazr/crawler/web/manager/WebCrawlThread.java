@@ -31,6 +31,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URIBuilder;
 import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -282,10 +283,10 @@ public class WebCrawlThread implements Runnable {
 		if (logger.isInfoEnabled())
 			logger.info("Crawling " + uri + " (" + currentURI.getDepth() + ")");
 		try {
-			String mainWindow = driver.getWindowHandle();
+			//String mainWindow = driver.getWindowHandle();
 			driver.get(uriString);
-			if (mainWindow != null && mainWindow.equals(driver.getWindowHandle()))
-				driver.switchTo().window(mainWindow);
+			//if (mainWindow != null && !mainWindow.equals(driver.getWindowHandle()))
+			//	driver.switchTo().window(mainWindow);
 		} catch (Exception e) {
 			session.incErrorCount();
 			currentURI.setError(e);
@@ -321,22 +322,34 @@ public class WebCrawlThread implements Runnable {
 		}
 
 		// Support of the base/href element
+		boolean searchBaseHref = true;
 		try {
-			WebElement baseElement = driver.findElement(By.tagName("base"));
-			if (baseElement != null) {
-				String href = baseElement.getAttribute("href");
-				try {
-					currentURI.setBaseURI(new URI(href));
-				} catch (URISyntaxException e) {
-					logger.warn("Invalid URI in base HREF: " + href + " in " + uriString);
-				}
-			}
-		} catch (org.openqa.selenium.NoSuchElementException e) {
+			searchBaseHref = "text/html".equals(driver.getContentType());
+		} catch (WebDriverException e) {
 			// OK that's not really an error
-		} catch (IllegalStateException e) {
-			logger.warn("Cannot locate base href for " + uriString + " " + e.getMessage());
-		} catch (Exception e) {
-			logger.warn("Cannot locate base href for " + uriString + " " + e.getMessage());
+		}
+
+		if (searchBaseHref) {
+			try {
+				WebElement baseElement = driver.findElement(By.tagName("base"));
+				if (baseElement != null) {
+					String href = baseElement.getAttribute("href");
+					try {
+						currentURI.setBaseURI(new URI(href));
+					} catch (URISyntaxException e) {
+						if (logger.isWarnEnabled())
+							logger.warn("Invalid URI in base HREF: " + href + " in " + uriString);
+					}
+				}
+			} catch (org.openqa.selenium.NoSuchElementException e) {
+				// OK that's not really an error
+			} catch (IllegalStateException e) {
+				if (logger.isWarnEnabled())
+					logger.warn("Cannot locate base href for " + uriString + " " + e.getMessage());
+			} catch (Exception e) {
+				if (logger.isWarnEnabled())
+					logger.warn("Cannot locate base href for " + uriString + " " + e.getMessage());
+			}
 		}
 
 		int crawledCount = session.incCrawledCount();
@@ -349,7 +362,8 @@ public class WebCrawlThread implements Runnable {
 		try {
 			driver.findLinks(driver, hrefSet);
 		} catch (Exception e) {
-			logger.warn("Cannot extract links from " + uriString, e);
+			if (logger.isWarnEnabled())
+				logger.warn("Cannot extract links from " + uriString, e);
 		}
 		if (hrefSet.isEmpty())
 			return;

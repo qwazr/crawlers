@@ -31,6 +31,9 @@ public class PhantomJSBrowserDriver extends PhantomJSDriver implements Additiona
 
 	private Number pid;
 
+	private String requestedUrl = null;
+	private Map<String, ?> endEntry = null;
+
 	public PhantomJSBrowserDriver() {
 		super();
 		pid = getPidOrDie();
@@ -106,26 +109,59 @@ public class PhantomJSBrowserDriver extends PhantomJSDriver implements Additiona
 		}
 	}
 
-	private String JS_FIND_RESOURCE =
+	private String JS_FIND_END_ENTRY =
 			"if (!this.resources) return; " + "for (var key in this.resources) { " + "var res = this.resources[key]; "
 					+ "if (res.endReply) { " + "if (res.endReply.url == arguments[0]) { " + "return res.endReply; "
 					+ " } " + " } " + " } ";
 
+	private boolean findEndEntry(String url) {
+		endEntry = (Map<String, ?>) executePhantomJS(JS_FIND_END_ENTRY, url);
+		return endEntry != null && endEntry.size() > 0;
+	}
+
+	@Override
+	public void get(String url) {
+		requestedUrl = url;
+		super.get(url);
+		String currentUrl = super.getCurrentUrl();
+		int test = 60;
+		boolean found = false;
+		try {
+			while (--test > 0) {
+				found = findEndEntry(super.getCurrentUrl()) || findEndEntry(requestedUrl);
+				if (found)
+					break;
+				Thread.sleep(2000);
+			}
+		} catch (InterruptedException e) {
+		}
+		if (!found)
+			logger.warn("PhantomJSDriver: Resource EndEntry not found: " + requestedUrl);
+	}
+
+	@Override
+	public String getCurrentUrl() {
+		String url = null;
+		if (endEntry != null)
+			url = (String) endEntry.get("url");
+		if (url != null)
+			return url;
+		return super.getCurrentUrl();
+	}
+
 	@Override
 	public Integer getStatusCode() {
-		Map<String, ?> result = (Map<String, ?>) executePhantomJS(JS_FIND_RESOURCE, getCurrentUrl());
-		if (result == null)
+		if (endEntry == null)
 			return null;
-		Long statusCode = (Long) result.get("status");
+		Number statusCode = (Number) endEntry.get("status");
 		return statusCode == null ? null : statusCode.intValue();
 	}
 
 	@Override
 	public String getContentType() {
-		Map<String, ?> result = (Map<String, ?>) executePhantomJS(JS_FIND_RESOURCE, getCurrentUrl());
-		if (result == null)
+		if (endEntry == null)
 			return null;
-		String contentType = (String) result.get("contentType");
+		String contentType = (String) endEntry.get("contentType");
 		if (contentType == null)
 			return null;
 		int i = contentType.indexOf(';');
