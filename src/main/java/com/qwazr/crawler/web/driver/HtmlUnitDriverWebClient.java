@@ -20,6 +20,7 @@ import com.gargoylesoftware.htmlunit.html.DomElement;
 import org.openqa.selenium.Capabilities;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.htmlunit.HtmlUnitDriver;
+import org.openqa.selenium.htmlunit.HtmlUnitWebElement;
 
 public class HtmlUnitDriverWebClient extends HtmlUnitDriver {
 
@@ -54,6 +55,21 @@ public class HtmlUnitDriverWebClient extends HtmlUnitDriver {
 
 	WebElement convertNode(DomElement element) {
 		return newHtmlUnitWebElement(element);
+	}
+
+	protected WebElement newHtmlUnitWebElement(DomElement element) {
+		return new HtmlUnitDriverWebElement(this, element);
+	}
+
+	public class HtmlUnitDriverWebElement extends HtmlUnitWebElement {
+
+		public HtmlUnitDriverWebElement(HtmlUnitDriver parent, DomElement element) {
+			super(parent, element);
+		}
+
+		DomElement getDomElement() {
+			return super.getElement();
+		}
 	}
 
 }

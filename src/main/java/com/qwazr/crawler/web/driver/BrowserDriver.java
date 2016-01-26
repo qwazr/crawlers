@@ -309,6 +309,12 @@ final public class BrowserDriver implements WebDriver, Closeable, AdditionalCapa
 		return driver.findElements(By.cssSelector(cssSelector));
 	}
 
+	public void setAttribute(WebElement element, String name, String value) {
+		if (driver instanceof AdditionalCapabilities.SetAttribute)
+			((AdditionalCapabilities.SetAttribute) driver).setAttribute(element, name, value);
+		this.executeScript("arguments[0].setAttribute(arguments[1], arguments[2])", false, element, name, value);
+	}
+
 	@Override
 	public void saveBinaryFile(File file) throws IOException {
 		if (file == null)

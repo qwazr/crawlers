@@ -35,7 +35,7 @@ import static com.qwazr.utils.json.JsonMapper.MAPPER;
 
 public class HtmlUnitBrowserDriver extends HtmlUnitDriverWebClient
 		implements AdditionalCapabilities.ResponseHeader, AdditionalCapabilities.SafeText,
-		AdditionalCapabilities.InnerHtml, AdditionalCapabilities.SaveBinaryFile {
+		AdditionalCapabilities.InnerHtml, AdditionalCapabilities.SaveBinaryFile, AdditionalCapabilities.SetAttribute {
 
 	protected static final Logger logger = LoggerFactory.getLogger(HtmlUnitBrowserDriver.class);
 
@@ -139,4 +139,8 @@ public class HtmlUnitBrowserDriver extends HtmlUnitDriverWebClient
 		}
 	}
 
+	@Override
+	public void setAttribute(WebElement element, String name, String value) {
+		((HtmlUnitDriverWebElement) element).getDomElement().setAttribute(name, value);
+	}
 }

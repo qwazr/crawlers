@@ -48,7 +48,12 @@ public class AdditionalCapabilities {
 		void saveBinaryFile(File file) throws IOException;
 	}
 
-	public interface All extends ResponseHeader, SafeText, InnerHtml, SaveBinaryFile {
+	public interface SetAttribute {
+		
+		void setAttribute(WebElement element, String name, String value);
+	}
+
+	public interface All extends ResponseHeader, SafeText, InnerHtml, SaveBinaryFile, SetAttribute {
 
 	}
 }

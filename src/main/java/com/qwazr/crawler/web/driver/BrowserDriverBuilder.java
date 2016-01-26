@@ -158,7 +158,7 @@ public class BrowserDriverBuilder {
 		if (browserType == BrowserDriverEnum.phantomjs) {
 			capabilities = checkCapabilities(capabilities);
 			capabilities.setCapability(PhantomJSDriverService.PHANTOMJS_CLI_ARGS,
-					new String[] { "--webdriver-loglevel=NONE" });
+					new String[] { "--webdriver-loglevel=NONE", "--ignore-ssl-errors=true" });
 		}
 
 		final WebDriver driver = browserType.getNewInstance(capabilities);
