@@ -38,7 +38,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.script.ScriptException;
 import javax.ws.rs.core.Response.Status;
-import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -56,7 +55,6 @@ public class WebCrawlThread implements Runnable {
 
 	private final CurrentSession session;
 	final WebCrawlDefinition crawlDefinition;
-	private final File logs_directory;
 	private final InternetDomainName internetDomainName;
 
 	private final List<Matcher> parametersMatcherList;
@@ -68,9 +66,8 @@ public class WebCrawlThread implements Runnable {
 	private final Map<URI, RobotsTxt> robotsTxtMap;
 	private final String robotsTxtUserAgent;
 
-	WebCrawlThread(String sessionName, WebCrawlDefinition crawlDefinition, File logs_directory) throws ServerException {
+	WebCrawlThread(String sessionName, WebCrawlDefinition crawlDefinition) throws ServerException {
 		this.session = new CurrentSession(crawlDefinition, sessionName);
-		this.logs_directory = logs_directory;
 		this.crawlDefinition = crawlDefinition;
 		if (crawlDefinition.browser_type == null)
 			throw new ServerException(Status.NOT_ACCEPTABLE, "The browser_type is missing");
@@ -519,7 +516,7 @@ public class WebCrawlThread implements Runnable {
 			throws URISyntaxException, IOException, ScriptException, ServerException, ReflectiveOperationException,
 			NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
 		try {
-			driver = new BrowserDriverBuilder(crawlDefinition, logs_directory).build();
+			driver = new BrowserDriverBuilder(crawlDefinition).build();
 			script(EventEnum.before_session, null);
 			final Set<URI> crawledURIs = new HashSet<URI>();
 			final List<URI> uriList;

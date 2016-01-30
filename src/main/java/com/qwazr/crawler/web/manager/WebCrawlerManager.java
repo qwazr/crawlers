@@ -24,7 +24,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.Response.Status;
-import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.HashMap;
@@ -42,14 +41,12 @@ public class WebCrawlerManager {
 
 	private final ExecutorService executorService;
 
-	private final File logs_directory;
-
-	public synchronized static Class<? extends WebCrawlerServiceInterface> load(ExecutorService executor,
-			File logs_directory) throws IOException {
+	public synchronized static Class<? extends WebCrawlerServiceInterface> load(ExecutorService executor)
+			throws IOException {
 		if (INSTANCE != null)
 			throw new IOException("Already loaded");
 		try {
-			INSTANCE = new WebCrawlerManager(executor, logs_directory);
+			INSTANCE = new WebCrawlerManager(executor);
 			return ClusterManager.INSTANCE.isCluster() ?
 					WebCrawlerClusterServiceImpl.class :
 					WebCrawlerSingleServiceImpl.class;
@@ -67,9 +64,8 @@ public class WebCrawlerManager {
 	private final LockUtils.ReadWriteLock rwlSessionMap = new LockUtils.ReadWriteLock();
 	private final HashMap<String, WebCrawlThread> crawlSessionMap;
 
-	private WebCrawlerManager(ExecutorService executor, File logs_directory) throws IOException, URISyntaxException {
+	private WebCrawlerManager(ExecutorService executor) throws IOException, URISyntaxException {
 		this.executorService = executor;
-		this.logs_directory = logs_directory;
 		crawlSessionMap = new HashMap<String, WebCrawlThread>();
 	}
 
@@ -119,7 +115,7 @@ public class WebCrawlerManager {
 			if (logger.isInfoEnabled())
 				logger.info("Create session: " + session_name);
 
-			WebCrawlThread crawlThread = new WebCrawlThread(session_name, crawlJson, logs_directory);
+			WebCrawlThread crawlThread = new WebCrawlThread(session_name, crawlJson);
 			crawlSessionMap.put(session_name, crawlThread);
 			executorService.execute(crawlThread);
 			return crawlThread.getStatus();

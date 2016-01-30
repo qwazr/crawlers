@@ -24,7 +24,6 @@ import org.openqa.selenium.phantomjs.PhantomJSDriverService;
 import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.DesiredCapabilities;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -36,11 +35,9 @@ import java.util.Map;
 public class BrowserDriverBuilder {
 
 	private final WebCrawlDefinition crawlDefinition;
-	private final File logs_directory;
 
-	public BrowserDriverBuilder(WebCrawlDefinition crawlDefinition, File logs_directory) {
+	public BrowserDriverBuilder(WebCrawlDefinition crawlDefinition) {
 		this.crawlDefinition = crawlDefinition;
-		this.logs_directory = logs_directory;
 	}
 
 	private DesiredCapabilities checkCapabilities(DesiredCapabilities capabilities) {
