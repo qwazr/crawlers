@@ -45,7 +45,7 @@
         </dependency>
         <dependency>
             <groupId>com.qwazr</groupId>
-            <artifactId>qwazr-connectors</artifactId>
+            <artifactId>qwazr-library</artifactId>
         </dependency>
         <dependency>
             <groupId>com.qwazr</groupId>
