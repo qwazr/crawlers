@@ -6,7 +6,7 @@ import com.qwazr.crawler.web.driver.BrowserDriver;
 import com.qwazr.crawler.web.driver.BrowserDriverBuilder;
 import com.qwazr.crawler.web.service.WebCrawlDefinition;
 import com.qwazr.crawler.web.service.WebCrawlerServiceInterface;
-import com.qwazr.tools.AbstractTool;
+import com.qwazr.library.AbstractLibrary;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.json.JsonMapper;
 
@@ -15,7 +15,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class WebCrawlerTool extends AbstractTool {
+public class WebCrawlerTool extends AbstractLibrary {
 
 	final public WebCrawlDefinition config = null;
 
