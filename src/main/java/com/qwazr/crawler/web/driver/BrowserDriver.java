@@ -15,10 +15,12 @@
  **/
 package com.qwazr.crawler.web.driver;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.qwazr.crawler.web.service.WebCrawlDefinition;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.http.HttpUtils;
+import com.qwazr.utils.json.JsonMapper;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.fluent.Executor;
 import org.apache.http.client.fluent.Request;
@@ -29,7 +31,10 @@ import org.w3c.css.sac.CSSException;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.Closeable;
+import java.io.File;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.KeyManagementException;
@@ -377,4 +382,29 @@ final public class BrowserDriver implements WebDriver, Closeable, AdditionalCapa
 			return ((AdditionalCapabilities.ResponseHeader) driver).getContentType();
 		throw new WebDriverException("GetStatusCode is not implemented in " + driver.getClass());
 	}
+
+	public String getErrorMessage(Exception error) {
+		if (error == null)
+			return null;
+		String msg = error.getMessage();
+		if (msg == null)
+			msg = error.toString();
+		if (msg == null)
+			return error.getClass().getName();
+		if (!msg.startsWith("{"))
+			return msg;
+		try {
+			JsonNode json = JsonMapper.MAPPER.readTree(msg);
+			JsonNode jsonMsg = json.get("errorMessage");
+			if (jsonMsg != null && jsonMsg.isTextual())
+				return jsonMsg.textValue();
+			jsonMsg = json.get("error");
+			if (jsonMsg != null && jsonMsg.isTextual())
+				return jsonMsg.textValue();
+			return msg;
+		} catch (IOException e) {
+			return msg;
+		}
+	}
+
 }

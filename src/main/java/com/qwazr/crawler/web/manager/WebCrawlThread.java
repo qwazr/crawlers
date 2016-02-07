@@ -286,7 +286,7 @@ public class WebCrawlThread implements Runnable {
 			//	driver.switchTo().window(mainWindow);
 		} catch (Exception e) {
 			session.incErrorCount();
-			currentURI.setError(e);
+			currentURI.setError(driver, e);
 			return;
 		}
 
@@ -296,7 +296,7 @@ public class WebCrawlThread implements Runnable {
 			currentURI.setFinalURI(uri);
 		} catch (URISyntaxException e) {
 			session.incErrorCount();
-			currentURI.setError(e);
+			currentURI.setError(driver, e);
 			return;
 		}
 
@@ -309,7 +309,7 @@ public class WebCrawlThread implements Runnable {
 				scriptBeforeCrawl(currentURI, uriString);
 			} catch (Exception e) {
 				session.incErrorCount();
-				currentURI.setError(e);
+				currentURI.setError(driver, e);
 				return;
 			}
 			if (currentURI.isIgnored()) {
@@ -527,7 +527,8 @@ public class WebCrawlThread implements Runnable {
 			crawlLevel(crawledURIs, uriList, 0);
 		} finally {
 			try {
-				driver.quit();
+				if (driver != null)
+					driver.quit();
 			} catch (Exception e) {
 				logger.warn(e.getMessage(), e);
 			}

@@ -15,6 +15,7 @@
  **/
 package com.qwazr.crawler.web.manager;
 
+import com.qwazr.crawler.web.driver.BrowserDriver;
 import com.qwazr.utils.LinkUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -110,8 +111,16 @@ public class CurrentURI {
 		return isRedirected;
 	}
 
-	void setError(Exception e) {
-		error = e == null ? null : e.getMessage();
+	void setError(BrowserDriver driver, Exception e) {
+		if (e == null) {
+			error = null;
+			return;
+		}
+		error = driver == null ? e.getMessage() : driver.getErrorMessage(e);
+		if (StringUtils.isEmpty(error))
+			error = e.toString();
+		if (StringUtils.isEmpty(error))
+			error = e.getClass().getName();
 	}
 
 	public String getError() {

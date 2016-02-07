@@ -159,14 +159,19 @@ public class BrowserDriverBuilder {
 		}
 
 		final WebDriver driver = browserType.getNewInstance(capabilities);
-		final BrowserDriver browserDriver = new BrowserDriver(browserType, driver, proxyDef);
-		browserDriver.setTimeouts(crawlDefinition.implicitly_wait, crawlDefinition.page_load_timeout,
-				crawlDefinition.script_timeout);
+		try {
+			final BrowserDriver browserDriver = new BrowserDriver(browserType, driver, proxyDef);
+			browserDriver.setTimeouts(crawlDefinition.implicitly_wait, crawlDefinition.page_load_timeout,
+					crawlDefinition.script_timeout);
 
-		if (crawlDefinition.cookies != null)
-			for (Map.Entry<String, String> cookie : crawlDefinition.cookies.entrySet())
-				driver.manage().addCookie(new Cookie(cookie.getKey(), cookie.getValue()));
+			if (crawlDefinition.cookies != null)
+				for (Map.Entry<String, String> cookie : crawlDefinition.cookies.entrySet())
+					driver.manage().addCookie(new Cookie(cookie.getKey(), cookie.getValue()));
 
-		return browserDriver;
+			return browserDriver;
+		} catch (Exception e) {
+			driver.quit();
+			throw e;
+		}
 	}
 }
