@@ -16,9 +16,9 @@
 package com.qwazr.crawler.web.manager;
 
 import com.qwazr.crawler.web.service.WebCrawlDefinition;
+import com.qwazr.utils.TimeTracker;
 import org.apache.commons.collections.CollectionUtils;
 
-import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -27,8 +27,8 @@ public class CurrentSession {
 
 	private final WebCrawlDefinition crawlDefinition;
 	private final String name;
-	private final Date startTime;
 	private final AtomicBoolean abort;
+	private final TimeTracker timeTracker;
 	private final ConcurrentHashMap<String, Object> variables;
 
 	private volatile int ignoredCount = 0;
@@ -38,10 +38,10 @@ public class CurrentSession {
 	private volatile Integer currentDepth = null;
 	private volatile String abortingReason = null;
 
-	CurrentSession(WebCrawlDefinition crawlDefinition, String name) {
+	CurrentSession(WebCrawlDefinition crawlDefinition, String name, TimeTracker timeTracker) {
 		this.crawlDefinition = crawlDefinition;
+		this.timeTracker = timeTracker;
 		this.name = name;
-		startTime = new Date();
 		abort = new AtomicBoolean(false);
 		this.variables = new ConcurrentHashMap<>();
 		if (crawlDefinition.variables != null)
@@ -165,13 +165,6 @@ public class CurrentSession {
 	}
 
 	/**
-	 * @return The time when the crawl session was started
-	 */
-	public Date getStartTime() {
-		return startTime;
-	}
-
-	/**
 	 * @return the name of the session
 	 */
 	public String getName() {
@@ -206,6 +199,10 @@ public class CurrentSession {
 
 	public boolean isURLPatterns() {
 		return crawlDefinition != null && !CollectionUtils.isEmpty(crawlDefinition.inclusion_patterns) &&
-						!CollectionUtils.isEmpty(crawlDefinition.exclusion_patterns);
+				!CollectionUtils.isEmpty(crawlDefinition.exclusion_patterns);
+	}
+	
+	public TimeTracker getTimeTracker() {
+		return timeTracker;
 	}
 }

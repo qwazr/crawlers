@@ -25,6 +25,7 @@ import com.qwazr.crawler.web.service.WebCrawlDefinition.Script;
 import com.qwazr.crawler.web.service.WebCrawlStatus;
 import com.qwazr.scripts.ScriptManager;
 import com.qwazr.scripts.ScriptRunThread;
+import com.qwazr.utils.TimeTracker;
 import com.qwazr.utils.WildcardMatcher;
 import com.qwazr.utils.server.ServerException;
 import org.apache.commons.lang3.StringUtils;
@@ -66,8 +67,11 @@ public class WebCrawlThread implements Runnable {
 	private final Map<URI, RobotsTxt> robotsTxtMap;
 	private final String robotsTxtUserAgent;
 
+	private final TimeTracker timeTracker;
+
 	WebCrawlThread(String sessionName, WebCrawlDefinition crawlDefinition) throws ServerException {
-		this.session = new CurrentSession(crawlDefinition, sessionName);
+		timeTracker = new TimeTracker();
+		this.session = new CurrentSession(crawlDefinition, sessionName, timeTracker);
 		this.crawlDefinition = crawlDefinition;
 		if (crawlDefinition.browser_type == null)
 			throw new ServerException(Status.NOT_ACCEPTABLE, "The browser_type is missing");
@@ -90,6 +94,8 @@ public class WebCrawlThread implements Runnable {
 			internetDomainName = InternetDomainName.from(host);
 		} catch (URISyntaxException e) {
 			throw new ServerException(Status.NOT_ACCEPTABLE, e.getMessage());
+		} finally {
+			timeTracker.next("Initialization");
 		}
 	}
 
@@ -280,7 +286,7 @@ public class WebCrawlThread implements Runnable {
 		if (logger.isInfoEnabled())
 			logger.info("Crawling " + uri + " (" + currentURI.getDepth() + ")");
 		try {
-			//String mainWindow = driver.getWindowHandle();
+			timeTracker.next(null);
 			driver.get(uriString);
 			//if (mainWindow != null && !mainWindow.equals(driver.getWindowHandle()))
 			//	driver.switchTo().window(mainWindow);
@@ -288,6 +294,8 @@ public class WebCrawlThread implements Runnable {
 			session.incErrorCount();
 			currentURI.setError(driver, e);
 			return;
+		} finally {
+			timeTracker.next("Driver.getURL");
 		}
 
 		try {
@@ -357,10 +365,13 @@ public class WebCrawlThread implements Runnable {
 		// Let's look for the a tags
 		Set<String> hrefSet = new LinkedHashSet<String>();
 		try {
+			timeTracker.next(null);
 			driver.findLinks(driver, hrefSet);
 		} catch (Exception e) {
 			if (logger.isWarnEnabled())
 				logger.warn("Cannot extract links from " + uriString, e);
+		} finally {
+			timeTracker.next("Find links");
 		}
 		if (hrefSet.isEmpty())
 			return;
@@ -389,14 +400,19 @@ public class WebCrawlThread implements Runnable {
 			KeyManagementException {
 		if (robotsTxtMap == null)
 			return null;
-		URI uri = currentURI.getURI();
-		URI robotsTxtURI = RobotsTxt.getRobotsURI(uri);
-		RobotsTxt robotsTxt = robotsTxtMap.get(robotsTxtURI);
-		if (robotsTxt == null) {
-			robotsTxt = RobotsTxt.download(driver.getProxy(), robotsTxtUserAgent, robotsTxtURI);
-			robotsTxtMap.put(robotsTxtURI, robotsTxt);
+		timeTracker.next(null);
+		try {
+			URI uri = currentURI.getURI();
+			URI robotsTxtURI = RobotsTxt.getRobotsURI(uri);
+			RobotsTxt robotsTxt = robotsTxtMap.get(robotsTxtURI);
+			if (robotsTxt == null) {
+				robotsTxt = RobotsTxt.download(driver.getProxy(), robotsTxtUserAgent, robotsTxtURI);
+				robotsTxtMap.put(robotsTxtURI, robotsTxt);
+			}
+			return robotsTxt.getStatus(uri);
+		} finally {
+			timeTracker.next("Robots.txt check");
 		}
-		return robotsTxt.getStatus(uri);
 	}
 
 	private void crawlOne(final Set<URI> crawledURIs, URI uri, final Set<URI> nextLevelURIs, final int depth)
@@ -489,18 +505,23 @@ public class WebCrawlThread implements Runnable {
 		Script script = crawlDefinition.scripts.get(event);
 		if (script == null)
 			return false;
-		Map<String, Object> objects = new TreeMap<String, Object>();
-		objects.put("session", session);
-		if (script.variables != null)
-			objects.putAll(script.variables);
-		if (driver != null)
-			objects.put("driver", driver);
-		if (currentURI != null)
-			objects.put("current", currentURI);
-		ScriptRunThread scriptRunThread = ScriptManager.getInstance().runSync(script.name, objects);
-		if (scriptRunThread.getException() != null)
-			throw new ServerException(scriptRunThread.getException());
-		return true;
+		timeTracker.next(null);
+		try {
+			Map<String, Object> objects = new TreeMap<String, Object>();
+			objects.put("session", session);
+			if (script.variables != null)
+				objects.putAll(script.variables);
+			if (driver != null)
+				objects.put("driver", driver);
+			if (currentURI != null)
+				objects.put("current", currentURI);
+			ScriptRunThread scriptRunThread = ScriptManager.getInstance().runSync(script.name, objects);
+			if (scriptRunThread.getException() != null)
+				throw new ServerException(scriptRunThread.getException());
+			return true;
+		} finally {
+			timeTracker.next("Event: " + event.name());
+		}
 	}
 
 	private List<URI> buildURIList(List<String> uris) throws URISyntaxException {
@@ -545,6 +566,5 @@ public class WebCrawlThread implements Runnable {
 		} finally {
 			WebCrawlerManager.INSTANCE.removeSession(this);
 		}
-
 	}
 }
