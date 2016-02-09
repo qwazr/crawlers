@@ -15,6 +15,7 @@
  **/
 package com.qwazr.crawler.web.manager;
 
+import com.qwazr.crawler.web.CurrentSession;
 import com.qwazr.crawler.web.service.WebCrawlDefinition;
 import com.qwazr.utils.TimeTracker;
 import org.apache.commons.collections.CollectionUtils;
@@ -23,7 +24,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class CurrentSession {
+class CurrentSessionImpl implements CurrentSession {
 
 	private final WebCrawlDefinition crawlDefinition;
 	private final String name;
@@ -38,7 +39,7 @@ public class CurrentSession {
 	private volatile Integer currentDepth = null;
 	private volatile String abortingReason = null;
 
-	CurrentSession(WebCrawlDefinition crawlDefinition, String name, TimeTracker timeTracker) {
+	CurrentSessionImpl(WebCrawlDefinition crawlDefinition, String name, TimeTracker timeTracker) {
 		this.crawlDefinition = crawlDefinition;
 		this.timeTracker = timeTracker;
 		this.name = name;
@@ -50,42 +51,29 @@ public class CurrentSession {
 					this.variables.put(entry.getKey(), entry.getValue());
 	}
 
+	@Override
 	public Map<String, Object> getVariables() {
 		return variables;
 	}
 
-	/**
-	 * @param name the name of the variable
-	 * @return the value of the variable
-	 */
+	@Override
 	public Object getVariable(String name) {
 		return variables.get(name);
 	}
 
-	/**
-	 * @param name  the name of the variable to set
-	 * @param value the value to set
-	 * @return the previous value if any
-	 */
+	@Override
 	public Object setVariable(String name, Object value) {
 		if (value == null)
 			return removeVariable(name);
 		return variables.put(name, value);
 	}
 
-	/**
-	 * @param name the name of the variable to remove
-	 * @return the value of the variable if any
-	 */
+	@Override
 	public Object removeVariable(String name) {
 		return variables.remove(name);
 	}
 
-	/**
-	 * Causes the currently executing thread to sleep
-	 *
-	 * @param millis the number of milliseconds
-	 */
+	@Override
 	public void sleep(int millis) {
 		try {
 			if (millis == 0)
@@ -96,37 +84,24 @@ public class CurrentSession {
 		}
 	}
 
-	/**
-	 * Call this method to abort of the current session
-	 */
+	@Override
 	public void abort() {
 		this.abort(null);
 	}
 
-	/**
-	 * Call this method to abort the current session and set the reason.
-	 * If it was previously aborted, the reason is not updated
-	 *
-	 * @param reason the motivation of the abort
-	 */
+	@Override
 	public void abort(String reason) {
 		if (abort.getAndSet(true))
 			return;
 		abortingReason = reason;
 	}
 
-	/**
-	 * Check if the session is currently aborting
-	 *
-	 * @return
-	 */
+	@Override
 	public boolean isAborting() {
 		return abort.get();
 	}
 
-	/**
-	 * @return the aborting reason if any
-	 */
+	@Override
 	public String getAbortingReason() {
 		return abortingReason;
 	}
@@ -135,9 +110,7 @@ public class CurrentSession {
 		return ignoredCount++;
 	}
 
-	/**
-	 * @return The number of ignored URLs
-	 */
+	@Override
 	public Integer getIgnoredCount() {
 		return ignoredCount;
 	}
@@ -146,9 +119,7 @@ public class CurrentSession {
 		return crawledCount++;
 	}
 
-	/**
-	 * @return The number of crawled URLs
-	 */
+	@Override
 	public Integer getCrawledCount() {
 		return crawledCount;
 	}
@@ -157,38 +128,27 @@ public class CurrentSession {
 		return errorCount++;
 	}
 
-	/**
-	 * @return The number of erroneous URLs
-	 */
+	@Override
 	public Integer getErrorCount() {
 		return errorCount;
 	}
 
-	/**
-	 * @return the name of the session
-	 */
+	@Override
 	public String getName() {
 		return name;
 	}
 
-	/**
-	 * @return the currentUri
-	 */
+	@Override
 	public String getCurrentURI() {
 		return currentURI;
 	}
 
-	/**
-	 * @return the currentDepth
-	 */
+	@Override
 	public Integer getCurrentDepth() {
 		return currentDepth;
 	}
 
-	/**
-	 * @param currentURI the currentURI to set
-	 */
-	synchronized public void setCurrentURI(String currentURI, Integer currentDepth) {
+	synchronized void setCurrentURI(String currentURI, Integer currentDepth) {
 		this.currentURI = currentURI;
 		this.currentDepth = currentDepth;
 	}
@@ -201,8 +161,8 @@ public class CurrentSession {
 		return crawlDefinition != null && !CollectionUtils.isEmpty(crawlDefinition.inclusion_patterns) &&
 				!CollectionUtils.isEmpty(crawlDefinition.exclusion_patterns);
 	}
-	
-	public TimeTracker getTimeTracker() {
-		return timeTracker;
+
+	public TimeTracker.Status getTimeTrackerStatus() {
+		return timeTracker == null ? null : timeTracker.getStatus();
 	}
 }

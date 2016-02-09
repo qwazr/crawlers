@@ -17,7 +17,7 @@ package com.qwazr.crawler.web.service;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.qwazr.crawler.web.manager.CurrentSession;
+import com.qwazr.crawler.web.CurrentSession;
 import com.qwazr.utils.TimeTracker;
 
 @JsonInclude(Include.NON_NULL)
@@ -42,7 +42,7 @@ public class WebCrawlStatus {
 	public WebCrawlStatus(String node_address, String entry_url, CurrentSession session) {
 		this.node_address = node_address;
 		this.entry_url = entry_url;
-		this.timer = session.getTimeTracker().getStatus();
+		this.timer = session.getTimeTrackerStatus();
 		this.aborting = session.isAborting();
 		this.aborting_reason = session.getAbortingReason();
 		this.urls = new UrlStatus(session);

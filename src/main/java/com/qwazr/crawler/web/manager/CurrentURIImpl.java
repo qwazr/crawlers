@@ -15,6 +15,7 @@
  **/
 package com.qwazr.crawler.web.manager;
 
+import com.qwazr.crawler.web.CurrentURI;
 import com.qwazr.crawler.web.driver.BrowserDriver;
 import com.qwazr.utils.LinkUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -22,7 +23,7 @@ import org.apache.commons.lang3.StringUtils;
 import java.net.URI;
 import java.util.Collection;
 
-public class CurrentURI {
+class CurrentURIImpl implements CurrentURI {
 
 	final private Integer depth;
 
@@ -44,23 +45,27 @@ public class CurrentURI {
 	private volatile Collection<URI> nextLevelLinks = null;
 	private volatile Collection<URI> filteredLinks = null;
 
-	CurrentURI(URI uri, Integer depth) {
+	CurrentURIImpl(URI uri, Integer depth) {
 		this.initialURI = uri;
 		this.depth = depth;
 	}
 
+	@Override
 	public URI getInitialURI() {
 		return initialURI;
 	}
 
+	@Override
 	public URI getUri() {
 		return getURI();
 	}
 
+	@Override
 	public URI getURI() {
 		return finalURI != null ? finalURI : initialURI;
 	}
 
+	@Override
 	public Integer getDepth() {
 		return depth;
 	}
@@ -75,10 +80,11 @@ public class CurrentURI {
 			isRedirected = !finalURI.equals(initialURI);
 	}
 
-	public void setInInclusion(Boolean isInInclusion) {
+	void setInInclusion(Boolean isInInclusion) {
 		this.isInInclusion = isInInclusion;
 	}
 
+	@Override
 	public Boolean isInInclusion() {
 		return isInInclusion;
 	}
@@ -87,14 +93,17 @@ public class CurrentURI {
 		this.isInExclusion = isInExclusion;
 	}
 
+	@Override
 	public Boolean isInExclusion() {
 		return isInExclusion;
 	}
 
+	@Override
 	public void setIgnored(boolean ignored) {
 		isIgnored = ignored;
 	}
 
+	@Override
 	public boolean isIgnored() {
 		return isIgnored;
 	}
@@ -103,10 +112,12 @@ public class CurrentURI {
 		isCrawled = true;
 	}
 
+	@Override
 	public boolean isCrawled() {
 		return isCrawled;
 	}
 
+	@Override
 	public boolean isRedirected() {
 		return isRedirected;
 	}
@@ -123,30 +134,37 @@ public class CurrentURI {
 			error = e.getClass().getName();
 	}
 
+	@Override
 	public String getError() {
 		return error;
 	}
 
+	@Override
 	public void setSameLevelLinks(Collection<URI> links) {
 		this.sameLevelLinks = links;
 	}
 
+	@Override
 	public Collection<URI> getSameLevelLinks() {
 		return sameLevelLinks;
 	}
 
+	@Override
 	public void setLinks(Collection<URI> links) {
 		this.nextLevelLinks = links;
 	}
 
+	@Override
 	public Collection<URI> getLinks() {
 		return nextLevelLinks;
 	}
 
+	@Override
 	public void setFilteredLinks(Collection<URI> filteredLinks) {
 		this.filteredLinks = filteredLinks;
 	}
 
+	@Override
 	public Collection<URI> getFilteredLinks() {
 		return filteredLinks;
 	}
@@ -155,6 +173,7 @@ public class CurrentURI {
 		this.isStartDomain = isStartDomain;
 	}
 
+	@Override
 	public boolean isStartDomain() {
 		return isStartDomain;
 	}
@@ -163,10 +182,12 @@ public class CurrentURI {
 		this.isStartSubDomain = isStartSubDomain;
 	}
 
+	@Override
 	public boolean isStartSubDomain() {
 		return isStartSubDomain;
 	}
 
+	@Override
 	public void hrefToURICollection(Collection<String> hrefCollection, Collection<URI> uriCollection) {
 		if (hrefCollection == null)
 			return;

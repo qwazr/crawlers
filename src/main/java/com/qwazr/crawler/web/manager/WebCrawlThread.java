@@ -17,6 +17,7 @@ package com.qwazr.crawler.web.manager;
 
 import com.google.common.net.InternetDomainName;
 import com.qwazr.cluster.manager.ClusterManager;
+import com.qwazr.crawler.web.CurrentURI;
 import com.qwazr.crawler.web.driver.BrowserDriver;
 import com.qwazr.crawler.web.driver.BrowserDriverBuilder;
 import com.qwazr.crawler.web.service.WebCrawlDefinition;
@@ -54,7 +55,7 @@ public class WebCrawlThread implements Runnable {
 
 	private static final Logger logger = LoggerFactory.getLogger(WebCrawlThread.class);
 
-	private final CurrentSession session;
+	private final CurrentSessionImpl session;
 	final WebCrawlDefinition crawlDefinition;
 	private final InternetDomainName internetDomainName;
 
@@ -71,7 +72,7 @@ public class WebCrawlThread implements Runnable {
 
 	WebCrawlThread(String sessionName, WebCrawlDefinition crawlDefinition) throws ServerException {
 		timeTracker = new TimeTracker();
-		this.session = new CurrentSession(crawlDefinition, sessionName, timeTracker);
+		this.session = new CurrentSessionImpl(crawlDefinition, sessionName, timeTracker);
 		this.crawlDefinition = crawlDefinition;
 		if (crawlDefinition.browser_type == null)
 			throw new ServerException(Status.NOT_ACCEPTABLE, "The browser_type is missing");
@@ -242,7 +243,8 @@ public class WebCrawlThread implements Runnable {
 		return internetDomainName.equals(InternetDomainName.from(host));
 	}
 
-	private String scriptBeforeCrawl(CurrentURI currentURI, String uriString) throws ServerException, IOException {
+	private String scriptBeforeCrawl(CurrentURIImpl currentURI, String uriString)
+			throws ServerException, IOException, ClassNotFoundException {
 		URI uri = currentURI.getURI();
 		if (uriString == null)
 			uriString = uri.toString();
@@ -263,7 +265,7 @@ public class WebCrawlThread implements Runnable {
 		return uriString;
 	}
 
-	private void crawl(CurrentURI currentURI) {
+	private void crawl(CurrentURIImpl currentURI) {
 
 		if (session.isAborting())
 			return;
@@ -417,7 +419,7 @@ public class WebCrawlThread implements Runnable {
 
 	private void crawlOne(final Set<URI> crawledURIs, URI uri, final Set<URI> nextLevelURIs, final int depth)
 			throws ServerException, IOException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException,
-			KeyManagementException {
+			KeyManagementException, ClassNotFoundException {
 
 		if (session.isAborting())
 			return;
@@ -429,7 +431,7 @@ public class WebCrawlThread implements Runnable {
 			crawledURIs.add(uri);
 		}
 
-		CurrentURI currentURI = new CurrentURI(uri, depth);
+		CurrentURIImpl currentURI = new CurrentURIImpl(uri, depth);
 
 		// Give the hand to the "before_crawl" scripts
 		scriptBeforeCrawl(currentURI, null);
@@ -465,7 +467,7 @@ public class WebCrawlThread implements Runnable {
 
 	private void crawlLevel(Set<URI> crawledURIs, Collection<URI> levelURIs, int depth)
 			throws ServerException, IOException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException,
-			KeyManagementException {
+			KeyManagementException, ClassNotFoundException {
 
 		if (session.isAborting())
 			return;
@@ -496,10 +498,12 @@ public class WebCrawlThread implements Runnable {
 	 * @param currentURI the current URI description
 	 * @return true if the scripts was executed, false if no scripts is attached
 	 * to the event
-	 * @throws ServerException if the execution of the scripts failed
-	 * @throws IOException     if any I/O exception occurs
+	 * @throws ServerException        if the execution of the scripts failed
+	 * @throws IOException            if any I/O exception occurs
+	 * @throws ClassNotFoundException if the JAVA class is not found
 	 */
-	private boolean script(EventEnum event, CurrentURI currentURI) throws ServerException, IOException {
+	private boolean script(EventEnum event, CurrentURI currentURI)
+			throws ServerException, IOException, ClassNotFoundException {
 		if (crawlDefinition.scripts == null)
 			return false;
 		Script script = crawlDefinition.scripts.get(event);
