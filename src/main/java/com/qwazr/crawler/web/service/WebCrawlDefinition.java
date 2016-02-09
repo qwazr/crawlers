@@ -277,7 +277,7 @@ public class WebCrawlDefinition implements Cloneable {
 		}
 
 		@Override
-		public Object clone() {
+		final public Object clone() {
 			return new Script(this);
 		}
 
