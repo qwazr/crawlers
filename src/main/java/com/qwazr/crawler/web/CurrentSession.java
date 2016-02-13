@@ -107,5 +107,5 @@ public interface CurrentSession {
 	/**
 	 * @return time information about the current crawl session
 	 */
-	TimeTracker.Status getTimeTrackerStatus();
+	TimeTracker getTimeTracker();
 }

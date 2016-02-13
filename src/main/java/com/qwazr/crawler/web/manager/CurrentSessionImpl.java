@@ -162,7 +162,7 @@ class CurrentSessionImpl implements CurrentSession {
 				!CollectionUtils.isEmpty(crawlDefinition.exclusion_patterns);
 	}
 
-	public TimeTracker.Status getTimeTrackerStatus() {
-		return timeTracker == null ? null : timeTracker.getStatus();
+	public TimeTracker getTimeTracker() {
+		return timeTracker;
 	}
 }

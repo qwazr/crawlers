@@ -42,7 +42,8 @@ public class WebCrawlStatus {
 	public WebCrawlStatus(String node_address, String entry_url, CurrentSession session) {
 		this.node_address = node_address;
 		this.entry_url = entry_url;
-		this.timer = session.getTimeTrackerStatus();
+		TimeTracker tt = session.getTimeTracker();
+		this.timer = tt == null ? null : tt.getStatus();
 		this.aborting = session.isAborting();
 		this.aborting_reason = session.getAbortingReason();
 		this.urls = new UrlStatus(session);
