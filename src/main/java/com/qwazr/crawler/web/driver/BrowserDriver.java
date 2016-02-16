@@ -21,9 +21,9 @@ import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.http.HttpUtils;
 import com.qwazr.utils.json.JsonMapper;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.fluent.Executor;
 import org.apache.http.client.fluent.Request;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.openqa.selenium.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -340,7 +340,7 @@ final public class BrowserDriver implements WebDriver, Closeable, AdditionalCapa
 			throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException, IOException,
 			URISyntaxException {
 		URI uri = new URI(url);
-		final HttpClient httpClient = HttpUtils.createHttpClient_AcceptsUntrustedCerts();
+		final CloseableHttpClient httpClient = HttpUtils.createHttpClient_AcceptsUntrustedCerts();
 		try {
 			final Executor executor = Executor.newInstance(httpClient);
 			Request request = Request.Get(uri.toString()).addHeader("Connection", "close").connectTimeout(60000)
@@ -356,8 +356,7 @@ final public class BrowserDriver implements WebDriver, Closeable, AdditionalCapa
 			}
 			executor.execute(request).saveContent(file);
 		} finally {
-			if (httpClient != null && httpClient instanceof AutoCloseable)
-				IOUtils.close((AutoCloseable) httpClient);
+			IOUtils.close(httpClient);
 		}
 	}
 

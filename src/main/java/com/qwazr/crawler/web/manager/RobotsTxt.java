@@ -19,10 +19,10 @@ import com.qwazr.crawler.web.service.WebCrawlDefinition;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.LinkUtils;
 import com.qwazr.utils.http.HttpUtils;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.fluent.Executor;
 import org.apache.http.client.fluent.Request;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -252,7 +252,7 @@ public class RobotsTxt {
 	static RobotsTxt download(WebCrawlDefinition.ProxyDefinition proxy, String userAgent, URI uri)
 			throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
 		InputStream is = null;
-		final HttpClient httpClient = HttpUtils.createHttpClient_AcceptsUntrustedCerts();
+		final CloseableHttpClient httpClient = HttpUtils.createHttpClient_AcceptsUntrustedCerts();
 		try {
 			final Executor executor = Executor.newInstance(httpClient);
 			Request request = Request.Get(uri.toString()).addHeader("Connection", "close")
@@ -280,9 +280,7 @@ public class RobotsTxt {
 			}
 			return new RobotsTxt(userAgent, sc);
 		} finally {
-			IOUtils.close(is);
-			if (httpClient != null && httpClient instanceof AutoCloseable)
-				IOUtils.close((AutoCloseable) httpClient);
+			IOUtils.close(is, httpClient);
 		}
 	}
 
