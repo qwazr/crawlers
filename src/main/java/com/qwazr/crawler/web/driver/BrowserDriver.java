@@ -188,6 +188,25 @@ final public class BrowserDriver implements WebDriver, Closeable, AdditionalCapa
 		extractLinks(searchContext, hrefCollection, "frame", "src");
 	}
 
+	/**
+	 * Iterate over every frames and extract all links. The driver is set to defaultContent()
+	 *
+	 * @param hrefCollection
+	 */
+	public void findEveryFramesLinks(Collection<String> hrefCollection) {
+		driver.switchTo().defaultContent();
+		for (int i = 0; i < 100; i++) {
+			try {
+				driver.switchTo().frame(i);
+				findLinks(driver, hrefCollection);
+			} catch (NoSuchFrameException e) {
+				// That's not an error, we just want to iterate over frames
+				break;
+			}
+		}
+		driver.switchTo().defaultContent();
+	}
+
 	public void findRssItemLinks(SearchContext searchContext, Collection<String> linkCollection) {
 		List<WebElement> channels = driver.findElements(By.tagName("channel"));
 		for (WebElement channel : channels) {
