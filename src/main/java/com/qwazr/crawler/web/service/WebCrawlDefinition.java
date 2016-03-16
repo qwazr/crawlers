@@ -37,9 +37,9 @@ public class WebCrawlDefinition implements Cloneable {
 	public String entry_url = null;
 
 	/**
-	 * A set of URL to crawl
+	 * A map of URL to crawl with the depth
 	 */
-	public List<String> urls = null;
+	public LinkedHashMap<String, Integer> urls = null;
 
 	/**
 	 * The maximum depth of the crawl.
@@ -295,7 +295,7 @@ public class WebCrawlDefinition implements Cloneable {
 
 	protected WebCrawlDefinition(WebCrawlDefinition src) {
 		entry_url = src.entry_url;
-		urls = src.urls == null ? null : new ArrayList<String>(src.urls);
+		urls = src.urls == null ? null : new LinkedHashMap<String, Integer>(src.urls);
 		max_depth = src.max_depth;
 		parameters_patterns = src.parameters_patterns == null ? null : new ArrayList<String>(src.parameters_patterns);
 		inclusion_patterns = src.inclusion_patterns == null ? null : new ArrayList<String>(src.inclusion_patterns);
@@ -334,15 +334,15 @@ public class WebCrawlDefinition implements Cloneable {
 		return this;
 	}
 
-	public WebCrawlDefinition setUrls(List<String> urls) {
+	public WebCrawlDefinition setUrls(LinkedHashMap<String, Integer> urls) {
 		this.urls = urls;
 		return this;
 	}
 
-	public WebCrawlDefinition addUrl(String url) {
+	public WebCrawlDefinition addUrl(String url, Integer depth) {
 		if (urls == null)
-			urls = new ArrayList<String>();
-		urls.add(url);
+			urls = new LinkedHashMap<>();
+		urls.put(url, depth);
 		return this;
 	}
 

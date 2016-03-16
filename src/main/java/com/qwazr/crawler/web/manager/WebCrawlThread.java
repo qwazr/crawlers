@@ -47,6 +47,7 @@ import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
+import java.util.function.BiConsumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -460,7 +461,7 @@ public class WebCrawlThread implements Runnable {
 
 		Collection<URI> newLinks = checkLinks(currentURI.getLinks());
 		currentURI.setLinks(newLinks);
-		if (newLinks != null)
+		if (newLinks != null && nextLevelURIs != null)
 			nextLevelURIs.addAll(newLinks);
 
 	}
@@ -489,6 +490,20 @@ public class WebCrawlThread implements Runnable {
 		// Let's crawl the next level if any
 		crawlLevel(crawledURIs, nextLevelURIs, depth);
 
+	}
+
+	private void crawlUrlMap(Set<URI> crawledURIs, Map<String, Integer> urlMap) {
+
+		urlMap.forEach(new BiConsumer<String, Integer>() {
+			@Override
+			public void accept(String uri, Integer depth) {
+				try {
+					crawlOne(crawledURIs, new URI(uri), null, depth);
+				} catch (Exception e) {
+					throw new RuntimeException("Malformed URI: " + uri);
+				}
+			}
+		});
 	}
 
 	/**
@@ -528,28 +543,19 @@ public class WebCrawlThread implements Runnable {
 		}
 	}
 
-	private List<URI> buildURIList(List<String> uris) throws URISyntaxException {
-		if (uris == null)
-			return null;
-		List<URI> uriList = new ArrayList<URI>(uris.size());
-		for (String uri : uris)
-			uriList.add(new URI(uri));
-		return uriList;
-	}
-
 	private void runner()
 			throws URISyntaxException, IOException, ScriptException, ServerException, ReflectiveOperationException,
 			NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
 		try {
 			driver = new BrowserDriverBuilder(crawlDefinition).build();
 			script(EventEnum.before_session, null);
-			final Set<URI> crawledURIs = new HashSet<URI>();
+			final Set<URI> crawledURIs = new HashSet<>();
 			final List<URI> uriList;
 			if (crawlDefinition.urls != null && !crawlDefinition.urls.isEmpty())
-				uriList = buildURIList(crawlDefinition.urls);
-			else
-				uriList = Arrays.asList(new URI(crawlDefinition.entry_url));
-			crawlLevel(crawledURIs, uriList, 0);
+				crawlUrlMap(crawledURIs, crawlDefinition.urls);
+			else {
+				crawlLevel(crawledURIs, Arrays.asList(new URI(crawlDefinition.entry_url)), 0);
+			}
 		} finally {
 			try {
 				if (driver != null)
