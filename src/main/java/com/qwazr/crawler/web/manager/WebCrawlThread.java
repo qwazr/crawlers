@@ -500,7 +500,7 @@ public class WebCrawlThread implements Runnable {
 				try {
 					crawlOne(crawledURIs, new URI(uri), null, depth);
 				} catch (Exception e) {
-					throw new RuntimeException("Malformed URI: " + uri);
+					logger.warn("Malformed URI: " + uri);
 				}
 			}
 		});
