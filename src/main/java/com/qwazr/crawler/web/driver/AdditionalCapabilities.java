@@ -30,6 +30,9 @@ public class AdditionalCapabilities {
 
 		String getContentType();
 
+		String getContentDisposition();
+
+		String getContentDispositionFilename();
 	}
 
 	public interface SafeText {
@@ -49,7 +52,7 @@ public class AdditionalCapabilities {
 	}
 
 	public interface SetAttribute {
-		
+
 		void setAttribute(WebElement element, String name, String value);
 	}
 

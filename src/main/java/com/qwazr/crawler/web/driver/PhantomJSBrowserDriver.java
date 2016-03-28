@@ -15,15 +15,20 @@
  */
 package com.qwazr.crawler.web.driver;
 
+import com.qwazr.utils.http.HttpUtils;
 import com.qwazr.utils.process.ProcessUtils;
 import org.apache.commons.lang3.SystemUtils;
+import org.apache.http.entity.mime.MIME;
 import org.openqa.selenium.Capabilities;
 import org.openqa.selenium.phantomjs.PhantomJSDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 public class PhantomJSBrowserDriver extends PhantomJSDriver implements AdditionalCapabilities.ResponseHeader {
 
@@ -33,6 +38,7 @@ public class PhantomJSBrowserDriver extends PhantomJSDriver implements Additiona
 
 	private String requestedUrl = null;
 	private Map<String, ?> endEntry = null;
+	private Map<String, String> headers = null;
 
 	public PhantomJSBrowserDriver() {
 		super();
@@ -116,6 +122,7 @@ public class PhantomJSBrowserDriver extends PhantomJSDriver implements Additiona
 
 	private boolean findEndEntry(String url) {
 		endEntry = (Map<String, ?>) executePhantomJS(JS_FIND_END_ENTRY, url);
+		headers = null;
 		return endEntry != null && endEntry.size() > 0;
 	}
 
@@ -166,6 +173,47 @@ public class PhantomJSBrowserDriver extends PhantomJSDriver implements Additiona
 			return null;
 		int i = contentType.indexOf(';');
 		return i == -1 ? contentType : contentType.substring(0, i);
+	}
+
+	private Map<String, String> getHeaders() {
+		if (endEntry == null)
+			return null;
+		if (headers != null)
+			return headers;
+		List<Map<String, ?>> entries = (List<Map<String, ?>>) endEntry.get("headers");
+		if (entries == null)
+			return null;
+		final Map<String, String> headers = new LinkedHashMap<>();
+		entries.forEach(new Consumer<Map<String, ?>>() {
+			@Override
+			public void accept(Map<String, ?> map) {
+				Object name = map.get("name");
+				Object value = map.get("value");
+				if (name == null || value == null)
+					return;
+				headers.put(name.toString().trim().toLowerCase(), value.toString());
+			}
+		});
+		return this.headers = headers;
+	}
+
+	private String getHeader(String name) {
+		Map<String, String> headers = getHeaders();
+		if (headers == null)
+			return null;
+		return headers.get(name.trim().toLowerCase());
+	}
+
+	@Override
+	public String getContentDisposition() {
+		if (endEntry == null)
+			return null;
+		return getHeader(MIME.CONTENT_DISPOSITION);
+	}
+
+	@Override
+	public String getContentDispositionFilename() {
+		return HttpUtils.getHeaderParameter(getContentDisposition(), "filename");
 	}
 
 }

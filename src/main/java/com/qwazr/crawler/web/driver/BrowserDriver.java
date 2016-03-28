@@ -398,7 +398,21 @@ final public class BrowserDriver implements WebDriver, Closeable, AdditionalCapa
 	public String getContentType() {
 		if (driver instanceof AdditionalCapabilities.ResponseHeader)
 			return ((AdditionalCapabilities.ResponseHeader) driver).getContentType();
-		throw new WebDriverException("GetStatusCode is not implemented in " + driver.getClass());
+		throw new WebDriverException("GetContentType is not implemented in " + driver.getClass());
+	}
+
+	@Override
+	public String getContentDisposition() {
+		if (driver instanceof AdditionalCapabilities.ResponseHeader)
+			return ((AdditionalCapabilities.ResponseHeader) driver).getContentDisposition();
+		throw new WebDriverException("GetContentDisposition is not implemented in " + driver.getClass());
+	}
+
+	@Override
+	public String getContentDispositionFilename() {
+		if (driver instanceof AdditionalCapabilities.ResponseHeader)
+			return ((AdditionalCapabilities.ResponseHeader) driver).getContentDispositionFilename();
+		throw new WebDriverException("GetContentDispositionFilename is not implemented in " + driver.getClass());
 	}
 
 	public String getErrorMessage(Exception error) {

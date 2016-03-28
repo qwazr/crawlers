@@ -20,6 +20,8 @@ import com.gargoylesoftware.htmlunit.html.DomElement;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.qwazr.crawler.web.service.WebRequestDefinition;
 import com.qwazr.utils.IOUtils;
+import com.qwazr.utils.http.HttpUtils;
+import org.apache.http.entity.mime.MIME;
 import org.openqa.selenium.Capabilities;
 import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
@@ -78,6 +80,18 @@ public class HtmlUnitBrowserDriver extends HtmlUnitDriverWebClient
 		if (response == null)
 			return null;
 		return response.getContentType();
+	}
+
+	@Override
+	public String getContentDisposition() {
+		WebResponse response = getWebResponse();
+		if (response == null)
+			return null;
+		return response.getResponseHeaderValue(MIME.CONTENT_DISPOSITION);
+	}
+
+	public String getContentDispositionFilename() {
+		return HttpUtils.getHeaderParameter(getContentDisposition(), "filename");
 	}
 
 	@Override
