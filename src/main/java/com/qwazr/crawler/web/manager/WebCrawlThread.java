@@ -419,8 +419,7 @@ public class WebCrawlThread implements Runnable {
 	}
 
 	private void crawlOne(final Set<URI> crawledURIs, URI uri, final Set<URI> nextLevelURIs, final int depth)
-			throws ServerException, IOException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException,
-			KeyManagementException, ClassNotFoundException {
+			throws ServerException, IOException, ClassNotFoundException {
 
 		if (session.isAborting())
 			return;
@@ -440,11 +439,16 @@ public class WebCrawlThread implements Runnable {
 		if (!currentURI.isIgnored()) {
 
 			// Check the robotsTxt status
-			RobotsTxt.RobotsTxtStatus robotsTxtStatus = checkRobotsTxt(currentURI);
-			if (robotsTxtStatus != null && !robotsTxtStatus.isCrawlable)
-				currentURI.setIgnored(true);
+			try {
+				RobotsTxt.RobotsTxtStatus robotsTxtStatus = checkRobotsTxt(currentURI);
+				if (robotsTxtStatus != null && !robotsTxtStatus.isCrawlable)
+					currentURI.setIgnored(true);
+			} catch (Exception e) {
+				session.incErrorCount();
+				currentURI.setError(driver, e);
+			}
 
-			if (!currentURI.isIgnored()) {
+			if (!currentURI.isIgnored() && currentURI.getError() == null) {
 				crawl(currentURI);
 
 				// Store the final URI (in case of redirection)
