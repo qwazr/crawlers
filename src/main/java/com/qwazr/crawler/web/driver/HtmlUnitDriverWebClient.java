@@ -49,6 +49,7 @@ public class HtmlUnitDriverWebClient extends HtmlUnitDriver {
 		webClient.setRefreshHandler(null);
 		webClient.getOptions().setThrowExceptionOnScriptError(false);
 		webClient.setAjaxController(new NicelyResynchronizingAjaxController());
+		webClient.setHTMLParserListener(null);
 		return webClient;
 	}
 
