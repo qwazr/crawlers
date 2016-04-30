@@ -21,6 +21,7 @@ import com.qwazr.crawler.web.service.WebCrawlerServiceInterface;
 import com.qwazr.crawler.web.service.WebCrawlerSingleServiceImpl;
 import com.qwazr.utils.http.HttpResponseEntityException;
 import com.qwazr.utils.json.client.JsonMultiClientAbstract;
+import com.qwazr.utils.server.RemoteService;
 import com.qwazr.utils.server.ServerException;
 import com.qwazr.utils.server.WebAppExceptionHolder;
 import org.slf4j.Logger;
@@ -30,22 +31,21 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.TreeMap;
 import java.util.concurrent.ExecutorService;
 
-public class WebCrawlerMultiClient extends JsonMultiClientAbstract<String, WebCrawlerSingleClient>
+public class WebCrawlerMultiClient extends JsonMultiClientAbstract<WebCrawlerSingleClient>
 		implements WebCrawlerServiceInterface {
 
 	private static final Logger logger = LoggerFactory.getLogger(WebCrawlerMultiClient.class);
 
-	public WebCrawlerMultiClient(ExecutorService executor, String[] urls, Integer msTimeOut) throws URISyntaxException {
-		super(executor, new WebCrawlerSingleClient[urls.length], urls, msTimeOut);
+	public WebCrawlerMultiClient(final ExecutorService executor, final RemoteService... remote) {
+		super(executor, new WebCrawlerSingleClient[remote.length], remote);
 	}
 
 	@Override
-	protected WebCrawlerSingleClient newClient(String url, Integer msTimeOut) throws URISyntaxException {
-		return new WebCrawlerSingleClient(url, msTimeOut);
+	protected WebCrawlerSingleClient newClient(final RemoteService remote) {
+		return new WebCrawlerSingleClient(remote);
 	}
 
 	@Override

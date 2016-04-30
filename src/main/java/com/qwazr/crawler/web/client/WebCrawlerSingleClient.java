@@ -22,6 +22,7 @@ import com.qwazr.crawler.web.service.WebCrawlerServiceInterface;
 import com.qwazr.utils.http.HttpResponseEntityException;
 import com.qwazr.utils.http.HttpUtils;
 import com.qwazr.utils.json.client.JsonClientAbstract;
+import com.qwazr.utils.server.RemoteService;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Request;
 
@@ -29,17 +30,17 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.TreeMap;
 
 public class WebCrawlerSingleClient extends JsonClientAbstract implements WebCrawlerServiceInterface {
 
-	public WebCrawlerSingleClient(String url, Integer msTimeOut) throws URISyntaxException {
-		super(url, msTimeOut);
+	public WebCrawlerSingleClient(final RemoteService remote) {
+		super(remote);
 	}
 
-	public final static TypeReference<TreeMap<String, WebCrawlStatus>> TreeMapStringCrawlTypeRef = new TypeReference<TreeMap<String, WebCrawlStatus>>() {
-	};
+	public final static TypeReference<TreeMap<String, WebCrawlStatus>> TreeMapStringCrawlTypeRef =
+			new TypeReference<TreeMap<String, WebCrawlStatus>>() {
+			};
 
 	@Override
 	public TreeMap<String, WebCrawlStatus> getSessions(Boolean local, String group, Integer msTimeout) {
@@ -50,8 +51,8 @@ public class WebCrawlerSingleClient extends JsonClientAbstract implements WebCra
 
 	@Override
 	public WebCrawlStatus getSession(String session_name, Boolean local, String group, Integer msTimeout) {
-		UBuilder uriBuilder = new UBuilder("/crawler/web/sessions/", session_name)
-				.setParameters(local, group, msTimeout);
+		UBuilder uriBuilder =
+				new UBuilder("/crawler/web/sessions/", session_name).setParameters(local, group, msTimeout);
 		Request request = Request.Get(uriBuilder.build());
 		return commonServiceRequest(request, null, null, WebCrawlStatus.class, 200);
 	}
@@ -59,8 +60,9 @@ public class WebCrawlerSingleClient extends JsonClientAbstract implements WebCra
 	@Override
 	public Response abortSession(String session_name, String reason, Boolean local, String group, Integer msTimeout) {
 		try {
-			UBuilder uriBuilder = new UBuilder("/crawler/web/sessions/", session_name)
-					.setParameters(local, group, msTimeout).setParameterObject("reason", reason);
+			UBuilder uriBuilder =
+					new UBuilder("/crawler/web/sessions/", session_name).setParameters(local, group, msTimeout)
+							.setParameterObject("reason", reason);
 			Request request = Request.Delete(uriBuilder.build());
 			HttpResponse response = execute(request, null, null);
 			HttpUtils.checkStatusCodes(response, 200, 202);

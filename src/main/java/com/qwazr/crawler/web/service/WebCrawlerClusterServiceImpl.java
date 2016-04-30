@@ -34,8 +34,8 @@ public class WebCrawlerClusterServiceImpl extends WebCrawlerSingleServiceImpl {
 		// Read the sessions present in the remote nodes
 		try {
 			TreeMap<String, WebCrawlStatus> globalSessions = new TreeMap<String, WebCrawlStatus>();
-			globalSessions.putAll(WebCrawlerManager.getInstance().getMultiClient(group, msTimeout)
-					.getSessions(false, group, msTimeout));
+			globalSessions
+					.putAll(WebCrawlerManager.getInstance().getMultiClient(group).getSessions(false, group, msTimeout));
 			return globalSessions;
 		} catch (URISyntaxException e) {
 			throw ServerException.getJsonException(e);
@@ -47,7 +47,7 @@ public class WebCrawlerClusterServiceImpl extends WebCrawlerSingleServiceImpl {
 		try {
 			if (local != null && local)
 				return super.getSession(session_name, local, group, msTimeout);
-			return WebCrawlerManager.getInstance().getMultiClient(group, msTimeout)
+			return WebCrawlerManager.getInstance().getMultiClient(group)
 					.getSession(session_name, false, group, msTimeout);
 		} catch (URISyntaxException e) {
 			throw ServerException.getJsonException(e);
@@ -60,7 +60,7 @@ public class WebCrawlerClusterServiceImpl extends WebCrawlerSingleServiceImpl {
 		try {
 			if (local != null && local)
 				return super.abortSession(session_name, reason, local, group, msTimeout);
-			return WebCrawlerManager.getInstance().getMultiClient(group, msTimeout)
+			return WebCrawlerManager.getInstance().getMultiClient(group)
 					.abortSession(session_name, reason, false, group, msTimeout);
 		} catch (URISyntaxException e) {
 			throw ServerException.getTextException(e);

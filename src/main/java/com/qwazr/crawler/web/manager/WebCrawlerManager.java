@@ -19,6 +19,7 @@ import com.qwazr.cluster.manager.ClusterManager;
 import com.qwazr.crawler.web.client.WebCrawlerMultiClient;
 import com.qwazr.crawler.web.service.*;
 import com.qwazr.utils.LockUtils;
+import com.qwazr.utils.server.RemoteService;
 import com.qwazr.utils.server.ServerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -136,10 +137,10 @@ public class WebCrawlerManager {
 		}
 	}
 
-	public WebCrawlerMultiClient getMultiClient(String group, Integer msTimeout) throws URISyntaxException {
-		String[] urls = ClusterManager.INSTANCE.getClusterClient()
-				.getActiveNodesByService(SERVICE_NAME_WEBCRAWLER, group);
-		return new WebCrawlerMultiClient(executorService, urls, msTimeout);
+	public WebCrawlerMultiClient getMultiClient(final String group) throws URISyntaxException {
+		String[] urls =
+				ClusterManager.INSTANCE.getClusterClient().getActiveNodesByService(SERVICE_NAME_WEBCRAWLER, group);
+		return new WebCrawlerMultiClient(executorService, RemoteService.build(urls));
 	}
 
 }

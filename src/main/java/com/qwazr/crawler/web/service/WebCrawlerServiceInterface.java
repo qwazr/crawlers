@@ -19,6 +19,7 @@ import com.qwazr.cluster.manager.ClusterManager;
 import com.qwazr.crawler.web.client.WebCrawlerMultiClient;
 import com.qwazr.crawler.web.client.WebCrawlerSingleClient;
 import com.qwazr.crawler.web.manager.WebCrawlerManager;
+import com.qwazr.utils.server.RemoteService;
 import com.qwazr.utils.server.ServiceInterface;
 import com.qwazr.utils.server.ServiceName;
 
@@ -74,9 +75,9 @@ public interface WebCrawlerServiceInterface extends ServiceInterface {
 					"No node available for service " + WebCrawlerManager.SERVICE_NAME_WEBCRAWLER + " group: " + group,
 					Response.Status.NOT_FOUND);
 		case 1:
-			return new WebCrawlerSingleClient(urls[0], msTimeout);
+			return new WebCrawlerSingleClient(new RemoteService(urls[0]));
 		default:
-			return new WebCrawlerMultiClient(ClusterManager.INSTANCE.executor, urls, msTimeout);
+			return new WebCrawlerMultiClient(ClusterManager.INSTANCE.executor, RemoteService.build(urls));
 		}
 	}
 }
