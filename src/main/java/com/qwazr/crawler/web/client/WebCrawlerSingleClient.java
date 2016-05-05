@@ -43,26 +43,24 @@ public class WebCrawlerSingleClient extends JsonClientAbstract implements WebCra
 			};
 
 	@Override
-	public TreeMap<String, WebCrawlStatus> getSessions(Boolean local, String group, Integer msTimeout) {
-		UBuilder uriBuilder = new UBuilder("/crawler/web/sessions").setParameters(local, group, msTimeout);
+	public TreeMap<String, WebCrawlStatus> getSessions(String group) {
+		UBuilder uriBuilder = new UBuilder("/crawler/web/sessions").setParameter("group", group);
 		Request request = Request.Get(uriBuilder.build());
 		return commonServiceRequest(request, null, null, TreeMapStringCrawlTypeRef, 200);
 	}
 
 	@Override
-	public WebCrawlStatus getSession(String session_name, Boolean local, String group, Integer msTimeout) {
-		UBuilder uriBuilder =
-				new UBuilder("/crawler/web/sessions/", session_name).setParameters(local, group, msTimeout);
+	public WebCrawlStatus getSession(String session_name, String group) {
+		UBuilder uriBuilder = new UBuilder("/crawler/web/sessions/", session_name).setParameter("group", group);
 		Request request = Request.Get(uriBuilder.build());
 		return commonServiceRequest(request, null, null, WebCrawlStatus.class, 200);
 	}
 
 	@Override
-	public Response abortSession(String session_name, String reason, Boolean local, String group, Integer msTimeout) {
+	public Response abortSession(String session_name, String reason, String group) {
 		try {
-			UBuilder uriBuilder =
-					new UBuilder("/crawler/web/sessions/", session_name).setParameters(local, group, msTimeout)
-							.setParameterObject("reason", reason);
+			UBuilder uriBuilder = new UBuilder("/crawler/web/sessions/", session_name).setParameter("group", group)
+					.setParameterObject("reason", reason);
 			Request request = Request.Delete(uriBuilder.build());
 			HttpResponse response = execute(request, null, null);
 			HttpUtils.checkStatusCodes(response, 200, 202);

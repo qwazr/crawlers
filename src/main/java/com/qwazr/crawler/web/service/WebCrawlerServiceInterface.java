@@ -29,6 +29,7 @@ import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 @RolesAllowed(WebCrawlerManager.SERVICE_NAME_WEBCRAWLER)
 @Path("/crawler/web")
@@ -38,20 +39,17 @@ public interface WebCrawlerServiceInterface extends ServiceInterface {
 	@GET
 	@Path("/sessions")
 	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
-	TreeMap<String, WebCrawlStatus> getSessions(@QueryParam("local") Boolean local, @QueryParam("group") String group,
-			@QueryParam("timeout") Integer msTimeout);
+	TreeMap<String, WebCrawlStatus> getSessions(@QueryParam("group") String group);
 
 	@GET
 	@Path("/sessions/{session_name}")
 	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
-	WebCrawlStatus getSession(@PathParam("session_name") String session_name, @QueryParam("local") Boolean local,
-			@QueryParam("group") String group, @QueryParam("timeout") Integer msTimeout);
+	WebCrawlStatus getSession(@PathParam("session_name") String session_name, @QueryParam("group") String group);
 
 	@DELETE
 	@Path("/sessions/{session_name}")
 	Response abortSession(@PathParam("session_name") String session_name, @QueryParam("reason") String aborting_reason,
-			@QueryParam("local") Boolean local, @QueryParam("group") String group,
-			@QueryParam("timeout") Integer msTimeout);
+			@QueryParam("group") String group);
 
 	@POST
 	@Path("/sessions/{session_name}")
@@ -61,21 +59,20 @@ public interface WebCrawlerServiceInterface extends ServiceInterface {
 
 	WebCrawlStatus runSession(String session_name, String jsonCrawlDefinition) throws IOException;
 
-	public static WebCrawlerServiceInterface getClient(Boolean local, String group, Integer msTimeout)
-			throws URISyntaxException {
-		if (!ClusterManager.INSTANCE.isCluster() || (local != null && local)) {
+	public static WebCrawlerServiceInterface getClient(Boolean local, String group) throws URISyntaxException {
+		if (local != null && local) {
 			WebCrawlerManager.getInstance();
-			return new WebCrawlerSingleServiceImpl();
+			return new WebCrawlerServiceImpl();
 		}
-		String[] urls = ClusterManager.INSTANCE.getClusterClient()
-				.getActiveNodesByService(WebCrawlerManager.SERVICE_NAME_WEBCRAWLER, group);
-		switch (urls.length) {
-		case 0:
+		TreeSet<String> urls =
+				ClusterManager.INSTANCE.getNodesByGroupByService(WebCrawlerManager.SERVICE_NAME_WEBCRAWLER, group);
+		if (urls == null || urls.isEmpty())
 			throw new WebApplicationException(
 					"No node available for service " + WebCrawlerManager.SERVICE_NAME_WEBCRAWLER + " group: " + group,
 					Response.Status.NOT_FOUND);
+		switch (urls.size()) {
 		case 1:
-			return new WebCrawlerSingleClient(new RemoteService(urls[0]));
+			return new WebCrawlerSingleClient(new RemoteService(urls.first()));
 		default:
 			return new WebCrawlerMultiClient(ClusterManager.INSTANCE.executor, RemoteService.build(urls));
 		}

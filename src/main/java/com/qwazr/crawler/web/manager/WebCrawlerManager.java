@@ -17,7 +17,10 @@ package com.qwazr.crawler.web.manager;
 
 import com.qwazr.cluster.manager.ClusterManager;
 import com.qwazr.crawler.web.client.WebCrawlerMultiClient;
-import com.qwazr.crawler.web.service.*;
+import com.qwazr.crawler.web.service.WebCrawlDefinition;
+import com.qwazr.crawler.web.service.WebCrawlStatus;
+import com.qwazr.crawler.web.service.WebCrawlerServiceImpl;
+import com.qwazr.crawler.web.service.WebCrawlerServiceInterface;
 import com.qwazr.utils.LockUtils;
 import com.qwazr.utils.server.RemoteService;
 import com.qwazr.utils.server.ServerException;
@@ -30,6 +33,7 @@ import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.concurrent.ExecutorService;
 
 public class WebCrawlerManager {
@@ -48,9 +52,7 @@ public class WebCrawlerManager {
 			throw new IOException("Already loaded");
 		try {
 			INSTANCE = new WebCrawlerManager(executor);
-			return ClusterManager.INSTANCE.isCluster() ?
-					WebCrawlerClusterServiceImpl.class :
-					WebCrawlerSingleServiceImpl.class;
+			return WebCrawlerServiceImpl.class;
 		} catch (URISyntaxException e) {
 			throw new IOException(e);
 		}
@@ -138,8 +140,7 @@ public class WebCrawlerManager {
 	}
 
 	public WebCrawlerMultiClient getMultiClient(final String group) throws URISyntaxException {
-		String[] urls =
-				ClusterManager.INSTANCE.getClusterClient().getActiveNodesByService(SERVICE_NAME_WEBCRAWLER, group);
+		TreeSet<String> urls = ClusterManager.INSTANCE.getNodesByGroupByService(SERVICE_NAME_WEBCRAWLER, group);
 		return new WebCrawlerMultiClient(executorService, RemoteService.build(urls));
 	}
 

@@ -18,7 +18,6 @@ package com.qwazr.crawler.web.client;
 import com.qwazr.crawler.web.service.WebCrawlDefinition;
 import com.qwazr.crawler.web.service.WebCrawlStatus;
 import com.qwazr.crawler.web.service.WebCrawlerServiceInterface;
-import com.qwazr.crawler.web.service.WebCrawlerSingleServiceImpl;
 import com.qwazr.utils.http.HttpResponseEntityException;
 import com.qwazr.utils.json.client.JsonMultiClientAbstract;
 import com.qwazr.utils.server.RemoteService;
@@ -49,17 +48,13 @@ public class WebCrawlerMultiClient extends JsonMultiClientAbstract<WebCrawlerSin
 	}
 
 	@Override
-	public TreeMap<String, WebCrawlStatus> getSessions(Boolean local, String group, Integer msTimeout) {
-
-		// If not global, just request the local node
-		if (local != null && local)
-			return new WebCrawlerSingleServiceImpl().getSessions(local, group, msTimeout);
+	public TreeMap<String, WebCrawlStatus> getSessions(String group) {
 
 		// We merge the result of all the nodes
 		TreeMap<String, WebCrawlStatus> globalSessions = new TreeMap<String, WebCrawlStatus>();
 		for (WebCrawlerSingleClient client : this) {
 			try {
-				TreeMap<String, WebCrawlStatus> localSessions = client.getSessions(true, group, msTimeout);
+				TreeMap<String, WebCrawlStatus> localSessions = client.getSessions(group);
 				if (localSessions == null)
 					continue;
 				globalSessions.putAll(localSessions);
@@ -71,15 +66,11 @@ public class WebCrawlerMultiClient extends JsonMultiClientAbstract<WebCrawlerSin
 	}
 
 	@Override
-	public WebCrawlStatus getSession(String session_name, Boolean local, String group, Integer msTimeout) {
-
-		// If not global, just request the local node
-		if (local != null && local)
-			return new WebCrawlerSingleServiceImpl().getSession(session_name, local, group, msTimeout);
+	public WebCrawlStatus getSession(String session_name, String group) {
 
 		for (WebCrawlerSingleClient client : this) {
 			try {
-				return client.getSession(session_name, true, group, msTimeout);
+				return client.getSession(session_name, group);
 			} catch (WebApplicationException e) {
 				if (e.getResponse().getStatus() != 404)
 					throw e;
@@ -89,17 +80,12 @@ public class WebCrawlerMultiClient extends JsonMultiClientAbstract<WebCrawlerSin
 	}
 
 	@Override
-	public Response abortSession(String session_name, String reason, Boolean local, String group, Integer msTimeout) {
+	public Response abortSession(String session_name, String reason, String group) {
 
-		// Is it local ?
-		if (local != null && local)
-			return new WebCrawlerSingleServiceImpl().abortSession(session_name, reason, local, group, msTimeout);
-
-		// Global, we abort on every nodes
 		boolean aborted = false;
 		for (WebCrawlerSingleClient client : this) {
 			try {
-				int code = client.abortSession(session_name, reason, true, group, msTimeout).getStatus();
+				int code = client.abortSession(session_name, reason, group).getStatus();
 				if (code == 200 || code == 202)
 					aborted = true;
 			} catch (WebApplicationException e) {

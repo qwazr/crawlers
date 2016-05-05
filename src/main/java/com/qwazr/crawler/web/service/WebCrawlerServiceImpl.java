@@ -24,18 +24,18 @@ import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
 import java.util.TreeMap;
 
-public class WebCrawlerSingleServiceImpl implements WebCrawlerServiceInterface {
+public class WebCrawlerServiceImpl implements WebCrawlerServiceInterface {
 
 	@Override
-	public TreeMap<String, WebCrawlStatus> getSessions(Boolean local, String group, Integer msTimeout) {
+	public TreeMap<String, WebCrawlStatus> getSessions(String group) {
 		// Read the sessions in the local node
 		if (!ClusterManager.INSTANCE.isGroup(group))
-			return new TreeMap<String, WebCrawlStatus>();
+			return new TreeMap<>();
 		return WebCrawlerManager.getInstance().getSessions();
 	}
 
 	@Override
-	public WebCrawlStatus getSession(String session_name, Boolean local, String group, Integer msTimeout) {
+	public WebCrawlStatus getSession(String session_name, String group) {
 		try {
 			WebCrawlStatus status = ClusterManager.INSTANCE.isGroup(group) ?
 					WebCrawlerManager.getInstance().getSession(session_name) :
@@ -49,7 +49,7 @@ public class WebCrawlerSingleServiceImpl implements WebCrawlerServiceInterface {
 	}
 
 	@Override
-	public Response abortSession(String session_name, String reason, Boolean local, String group, Integer msTimeout) {
+	public Response abortSession(String session_name, String reason, String group) {
 		try {
 			if (!ClusterManager.INSTANCE.isGroup(group))
 				throw new ServerException(Status.NOT_FOUND, "Session not found");

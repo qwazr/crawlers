@@ -27,16 +27,14 @@ public class WebCrawlerTool extends AbstractLibrary {
 	 * Create a new web crawler client instance.
 	 * This API queries the cluster to get the current active node for the WebCrawler service.
 	 *
-	 * @param local     Set to true to target the local service
-	 * @param group     the targeted group
-	 * @param msTimeout the default timeout used by the client
+	 * @param local Set to true to target the local service
+	 * @param group the targeted group
 	 * @return a new WebCrawlerServiceInterface instance
 	 * @throws URISyntaxException
 	 */
 	@JsonIgnore
-	public WebCrawlerServiceInterface getClient(Boolean local, String group, Integer msTimeout)
-			throws URISyntaxException {
-		return WebCrawlerServiceInterface.getClient(local, group, msTimeout);
+	public WebCrawlerServiceInterface getClient(Boolean local, String group) throws URISyntaxException {
+		return WebCrawlerServiceInterface.getClient(local, group);
 	}
 
 	@JsonIgnore
