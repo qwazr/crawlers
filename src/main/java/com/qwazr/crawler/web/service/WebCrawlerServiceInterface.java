@@ -74,7 +74,7 @@ public interface WebCrawlerServiceInterface extends ServiceInterface {
 		case 1:
 			return new WebCrawlerSingleClient(new RemoteService(urls.first()));
 		default:
-			return new WebCrawlerMultiClient(ClusterManager.INSTANCE.executor, RemoteService.build(urls));
+			return new WebCrawlerMultiClient(RemoteService.build(urls));
 		}
 	}
 }

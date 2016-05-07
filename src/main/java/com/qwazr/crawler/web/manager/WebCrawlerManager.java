@@ -20,9 +20,9 @@ import com.qwazr.crawler.web.client.WebCrawlerMultiClient;
 import com.qwazr.crawler.web.service.WebCrawlDefinition;
 import com.qwazr.crawler.web.service.WebCrawlStatus;
 import com.qwazr.crawler.web.service.WebCrawlerServiceImpl;
-import com.qwazr.crawler.web.service.WebCrawlerServiceInterface;
 import com.qwazr.utils.LockUtils;
 import com.qwazr.utils.server.RemoteService;
+import com.qwazr.utils.server.ServerBuilder;
 import com.qwazr.utils.server.ServerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,13 +46,12 @@ public class WebCrawlerManager {
 
 	private final ExecutorService executorService;
 
-	public synchronized static Class<? extends WebCrawlerServiceInterface> load(ExecutorService executor)
-			throws IOException {
+	public synchronized static void load(final ServerBuilder serverBuilder) throws IOException {
 		if (INSTANCE != null)
 			throw new IOException("Already loaded");
 		try {
-			INSTANCE = new WebCrawlerManager(executor);
-			return WebCrawlerServiceImpl.class;
+			INSTANCE = new WebCrawlerManager(serverBuilder.getExecutorService());
+			serverBuilder.registerWebService(WebCrawlerServiceImpl.class);
 		} catch (URISyntaxException e) {
 			throw new IOException(e);
 		}
@@ -69,7 +68,7 @@ public class WebCrawlerManager {
 
 	private WebCrawlerManager(ExecutorService executor) throws IOException, URISyntaxException {
 		this.executorService = executor;
-		crawlSessionMap = new HashMap<String, WebCrawlThread>();
+		crawlSessionMap = new HashMap<>();
 	}
 
 	public TreeMap<String, WebCrawlStatus> getSessions() {
@@ -141,7 +140,7 @@ public class WebCrawlerManager {
 
 	public WebCrawlerMultiClient getMultiClient(final String group) throws URISyntaxException {
 		TreeSet<String> urls = ClusterManager.INSTANCE.getNodesByGroupByService(SERVICE_NAME_WEBCRAWLER, group);
-		return new WebCrawlerMultiClient(executorService, RemoteService.build(urls));
+		return new WebCrawlerMultiClient(RemoteService.build(urls));
 	}
 
 }

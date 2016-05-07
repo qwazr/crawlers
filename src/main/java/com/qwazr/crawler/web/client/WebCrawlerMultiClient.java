@@ -31,15 +31,14 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
 import java.util.TreeMap;
-import java.util.concurrent.ExecutorService;
 
 public class WebCrawlerMultiClient extends JsonMultiClientAbstract<WebCrawlerSingleClient>
 		implements WebCrawlerServiceInterface {
 
 	private static final Logger logger = LoggerFactory.getLogger(WebCrawlerMultiClient.class);
 
-	public WebCrawlerMultiClient(final ExecutorService executor, final RemoteService... remote) {
-		super(executor, new WebCrawlerSingleClient[remote.length], remote);
+	public WebCrawlerMultiClient(final RemoteService... remote) {
+		super(new WebCrawlerSingleClient[remote.length], remote);
 	}
 
 	@Override
