@@ -59,13 +59,13 @@ public interface WebCrawlerServiceInterface extends ServiceInterface {
 
 	WebCrawlStatus runSession(String session_name, String jsonCrawlDefinition) throws IOException;
 
-	public static WebCrawlerServiceInterface getClient(Boolean local, String group) throws URISyntaxException {
+	static WebCrawlerServiceInterface getClient(Boolean local, String group) throws URISyntaxException {
 		if (local != null && local) {
 			WebCrawlerManager.getInstance();
 			return new WebCrawlerServiceImpl();
 		}
 		TreeSet<String> urls =
-				ClusterManager.INSTANCE.getNodesByGroupByService(WebCrawlerManager.SERVICE_NAME_WEBCRAWLER, group);
+				ClusterManager.INSTANCE.getNodesByGroupByService(group, WebCrawlerManager.SERVICE_NAME_WEBCRAWLER);
 		if (urls == null || urls.isEmpty())
 			throw new WebApplicationException(
 					"No node available for service " + WebCrawlerManager.SERVICE_NAME_WEBCRAWLER + " group: " + group,

@@ -139,7 +139,7 @@ public class WebCrawlerManager {
 	}
 
 	public WebCrawlerMultiClient getMultiClient(final String group) throws URISyntaxException {
-		TreeSet<String> urls = ClusterManager.INSTANCE.getNodesByGroupByService(SERVICE_NAME_WEBCRAWLER, group);
+		TreeSet<String> urls = ClusterManager.INSTANCE.getNodesByGroupByService(group, SERVICE_NAME_WEBCRAWLER);
 		return new WebCrawlerMultiClient(RemoteService.build(urls));
 	}
 
