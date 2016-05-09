@@ -72,70 +72,56 @@ public class WebCrawlerManager {
 	}
 
 	public TreeMap<String, WebCrawlStatus> getSessions() {
-		TreeMap<String, WebCrawlStatus> map = new TreeMap<String, WebCrawlStatus>();
-		rwlSessionMap.r.lock();
-		try {
+		return rwlSessionMap.read(() -> {
+			final TreeMap<String, WebCrawlStatus> map = new TreeMap<String, WebCrawlStatus>();
 			for (Map.Entry<String, WebCrawlThread> entry : crawlSessionMap.entrySet())
 				map.put(entry.getKey(), entry.getValue().getStatus());
 			return map;
-		} finally {
-			rwlSessionMap.r.unlock();
-		}
+		});
 	}
 
-	public WebCrawlStatus getSession(String session_name) {
-		rwlSessionMap.r.lock();
-		try {
-			WebCrawlThread crawlThread = crawlSessionMap.get(session_name);
+	public WebCrawlStatus getSession(final String sessionName) {
+		return rwlSessionMap.read(() -> {
+			final WebCrawlThread crawlThread = crawlSessionMap.get(sessionName);
 			if (crawlThread == null)
 				return null;
 			return crawlThread.getStatus();
-		} finally {
-			rwlSessionMap.r.unlock();
-		}
+		});
 	}
 
-	public void abortSession(String session_name, String abortingReason) throws ServerException {
-		rwlSessionMap.r.lock();
-		try {
-			WebCrawlThread crawlThread = crawlSessionMap.get(session_name);
+	public void abortSession(final String sessionName, final String abortingReason) throws ServerException {
+		rwlSessionMap.readEx(() -> {
+			final WebCrawlThread crawlThread = crawlSessionMap.get(sessionName);
 			if (crawlThread == null)
-				throw new ServerException(Status.NOT_FOUND, "Session not found: " + session_name);
+				throw new ServerException(Status.NOT_FOUND, "Session not found: " + sessionName);
 			if (logger.isInfoEnabled())
-				logger.info("Aborting session: " + session_name + " - " + abortingReason);
+				logger.info("Aborting session: " + sessionName + " - " + abortingReason);
 			crawlThread.abort(abortingReason);
-		} finally {
-			rwlSessionMap.r.unlock();
-		}
+		});
 	}
 
-	public WebCrawlStatus runSession(String session_name, WebCrawlDefinition crawlJson) throws ServerException {
-		rwlSessionMap.w.lock();
-		try {
-			if (crawlSessionMap.containsKey(session_name))
-				throw new ServerException(Status.CONFLICT, "The session already exists: " + session_name);
+	public WebCrawlStatus runSession(final String sessionName, final WebCrawlDefinition crawlJson)
+			throws ServerException {
+		return rwlSessionMap.writeEx(() -> {
+			if (crawlSessionMap.containsKey(sessionName))
+				throw new ServerException(Status.CONFLICT, "The session already exists: " + sessionName);
 			if (logger.isInfoEnabled())
-				logger.info("Create session: " + session_name);
+				logger.info("Create session: " + sessionName);
 
-			WebCrawlThread crawlThread = new WebCrawlThread(session_name, crawlJson);
-			crawlSessionMap.put(session_name, crawlThread);
+			WebCrawlThread crawlThread = new WebCrawlThread(sessionName, crawlJson);
+			crawlSessionMap.put(sessionName, crawlThread);
 			executorService.execute(crawlThread);
 			return crawlThread.getStatus();
-		} finally {
-			rwlSessionMap.w.unlock();
-		}
+		});
 	}
 
-	void removeSession(WebCrawlThread crawlThread) {
-		rwlSessionMap.w.lock();
-		try {
-			String sessionName = crawlThread.getSessionName();
+	void removeSession(final WebCrawlThread crawlThread) {
+		rwlSessionMap.writeEx(() -> {
+			final String sessionName = crawlThread.getSessionName();
 			if (logger.isInfoEnabled())
 				logger.info("Remove session: " + sessionName);
 			crawlSessionMap.remove(sessionName, crawlThread);
-		} finally {
-			rwlSessionMap.w.unlock();
-		}
+		});
 	}
 
 	public WebCrawlerMultiClient getMultiClient(final String group) throws URISyntaxException {
