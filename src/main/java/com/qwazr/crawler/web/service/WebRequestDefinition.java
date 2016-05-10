@@ -103,7 +103,7 @@ public class WebRequestDefinition {
 		return request;
 	}
 
-	public class Builder {
+	public static class Builder {
 
 		private String url;
 
