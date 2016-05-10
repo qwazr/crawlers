@@ -37,6 +37,11 @@ public class WebCrawlDefinition implements Cloneable {
 	public String entry_url = null;
 
 	/**
+	 * The entry point HTTP Method.
+	 */
+	public WebRequestDefinition entry_request = null;
+
+	/**
 	 * A map of URL to crawl with the depth
 	 */
 	public LinkedHashMap<String, Integer> urls = null;
@@ -283,7 +288,7 @@ public class WebCrawlDefinition implements Cloneable {
 
 		public Script addVariable(String name, String value) {
 			if (variables == null)
-				variables = new HashMap<String, String>();
+				variables = new HashMap<>();
 			variables.put(name, value);
 			return this;
 		}
@@ -295,7 +300,8 @@ public class WebCrawlDefinition implements Cloneable {
 
 	protected WebCrawlDefinition(WebCrawlDefinition src) {
 		entry_url = src.entry_url;
-		urls = src.urls == null ? null : new LinkedHashMap<String, Integer>(src.urls);
+		entry_request = src.entry_request;
+		urls = src.urls == null ? null : new LinkedHashMap<>(src.urls);
 		max_depth = src.max_depth;
 		parameters_patterns = src.parameters_patterns == null ? null : new ArrayList<String>(src.parameters_patterns);
 		inclusion_patterns = src.inclusion_patterns == null ? null : new ArrayList<String>(src.inclusion_patterns);
@@ -319,7 +325,7 @@ public class WebCrawlDefinition implements Cloneable {
 		if (src.scripts == null) {
 			scripts = null;
 		} else {
-			scripts = new HashMap<EventEnum, Script>();
+			scripts = new HashMap<>();
 			for (Map.Entry<EventEnum, Script> entry : src.scripts.entrySet())
 				scripts.put(entry.getKey(), new Script(entry.getValue()));
 		}
@@ -331,6 +337,11 @@ public class WebCrawlDefinition implements Cloneable {
 
 	public WebCrawlDefinition setEntry_url(String entry_url) {
 		this.entry_url = entry_url;
+		return this;
+	}
+
+	public WebCrawlDefinition setEntry_request(final WebRequestDefinition request) {
+		this.entry_request = request;
 		return this;
 	}
 

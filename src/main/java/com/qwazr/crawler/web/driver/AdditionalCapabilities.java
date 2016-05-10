@@ -15,6 +15,7 @@
  **/
 package com.qwazr.crawler.web.driver;
 
+import com.qwazr.crawler.web.service.WebRequestDefinition;
 import org.openqa.selenium.WebElement;
 
 import java.io.File;
@@ -22,9 +23,9 @@ import java.io.IOException;
 
 public class AdditionalCapabilities {
 
-	public static final String QWAZR_BROWSER_LANGUAGE = "qwazr.browser.language";
+	static final String QWAZR_BROWSER_LANGUAGE = "qwazr.browser.language";
 
-	public interface ResponseHeader {
+	interface ResponseHeader {
 
 		Integer getStatusCode();
 
@@ -35,28 +36,33 @@ public class AdditionalCapabilities {
 		String getContentDispositionFilename();
 	}
 
-	public interface SafeText {
+	interface SafeText {
 
 		String getTextSafe(WebElement webElement);
 	}
 
-	public interface InnerHtml {
+	interface InnerHtml {
 
 		String getInnerHtmlByXPath(String xPath);
 
 	}
 
-	public interface SaveBinaryFile {
+	interface SaveBinaryFile {
 
 		void saveBinaryFile(File file) throws IOException;
 	}
 
-	public interface SetAttribute {
+	interface SetAttribute {
 
 		void setAttribute(WebElement element, String name, String value);
 	}
 
-	public interface All extends ResponseHeader, SafeText, InnerHtml, SaveBinaryFile, SetAttribute {
+	interface WebRequest {
+
+		void request(WebRequestDefinition request);
+	}
+
+	interface All extends ResponseHeader, SafeText, InnerHtml, SaveBinaryFile, SetAttribute, WebRequest {
 
 	}
 }

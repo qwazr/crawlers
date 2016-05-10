@@ -18,14 +18,8 @@ package com.qwazr.crawler.web.service;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.gargoylesoftware.htmlunit.HttpMethod;
-import com.gargoylesoftware.htmlunit.WebRequest;
-import com.gargoylesoftware.htmlunit.util.NameValuePair;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -63,44 +57,6 @@ public class WebRequestDefinition {
 		this.parameters = builder.parameters == null ? null : new LinkedHashMap<>(builder.parameters);
 		this.method = builder.method;
 		this.form_encoding_type = builder.form_encoding_type;
-	}
-
-	public WebRequest getNewWebRequest() throws MalformedURLException {
-
-		WebRequest request = new WebRequest(new URL(url));
-
-		// Set the HTTP method
-		if (method != null)
-			request.setHttpMethod(method);
-
-		// Set the charset
-		if (charset != null)
-			request.setCharset(charset);
-
-		// Set the request parameters
-		if (parameters != null) {
-			List<NameValuePair> requestParameters = new ArrayList<>(parameters.size());
-			parameters.forEach((key, value) -> requestParameters.add(new NameValuePair(key, value)));
-			request.setRequestParameters(requestParameters);
-		}
-
-		// Set the request headers
-		if (headers != null)
-			request.setAdditionalHeaders(headers);
-
-		// Set the form type
-		if (form_encoding_type != null) {
-			switch (form_encoding_type) {
-			case URL_ENCODED:
-				request.setEncodingType(com.gargoylesoftware.htmlunit.FormEncodingType.URL_ENCODED);
-				break;
-			case MULTIPART:
-				request.setEncodingType(com.gargoylesoftware.htmlunit.FormEncodingType.MULTIPART);
-				break;
-			}
-		}
-
-		return request;
 	}
 
 	public static class Builder {

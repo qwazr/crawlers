@@ -17,6 +17,7 @@ package com.qwazr.crawler.web.driver;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.qwazr.crawler.web.service.WebCrawlDefinition;
+import com.qwazr.crawler.web.service.WebRequestDefinition;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.http.HttpUtils;
@@ -74,6 +75,12 @@ final public class BrowserDriver implements WebDriver, Closeable, AdditionalCapa
 	@Override
 	final public void get(String sUrl) {
 		driver.get(sUrl);
+	}
+
+	final public void request(WebRequestDefinition request) {
+		if (driver instanceof AdditionalCapabilities.WebRequest)
+			((AdditionalCapabilities.WebRequest) driver).request(request);
+		throw new WebDriverException("WebRequest is not implemented in " + driver.getClass());
 	}
 
 	public BrowserDriverEnum getType() {

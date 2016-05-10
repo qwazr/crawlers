@@ -24,6 +24,7 @@ import com.qwazr.crawler.web.service.WebCrawlDefinition;
 import com.qwazr.crawler.web.service.WebCrawlDefinition.EventEnum;
 import com.qwazr.crawler.web.service.WebCrawlDefinition.Script;
 import com.qwazr.crawler.web.service.WebCrawlStatus;
+import com.qwazr.crawler.web.service.WebRequestDefinition;
 import com.qwazr.scripts.ScriptManager;
 import com.qwazr.scripts.ScriptRunThread;
 import com.qwazr.utils.TimeTracker;
@@ -47,7 +48,6 @@ import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
-import java.util.function.BiConsumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -266,7 +266,7 @@ public class WebCrawlThread implements Runnable {
 		return uriString;
 	}
 
-	private void crawl(CurrentURIImpl currentURI) {
+	private void crawl(final CurrentURIImpl currentURI, final CrawlProvider crawlProvider) {
 
 		if (session.isAborting())
 			return;
@@ -290,7 +290,7 @@ public class WebCrawlThread implements Runnable {
 			logger.info("Crawling " + uri + " (" + currentURI.getDepth() + ")");
 		try {
 			timeTracker.next(null);
-			driver.get(uriString);
+			crawlProvider.apply();
 			//if (mainWindow != null && !mainWindow.equals(driver.getWindowHandle()))
 			//	driver.switchTo().window(mainWindow);
 		} catch (Exception e) {
@@ -418,20 +418,20 @@ public class WebCrawlThread implements Runnable {
 		}
 	}
 
-	private void crawlOne(final Set<URI> crawledURIs, URI uri, final Set<URI> nextLevelURIs, final int depth)
-			throws ServerException, IOException, ClassNotFoundException {
+	private void crawlOne(final Set<URI> crawledURIs, final CrawlProvider crawlProvider, final Set<URI> nextLevelURIs,
+			final int depth) throws ServerException, IOException, ClassNotFoundException {
 
 		if (session.isAborting())
 			return;
 
 		// Check if it has been already crawled
 		if (crawledURIs != null) {
-			if (crawledURIs.contains(uri))
+			if (crawledURIs.contains(crawlProvider.uri))
 				return;
-			crawledURIs.add(uri);
+			crawledURIs.add(crawlProvider.uri);
 		}
 
-		CurrentURIImpl currentURI = new CurrentURIImpl(uri, depth);
+		CurrentURIImpl currentURI = new CurrentURIImpl(crawlProvider.uri, depth);
 
 		// Give the hand to the "before_crawl" scripts
 		scriptBeforeCrawl(currentURI, null);
@@ -449,7 +449,7 @@ public class WebCrawlThread implements Runnable {
 			}
 
 			if (!currentURI.isIgnored() && currentURI.getError() == null) {
-				crawl(currentURI);
+				crawl(currentURI, crawlProvider);
 
 				// Store the final URI (in case of redirection)
 				if (crawledURIs != null)
@@ -461,7 +461,7 @@ public class WebCrawlThread implements Runnable {
 		Collection<URI> sameLevelLinks = checkLinks(currentURI.getSameLevelLinks());
 		if (sameLevelLinks != null)
 			for (URI sameLevelURI : sameLevelLinks)
-				crawlOne(crawledURIs, sameLevelURI, nextLevelURIs, depth);
+				crawlOne(crawledURIs, new GetProvider(sameLevelURI), nextLevelURIs, depth);
 
 		Collection<URI> newLinks = checkLinks(currentURI.getLinks());
 		currentURI.setLinks(newLinks);
@@ -470,9 +470,12 @@ public class WebCrawlThread implements Runnable {
 
 	}
 
-	private void crawlLevel(Set<URI> crawledURIs, Collection<URI> levelURIs, int depth)
+	private void crawlSubLevel(final Set<URI> crawledURIs, final Collection<URI> levelURIs, final int depth)
 			throws ServerException, IOException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException,
 			KeyManagementException, ClassNotFoundException {
+
+		if (crawlDefinition.max_depth == null || depth > crawlDefinition.max_depth)
+			return;
 
 		if (session.isAborting())
 			return;
@@ -480,32 +483,30 @@ public class WebCrawlThread implements Runnable {
 		if (levelURIs == null || levelURIs.isEmpty())
 			return;
 
-		final Set<URI> nextLevelURIs = new HashSet<URI>();
+		final Set<URI> nextLevelURIs = new HashSet<>();
 
 		// Crawl all URLs from the level
 		for (URI uri : levelURIs)
-			crawlOne(crawledURIs, uri, nextLevelURIs, depth);
-
-		// Check if we reach the max depth
-		depth++;
-		if (crawlDefinition.max_depth == null || depth > crawlDefinition.max_depth)
-			return;
+			crawlOne(crawledURIs, new GetProvider(uri), nextLevelURIs, depth);
 
 		// Let's crawl the next level if any
-		crawlLevel(crawledURIs, nextLevelURIs, depth);
+		crawlSubLevel(crawledURIs, nextLevelURIs, depth + 1);
+	}
 
+	private void crawlStart(final Set<URI> crawledURIs, final CrawlProvider crawlProvider)
+			throws NoSuchAlgorithmException, IOException, KeyManagementException, KeyStoreException, URISyntaxException,
+			ClassNotFoundException {
+		final Set<URI> nextLevelURIs = new HashSet<>();
+		crawlOne(crawledURIs, crawlProvider, nextLevelURIs, 0);
+		crawlSubLevel(crawledURIs, nextLevelURIs, 1);
 	}
 
 	private void crawlUrlMap(Set<URI> crawledURIs, Map<String, Integer> urlMap) {
-
-		urlMap.forEach(new BiConsumer<String, Integer>() {
-			@Override
-			public void accept(String uri, Integer depth) {
-				try {
-					crawlOne(crawledURIs, new URI(uri), null, depth);
-				} catch (Exception e) {
-					logger.warn("Malformed URI: " + uri);
-				}
+		urlMap.forEach((uri, depth) -> {
+			try {
+				crawlOne(crawledURIs, new GetProvider(uri), null, depth);
+			} catch (Exception e) {
+				logger.warn("Malformed URI: " + uri);
 			}
 		});
 	}
@@ -558,7 +559,10 @@ public class WebCrawlThread implements Runnable {
 			if (crawlDefinition.urls != null && !crawlDefinition.urls.isEmpty())
 				crawlUrlMap(crawledURIs, crawlDefinition.urls);
 			else {
-				crawlLevel(crawledURIs, Arrays.asList(new URI(crawlDefinition.entry_url)), 0);
+				if (crawlDefinition.entry_url != null)
+					crawlStart(crawledURIs, new GetProvider(crawlDefinition.entry_url));
+				else if (crawlDefinition.entry_request != null)
+					crawlStart(crawledURIs, new RequestProvider(crawlDefinition.entry_request));
 			}
 		} finally {
 			try {
@@ -579,6 +583,52 @@ public class WebCrawlThread implements Runnable {
 			logger.error(e.getMessage(), e);
 		} finally {
 			WebCrawlerManager.INSTANCE.removeSession(this);
+		}
+	}
+
+	private abstract class CrawlProvider {
+
+		protected final URI uri;
+
+		protected CrawlProvider(String uriString) throws URISyntaxException {
+			this.uri = new URI(uriString);
+		}
+
+		protected CrawlProvider(URI uri) {
+			this.uri = uri;
+		}
+
+		protected abstract void apply();
+	}
+
+	private class GetProvider extends CrawlProvider {
+
+		private GetProvider(URI uri) {
+			super(uri);
+		}
+
+		private GetProvider(String uriString) throws URISyntaxException {
+			super(uriString);
+		}
+
+		@Override
+		protected void apply() {
+			driver.get(uri.toString());
+		}
+	}
+
+	private class RequestProvider extends CrawlProvider {
+
+		private final WebRequestDefinition request;
+
+		private RequestProvider(WebRequestDefinition request) throws URISyntaxException {
+			super(request.url);
+			this.request = request;
+		}
+
+		@Override
+		protected void apply() {
+			driver.request(request);
 		}
 	}
 }
