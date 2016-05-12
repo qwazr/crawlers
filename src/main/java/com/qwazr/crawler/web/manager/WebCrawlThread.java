@@ -353,22 +353,19 @@ public class WebCrawlThread implements Runnable {
 				}
 			} catch (org.openqa.selenium.NoSuchElementException e) {
 				// OK that's not really an error
-			} catch (IllegalStateException e) {
-				if (logger.isWarnEnabled())
-					logger.warn("Cannot locate base href for " + uriString + " " + e.getMessage());
 			} catch (Exception e) {
 				if (logger.isWarnEnabled())
 					logger.warn("Cannot locate base href for " + uriString + " " + e.getMessage());
 			}
 		}
 
-		int crawledCount = session.incCrawledCount();
+		final int crawledCount = session.incCrawledCount();
 		currentURI.setCrawled();
 		if (crawlDefinition.max_url_number != null && crawledCount >= crawlDefinition.max_url_number)
 			abort("Max URL number reached: " + crawlDefinition.max_url_number);
 
 		// Let's look for the a tags
-		Set<String> hrefSet = new LinkedHashSet<>();
+		final Set<String> hrefSet = new LinkedHashSet<>();
 		try {
 			timeTracker.next(null);
 			driver.findLinks(driver, hrefSet);
@@ -380,13 +377,13 @@ public class WebCrawlThread implements Runnable {
 		}
 		if (hrefSet.isEmpty())
 			return;
-		ArrayList<URI> uris = new ArrayList<>(hrefSet.size());
+		final ArrayList<URI> uris = new ArrayList<>(hrefSet.size());
 		currentURI.hrefToURICollection(hrefSet, uris);
 		currentURI.setLinks(uris);
 		if (logger.isInfoEnabled())
 			logger.info("Link founds " + uri + " : " + uris.size());
 
-		ArrayList<URI> filteredURIs = new ArrayList<>();
+		final ArrayList<URI> filteredURIs = new ArrayList<>();
 		for (URI u : uris) {
 			String us = u.toString();
 			Boolean inc = matchesInclusion(us);
