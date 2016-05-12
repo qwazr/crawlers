@@ -80,7 +80,8 @@ final public class BrowserDriver implements WebDriver, Closeable, AdditionalCapa
 	final public void request(WebRequestDefinition request) {
 		if (driver instanceof AdditionalCapabilities.WebRequest)
 			((AdditionalCapabilities.WebRequest) driver).request(request);
-		throw new WebDriverException("WebRequest is not implemented in " + driver.getClass());
+		else
+			throw new WebDriverException("WebRequest is not implemented in " + driver.getClass());
 	}
 
 	public BrowserDriverEnum getType() {

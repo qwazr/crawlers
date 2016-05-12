@@ -77,8 +77,8 @@ public class WebCrawlThread implements Runnable {
 		this.crawlDefinition = crawlDefinition;
 		if (crawlDefinition.browser_type == null)
 			throw new ServerException(Status.NOT_ACCEPTABLE, "The browser_type is missing");
-		if (crawlDefinition.entry_url == null)
-			throw new ServerException(Status.NOT_ACCEPTABLE, "The entry_url is missing");
+		if (crawlDefinition.entry_url == null && crawlDefinition.entry_request == null)
+			throw new ServerException(Status.NOT_ACCEPTABLE, "Either the entry_url or the entry_request is missing");
 		parametersMatcherList = getRegExpMatcherList(crawlDefinition.parameters_patterns);
 		exclusionMatcherList = getWildcardMatcherList(crawlDefinition.exclusion_patterns);
 		inclusionMatcherList = getWildcardMatcherList(crawlDefinition.inclusion_patterns);
@@ -88,11 +88,13 @@ public class WebCrawlThread implements Runnable {
 			robotsTxtMap = null;
 		robotsTxtUserAgent =
 				crawlDefinition.robots_txt_useragent == null ? "QWAZR_BOT" : crawlDefinition.robots_txt_useragent;
+		final String u;
 		try {
-			URI uri = new URI(crawlDefinition.entry_url);
+			u = crawlDefinition.entry_url != null ? crawlDefinition.entry_url : crawlDefinition.entry_request.url;
+			URI uri = new URI(u);
 			String host = uri.getHost();
 			if (host == null)
-				throw new URISyntaxException(crawlDefinition.entry_url, "No host found.", -1);
+				throw new URISyntaxException(u, "No host found.", -1);
 			internetDomainName = InternetDomainName.from(host);
 		} catch (URISyntaxException e) {
 			throw new ServerException(Status.NOT_ACCEPTABLE, e.getMessage());
@@ -366,7 +368,7 @@ public class WebCrawlThread implements Runnable {
 			abort("Max URL number reached: " + crawlDefinition.max_url_number);
 
 		// Let's look for the a tags
-		Set<String> hrefSet = new LinkedHashSet<String>();
+		Set<String> hrefSet = new LinkedHashSet<>();
 		try {
 			timeTracker.next(null);
 			driver.findLinks(driver, hrefSet);
@@ -378,13 +380,13 @@ public class WebCrawlThread implements Runnable {
 		}
 		if (hrefSet.isEmpty())
 			return;
-		ArrayList<URI> uris = new ArrayList<URI>(hrefSet.size());
+		ArrayList<URI> uris = new ArrayList<>(hrefSet.size());
 		currentURI.hrefToURICollection(hrefSet, uris);
 		currentURI.setLinks(uris);
 		if (logger.isInfoEnabled())
 			logger.info("Link founds " + uri + " : " + uris.size());
 
-		ArrayList<URI> filteredURIs = new ArrayList<URI>();
+		ArrayList<URI> filteredURIs = new ArrayList<>();
 		for (URI u : uris) {
 			String us = u.toString();
 			Boolean inc = matchesInclusion(us);
@@ -555,7 +557,6 @@ public class WebCrawlThread implements Runnable {
 			driver = new BrowserDriverBuilder(crawlDefinition).build();
 			script(EventEnum.before_session, null);
 			final Set<URI> crawledURIs = new HashSet<>();
-			final List<URI> uriList;
 			if (crawlDefinition.urls != null && !crawlDefinition.urls.isEmpty())
 				crawlUrlMap(crawledURIs, crawlDefinition.urls);
 			else {

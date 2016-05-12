@@ -92,7 +92,8 @@ public class HtmlUnitDriverWebClient extends HtmlUnitDriver {
 		}
 		final WebWindow window = getCurrentWindow().getTopWindow();
 		try {
-			window.setEnclosedPage(getWebClient().getPage(request));
+			final Page page = getWebClient().getPage(request);
+			window.setEnclosedPage(page);
 		} catch (UnknownHostException e) {
 			window.setEnclosedPage(new UnexpectedPage(new StringWebResponse("Unknown host", request.getUrl()),
 					getCurrentWindow().getTopWindow()));
@@ -122,7 +123,8 @@ public class HtmlUnitDriverWebClient extends HtmlUnitDriver {
 		// Set the request parameters
 		if (requestDef.parameters != null) {
 			List<NameValuePair> requestParameters = new ArrayList<>(requestDef.parameters.size());
-			requestDef.parameters.forEach((key, value) -> requestParameters.add(new NameValuePair(key, value)));
+			requestDef.parameters.forEach(
+					(key, values) -> values.forEach((value) -> requestParameters.add(new NameValuePair(key, value))));
 			request.setRequestParameters(requestParameters);
 		}
 

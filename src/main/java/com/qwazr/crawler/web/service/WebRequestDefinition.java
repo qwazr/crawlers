@@ -19,7 +19,9 @@ package com.qwazr.crawler.web.service;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.gargoylesoftware.htmlunit.HttpMethod;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -31,7 +33,7 @@ public class WebRequestDefinition {
 
 	public final Map<String, String> headers;
 
-	public final Map<String, String> parameters;
+	public final Map<String, List<String>> parameters;
 
 	public final HttpMethod method;
 
@@ -54,7 +56,7 @@ public class WebRequestDefinition {
 		this.url = builder.url;
 		this.charset = builder.charset;
 		this.headers = builder.headers == null ? null : new LinkedHashMap<>(builder.headers);
-		this.parameters = builder.parameters == null ? null : new LinkedHashMap<>(builder.parameters);
+		this.parameters = builder.parameters == null ? null : builder.parameters;
 		this.method = builder.method;
 		this.form_encoding_type = builder.form_encoding_type;
 	}
@@ -67,7 +69,7 @@ public class WebRequestDefinition {
 
 		private Map<String, String> headers;
 
-		private Map<String, String> parameters;
+		private Map<String, List<String>> parameters;
 
 		private HttpMethod method;
 
@@ -92,17 +94,22 @@ public class WebRequestDefinition {
 			return this;
 		}
 
-		public Builder addHeader(final String key, String value) {
+		public Builder addHeader(final String key, final String value) {
 			if (headers == null)
 				headers = new LinkedHashMap<>();
 			headers.put(key, value);
 			return this;
 		}
 
-		public Builder addParameter(final String key, String value) {
+		public Builder addParameter(final String key, final String value) {
 			if (parameters == null)
 				parameters = new LinkedHashMap<>();
-			parameters.put(key, value);
+			List<String> values = parameters.get(key);
+			if (values == null) {
+				values = new ArrayList<>();
+				parameters.put(key, values);
+			}
+			values.add(value);
 			return this;
 		}
 
