@@ -32,8 +32,8 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.SortedSet;
 import java.util.TreeMap;
-import java.util.TreeSet;
 import java.util.concurrent.ExecutorService;
 
 public class WebCrawlerManager {
@@ -125,7 +125,7 @@ public class WebCrawlerManager {
 	}
 
 	public WebCrawlerMultiClient getMultiClient(final String group) throws URISyntaxException {
-		TreeSet<String> urls = ClusterManager.INSTANCE.getNodesByGroupByService(group, SERVICE_NAME_WEBCRAWLER);
+		SortedSet<String> urls = ClusterManager.INSTANCE.getNodesByGroupByService(group, SERVICE_NAME_WEBCRAWLER);
 		return new WebCrawlerMultiClient(RemoteService.build(urls));
 	}
 

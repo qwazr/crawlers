@@ -363,6 +363,16 @@ final public class BrowserDriver implements WebDriver, Closeable, AdditionalCapa
 		}
 	}
 
+	public static final Request applyProxy(WebCrawlDefinition.ProxyDefinition proxy, URI uri, Request request) {
+		if (proxy == null)
+			return request;
+		if (proxy.http_proxy != null && !proxy.http_proxy.isEmpty())
+			request = request.viaProxy(proxy.http_proxy);
+		if ("https".equals(uri.getScheme()) && proxy.ssl_proxy != null && !proxy.ssl_proxy.isEmpty())
+			request = request.viaProxy(proxy.ssl_proxy);
+		return request;
+	}
+
 	void httpClientDownload(String url, String userAgent, File file)
 			throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException, IOException,
 			URISyntaxException {
@@ -374,13 +384,7 @@ final public class BrowserDriver implements WebDriver, Closeable, AdditionalCapa
 					.socketTimeout(60000);
 			if (userAgent != null)
 				request = request.addHeader("User-Agent", userAgent);
-			if (currentProxy != null) {
-				if (currentProxy.http_proxy != null && !currentProxy.http_proxy.isEmpty())
-					request = request.viaProxy(currentProxy.http_proxy);
-				if ("https".equals(uri.getScheme()) && currentProxy.ssl_proxy != null && !currentProxy.ssl_proxy
-						.isEmpty())
-					request = request.viaProxy(currentProxy.ssl_proxy);
-			}
+			request = applyProxy(currentProxy, uri, request);
 			executor.execute(request).saveContent(file);
 		} finally {
 			IOUtils.close(httpClient);

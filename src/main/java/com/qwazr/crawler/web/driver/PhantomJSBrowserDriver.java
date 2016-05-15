@@ -28,13 +28,14 @@ import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 public class PhantomJSBrowserDriver extends PhantomJSDriver implements AdditionalCapabilities.ResponseHeader {
 
 	protected static final Logger logger = LoggerFactory.getLogger(PhantomJSBrowserDriver.class);
 
-	private Number pid;
+	private final AtomicReference<Number> pid = new AtomicReference<>(null);
 
 	private String requestedUrl = null;
 	private Map<String, ?> endEntry = null;
@@ -42,12 +43,12 @@ public class PhantomJSBrowserDriver extends PhantomJSDriver implements Additiona
 
 	public PhantomJSBrowserDriver() {
 		super();
-		pid = getPidOrDie();
+		pid.set(getPidOrDie());
 	}
 
 	public PhantomJSBrowserDriver(Capabilities capabilities) {
 		super(capabilities);
-		pid = getPidOrDie();
+		pid.set(getPidOrDie());
 	}
 
 	private Number getPidOrDie() {
@@ -64,53 +65,52 @@ public class PhantomJSBrowserDriver extends PhantomJSDriver implements Additiona
 	@Override
 	public void quit() {
 		super.quit();
-		if (pid == null)
+		if (pid.get() == null)
 			return;
 		// Paranoid quit. Check if the PhantomJS process is still running
 		if (SystemUtils.IS_OS_WINDOWS) {
 			try {
-				ProcessUtils.forceKill(pid);
-				pid = null;
+				ProcessUtils.forceKill(pid.getAndSet(null));
 			} catch (IOException | InterruptedException e) {
 				if (logger.isWarnEnabled())
-					logger.warn("Cannot kill PhantomJS PID " + pid, e);
+					logger.warn("Cannot kill PhantomJS PID " + pid.get(), e);
 			}
 			return;
 		}
 		if (SystemUtils.IS_OS_UNIX) {
 			if (!processIsRunning()) {
-				pid = null;
+				pid.set(null);
 				return;
 			}
 			try {
-				ProcessUtils.kill(pid);
+				ProcessUtils.kill(pid.get());
 			} catch (IOException | InterruptedException e) {
 				if (logger.isWarnEnabled())
-					logger.warn("Cannot check if PhantomJS PID is running " + pid, e);
+					logger.warn("Cannot check if PhantomJS PID is running " + pid.get(), e);
 			}
 			if (!processIsRunning()) {
-				pid = null;
+				pid.set(null);
 				return;
 			}
 			try {
-				ProcessUtils.forceKill(pid);
+				ProcessUtils.forceKill(pid.get());
 			} catch (IOException | InterruptedException e) {
 				if (logger.isWarnEnabled())
-					logger.warn("Cannot check if PhantomJS PID is running " + pid, e);
+					logger.warn("Cannot check if PhantomJS PID is running " + pid.get(), e);
 			}
 		}
 	}
 
 	private boolean processIsRunning() {
-		if (pid == null)
+		if (pid.get() == null)
 			return false;
 		try {
 			if (logger.isInfoEnabled())
-				logger.info("Check if PhantomJS PID is running: " + pid);
-			return ProcessUtils.isRunning(pid);
+				logger.info("Check if PhantomJS PID is running: " + pid.get());
+			return ProcessUtils.isRunning(pid.get());
 		} catch (IOException | InterruptedException e) {
 			if (logger.isWarnEnabled())
-				logger.warn("Cannot check if PID is running " + pid, e);
+				logger.warn("Cannot check if PID is running " + pid.get(), e);
 			return true;
 		}
 	}
@@ -130,12 +130,12 @@ public class PhantomJSBrowserDriver extends PhantomJSDriver implements Additiona
 	public void get(String url) {
 		requestedUrl = url;
 		super.get(url);
-		String currentUrl = super.getCurrentUrl();
+		final String currentUrl = super.getCurrentUrl();
 		int test = 60;
 		boolean found = false;
 		try {
 			while (--test > 0) {
-				found = findEndEntry(super.getCurrentUrl()) || findEndEntry(requestedUrl);
+				found = findEndEntry(currentUrl) || findEndEntry(requestedUrl);
 				if (found)
 					break;
 				Thread.sleep(2000);

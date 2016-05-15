@@ -28,8 +28,8 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.SortedSet;
 import java.util.TreeMap;
-import java.util.TreeSet;
 
 @RolesAllowed(WebCrawlerManager.SERVICE_NAME_WEBCRAWLER)
 @Path("/crawler/web")
@@ -64,7 +64,7 @@ public interface WebCrawlerServiceInterface extends ServiceInterface {
 			WebCrawlerManager.getInstance();
 			return new WebCrawlerServiceImpl();
 		}
-		TreeSet<String> urls =
+		SortedSet<String> urls =
 				ClusterManager.INSTANCE.getNodesByGroupByService(group, WebCrawlerManager.SERVICE_NAME_WEBCRAWLER);
 		if (urls == null || urls.isEmpty())
 			throw new WebApplicationException(

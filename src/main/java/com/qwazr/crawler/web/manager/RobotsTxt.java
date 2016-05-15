@@ -15,13 +15,18 @@
  **/
 package com.qwazr.crawler.web.manager;
 
+import com.qwazr.crawler.web.driver.BrowserDriver;
 import com.qwazr.crawler.web.service.WebCrawlDefinition;
-import com.qwazr.utils.IOUtils;
+import com.qwazr.utils.CharsetUtils;
 import com.qwazr.utils.LinkUtils;
 import com.qwazr.utils.http.HttpUtils;
+import org.apache.http.HttpEntity;
+import org.apache.http.StatusLine;
+import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.fluent.Executor;
 import org.apache.http.client.fluent.Request;
+import org.apache.http.entity.ContentType;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +38,7 @@ import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.Charset;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -48,13 +54,13 @@ public class RobotsTxt {
 	private final String userAgent;
 	private final int httpStatusCode;
 
-	RobotsTxt(String userAgent, InputStream input) throws IOException {
+	RobotsTxt(final String userAgent, final InputStream input, final Charset charset) throws IOException {
 		this.userAgent = userAgent;
-		this.userAgentMap = new UserAgentMap(input);
+		this.userAgentMap = new UserAgentMap(input, charset);
 		this.httpStatusCode = 200;
 	}
 
-	RobotsTxt(String userAgent, int statusCode) {
+	RobotsTxt(final String userAgent, final int statusCode) {
 		this.userAgent = userAgent;
 		this.userAgentMap = null;
 		this.httpStatusCode = statusCode;
@@ -68,7 +74,7 @@ public class RobotsTxt {
 	 * @throws MalformedURLException
 	 * @throws URISyntaxException
 	 */
-	static URI getRobotsURI(URI uri) throws MalformedURLException, URISyntaxException {
+	static URI getRobotsURI(final URI uri) throws MalformedURLException, URISyntaxException {
 		StringBuilder sb = new StringBuilder();
 		sb.append(uri.getScheme());
 		sb.append("://");
@@ -104,14 +110,14 @@ public class RobotsTxt {
 	 * @throws MalformedURLException
 	 * @throws URISyntaxException
 	 */
-	RobotsTxtStatus getStatus(URI uri) throws MalformedURLException, URISyntaxException {
+	final RobotsTxtStatus getStatus(final URI uri) throws MalformedURLException, URISyntaxException {
 		RobotsTxtStatus status = getStatusNoLogs(uri);
 		if (logger.isInfoEnabled())
 			logger.info("Check robots.txt returns " + status.name() + " for " + uri);
 		return status;
 	}
 
-	private RobotsTxtStatus getStatusNoLogs(URI uri) throws MalformedURLException, URISyntaxException {
+	private RobotsTxtStatus getStatusNoLogs(final URI uri) throws MalformedURLException, URISyntaxException {
 		switch (httpStatusCode) {
 		case 400:
 		case 404:
@@ -140,15 +146,15 @@ public class RobotsTxt {
 
 		private final Map<String, ClauseSet> clauseMap;
 
-		public UserAgentMap(InputStream input) throws IOException {
-			clauseMap = parseContent(input);
+		public UserAgentMap(final InputStream input, final Charset charset) throws IOException {
+			clauseMap = parseContent(input, charset);
 		}
 
 		/**
 		 * @param userAgent
 		 * @return the right DisallowSet for the passed user-agent
 		 */
-		protected ClauseSet get(String userAgent) {
+		final protected ClauseSet get(final String userAgent) {
 			synchronized (this) {
 				if (clauseMap == null)
 					return null;
@@ -162,10 +168,9 @@ public class RobotsTxt {
 		 * @param input
 		 * @throws IOException
 		 */
-		private Map<String, ClauseSet> parseContent(InputStream input) throws IOException {
-			Map<String, ClauseSet> clauseMap = new LinkedHashMap<>();
-			BufferedReader br = new BufferedReader(new InputStreamReader(input));
-			try {
+		private Map<String, ClauseSet> parseContent(final InputStream input, final Charset charset) throws IOException {
+			final Map<String, ClauseSet> clauseMap = new LinkedHashMap<>();
+			try (final BufferedReader br = new BufferedReader(new InputStreamReader(input, charset))) {
 				String line;
 				ClauseSet currentClauseSet = null;
 				while ((line = br.readLine()) != null) {
@@ -186,7 +191,7 @@ public class RobotsTxt {
 						String userAgent = value.toLowerCase();
 						ClauseSet clauseSet = clauseMap.get(userAgent);
 						if (clauseSet == null) {
-							clauseSet = new ClauseSet(userAgent);
+							clauseSet = new ClauseSet();
 							clauseMap.put(userAgent, clauseSet);
 						}
 						currentClauseSet = clauseSet;
@@ -199,8 +204,6 @@ public class RobotsTxt {
 					}
 				}
 				return clauseMap;
-			} finally {
-				br.close();
 			}
 		}
 	}
@@ -213,7 +216,7 @@ public class RobotsTxt {
 
 		private LinkedHashMap<String, Boolean> clauses;
 
-		private ClauseSet(String userAgent) {
+		private ClauseSet() {
 			clauses = null;
 		}
 
@@ -223,10 +226,10 @@ public class RobotsTxt {
 		 * @param clause the path of the clause
 		 * @param allow  allow or disallow
 		 */
-		protected void add(String clause, Boolean allow) {
+		final protected void add(final String clause, final Boolean allow) {
 			synchronized (this) {
 				if (clauses == null)
-					clauses = new LinkedHashMap<String, Boolean>();
+					clauses = new LinkedHashMap<>();
 				clauses.put(clause, allow);
 			}
 		}
@@ -235,7 +238,7 @@ public class RobotsTxt {
 		 * @param path the path to check
 		 * @return false if the URL is not allowed
 		 */
-		protected boolean isAllowed(String path) {
+		final protected boolean isAllowed(String path) {
 			synchronized (this) {
 				if (clauses == null)
 					return true;
@@ -249,26 +252,30 @@ public class RobotsTxt {
 		}
 	}
 
-	static RobotsTxt download(WebCrawlDefinition.ProxyDefinition proxy, String userAgent, URI uri)
+	static RobotsTxt download(final WebCrawlDefinition.ProxyDefinition proxy, final String userAgent, final URI uri)
 			throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
-		InputStream is = null;
-		final CloseableHttpClient httpClient = HttpUtils.createHttpClient_AcceptsUntrustedCerts();
-		try {
+		try (final CloseableHttpClient httpClient = HttpUtils.createHttpClient_AcceptsUntrustedCerts()) {
 			final Executor executor = Executor.newInstance(httpClient);
-			Request request = Request.Get(uri.toString()).addHeader("Connection", "close")
-					.addHeader("User-Agent", userAgent).connectTimeout(60000).socketTimeout(60000);
-			if (proxy != null) {
-				if (proxy.http_proxy != null && !proxy.http_proxy.isEmpty())
-					request = request.viaProxy(proxy.http_proxy);
-				if ("https".equals(uri.getScheme()) && proxy.ssl_proxy != null && !proxy.ssl_proxy.isEmpty())
-					request = request.viaProxy(proxy.ssl_proxy);
-			}
+			Request request =
+					Request.Get(uri.toString()).addHeader("Connection", "close").addHeader("User-Agent", userAgent)
+							.connectTimeout(60000).socketTimeout(60000);
+			request = BrowserDriver.applyProxy(proxy, uri, request);
+
 			if (logger.isInfoEnabled())
 				logger.info("Try to download robots.txt " + uri);
-			is = executor.execute(request).returnContent().asStream();
-			if (logger.isInfoEnabled())
-				logger.info("Robots.txt downloaded: " + uri);
-			return new RobotsTxt(userAgent, is);
+			return executor.execute(request).handleResponse(response -> {
+				final StatusLine statusLine = response.getStatusLine();
+				if (statusLine.getStatusCode() >= 300)
+					throw new HttpResponseException(statusLine.getStatusCode(), statusLine.getReasonPhrase());
+				final HttpEntity entity = response.getEntity();
+				if (entity == null)
+					throw new ClientProtocolException("Response contains no content");
+				final ContentType contentType = ContentType.getOrDefault(entity);
+				final Charset charset = contentType.getCharset();
+				try (final InputStream is = entity.getContent()) {
+					return new RobotsTxt(userAgent, is, charset == null ? CharsetUtils.CharsetUTF8 : charset);
+				}
+			});
 		} catch (HttpResponseException e) {
 			int sc = e.getStatusCode();
 			if (sc != 404) {
@@ -279,8 +286,6 @@ public class RobotsTxt {
 					logger.info("Get wrong status (" + sc + " code for: " + uri);
 			}
 			return new RobotsTxt(userAgent, sc);
-		} finally {
-			IOUtils.close(is, httpClient);
 		}
 	}
 
