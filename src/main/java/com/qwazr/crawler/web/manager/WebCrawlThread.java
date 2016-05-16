@@ -440,8 +440,10 @@ public class WebCrawlThread implements Runnable {
 			// Check the robotsTxt status
 			try {
 				RobotsTxt.RobotsTxtStatus robotsTxtStatus = checkRobotsTxt(currentURI);
-				if (robotsTxtStatus != null && !robotsTxtStatus.isCrawlable)
+				if (robotsTxtStatus != null && !robotsTxtStatus.isCrawlable) {
 					currentURI.setIgnored(true);
+					currentURI.setRobotsTxtDisallow(true);
+				}
 			} catch (Exception e) {
 				session.incErrorCount();
 				currentURI.setError(driver, e);

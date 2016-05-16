@@ -38,6 +38,7 @@ class CurrentURIImpl implements CurrentURI {
 	private volatile Boolean isInExclusion = null;
 	private volatile boolean isStartDomain = false;
 	private volatile boolean isStartSubDomain = false;
+	private volatile boolean isRobotsTxtDisallow = false;
 
 	private String error = null;
 
@@ -106,6 +107,15 @@ class CurrentURIImpl implements CurrentURI {
 	@Override
 	public boolean isIgnored() {
 		return isIgnored;
+	}
+
+	void setRobotsTxtDisallow(boolean disallow) {
+		this.isRobotsTxtDisallow = disallow;
+	}
+
+	@Override
+	public boolean isRobotsTxtDisallow() {
+		return isRobotsTxtDisallow;
 	}
 
 	void setCrawled() {

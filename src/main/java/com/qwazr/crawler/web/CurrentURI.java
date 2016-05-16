@@ -53,6 +53,11 @@ public interface CurrentURI {
 	Boolean isInExclusion();
 
 	/**
+	 * @return true if the Robots.txt disallow the current URI
+	 */
+	boolean isRobotsTxtDisallow();
+
+	/**
 	 * Set the ignored flag
 	 *
 	 * @param ignored
