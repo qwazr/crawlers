@@ -335,127 +335,232 @@ public class WebCrawlDefinition implements Cloneable {
 		return new WebCrawlDefinition(this);
 	}
 
-	public WebCrawlDefinition setEntry_url(String entry_url) {
-		this.entry_url = entry_url;
+	@JsonIgnore
+	public WebCrawlDefinition setEntryUrl(final String entryUrl) {
+		this.entry_url = entryUrl;
 		return this;
 	}
 
-	public WebCrawlDefinition setEntry_request(final WebRequestDefinition request) {
+	@JsonIgnore
+	public String getEntryUrl() {
+		return this.entry_url;
+	}
+
+	@JsonIgnore
+	public WebCrawlDefinition setEntryRequest(final WebRequestDefinition request) {
 		this.entry_request = request;
 		return this;
 	}
 
-	public WebCrawlDefinition setUrls(LinkedHashMap<String, Integer> urls) {
+	@JsonIgnore
+	public WebRequestDefinition getEntryRequest() {
+		return entry_request;
+	}
+
+	@JsonIgnore
+	public WebCrawlDefinition setUrls(final LinkedHashMap<String, Integer> urls) {
 		this.urls = urls;
 		return this;
 	}
 
-	public WebCrawlDefinition addUrl(String url, Integer depth) {
+	@JsonIgnore
+	public LinkedHashMap<String, Integer> getUrls() {
+		return this.urls;
+	}
+
+	@JsonIgnore
+	public WebCrawlDefinition addUrl(final String url, final Integer depth) {
 		if (urls == null)
 			urls = new LinkedHashMap<>();
 		urls.put(url, depth);
 		return this;
 	}
 
-	public WebCrawlDefinition setMax_depth(Integer max_depth) {
-		this.max_depth = max_depth;
+	@JsonIgnore
+	public WebCrawlDefinition setMaxDepth(final Integer maxDepth) {
+		this.max_depth = maxDepth;
 		return this;
 	}
 
-	public WebCrawlDefinition setMax_url_number(Integer max_url_number) {
-		this.max_url_number = max_url_number;
+	@JsonIgnore
+	public Integer getMaxDepth() {
+		return max_depth;
+	}
+
+	@JsonIgnore
+	public WebCrawlDefinition setMaxUrlNumber(final Integer maxUrlNumber) {
+		this.max_url_number = maxUrlNumber;
 		return this;
 	}
 
-	public WebCrawlDefinition addParameters_pattern(String parameters_pattern) {
+	@JsonIgnore
+	public WebCrawlDefinition addParametersPattern(final String parametersPattern) {
 		if (parameters_patterns == null)
-			parameters_patterns = new ArrayList<String>();
-		parameters_patterns.add(parameters_pattern);
+			parameters_patterns = new ArrayList<>();
+		parameters_patterns.add(parametersPattern);
 		return this;
 	}
 
-	public WebCrawlDefinition addInclusion_pattern(String inclusion_pattern) {
+	@JsonIgnore
+	public Collection<String> getParametersPattern() {
+		return parameters_patterns;
+	}
+
+	@JsonIgnore
+	public WebCrawlDefinition addInclusionPattern(final String inclusionPattern) {
 		if (inclusion_patterns == null)
-			inclusion_patterns = new ArrayList<String>();
-		inclusion_patterns.add(inclusion_pattern);
+			inclusion_patterns = new ArrayList<>();
+		inclusion_patterns.add(inclusionPattern);
 		return this;
 	}
 
-	public WebCrawlDefinition setInclusion_pattern(String inclusion_pattern_text) throws IOException {
-		if (inclusion_pattern_text == null) {
+	@JsonIgnore
+	public WebCrawlDefinition setInclusionPattern(final String inclusionPatternText) throws IOException {
+		if (inclusionPatternText == null) {
 			inclusion_patterns = null;
 			return this;
 		}
-		inclusion_patterns = new ArrayList<String>();
-		StringUtils.linesCollector(inclusion_pattern_text, false, inclusion_patterns);
+		inclusion_patterns = new ArrayList<>();
+		StringUtils.linesCollector(inclusionPatternText, false, inclusion_patterns);
 		return this;
 	}
 
-	public WebCrawlDefinition setExclusion_pattern(String exclusion_pattern_text) throws IOException {
-		if (exclusion_pattern_text == null) {
+	@JsonIgnore
+	public Collection<String> getInclusionPatterns() {
+		return inclusion_patterns;
+	}
+
+	@JsonIgnore
+	public WebCrawlDefinition setExclusionPattern(final String exclusionPatternText) throws IOException {
+		if (exclusionPatternText == null) {
 			exclusion_patterns = null;
 			return this;
 		}
-		exclusion_patterns = new ArrayList<String>();
-		StringUtils.linesCollector(exclusion_pattern_text, false, exclusion_patterns);
+		exclusion_patterns = new ArrayList<>();
+		StringUtils.linesCollector(exclusionPatternText, false, exclusion_patterns);
 		return this;
 	}
 
-	public WebCrawlDefinition addExclusion_pattern(String exclusion_pattern) {
-		if (exclusion_patterns == null)
-			exclusion_patterns = new ArrayList<String>();
-		exclusion_patterns.add(exclusion_pattern);
+	@JsonIgnore
+	public WebCrawlDefinition addExclusionPattern(final String exclusionPattern) {
+		if (exclusionPattern == null)
+			exclusion_patterns = new ArrayList<>();
+		exclusion_patterns.add(exclusionPattern);
 		return this;
 	}
 
-	public WebCrawlDefinition setRemove_fragments(Boolean remove_fragments) {
-		this.remove_fragments = remove_fragments;
+	@JsonIgnore
+	public Collection<String> getExclusionPatterns() {
+		return exclusion_patterns;
+	}
+
+	@JsonIgnore
+	public WebCrawlDefinition setRemoveFragments(final Boolean removeFragments) {
+		this.remove_fragments = removeFragments;
 		return this;
 	}
 
-	public WebCrawlDefinition setJavascript_enabled(Boolean javascript_enabled) {
-		this.javascript_enabled = javascript_enabled;
+	@JsonIgnore
+	public Boolean getRemoveFragments() {
+		return remove_fragments;
+	}
+
+	@JsonIgnore
+	public WebCrawlDefinition setJavascriptEnabled(final Boolean javascriptEnabled) {
+		this.javascript_enabled = javascriptEnabled;
 		return this;
 	}
 
-	public WebCrawlDefinition setDownload_images(Boolean download_images) {
-		this.download_images = download_images;
+	@JsonIgnore
+	public Boolean getJavascriptEnabled() {
+		return javascript_enabled;
+	}
+
+	@JsonIgnore
+	public WebCrawlDefinition setDownloadImages(final Boolean downloadImages) {
+		this.download_images = downloadImages;
 		return this;
 	}
 
-	public WebCrawlDefinition setWeb_security(Boolean web_security) {
-		this.web_security = web_security;
+	@JsonIgnore
+	public Boolean getDownloadImages() {
+		return download_images;
+	}
+
+	@JsonIgnore
+	public WebCrawlDefinition setWebSecurity(final Boolean webSecurity) {
+		this.web_security = webSecurity;
 		return this;
 	}
 
-	public WebCrawlDefinition setRobots_txt_enabled(Boolean robots_txt_enabled) {
-		this.robots_txt_enabled = robots_txt_enabled;
+	@JsonIgnore
+	public Boolean getWebSecurity() {
+		return web_security;
+	}
+
+	@JsonIgnore
+	public WebCrawlDefinition setRobotsTxtEnabled(final Boolean robotsTxtEnabled) {
+		this.robots_txt_enabled = robotsTxtEnabled;
 		return this;
 	}
 
-	public WebCrawlDefinition setRobots_txt_useragent(String robots_txt_useragent) {
-		this.robots_txt_useragent = robots_txt_useragent;
+	@JsonIgnore
+	public Boolean getRobotsTxtEnabled() {
+		return robots_txt_enabled;
+	}
+
+	@JsonIgnore
+	public WebCrawlDefinition setRobotsTxtUserAgent(final String robotsTxtUserAgent) {
+		this.robots_txt_useragent = robotsTxtUserAgent;
 		return this;
 	}
 
-	public WebCrawlDefinition setBrowser_type(String browser_type) {
-		this.browser_type = BrowserDriverEnum.valueOf(browser_type);
+	@JsonIgnore
+	public String getRobotsTxtUserAgent() {
+		return robots_txt_useragent;
+	}
+
+	@JsonIgnore
+	public WebCrawlDefinition setBrowserType(final String browserType) {
+		this.browser_type = BrowserDriverEnum.valueOf(browserType);
 		return this;
 	}
 
-	public WebCrawlDefinition setBrowser_name(String browser_name) {
-		this.browser_name = browser_name;
+	@JsonIgnore
+	public BrowserDriverEnum getBrowserType() {
+		return browser_type;
+	}
+
+	@JsonIgnore
+	public WebCrawlDefinition setBrowserName(final String browserName) {
+		this.browser_name = browserName;
 		return this;
 	}
 
-	public WebCrawlDefinition setBrowser_version(String browser_version) {
-		this.browser_version = browser_version;
+	@JsonIgnore
+	public String getBrowserName() {
+		return browser_name;
+	}
+
+	public WebCrawlDefinition setBrowserVersion(final String browserVersion) {
+		this.browser_version = browserVersion;
 		return this;
 	}
 
-	public WebCrawlDefinition setBrowser_language(String browser_language) {
-		this.browser_language = browser_language;
+	@JsonIgnore
+	public String getBrowserVersion() {
+		return browser_version;
+	}
+
+	@JsonIgnore
+	public WebCrawlDefinition setBrowserLanguage(final String browserLanguage) {
+		this.browser_language = browserLanguage;
 		return this;
+	}
+
+	@JsonIgnore
+	public String getBrowserLanguage() {
+		return browser_language;
 	}
 
 	@JsonIgnore
@@ -465,61 +570,123 @@ public class WebCrawlDefinition implements Cloneable {
 		return proxy;
 	}
 
-	public WebCrawlDefinition addProxy(ProxyDefinition proxy) {
+	@JsonIgnore
+	public WebCrawlDefinition addProxy(final ProxyDefinition proxy) {
 		if (proxy == null)
 			return this;
 		if (proxies == null)
-			proxies = new ArrayList<ProxyDefinition>();
+			proxies = new ArrayList<>();
 		proxies.add(proxy);
 		return this;
 	}
 
-	public WebCrawlDefinition addVariable(String name, String value) {
+	@JsonIgnore
+	public Collection<ProxyDefinition> getProxies() {
+		return proxies;
+	}
+
+	@JsonIgnore
+	public WebCrawlDefinition addVariable(final String name, final String value) {
 		if (name == null || value == null)
 			return this;
 		if (variables == null)
-			variables = new LinkedHashMap<String, String>();
+			variables = new LinkedHashMap<>();
 		variables.put(name, value);
 		return this;
 	}
 
-	public WebCrawlDefinition addCookie(String name, String value) {
+	@JsonIgnore
+	public WebCrawlDefinition setVariables(final Map<String, String> variables) {
+		if (this.variables == null)
+			this.variables = new LinkedHashMap<>();
+		if (variables != null)
+			this.variables.putAll(variables);
+		return this;
+	}
+
+	@JsonIgnore
+	public Map<String, String> getVariables() {
+		return variables;
+	}
+
+	@JsonIgnore
+	public WebCrawlDefinition addCookie(final String name, final String value) {
 		if (name == null || value == null)
 			return this;
 		if (cookies == null)
-			cookies = new LinkedHashMap<String, String>();
+			cookies = new LinkedHashMap<>();
 		cookies.put(name, value);
 		return this;
 	}
 
-	public Script addScript(String event, String name) {
+	@JsonIgnore
+	public Map<String, String> getCookies() {
+		return cookies;
+	}
+
+	@JsonIgnore
+	public WebCrawlDefinition setCookies(final Map<String, String> cookies) {
+		if (this.cookies == null)
+			this.cookies = new LinkedHashMap<>();
+		if (cookies != null)
+			this.cookies.putAll(cookies);
+		return this;
+	}
+
+	@JsonIgnore
+	public Script addScript(final String event, final String name) {
 		if (scripts == null)
-			scripts = new LinkedHashMap<EventEnum, Script>();
+			scripts = new LinkedHashMap<>();
 		Script script = new Script(name);
 		scripts.put(EventEnum.valueOf(event), script);
 		return script;
 	}
 
-	public String urlEncode(String value) throws UnsupportedEncodingException {
+	@JsonIgnore
+	public Map<EventEnum, Script> getScripts() {
+		return scripts;
+	}
+
+	@JsonIgnore
+	public String urlEncode(final String value) throws UnsupportedEncodingException {
 		return URLEncoder.encode(value, "UTF-8");
 	}
 
-	public WebCrawlDefinition setImplicitly_wait(Integer wait) {
+	@JsonIgnore
+	public WebCrawlDefinition setImplicitlyWait(final Integer wait) {
 		this.implicitly_wait = wait;
 		return this;
 	}
 
-	public WebCrawlDefinition setScript_timeout(Integer timeout) {
+	@JsonIgnore
+	public Integer getImplicitlyWait() {
+		return implicitly_wait;
+	}
+
+	@JsonIgnore
+	public WebCrawlDefinition setScriptTimeout(final Integer timeout) {
 		this.script_timeout = timeout;
 		return this;
 	}
 
-	public WebCrawlDefinition setPage_load_timeout(Integer timeout) {
+	@JsonIgnore
+	public Integer getScriptTimeout() {
+		return script_timeout;
+	}
+
+	@JsonIgnore
+	public WebCrawlDefinition setPageLoadTimeout(Integer timeout) {
 		this.page_load_timeout = timeout;
 		return this;
 	}
 
-	public static WebCrawlDefinition newInstance(String json) throws IOException {
+	@JsonIgnore
+	public Integer getPageLoadTimeout() {
+		return page_load_timeout;
+	}
+
+	@JsonIgnore
+	public static WebCrawlDefinition newInstance(final String json) throws IOException {
 		return JsonMapper.MAPPER.readValue(json, WebCrawlDefinition.class);
 	}
 
