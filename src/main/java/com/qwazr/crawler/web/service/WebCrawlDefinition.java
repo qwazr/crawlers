@@ -394,6 +394,11 @@ public class WebCrawlDefinition implements Cloneable {
 	}
 
 	@JsonIgnore
+	public Integer getMaxUrlNumber() {
+		return max_url_number;
+	}
+
+	@JsonIgnore
 	public WebCrawlDefinition addParametersPattern(final String parametersPattern) {
 		if (parameters_patterns == null)
 			parameters_patterns = new ArrayList<>();
