@@ -585,7 +585,6 @@ public class WebCrawlDefinition implements Cloneable {
 		return this;
 	}
 
-	@JsonIgnore
 	public Collection<ProxyDefinition> getProxies() {
 		return proxies;
 	}
@@ -624,7 +623,6 @@ public class WebCrawlDefinition implements Cloneable {
 		return this;
 	}
 
-	@JsonIgnore
 	public Map<String, String> getCookies() {
 		return cookies;
 	}
@@ -647,7 +645,6 @@ public class WebCrawlDefinition implements Cloneable {
 		return script;
 	}
 
-	@JsonIgnore
 	public Map<EventEnum, Script> getScripts() {
 		return scripts;
 	}
