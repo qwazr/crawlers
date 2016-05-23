@@ -303,9 +303,9 @@ public class WebCrawlDefinition implements Cloneable {
 		entry_request = src.entry_request;
 		urls = src.urls == null ? null : new LinkedHashMap<>(src.urls);
 		max_depth = src.max_depth;
-		parameters_patterns = src.parameters_patterns == null ? null : new ArrayList<String>(src.parameters_patterns);
-		inclusion_patterns = src.inclusion_patterns == null ? null : new ArrayList<String>(src.inclusion_patterns);
-		exclusion_patterns = src.exclusion_patterns == null ? null : new ArrayList<String>(src.exclusion_patterns);
+		parameters_patterns = src.parameters_patterns == null ? null : new ArrayList<>(src.parameters_patterns);
+		inclusion_patterns = src.inclusion_patterns == null ? null : new ArrayList<>(src.inclusion_patterns);
+		exclusion_patterns = src.exclusion_patterns == null ? null : new ArrayList<>(src.exclusion_patterns);
 		remove_fragments = src.remove_fragments;
 		browser_name = src.browser_name;
 		browser_language = src.browser_language;
@@ -316,18 +316,18 @@ public class WebCrawlDefinition implements Cloneable {
 		web_security = src.web_security;
 		robots_txt_enabled = src.robots_txt_enabled;
 		robots_txt_useragent = src.robots_txt_useragent;
+		cookies = src.cookies == null ? null : new LinkedHashMap<>(src.cookies);
 		proxy = src.proxy == null ? null : new ProxyDefinition(src.proxy);
-		proxies = src.proxies == null ? null : new ArrayList<ProxyDefinition>(src.proxies);
+		proxies = src.proxies == null ? null : new ArrayList<>(src.proxies);
 		implicitly_wait = src.implicitly_wait;
 		script_timeout = src.script_timeout;
 		page_load_timeout = src.page_load_timeout;
-		variables = src.variables == null ? null : new LinkedHashMap<String, String>(src.variables);
+		variables = src.variables == null ? null : new LinkedHashMap<>(src.variables);
 		if (src.scripts == null) {
 			scripts = null;
 		} else {
 			scripts = new HashMap<>();
-			for (Map.Entry<EventEnum, Script> entry : src.scripts.entrySet())
-				scripts.put(entry.getKey(), new Script(entry.getValue()));
+			src.scripts.forEach((eventEnum, script) -> scripts.put(eventEnum, new Script(script)));
 		}
 	}
 
