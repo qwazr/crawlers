@@ -443,7 +443,7 @@ public class WebCrawlDefinition implements Cloneable {
 
 	@JsonIgnore
 	public WebCrawlDefinition addExclusionPattern(final String exclusionPattern) {
-		if (exclusionPattern == null)
+		if (exclusion_patterns == null)
 			exclusion_patterns = new ArrayList<>();
 		exclusion_patterns.add(exclusionPattern);
 		return this;
