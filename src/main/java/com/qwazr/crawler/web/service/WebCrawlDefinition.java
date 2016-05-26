@@ -226,7 +226,7 @@ public class WebCrawlDefinition implements Cloneable {
 	/**
 	 * The global variables shared by all the scripts.
 	 */
-	public Map<String, String> variables = null;
+	public LinkedHashMap<String, String> variables = null;
 
 	/**
 	 * A list of scripts paths mapped with the events which fire the scripts.
@@ -599,7 +599,6 @@ public class WebCrawlDefinition implements Cloneable {
 		return this;
 	}
 
-	@JsonIgnore
 	public WebCrawlDefinition setVariables(final Map<String, String> variables) {
 		if (this.variables == null)
 			this.variables = new LinkedHashMap<>();
@@ -608,7 +607,6 @@ public class WebCrawlDefinition implements Cloneable {
 		return this;
 	}
 
-	@JsonIgnore
 	public Map<String, String> getVariables() {
 		return variables;
 	}
@@ -627,7 +625,6 @@ public class WebCrawlDefinition implements Cloneable {
 		return cookies;
 	}
 
-	@JsonIgnore
 	public WebCrawlDefinition setCookies(final Map<String, String> cookies) {
 		if (this.cookies == null)
 			this.cookies = new LinkedHashMap<>();
