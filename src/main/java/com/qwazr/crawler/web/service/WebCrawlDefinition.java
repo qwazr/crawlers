@@ -357,13 +357,11 @@ public class WebCrawlDefinition implements Cloneable {
 		return entry_request;
 	}
 
-	@JsonIgnore
 	public WebCrawlDefinition setUrls(final LinkedHashMap<String, Integer> urls) {
 		this.urls = urls;
 		return this;
 	}
 
-	@JsonIgnore
 	public LinkedHashMap<String, Integer> getUrls() {
 		return this.urls;
 	}
