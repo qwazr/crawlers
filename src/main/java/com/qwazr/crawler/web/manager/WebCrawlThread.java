@@ -418,7 +418,7 @@ public class WebCrawlThread implements Runnable {
 	}
 
 	private void crawlOne(final Set<URI> crawledURIs, final CrawlProvider crawlProvider, final Set<URI> nextLevelURIs,
-			final int depth) throws ServerException, IOException, ClassNotFoundException {
+			final int depth) throws ServerException, IOException, ClassNotFoundException, InterruptedException {
 
 		if (session.isAborting())
 			return;
@@ -436,6 +436,9 @@ public class WebCrawlThread implements Runnable {
 		scriptBeforeCrawl(currentURI, null);
 
 		if (!currentURI.isIgnored()) {
+
+			if (crawlDefinition.crawl_wait_ms != null)
+				Thread.sleep(crawlDefinition.crawl_wait_ms);
 
 			// Check the robotsTxt status
 			try {
@@ -473,7 +476,7 @@ public class WebCrawlThread implements Runnable {
 
 	private void crawlSubLevel(final Set<URI> crawledURIs, final Collection<URI> levelURIs, final int depth)
 			throws ServerException, IOException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException,
-			KeyManagementException, ClassNotFoundException {
+			KeyManagementException, ClassNotFoundException, InterruptedException {
 
 		if (crawlDefinition.max_depth == null || depth > crawlDefinition.max_depth)
 			return;
@@ -496,7 +499,7 @@ public class WebCrawlThread implements Runnable {
 
 	private void crawlStart(final Set<URI> crawledURIs, final CrawlProvider crawlProvider)
 			throws NoSuchAlgorithmException, IOException, KeyManagementException, KeyStoreException, URISyntaxException,
-			ClassNotFoundException {
+			ClassNotFoundException, InterruptedException {
 		final Set<URI> nextLevelURIs = new HashSet<>();
 		crawlOne(crawledURIs, crawlProvider, nextLevelURIs, 0);
 		crawlSubLevel(crawledURIs, nextLevelURIs, 1);
@@ -551,7 +554,7 @@ public class WebCrawlThread implements Runnable {
 
 	private void runner()
 			throws URISyntaxException, IOException, ScriptException, ServerException, ReflectiveOperationException,
-			NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
+			NoSuchAlgorithmException, KeyStoreException, KeyManagementException, InterruptedException {
 		try {
 			driver = new BrowserDriverBuilder(crawlDefinition).build();
 			script(EventEnum.before_session, null);

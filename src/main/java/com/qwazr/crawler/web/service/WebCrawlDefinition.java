@@ -132,6 +132,11 @@ public class WebCrawlDefinition implements Cloneable {
 	public Boolean robots_txt_enabled = null;
 	public String robots_txt_useragent = null;
 
+	/**
+	 * Time wait on successfull crawl
+	 */
+	public Integer crawl_wait_ms = null;
+
 	@JsonInclude(Include.NON_EMPTY)
 	public static class ProxyDefinition implements Cloneable {
 
@@ -322,6 +327,7 @@ public class WebCrawlDefinition implements Cloneable {
 		implicitly_wait = src.implicitly_wait;
 		script_timeout = src.script_timeout;
 		page_load_timeout = src.page_load_timeout;
+		crawl_wait_ms = src.crawl_wait_ms;
 		variables = src.variables == null ? null : new LinkedHashMap<>(src.variables);
 		if (src.scripts == null) {
 			scripts = null;
@@ -669,6 +675,17 @@ public class WebCrawlDefinition implements Cloneable {
 	@JsonIgnore
 	public Integer getScriptTimeout() {
 		return script_timeout;
+	}
+
+	@JsonIgnore
+	public WebCrawlDefinition setCrawlWaitMs(Integer crawlWaitMs) {
+		this.crawl_wait_ms = crawlWaitMs;
+		return this;
+	}
+
+	@JsonIgnore
+	public Integer getCrawlWaitMs() {
+		return crawl_wait_ms;
 	}
 
 	@JsonIgnore
