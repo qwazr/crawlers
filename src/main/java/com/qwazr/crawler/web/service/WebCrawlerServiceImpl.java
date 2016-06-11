@@ -18,6 +18,8 @@ package com.qwazr.crawler.web.service;
 import com.qwazr.cluster.manager.ClusterManager;
 import com.qwazr.crawler.web.manager.WebCrawlerManager;
 import com.qwazr.utils.server.ServerException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -25,6 +27,8 @@ import java.io.IOException;
 import java.util.TreeMap;
 
 public class WebCrawlerServiceImpl implements WebCrawlerServiceInterface {
+
+	private static final Logger logger = LoggerFactory.getLogger(WebCrawlerServiceImpl.class);
 
 	@Override
 	public TreeMap<String, WebCrawlStatus> getSessions(String group) {
@@ -44,7 +48,7 @@ public class WebCrawlerServiceImpl implements WebCrawlerServiceInterface {
 				return status;
 			throw new ServerException(Status.NOT_FOUND, "Session not found");
 		} catch (ServerException e) {
-			throw ServerException.getJsonException(e);
+			throw ServerException.getJsonException(logger, e);
 		}
 	}
 
@@ -56,7 +60,7 @@ public class WebCrawlerServiceImpl implements WebCrawlerServiceInterface {
 			WebCrawlerManager.getInstance().abortSession(session_name, reason);
 			return Response.accepted().build();
 		} catch (ServerException e) {
-			throw ServerException.getTextException(e);
+			throw ServerException.getTextException(logger, e);
 		}
 	}
 
@@ -65,7 +69,7 @@ public class WebCrawlerServiceImpl implements WebCrawlerServiceInterface {
 		try {
 			return WebCrawlerManager.getInstance().runSession(session_name, crawlDefinition);
 		} catch (ServerException e) {
-			throw ServerException.getJsonException(e);
+			throw ServerException.getJsonException(logger, e);
 		}
 	}
 
