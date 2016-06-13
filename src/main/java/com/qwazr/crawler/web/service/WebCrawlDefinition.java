@@ -63,6 +63,11 @@ public class WebCrawlDefinition implements Cloneable {
 	public List<String> parameters_patterns = null;
 
 	/**
+	 * A list of regular expression patterns. Any matching group is remove from the path.
+	 */
+	public List<String> path_cleaner_patterns = null;
+
+	/**
 	 * A list of regular expression patterns. An URL may be crawled only if it
 	 * matches any pattern.
 	 */
@@ -309,6 +314,7 @@ public class WebCrawlDefinition implements Cloneable {
 		urls = src.urls == null ? null : new LinkedHashMap<>(src.urls);
 		max_depth = src.max_depth;
 		parameters_patterns = src.parameters_patterns == null ? null : new ArrayList<>(src.parameters_patterns);
+		path_cleaner_patterns = src.path_cleaner_patterns == null ? null : new ArrayList<>(src.path_cleaner_patterns);
 		inclusion_patterns = src.inclusion_patterns == null ? null : new ArrayList<>(src.inclusion_patterns);
 		exclusion_patterns = src.exclusion_patterns == null ? null : new ArrayList<>(src.exclusion_patterns);
 		remove_fragments = src.remove_fragments;
@@ -413,6 +419,19 @@ public class WebCrawlDefinition implements Cloneable {
 	@JsonIgnore
 	public Collection<String> getParametersPattern() {
 		return parameters_patterns;
+	}
+
+	@JsonIgnore
+	public WebCrawlDefinition addPathCleanerPattern(final String pathCleanerPattern) {
+		if (path_cleaner_patterns == null)
+			path_cleaner_patterns = new ArrayList<>();
+		path_cleaner_patterns.add(pathCleanerPattern);
+		return this;
+	}
+
+	@JsonIgnore
+	public Collection<String> getPathCleanerPatterns() {
+		return path_cleaner_patterns;
 	}
 
 	@JsonIgnore

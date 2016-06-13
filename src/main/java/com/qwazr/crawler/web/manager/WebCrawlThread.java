@@ -27,12 +27,12 @@ import com.qwazr.crawler.web.service.WebCrawlStatus;
 import com.qwazr.crawler.web.service.WebRequestDefinition;
 import com.qwazr.scripts.ScriptManager;
 import com.qwazr.scripts.ScriptRunThread;
+import com.qwazr.utils.RegExpUtils;
 import com.qwazr.utils.TimeTracker;
+import com.qwazr.utils.UBuilder;
 import com.qwazr.utils.WildcardMatcher;
 import com.qwazr.utils.server.ServerException;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.utils.URIBuilder;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
@@ -49,7 +49,6 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 public class WebCrawlThread implements Runnable {
@@ -61,6 +60,7 @@ public class WebCrawlThread implements Runnable {
 	private final InternetDomainName internetDomainName;
 
 	private final List<Matcher> parametersMatcherList;
+	private final List<Matcher> pathCleanerMatcherList;
 	private final List<WildcardMatcher> exclusionMatcherList;
 	private final List<WildcardMatcher> inclusionMatcherList;
 
@@ -71,7 +71,7 @@ public class WebCrawlThread implements Runnable {
 
 	private final TimeTracker timeTracker;
 
-	WebCrawlThread(String sessionName, WebCrawlDefinition crawlDefinition) throws ServerException {
+	WebCrawlThread(final String sessionName, final WebCrawlDefinition crawlDefinition) throws ServerException {
 		timeTracker = new TimeTracker();
 		this.session = new CurrentSessionImpl(crawlDefinition, sessionName, timeTracker);
 		this.crawlDefinition = crawlDefinition;
@@ -79,9 +79,14 @@ public class WebCrawlThread implements Runnable {
 			throw new ServerException(Status.NOT_ACCEPTABLE, "The browser_type is missing");
 		if (crawlDefinition.entry_url == null && crawlDefinition.entry_request == null)
 			throw new ServerException(Status.NOT_ACCEPTABLE, "Either the entry_url or the entry_request is missing");
-		parametersMatcherList = getRegExpMatcherList(crawlDefinition.parameters_patterns);
-		exclusionMatcherList = getWildcardMatcherList(crawlDefinition.exclusion_patterns);
-		inclusionMatcherList = getWildcardMatcherList(crawlDefinition.inclusion_patterns);
+		try {
+			parametersMatcherList = RegExpUtils.getMatcherList(crawlDefinition.parameters_patterns);
+			pathCleanerMatcherList = RegExpUtils.getMatcherList(crawlDefinition.path_cleaner_patterns);
+		} catch (PatternSyntaxException e) {
+			throw new ServerException(Status.NOT_ACCEPTABLE, e.getMessage());
+		}
+		exclusionMatcherList = WildcardMatcher.getList(crawlDefinition.exclusion_patterns);
+		inclusionMatcherList = WildcardMatcher.getList(crawlDefinition.inclusion_patterns);
 		if (crawlDefinition.robots_txt_enabled != null && crawlDefinition.robots_txt_enabled)
 			robotsTxtMap = new HashMap<>();
 		else
@@ -103,30 +108,6 @@ public class WebCrawlThread implements Runnable {
 		}
 	}
 
-	private final static List<Matcher> getRegExpMatcherList(List<String> patternList) throws ServerException {
-		if (patternList == null || patternList.isEmpty())
-			return null;
-		try {
-			List<Matcher> matcherList = new ArrayList<Matcher>(patternList.size());
-			for (String pattern : patternList) {
-				Matcher matcher = Pattern.compile(pattern).matcher(StringUtils.EMPTY);
-				matcherList.add(matcher);
-			}
-			return matcherList;
-		} catch (PatternSyntaxException e) {
-			throw new ServerException(Status.NOT_ACCEPTABLE, e.getMessage());
-		}
-	}
-
-	private final static List<WildcardMatcher> getWildcardMatcherList(List<String> patternList) {
-		if (patternList == null || patternList.isEmpty())
-			return null;
-		List<WildcardMatcher> matcherList = new ArrayList<WildcardMatcher>(patternList.size());
-		for (String pattern : patternList)
-			matcherList.add(new WildcardMatcher(pattern));
-		return matcherList;
-	}
-
 	String getSessionName() {
 		return session.getName();
 	}
@@ -139,22 +120,6 @@ public class WebCrawlThread implements Runnable {
 		session.abort(reason);
 	}
 
-	private final static boolean checkRegExpMatcher(String value, List<Matcher> matcherList) {
-		for (Matcher matcher : matcherList) {
-			matcher.reset(value);
-			if (matcher.find())
-				return true;
-		}
-		return false;
-	}
-
-	private final static boolean checkWildcardMatcher(String value, List<WildcardMatcher> matcherList) {
-		for (WildcardMatcher matcher : matcherList)
-			if (matcher.match(value))
-				return true;
-		return false;
-	}
-
 	/**
 	 * Check the inclusion list. Returns null if the inclusion list is empty.
 	 *
@@ -164,7 +129,7 @@ public class WebCrawlThread implements Runnable {
 	private Boolean matchesInclusion(String uriString) {
 		if (inclusionMatcherList == null || inclusionMatcherList.isEmpty())
 			return null;
-		return checkWildcardMatcher(uriString, inclusionMatcherList);
+		return WildcardMatcher.anyMatch(uriString, inclusionMatcherList);
 	}
 
 	/**
@@ -176,35 +141,7 @@ public class WebCrawlThread implements Runnable {
 	private Boolean matchesExclusion(String uriString) {
 		if (exclusionMatcherList == null || exclusionMatcherList.isEmpty())
 			return false;
-		return checkWildcardMatcher(uriString, exclusionMatcherList);
-	}
-
-	/**
-	 * Remove the fragment if remove_framents is set to true
-	 *
-	 * @param uriBuilder
-	 */
-	private void checkRemoveFragment(URIBuilder uriBuilder) {
-		if (crawlDefinition.remove_fragments == null || !crawlDefinition.remove_fragments)
-			return;
-		uriBuilder.setFragment(null);
-	}
-
-	/**
-	 * Remove any query parameter which match the parameters_matcher list
-	 *
-	 * @param uriBuilder
-	 */
-	private void checkRemoveParameter(URIBuilder uriBuilder) {
-		if (parametersMatcherList == null || parametersMatcherList.isEmpty())
-			return;
-		List<NameValuePair> oldParams = uriBuilder.getQueryParams();
-		if (oldParams == null || oldParams.isEmpty())
-			return;
-		uriBuilder.clearParameters();
-		for (NameValuePair param : oldParams)
-			if (!checkRegExpMatcher(param.getName() + "=" + param.getValue(), parametersMatcherList))
-				uriBuilder.addParameter(param.getName(), param.getValue());
+		return WildcardMatcher.anyMatch(uriString, exclusionMatcherList);
 	}
 
 	/**
@@ -214,13 +151,17 @@ public class WebCrawlThread implements Runnable {
 	 * @return
 	 */
 	private URI checkLink(URI uri) {
-		URIBuilder uriBuilder = new URIBuilder(uri);
-		checkRemoveFragment(uriBuilder);
-		checkRemoveParameter(uriBuilder);
+		UBuilder uriBuilder = new UBuilder(uri);
+		if (crawlDefinition.remove_fragments != null && crawlDefinition.remove_fragments)
+			uriBuilder.setFragment(null);
+		if (parametersMatcherList != null && !parametersMatcherList.isEmpty())
+			uriBuilder.removeMatchingParameters(parametersMatcherList);
+		if (pathCleanerMatcherList != null && !pathCleanerMatcherList.isEmpty())
+			uriBuilder.cleanPath(pathCleanerMatcherList);
 		try {
 			return uriBuilder.build();
 		} catch (URISyntaxException e) {
-			logger.warn(e.getMessage(), e);
+			logger.warn("Cannot build the URI from " + uri.toString(), e);
 			return null;
 		}
 	}
