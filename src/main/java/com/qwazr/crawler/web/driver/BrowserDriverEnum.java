@@ -32,7 +32,7 @@ public enum BrowserDriverEnum {
 
 	html_unit(HtmlUnitBrowserDriver.class, "HtmlUnit"),
 
-	internet_explorer(InternetExplorerDriver.class, "Internet Exlorer"),
+	internet_explorer(InternetExplorerDriver.class, "Internet Explorer"),
 
 	phantomjs(PhantomJSBrowserDriver.class, "PhantomJS"),
 
