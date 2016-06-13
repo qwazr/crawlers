@@ -32,6 +32,11 @@ import java.util.*;
 public class WebCrawlDefinition implements Cloneable {
 
 	/**
+	 * URL called before a crawl session starts
+	 */
+	public String pre_url = null;
+
+	/**
 	 * The entry point URL of the crawl.
 	 */
 	public String entry_url = null;
@@ -309,6 +314,7 @@ public class WebCrawlDefinition implements Cloneable {
 	}
 
 	protected WebCrawlDefinition(WebCrawlDefinition src) {
+		pre_url = src.pre_url;
 		entry_url = src.entry_url;
 		entry_request = src.entry_request;
 		urls = src.urls == null ? null : new LinkedHashMap<>(src.urls);
@@ -345,6 +351,17 @@ public class WebCrawlDefinition implements Cloneable {
 
 	public Object clone() {
 		return new WebCrawlDefinition(this);
+	}
+
+	@JsonIgnore
+	public WebCrawlDefinition setPreUrl(final String preUrl) {
+		this.pre_url = preUrl;
+		return this;
+	}
+
+	@JsonIgnore
+	public String getPreUrl() {
+		return this.pre_url;
 	}
 
 	@JsonIgnore

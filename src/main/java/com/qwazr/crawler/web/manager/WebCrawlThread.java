@@ -232,8 +232,7 @@ public class WebCrawlThread implements Runnable {
 			crawlDefinition.cookies.forEach((name, value) -> {
 				if (options.getCookieNamed(name) != null)
 					options.deleteCookieNamed(name);
-				options.addCookie(
-						new Cookie(name, value, null, new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 48)));
+				options.addCookie(new Cookie(name, value));
 			});
 		}
 
@@ -511,6 +510,8 @@ public class WebCrawlThread implements Runnable {
 		try {
 			driver = new BrowserDriverBuilder(crawlDefinition).build();
 			script(EventEnum.before_session, null);
+			if (crawlDefinition.pre_url != null && !crawlDefinition.pre_url.isEmpty())
+				driver.get(crawlDefinition.pre_url);
 			final Set<URI> crawledURIs = new HashSet<>();
 			if (crawlDefinition.urls != null && !crawlDefinition.urls.isEmpty())
 				crawlUrlMap(crawledURIs, crawlDefinition.urls);
