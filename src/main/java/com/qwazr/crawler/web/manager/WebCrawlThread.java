@@ -33,9 +33,7 @@ import com.qwazr.utils.UBuilder;
 import com.qwazr.utils.WildcardMatcher;
 import com.qwazr.utils.server.ServerException;
 import org.apache.commons.lang3.StringUtils;
-import org.openqa.selenium.By;
-import org.openqa.selenium.WebDriverException;
-import org.openqa.selenium.WebElement;
+import org.openqa.selenium.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -226,6 +224,16 @@ public class WebCrawlThread implements Runnable {
 			if (logger.isInfoEnabled())
 				logger.info("Ignored (not http) " + uri);
 			return;
+		}
+
+		// Set the optional cookies
+		if (crawlDefinition.cookies != null) {
+			final WebDriver.Options options = driver.manage();
+			crawlDefinition.cookies.forEach((name, value) -> {
+				if (options.getCookieNamed(name) != null)
+					options.deleteCookieNamed(name);
+				options.addCookie(new Cookie(name, value));
+			});
 		}
 
 		// Load the URL
