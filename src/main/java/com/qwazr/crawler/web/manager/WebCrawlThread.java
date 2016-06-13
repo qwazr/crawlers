@@ -164,10 +164,10 @@ public class WebCrawlThread implements Runnable {
 		}
 	}
 
-	private Collection<URI> checkLinks(Collection<URI> uris) {
+	private Collection<URI> checkLinks(final Collection<URI> uris) {
 		if (uris == null)
 			return null;
-		Map<String, URI> linkMap = new LinkedHashMap<String, URI>();
+		Map<String, URI> linkMap = new LinkedHashMap<>();
 		for (URI linkURI : uris) {
 			linkURI = checkLink(linkURI);
 			if (linkURI != null)
@@ -176,7 +176,7 @@ public class WebCrawlThread implements Runnable {
 		return linkMap.values();
 	}
 
-	private boolean matchesInitialDomain(URI uri) {
+	private boolean matchesInitialDomain(final URI uri) {
 		String host = uri.getHost();
 		if (StringUtils.isEmpty(host))
 			return false;
@@ -185,7 +185,7 @@ public class WebCrawlThread implements Runnable {
 		return internetDomainName.equals(InternetDomainName.from(host));
 	}
 
-	private String scriptBeforeCrawl(CurrentURIImpl currentURI, String uriString)
+	private String scriptBeforeCrawl(final CurrentURIImpl currentURI, String uriString)
 			throws ServerException, IOException, ClassNotFoundException {
 		URI uri = currentURI.getURI();
 		if (uriString == null)
@@ -232,7 +232,8 @@ public class WebCrawlThread implements Runnable {
 			crawlDefinition.cookies.forEach((name, value) -> {
 				if (options.getCookieNamed(name) != null)
 					options.deleteCookieNamed(name);
-				options.addCookie(new Cookie(name, value));
+				options.addCookie(
+						new Cookie(name, value, null, new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 48)));
 			});
 		}
 
@@ -334,6 +335,9 @@ public class WebCrawlThread implements Runnable {
 
 		final ArrayList<URI> filteredURIs = new ArrayList<>();
 		for (URI u : uris) {
+			u = checkLink(u);
+			if (u == null)
+				continue;
 			String us = u.toString();
 			Boolean inc = matchesInclusion(us);
 			if (inc != null && !inc)
