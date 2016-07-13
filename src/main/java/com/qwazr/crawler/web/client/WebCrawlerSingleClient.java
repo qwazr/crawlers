@@ -20,12 +20,13 @@ import com.qwazr.crawler.web.service.WebCrawlDefinition;
 import com.qwazr.crawler.web.service.WebCrawlStatus;
 import com.qwazr.crawler.web.service.WebCrawlerServiceInterface;
 import com.qwazr.utils.UBuilder;
+import com.qwazr.utils.http.HttpRequest;
 import com.qwazr.utils.http.HttpResponseEntityException;
 import com.qwazr.utils.http.HttpUtils;
 import com.qwazr.utils.json.client.JsonClientAbstract;
 import com.qwazr.utils.server.RemoteService;
 import org.apache.http.HttpResponse;
-import org.apache.http.client.fluent.Request;
+import org.apache.http.client.methods.CloseableHttpResponse;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
@@ -47,7 +48,7 @@ public class WebCrawlerSingleClient extends JsonClientAbstract implements WebCra
 	public TreeMap<String, WebCrawlStatus> getSessions(String group) {
 		final UBuilder uriBuilder =
 				RemoteService.getNewUBuilder(remote, "/crawler/web/sessions").setParameter("group", group);
-		Request request = Request.Get(uriBuilder.buildNoEx());
+		HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
 		return commonServiceRequest(request, null, null, TreeMapStringCrawlTypeRef, 200);
 	}
 
@@ -55,17 +56,16 @@ public class WebCrawlerSingleClient extends JsonClientAbstract implements WebCra
 	public WebCrawlStatus getSession(String session_name, String group) {
 		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, "/crawler/web/sessions/", session_name)
 				.setParameter("group", group);
-		Request request = Request.Get(uriBuilder.buildNoEx());
+		HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
 		return commonServiceRequest(request, null, null, WebCrawlStatus.class, 200);
 	}
 
 	@Override
 	public Response abortSession(String session_name, String reason, String group) {
-		try {
-			final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, "/crawler/web/sessions/", session_name)
-					.setParameter("group", group).setParameterObject("reason", reason);
-			Request request = Request.Delete(uriBuilder.buildNoEx());
-			HttpResponse response = execute(request, null, null);
+		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, "/crawler/web/sessions/", session_name)
+				.setParameter("group", group).setParameterObject("reason", reason);
+		final HttpRequest request = HttpRequest.Delete(uriBuilder.buildNoEx());
+		try (final CloseableHttpResponse response = execute(request, null, null)) {
 			HttpUtils.checkStatusCodes(response, 200, 202);
 			return Response.status(response.getStatusLine().getStatusCode()).build();
 		} catch (HttpResponseEntityException e) {
@@ -78,7 +78,7 @@ public class WebCrawlerSingleClient extends JsonClientAbstract implements WebCra
 	@Override
 	public WebCrawlStatus runSession(String session_name, WebCrawlDefinition crawlDefinition) {
 		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, "/crawler/web/sessions/", session_name);
-		Request request = Request.Post(uriBuilder.buildNoEx());
+		HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
 		return commonServiceRequest(request, crawlDefinition, null, WebCrawlStatus.class, 200, 202);
 	}
 

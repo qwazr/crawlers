@@ -20,10 +20,15 @@ import com.qwazr.crawler.web.service.WebCrawlDefinition;
 import com.qwazr.crawler.web.service.WebRequestDefinition;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.StringUtils;
+import com.qwazr.utils.http.HttpRequest;
 import com.qwazr.utils.http.HttpUtils;
 import com.qwazr.utils.json.JsonMapper;
-import org.apache.http.client.fluent.Executor;
-import org.apache.http.client.fluent.Request;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpHost;
+import org.apache.http.HttpResponse;
+import org.apache.http.StatusLine;
+import org.apache.http.client.HttpResponseException;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.openqa.selenium.*;
 import org.slf4j.Logger;
@@ -32,10 +37,7 @@ import org.w3c.css.sac.CSSException;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
-import java.io.Closeable;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.KeyManagementException;
@@ -363,13 +365,15 @@ final public class BrowserDriver implements WebDriver, Closeable, AdditionalCapa
 		}
 	}
 
-	public static final Request applyProxy(WebCrawlDefinition.ProxyDefinition proxy, URI uri, Request request) {
+	public static final HttpRequest applyProxy(WebCrawlDefinition.ProxyDefinition proxy, URI uri, HttpRequest request) {
 		if (proxy == null)
 			return request;
+		RequestConfig.Builder builder = RequestConfig.custom();
 		if (proxy.http_proxy != null && !proxy.http_proxy.isEmpty())
-			request = request.viaProxy(proxy.http_proxy);
+			builder.setProxy(HttpHost.create(proxy.http_proxy));
 		if ("https".equals(uri.getScheme()) && proxy.ssl_proxy != null && !proxy.ssl_proxy.isEmpty())
-			request = request.viaProxy(proxy.ssl_proxy);
+			builder.setProxy(HttpHost.create(proxy.ssl_proxy));
+		request.request.setConfig(builder.build());
 		return request;
 	}
 
@@ -377,17 +381,20 @@ final public class BrowserDriver implements WebDriver, Closeable, AdditionalCapa
 			throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException, IOException,
 			URISyntaxException {
 		URI uri = new URI(url);
-		final CloseableHttpClient httpClient = HttpUtils.createHttpClient_AcceptsUntrustedCerts();
-		try {
-			final Executor executor = Executor.newInstance(httpClient);
-			Request request = Request.Get(uri.toString()).addHeader("Connection", "close").connectTimeout(60000)
-					.socketTimeout(60000);
-			if (userAgent != null)
-				request = request.addHeader("User-Agent", userAgent);
-			request = applyProxy(currentProxy, uri, request);
-			executor.execute(request).saveContent(file);
-		} finally {
-			IOUtils.close(httpClient);
+		final HttpRequest request = HttpRequest.Get(uri.toString()).addHeader("Connection", "close");
+		if (userAgent != null)
+			request.addHeader("User-Agent", userAgent);
+		applyProxy(currentProxy, uri, request);
+		final HttpResponse response = HttpUtils.UNSECURE_HTTP_CLIENT.execute(request.request);
+		final StatusLine statusLine = response.getStatusLine();
+		if (statusLine.getStatusCode() >= 300) {
+			throw new HttpResponseException(statusLine.getStatusCode(),
+					statusLine.getReasonPhrase());
+		}
+		try (final FileOutputStream out = new FileOutputStream(file)) {
+			final HttpEntity entity = response.getEntity();
+			if (entity != null)
+				entity.writeTo(out);
 		}
 	}
 

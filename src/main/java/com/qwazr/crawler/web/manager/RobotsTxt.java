@@ -18,23 +18,20 @@ package com.qwazr.crawler.web.manager;
 import com.qwazr.crawler.web.driver.BrowserDriver;
 import com.qwazr.crawler.web.service.WebCrawlDefinition;
 import com.qwazr.utils.CharsetUtils;
+import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.LinkUtils;
+import com.qwazr.utils.http.HttpRequest;
 import com.qwazr.utils.http.HttpUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.StatusLine;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpResponseException;
-import org.apache.http.client.fluent.Executor;
-import org.apache.http.client.fluent.Request;
 import org.apache.http.entity.ContentType;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -119,13 +116,13 @@ public class RobotsTxt {
 
 	private RobotsTxtStatus getStatusNoLogs(final URI uri) throws MalformedURLException, URISyntaxException {
 		switch (httpStatusCode) {
-		case 400:
-		case 404:
-			return RobotsTxtStatus.NO_ROBOTSTXT;
-		case 200:
-			break;
-		default:
-			return RobotsTxtStatus.ERROR;
+			case 400:
+			case 404:
+				return RobotsTxtStatus.NO_ROBOTSTXT;
+			case 200:
+				break;
+			default:
+				return RobotsTxtStatus.ERROR;
 		}
 		if (userAgentMap == null)
 			return RobotsTxtStatus.ALLOW;
@@ -254,26 +251,28 @@ public class RobotsTxt {
 
 	static RobotsTxt download(final WebCrawlDefinition.ProxyDefinition proxy, final String userAgent, final URI uri)
 			throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
-		try (final CloseableHttpClient httpClient = HttpUtils.createHttpClient_AcceptsUntrustedCerts()) {
-			final Executor executor = Executor.newInstance(httpClient);
-			Request request =
-					Request.Get(uri.toString()).addHeader("Connection", "close").addHeader("User-Agent", userAgent)
-							.connectTimeout(60000).socketTimeout(60000);
-			request = BrowserDriver.applyProxy(proxy, uri, request);
+		try {
+			final HttpRequest request =
+					HttpRequest.Get(uri.toString()).addHeader("Connection", "close").addHeader("User-Agent", userAgent);
+			BrowserDriver.applyProxy(proxy, uri, request);
 
 			if (logger.isInfoEnabled())
 				logger.info("Try to download robots.txt " + uri);
-			return executor.execute(request).handleResponse(response -> {
-				final StatusLine statusLine = response.getStatusLine();
-				if (statusLine.getStatusCode() >= 300)
-					throw new HttpResponseException(statusLine.getStatusCode(), statusLine.getReasonPhrase());
-				final HttpEntity entity = response.getEntity();
-				if (entity == null)
-					throw new ClientProtocolException("Response contains no content");
-				final ContentType contentType = ContentType.getOrDefault(entity);
-				final Charset charset = contentType.getCharset();
-				try (final InputStream is = entity.getContent()) {
-					return new RobotsTxt(userAgent, is, charset == null ? CharsetUtils.CharsetUTF8 : charset);
+			return HttpUtils.UNSECURE_HTTP_CLIENT.execute(request.request, response -> {
+				try {
+					final StatusLine statusLine = response.getStatusLine();
+					if (statusLine.getStatusCode() >= 300)
+						throw new HttpResponseException(statusLine.getStatusCode(), statusLine.getReasonPhrase());
+					final HttpEntity entity = response.getEntity();
+					if (entity == null)
+						throw new ClientProtocolException("Response contains no content");
+					final ContentType contentType = ContentType.getOrDefault(entity);
+					final Charset charset = contentType.getCharset();
+					try (final InputStream is = entity.getContent()) {
+						return new RobotsTxt(userAgent, is, charset == null ? CharsetUtils.CharsetUTF8 : charset);
+					}
+				} finally {
+					IOUtils.closeObject(response);
 				}
 			});
 		} catch (HttpResponseException e) {
