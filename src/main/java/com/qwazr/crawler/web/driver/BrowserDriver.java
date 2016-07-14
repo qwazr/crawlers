@@ -20,16 +20,15 @@ import com.qwazr.crawler.web.service.WebCrawlDefinition;
 import com.qwazr.crawler.web.service.WebRequestDefinition;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.StringUtils;
+import com.qwazr.utils.http.HttpClients;
 import com.qwazr.utils.http.HttpRequest;
-import com.qwazr.utils.http.HttpUtils;
 import com.qwazr.utils.json.JsonMapper;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
-import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.config.RequestConfig;
-import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.openqa.selenium.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -385,16 +384,16 @@ final public class BrowserDriver implements WebDriver, Closeable, AdditionalCapa
 		if (userAgent != null)
 			request.addHeader("User-Agent", userAgent);
 		applyProxy(currentProxy, uri, request);
-		final HttpResponse response = HttpUtils.UNSECURE_HTTP_CLIENT.execute(request.request);
-		final StatusLine statusLine = response.getStatusLine();
-		if (statusLine.getStatusCode() >= 300) {
-			throw new HttpResponseException(statusLine.getStatusCode(),
-					statusLine.getReasonPhrase());
-		}
-		try (final FileOutputStream out = new FileOutputStream(file)) {
-			final HttpEntity entity = response.getEntity();
-			if (entity != null)
-				entity.writeTo(out);
+		try (final CloseableHttpResponse response = HttpClients.UNSECURE_HTTP_CLIENT.execute(request.request)) {
+			final StatusLine statusLine = response.getStatusLine();
+			if (statusLine.getStatusCode() >= 300) {
+				throw new HttpResponseException(statusLine.getStatusCode(), statusLine.getReasonPhrase());
+			}
+			try (final FileOutputStream out = new FileOutputStream(file)) {
+				final HttpEntity entity = response.getEntity();
+				if (entity != null)
+					entity.writeTo(out);
+			}
 		}
 	}
 

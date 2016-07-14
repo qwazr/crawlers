@@ -110,7 +110,7 @@ public class WebCrawlerMultiClient extends JsonMultiClientAbstract<WebCrawlerSin
 			return null;
 		HttpResponseEntityException hree = HttpResponseEntityException.findFirstCause(e);
 		if (hree != null)
-			throw hree.getWebApplicationException();
+			throw ServerException.getServerException(hree).getJsonException();
 		throw e;
 	}
 
