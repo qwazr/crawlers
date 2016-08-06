@@ -10,7 +10,6 @@ import com.qwazr.library.AbstractLibrary;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.json.JsonMapper;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
@@ -20,7 +19,7 @@ public class WebCrawlerTool extends AbstractLibrary {
 	final public WebCrawlDefinition config = null;
 
 	@Override
-	public void load(File parentDir) {
+	public void load() {
 	}
 
 	/**
@@ -43,14 +42,14 @@ public class WebCrawlerTool extends AbstractLibrary {
 	}
 
 	@JsonIgnore
-	public BrowserDriver getNewWebDriver(IOUtils.CloseableContext context, String json)
+	public BrowserDriver getNewWebDriver(final IOUtils.CloseableContext context, final String json)
 			throws ReflectiveOperationException, SecurityException, IOException {
 		WebCrawlDefinition webCrawlDef = JsonMapper.MAPPER.readValue(json, WebCrawlDefinition.class);
 		return new BrowserDriverBuilder(webCrawlDef).build();
 	}
 
 	@JsonIgnore
-	public BrowserDriver getNewWebDriver(IOUtils.CloseableContext context) throws ReflectiveOperationException {
+	public BrowserDriver getNewWebDriver(final IOUtils.CloseableContext context) throws ReflectiveOperationException {
 		return new BrowserDriverBuilder(config).build();
 	}
 }
