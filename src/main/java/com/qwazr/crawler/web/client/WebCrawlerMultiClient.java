@@ -18,11 +18,11 @@ package com.qwazr.crawler.web.client;
 import com.qwazr.crawler.web.service.WebCrawlDefinition;
 import com.qwazr.crawler.web.service.WebCrawlStatus;
 import com.qwazr.crawler.web.service.WebCrawlerServiceInterface;
+import com.qwazr.utils.ExceptionUtils;
 import com.qwazr.utils.http.HttpResponseEntityException;
 import com.qwazr.utils.json.client.JsonMultiClientAbstract;
 import com.qwazr.utils.server.RemoteService;
 import com.qwazr.utils.server.ServerException;
-import com.qwazr.utils.server.WebAppExceptionHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -96,8 +96,8 @@ public class WebCrawlerMultiClient extends JsonMultiClientAbstract<WebCrawlerSin
 	}
 
 	@Override
-	public WebCrawlStatus runSession(String session_name, WebCrawlDefinition crawlDefinition) {
-		WebAppExceptionHolder exceptionHolder = new WebAppExceptionHolder(logger);
+	public WebCrawlStatus runSession(final String session_name, final WebCrawlDefinition crawlDefinition) {
+		final ExceptionUtils.Holder exceptionHolder = new ExceptionUtils.Holder(logger);
 		for (WebCrawlerSingleClient client : this) {
 			try {
 				return client.runSession(session_name, crawlDefinition);
@@ -105,10 +105,10 @@ public class WebCrawlerMultiClient extends JsonMultiClientAbstract<WebCrawlerSin
 				exceptionHolder.switchAndWarn(e);
 			}
 		}
-		WebApplicationException e = exceptionHolder.getException();
+		final WebApplicationException e = exceptionHolder.getException();
 		if (e == null)
 			return null;
-		HttpResponseEntityException hree = HttpResponseEntityException.findFirstCause(e);
+		final HttpResponseEntityException hree = HttpResponseEntityException.findFirstCause(e);
 		if (hree != null)
 			throw ServerException.getServerException(hree).getJsonException();
 		throw e;
