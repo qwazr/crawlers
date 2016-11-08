@@ -14,10 +14,6 @@
         <version>1.0.1-SNAPSHOT</version>
     </parent>
 
-    <properties>
-        <selenium.version>2.53.1</selenium.version>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>io.undertow</groupId>
@@ -26,6 +22,7 @@
         <dependency>
             <groupId>io.undertow</groupId>
             <artifactId>undertow-servlet</artifactId>
+            <version>${undertow.version}</version>
         </dependency>
         <dependency>
             <groupId>com.qwazr</groupId>
