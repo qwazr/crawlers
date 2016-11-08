@@ -25,7 +25,6 @@ import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.htmlunit.HtmlUnitDriver;
 import org.openqa.selenium.htmlunit.HtmlUnitWebElement;
-import org.openqa.selenium.remote.SessionNotFoundException;
 
 import java.net.*;
 import java.util.ArrayList;
@@ -101,8 +100,6 @@ public class HtmlUnitDriverWebClient extends HtmlUnitDriver {
 			// This might be expected
 		} catch (SocketTimeoutException e) {
 			throw new TimeoutException(e);
-		} catch (SessionNotFoundException e) {
-			throw e;
 		} catch (Exception e) {
 			throw new WebDriverException(e);
 		}
@@ -135,12 +132,12 @@ public class HtmlUnitDriverWebClient extends HtmlUnitDriver {
 		// Set the form type
 		if (requestDef.form_encoding_type != null) {
 			switch (requestDef.form_encoding_type) {
-			case URL_ENCODED:
-				request.setEncodingType(com.gargoylesoftware.htmlunit.FormEncodingType.URL_ENCODED);
-				break;
-			case MULTIPART:
-				request.setEncodingType(com.gargoylesoftware.htmlunit.FormEncodingType.MULTIPART);
-				break;
+				case URL_ENCODED:
+					request.setEncodingType(com.gargoylesoftware.htmlunit.FormEncodingType.URL_ENCODED);
+					break;
+				case MULTIPART:
+					request.setEncodingType(com.gargoylesoftware.htmlunit.FormEncodingType.MULTIPART);
+					break;
 			}
 		}
 
