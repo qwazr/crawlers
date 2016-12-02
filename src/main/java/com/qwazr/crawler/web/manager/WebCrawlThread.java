@@ -493,7 +493,7 @@ public class WebCrawlThread implements Runnable {
 			return false;
 		timeTracker.next(null);
 		try {
-			Map<String, Object> objects = new TreeMap<String, Object>();
+			final Map<String, Object> objects = new HashMap<>();
 			objects.put("session", session);
 			if (script.variables != null)
 				objects.putAll(script.variables);
@@ -501,7 +501,7 @@ public class WebCrawlThread implements Runnable {
 				objects.put("driver", driver);
 			if (currentURI != null)
 				objects.put("current", currentURI);
-			ScriptRunThread scriptRunThread = ScriptManager.getInstance().runSync(script.name, objects);
+			final ScriptRunThread scriptRunThread = ScriptManager.getInstance().runSync(script.name, objects);
 			if (scriptRunThread.getException() != null)
 				throw new ServerException(scriptRunThread.getException());
 			return true;
