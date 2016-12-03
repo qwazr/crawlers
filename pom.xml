@@ -41,6 +41,11 @@
             <artifactId>qwazr-cluster</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.qwazr</groupId>
+            <artifactId>qwazr-webapps</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.seleniumhq.selenium</groupId>
             <artifactId>selenium-java</artifactId>
         </dependency>
