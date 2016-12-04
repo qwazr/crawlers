@@ -46,12 +46,14 @@ public class WebCrawlerManager {
 
 	private final ExecutorService executorService;
 
-	public synchronized static void load(final ServerBuilder serverBuilder) throws IOException {
+	public synchronized static void load(final ExecutorService executorService, final ServerBuilder builder)
+			throws IOException {
 		if (INSTANCE != null)
 			throw new IOException("Already loaded");
 		try {
-			INSTANCE = new WebCrawlerManager(serverBuilder.getExecutorService());
-			serverBuilder.registerWebService(WebCrawlerServiceImpl.class);
+			INSTANCE = new WebCrawlerManager(executorService);
+			if (builder != null)
+				builder.registerWebService(WebCrawlerServiceImpl.class);
 		} catch (URISyntaxException e) {
 			throw new IOException(e);
 		}
@@ -66,7 +68,7 @@ public class WebCrawlerManager {
 	private final LockUtils.ReadWriteLock rwlSessionMap = new LockUtils.ReadWriteLock();
 	private final HashMap<String, WebCrawlThread> crawlSessionMap;
 
-	private WebCrawlerManager(ExecutorService executor) throws IOException, URISyntaxException {
+	private WebCrawlerManager(final ExecutorService executor) throws IOException, URISyntaxException {
 		this.executorService = executor;
 		crawlSessionMap = new HashMap<>();
 	}
