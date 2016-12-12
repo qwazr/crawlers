@@ -1,5 +1,6 @@
-/target/
+target
 .classpath
 .project
 .settings
-/target/
+qwazr-crawlers.iml
+.idea
