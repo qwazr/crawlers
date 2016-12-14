@@ -18,10 +18,10 @@ package com.qwazr.crawler.web;
 import com.qwazr.classloader.ClassLoaderManager;
 import com.qwazr.cluster.manager.ClusterManager;
 import com.qwazr.crawler.web.manager.WebCrawlerManager;
-import com.qwazr.utils.server.GenericServer;
-import com.qwazr.utils.server.ServerBuilder;
-import com.qwazr.utils.server.ServerConfiguration;
-import com.qwazr.utils.server.WelcomeService;
+import com.qwazr.server.GenericServer;
+import com.qwazr.server.ServerBuilder;
+import com.qwazr.server.WelcomeShutdownService;
+import com.qwazr.server.configuration.ServerConfiguration;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,7 +37,7 @@ public class WebCrawlerServer extends GenericServer {
 	@Override
 	protected void build(final ExecutorService executorService, final ServerBuilder builder,
 			final ServerConfiguration configuration, final Collection<File> etcFiles) throws IOException {
-		builder.registerWebService(WelcomeService.class);
+		builder.registerWebService(WelcomeShutdownService.class);
 		ClassLoaderManager.load(configuration.dataDirectory, null);
 		ClusterManager.load(builder, configuration);
 		WebCrawlerManager.load(executorService, builder);

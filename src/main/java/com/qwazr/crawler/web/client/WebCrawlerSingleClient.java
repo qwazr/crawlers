@@ -21,8 +21,8 @@ import com.qwazr.crawler.web.service.WebCrawlStatus;
 import com.qwazr.crawler.web.service.WebCrawlerServiceInterface;
 import com.qwazr.utils.UBuilder;
 import com.qwazr.utils.http.HttpRequest;
-import com.qwazr.utils.json.client.JsonClientAbstract;
-import com.qwazr.utils.server.RemoteService;
+import com.qwazr.server.client.JsonClientAbstract;
+import com.qwazr.server.RemoteService;
 
 import javax.ws.rs.core.Response;
 import java.io.IOException;

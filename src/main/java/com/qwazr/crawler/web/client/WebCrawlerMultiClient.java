@@ -20,9 +20,9 @@ import com.qwazr.crawler.web.service.WebCrawlStatus;
 import com.qwazr.crawler.web.service.WebCrawlerServiceInterface;
 import com.qwazr.utils.ExceptionUtils;
 import com.qwazr.utils.http.HttpResponseEntityException;
-import com.qwazr.utils.json.client.JsonMultiClientAbstract;
-import com.qwazr.utils.server.RemoteService;
-import com.qwazr.utils.server.ServerException;
+import com.qwazr.server.client.JsonMultiClientAbstract;
+import com.qwazr.server.RemoteService;
+import com.qwazr.server.ServerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

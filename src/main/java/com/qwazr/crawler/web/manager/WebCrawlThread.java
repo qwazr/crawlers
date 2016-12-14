@@ -31,7 +31,7 @@ import com.qwazr.utils.RegExpUtils;
 import com.qwazr.utils.TimeTracker;
 import com.qwazr.utils.UBuilder;
 import com.qwazr.utils.WildcardMatcher;
-import com.qwazr.utils.server.ServerException;
+import com.qwazr.server.ServerException;
 import org.apache.commons.lang3.StringUtils;
 import org.openqa.selenium.*;
 import org.slf4j.Logger;

@@ -21,9 +21,9 @@ import com.qwazr.crawler.web.service.WebCrawlDefinition;
 import com.qwazr.crawler.web.service.WebCrawlStatus;
 import com.qwazr.crawler.web.service.WebCrawlerServiceImpl;
 import com.qwazr.utils.LockUtils;
-import com.qwazr.utils.server.RemoteService;
-import com.qwazr.utils.server.ServerBuilder;
-import com.qwazr.utils.server.ServerException;
+import com.qwazr.server.RemoteService;
+import com.qwazr.server.ServerBuilder;
+import com.qwazr.server.ServerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

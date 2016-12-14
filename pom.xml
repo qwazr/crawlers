@@ -3,7 +3,6 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.qwazr</groupId>
     <artifactId>qwazr-crawlers</artifactId>
     <name>QWAZR Crawlers</name>
     <version>1.1-SNAPSHOT</version>
@@ -20,18 +19,6 @@
         <dependency>
             <groupId>com.qwazr</groupId>
             <artifactId>qwazr-scripts</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.qwazr</groupId>
-            <artifactId>qwazr-utils</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.qwazr</groupId>
-            <artifactId>qwazr-library</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.qwazr</groupId>
-            <artifactId>qwazr-cluster</artifactId>
         </dependency>
         <dependency>
             <groupId>com.qwazr</groupId>
@@ -69,11 +56,9 @@
 
     <build>
         <plugins>
-
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>2.4.3</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
@@ -107,7 +92,6 @@
                     </execution>
                 </executions>
             </plugin>
-
         </plugins>
     </build>
 </project>

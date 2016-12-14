@@ -17,7 +17,7 @@ package com.qwazr.crawler.web.service;
 
 import com.qwazr.cluster.manager.ClusterManager;
 import com.qwazr.crawler.web.manager.WebCrawlerManager;
-import com.qwazr.utils.server.ServerException;
+import com.qwazr.server.ServerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -17,8 +17,8 @@ package com.qwazr.crawler.web.service;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.qwazr.crawler.web.CurrentSession;
 import com.qwazr.utils.TimeTracker;
+import com.qwazr.crawler.web.CurrentSession;
 
 @JsonInclude(Include.NON_NULL)
 public class WebCrawlStatus {
