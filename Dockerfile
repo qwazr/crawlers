@@ -2,7 +2,7 @@ FROM openjdk:8-jdk-alpine
 
 MAINTAINER Emmanuel Keller
 
-ADD target/qwazr-crawlers-1.1-SNAPSHOT-exec.jar /usr/share/qwazr/qwazr-crawlers.jar
+ADD target/qwazr-crawlers-1.1.0-SNAPSHOT-exec.jar /usr/share/qwazr/qwazr-crawlers.jar
 
 VOLUME /var/lib/qwazr
 

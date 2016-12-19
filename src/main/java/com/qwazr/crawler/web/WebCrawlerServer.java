@@ -18,33 +18,64 @@ package com.qwazr.crawler.web;
 import com.qwazr.classloader.ClassLoaderManager;
 import com.qwazr.cluster.manager.ClusterManager;
 import com.qwazr.crawler.web.manager.WebCrawlerManager;
+import com.qwazr.crawler.web.service.WebCrawlerServiceInterface;
+import com.qwazr.library.LibraryManager;
+import com.qwazr.scripts.ScriptManager;
+import com.qwazr.server.BaseServer;
 import com.qwazr.server.GenericServer;
-import com.qwazr.server.ServerBuilder;
 import com.qwazr.server.WelcomeShutdownService;
 import com.qwazr.server.configuration.ServerConfiguration;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
+import java.net.URISyntaxException;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-public class WebCrawlerServer extends GenericServer {
+public class WebCrawlerServer implements BaseServer {
 
-	private WebCrawlerServer(final ServerConfiguration serverConfiguration) throws IOException {
-		super(serverConfiguration);
+	private final GenericServer server;
+	private final WebCrawlerManager webCrawlerManager;
+
+	private WebCrawlerServer(final ServerConfiguration configuration) throws IOException, URISyntaxException {
+		final ExecutorService executorService = Executors.newCachedThreadPool();
+		final GenericServer.Builder builder = GenericServer.of(configuration, executorService);
+		builder.webService(WelcomeShutdownService.class);
+		final ClassLoaderManager classLoaderManager =
+				new ClassLoaderManager(configuration.dataDirectory, Thread.currentThread());
+		final ClusterManager clusterManager = new ClusterManager(builder);
+		final LibraryManager libraryManager = new LibraryManager(classLoaderManager, null, builder);
+		final ScriptManager scriptManager =
+				new ScriptManager(executorService, classLoaderManager, clusterManager, libraryManager, builder);
+		webCrawlerManager = new WebCrawlerManager(clusterManager, scriptManager, executorService, builder);
+		server = builder.build();
 	}
 
 	@Override
-	protected void build(final ExecutorService executorService, final ServerBuilder builder,
-			final ServerConfiguration configuration, final Collection<File> etcFiles) throws IOException {
-		builder.registerWebService(WelcomeShutdownService.class);
-		ClassLoaderManager.load(configuration.dataDirectory, null);
-		ClusterManager.load(builder, configuration);
-		WebCrawlerManager.load(executorService, builder);
+	public GenericServer getServer() {
+		return server;
 	}
 
-	public static void main(final String... args) throws Exception {
-		new WebCrawlerServer(new ServerConfiguration(args)).start(true);
+	public WebCrawlerServiceInterface getService() {
+		return webCrawlerManager.getService();
+	}
+
+	private static volatile WebCrawlerServer INSTANCE;
+
+	public WebCrawlerServer getInstance() {
+		return INSTANCE;
+	}
+
+	public static synchronized void main(final String... args) throws Exception {
+		shutdown();
+		INSTANCE = new WebCrawlerServer(new ServerConfiguration(args));
+		INSTANCE.start();
+	}
+
+	public static synchronized void shutdown() {
+		if (INSTANCE == null)
+			return;
+		INSTANCE.stop();
+		INSTANCE = null;
 	}
 
 }

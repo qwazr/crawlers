@@ -16,7 +16,6 @@
 package com.qwazr.crawler.web.manager;
 
 import com.google.common.net.InternetDomainName;
-import com.qwazr.cluster.manager.ClusterManager;
 import com.qwazr.crawler.web.CurrentURI;
 import com.qwazr.crawler.web.driver.BrowserDriver;
 import com.qwazr.crawler.web.driver.BrowserDriverBuilder;
@@ -25,15 +24,18 @@ import com.qwazr.crawler.web.service.WebCrawlDefinition.EventEnum;
 import com.qwazr.crawler.web.service.WebCrawlDefinition.Script;
 import com.qwazr.crawler.web.service.WebCrawlStatus;
 import com.qwazr.crawler.web.service.WebRequestDefinition;
-import com.qwazr.scripts.ScriptManager;
 import com.qwazr.scripts.ScriptRunThread;
+import com.qwazr.server.ServerException;
 import com.qwazr.utils.RegExpUtils;
 import com.qwazr.utils.TimeTracker;
 import com.qwazr.utils.UBuilder;
 import com.qwazr.utils.WildcardMatcher;
-import com.qwazr.server.ServerException;
 import org.apache.commons.lang3.StringUtils;
-import org.openqa.selenium.*;
+import org.openqa.selenium.By;
+import org.openqa.selenium.Cookie;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebDriverException;
+import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,16 +47,25 @@ import java.net.URISyntaxException;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.PatternSyntaxException;
 
 public class WebCrawlThread implements Runnable {
 
-	private static final Logger logger = LoggerFactory.getLogger(WebCrawlThread.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(WebCrawlThread.class);
 
+	private final WebCrawlerManager webCrawlerManager;
 	private final CurrentSessionImpl session;
-	final WebCrawlDefinition crawlDefinition;
+	private final WebCrawlDefinition crawlDefinition;
 	private final InternetDomainName internetDomainName;
 
 	private final List<Matcher> parametersMatcherList;
@@ -69,8 +80,10 @@ public class WebCrawlThread implements Runnable {
 
 	private final TimeTracker timeTracker;
 
-	WebCrawlThread(final String sessionName, final WebCrawlDefinition crawlDefinition) throws ServerException {
+	WebCrawlThread(final WebCrawlerManager webCrawlerManager, final String sessionName,
+			final WebCrawlDefinition crawlDefinition) throws ServerException {
 		timeTracker = new TimeTracker();
+		this.webCrawlerManager = webCrawlerManager;
 		this.session = new CurrentSessionImpl(crawlDefinition, sessionName, timeTracker);
 		this.crawlDefinition = crawlDefinition;
 		if (crawlDefinition.browser_type == null)
@@ -111,7 +124,8 @@ public class WebCrawlThread implements Runnable {
 	}
 
 	WebCrawlStatus getStatus() {
-		return new WebCrawlStatus(ClusterManager.INSTANCE.getHttpAddressKey(), crawlDefinition.entry_url, session);
+		return new WebCrawlStatus(webCrawlerManager.getClusterManager().getHttpAddressKey(), crawlDefinition.entry_url,
+				session);
 	}
 
 	void abort(String reason) {
@@ -159,7 +173,7 @@ public class WebCrawlThread implements Runnable {
 		try {
 			return uriBuilder.build();
 		} catch (URISyntaxException e) {
-			logger.warn("Cannot build the URI from " + uri.toString(), e);
+			LOGGER.warn("Cannot build the URI from " + uri.toString(), e);
 			return null;
 		}
 	}
@@ -221,8 +235,8 @@ public class WebCrawlThread implements Runnable {
 		if (!"http".equalsIgnoreCase(scheme) && !"https".equalsIgnoreCase(scheme)) {
 			session.incIgnoredCount();
 			currentURI.setIgnored(true);
-			if (logger.isInfoEnabled())
-				logger.info("Ignored (not http) " + uri);
+			if (LOGGER.isInfoEnabled())
+				LOGGER.info("Ignored (not http) " + uri);
 			return;
 		}
 
@@ -237,8 +251,8 @@ public class WebCrawlThread implements Runnable {
 		}
 
 		// Load the URL
-		if (logger.isInfoEnabled())
-			logger.info("Crawling " + uri + " (" + currentURI.getDepth() + ")");
+		if (LOGGER.isInfoEnabled())
+			LOGGER.info("Crawling " + uri + " (" + currentURI.getDepth() + ")");
 		try {
 			timeTracker.next(null);
 			crawlProvider.apply();
@@ -265,8 +279,8 @@ public class WebCrawlThread implements Runnable {
 		// Check again with exclusion/inclusion list
 		// in case of redirection
 		if (currentURI.isRedirected()) {
-			if (logger.isInfoEnabled())
-				logger.info("Redirected " + currentURI.getInitialURI() + " to " + uriString);
+			if (LOGGER.isInfoEnabled())
+				LOGGER.info("Redirected " + currentURI.getInitialURI() + " to " + uriString);
 			try {
 				scriptBeforeCrawl(currentURI, uriString);
 			} catch (Exception e) {
@@ -296,15 +310,15 @@ public class WebCrawlThread implements Runnable {
 					try {
 						currentURI.setBaseURI(new URI(href));
 					} catch (URISyntaxException e) {
-						if (logger.isWarnEnabled())
-							logger.warn("Invalid URI in base HREF: " + href + " in " + uriString);
+						if (LOGGER.isWarnEnabled())
+							LOGGER.warn("Invalid URI in base HREF: " + href + " in " + uriString);
 					}
 				}
 			} catch (org.openqa.selenium.NoSuchElementException e) {
 				// OK that's not really an error
 			} catch (Exception e) {
-				if (logger.isWarnEnabled())
-					logger.warn("Cannot locate base href for " + uriString + " " + e.getMessage());
+				if (LOGGER.isWarnEnabled())
+					LOGGER.warn("Cannot locate base href for " + uriString + " " + e.getMessage());
 			}
 		}
 
@@ -319,8 +333,8 @@ public class WebCrawlThread implements Runnable {
 			timeTracker.next(null);
 			driver.findLinks(driver, hrefSet);
 		} catch (Exception e) {
-			if (logger.isWarnEnabled())
-				logger.warn("Cannot extract links from " + uriString, e);
+			if (LOGGER.isWarnEnabled())
+				LOGGER.warn("Cannot extract links from " + uriString, e);
 		} finally {
 			timeTracker.next("Find links");
 		}
@@ -329,8 +343,8 @@ public class WebCrawlThread implements Runnable {
 		final ArrayList<URI> uris = new ArrayList<>(hrefSet.size());
 		currentURI.hrefToURICollection(hrefSet, uris);
 		currentURI.setLinks(uris);
-		if (logger.isInfoEnabled())
-			logger.info("Link founds " + uri + " : " + uris.size());
+		if (LOGGER.isInfoEnabled())
+			LOGGER.info("Link founds " + uri + " : " + uris.size());
 
 		final ArrayList<URI> filteredURIs = new ArrayList<>();
 		for (URI u : uris) {
@@ -462,13 +476,13 @@ public class WebCrawlThread implements Runnable {
 			try {
 				crawlOne(crawledURIs, new GetProvider(uri), null, depth);
 			} catch (URISyntaxException e) {
-				logger.warn("Malformed URI: " + uri);
+				LOGGER.warn("Malformed URI: " + uri);
 			} catch (InterruptedException e) {
-				logger.warn("Interruption on " + uri, e);
+				LOGGER.warn("Interruption on " + uri, e);
 			} catch (IOException e) {
-				logger.warn("IO Exception on " + uri, e);
+				LOGGER.warn("IO Exception on " + uri, e);
 			} catch (ClassNotFoundException e) {
-				logger.error("Cannot crawl " + uri, e);
+				LOGGER.error("Cannot crawl " + uri, e);
 			}
 		});
 	}
@@ -501,7 +515,7 @@ public class WebCrawlThread implements Runnable {
 				objects.put("driver", driver);
 			if (currentURI != null)
 				objects.put("current", currentURI);
-			final ScriptRunThread scriptRunThread = ScriptManager.getInstance().runSync(script.name, objects);
+			final ScriptRunThread scriptRunThread = webCrawlerManager.getScriptManager().runSync(script.name, objects);
 			if (scriptRunThread.getException() != null)
 				throw new ServerException(scriptRunThread.getException());
 			return true;
@@ -532,7 +546,7 @@ public class WebCrawlThread implements Runnable {
 				if (driver != null)
 					driver.quit();
 			} catch (Exception e) {
-				logger.warn(e.getMessage(), e);
+				LOGGER.warn(e.getMessage(), e);
 			}
 			script(EventEnum.after_session, null);
 		}
@@ -543,9 +557,9 @@ public class WebCrawlThread implements Runnable {
 		try {
 			runner();
 		} catch (Exception e) {
-			logger.error(e.getMessage(), e);
+			LOGGER.error(e.getMessage(), e);
 		} finally {
-			WebCrawlerManager.INSTANCE.removeSession(this);
+			webCrawlerManager.removeSession(this);
 		}
 	}
 

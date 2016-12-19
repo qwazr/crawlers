@@ -15,65 +15,80 @@
  **/
 package com.qwazr.crawler.web.service;
 
-import com.qwazr.cluster.manager.ClusterManager;
 import com.qwazr.crawler.web.manager.WebCrawlerManager;
+import com.qwazr.server.AbstractServiceImpl;
 import com.qwazr.server.ServerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.PostConstruct;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
 import java.util.TreeMap;
 
-public class WebCrawlerServiceImpl implements WebCrawlerServiceInterface {
+public class WebCrawlerServiceImpl extends AbstractServiceImpl implements WebCrawlerServiceInterface {
 
-	private static final Logger logger = LoggerFactory.getLogger(WebCrawlerServiceImpl.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(WebCrawlerServiceImpl.class);
 
-	@Override
-	public TreeMap<String, WebCrawlStatus> getSessions(String group) {
-		// Read the sessions in the local node
-		if (!ClusterManager.INSTANCE.isGroup(group))
-			return new TreeMap<>();
-		return WebCrawlerManager.getInstance().getSessions();
+	private volatile WebCrawlerManager webrawlerManager;
+
+	public WebCrawlerServiceImpl(WebCrawlerManager webrawlerManager) {
+		this.webrawlerManager = webrawlerManager;
+	}
+
+	public WebCrawlerServiceImpl() {
+	}
+
+	@PostConstruct
+	public void init() {
+		webrawlerManager = getContextAttribute(WebCrawlerManager.class);
 	}
 
 	@Override
-	public WebCrawlStatus getSession(String session_name, String group) {
+	public TreeMap<String, WebCrawlStatus> getSessions(final String group) {
+		// Read the sessions in the local node
+		if (!webrawlerManager.getClusterManager().isGroup(group))
+			return new TreeMap<>();
+		return webrawlerManager.getSessions();
+	}
+
+	@Override
+	public WebCrawlStatus getSession(final String session_name, final String group) {
 		try {
-			WebCrawlStatus status = ClusterManager.INSTANCE.isGroup(group) ?
-					WebCrawlerManager.getInstance().getSession(session_name) :
+			final WebCrawlStatus status = webrawlerManager.getClusterManager().isGroup(group) ?
+					webrawlerManager.getSession(session_name) :
 					null;
 			if (status != null)
 				return status;
 			throw new ServerException(Status.NOT_FOUND, "Session not found");
 		} catch (ServerException e) {
-			throw ServerException.getJsonException(logger, e);
+			throw ServerException.getJsonException(LOGGER, e);
 		}
 	}
 
 	@Override
-	public Response abortSession(String session_name, String reason, String group) {
+	public Response abortSession(final String session_name, final String reason, final String group) {
 		try {
-			if (!ClusterManager.INSTANCE.isGroup(group))
+			if (!webrawlerManager.getClusterManager().isGroup(group))
 				throw new ServerException(Status.NOT_FOUND, "Session not found");
-			WebCrawlerManager.getInstance().abortSession(session_name, reason);
+			webrawlerManager.abortSession(session_name, reason);
 			return Response.accepted().build();
 		} catch (ServerException e) {
-			throw ServerException.getTextException(logger, e);
+			throw ServerException.getTextException(LOGGER, e);
 		}
 	}
 
 	@Override
-	public WebCrawlStatus runSession(String session_name, WebCrawlDefinition crawlDefinition) {
+	public WebCrawlStatus runSession(final String session_name, final WebCrawlDefinition crawlDefinition) {
 		try {
-			return WebCrawlerManager.getInstance().runSession(session_name, crawlDefinition);
+			return webrawlerManager.runSession(session_name, crawlDefinition);
 		} catch (ServerException e) {
-			throw ServerException.getJsonException(logger, e);
+			throw ServerException.getJsonException(LOGGER, e);
 		}
 	}
 
-	public WebCrawlStatus runSession(String session_name, String jsonCrawlDefinition) throws IOException {
+	public WebCrawlStatus runSession(final String session_name, final String jsonCrawlDefinition) throws IOException {
 		return runSession(session_name, WebCrawlDefinition.newInstance(jsonCrawlDefinition));
 	}
 

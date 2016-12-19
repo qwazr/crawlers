@@ -15,26 +15,28 @@
  **/
 package com.qwazr.crawler.web.service;
 
-import com.qwazr.cluster.manager.ClusterManager;
-import com.qwazr.crawler.web.client.WebCrawlerMultiClient;
-import com.qwazr.crawler.web.client.WebCrawlerSingleClient;
-import com.qwazr.crawler.web.manager.WebCrawlerManager;
-import com.qwazr.server.RemoteService;
 import com.qwazr.server.ServiceInterface;
 import com.qwazr.server.ServiceName;
 
 import javax.annotation.security.RolesAllowed;
-import javax.ws.rs.*;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
-import java.net.URISyntaxException;
-import java.util.SortedSet;
 import java.util.TreeMap;
 
-@RolesAllowed(WebCrawlerManager.SERVICE_NAME_WEBCRAWLER)
+@RolesAllowed(WebCrawlerServiceInterface.SERVICE_NAME)
 @Path("/crawler/web")
-@ServiceName(WebCrawlerManager.SERVICE_NAME_WEBCRAWLER)
+@ServiceName(WebCrawlerServiceInterface.SERVICE_NAME)
 public interface WebCrawlerServiceInterface extends ServiceInterface {
+
+	String SERVICE_NAME = "webcrawler";
 
 	@GET
 	@Path("/sessions")
@@ -59,22 +61,4 @@ public interface WebCrawlerServiceInterface extends ServiceInterface {
 
 	WebCrawlStatus runSession(String session_name, String jsonCrawlDefinition) throws IOException;
 
-	static WebCrawlerServiceInterface getClient(Boolean local, String group) throws URISyntaxException {
-		if (local != null && local) {
-			WebCrawlerManager.getInstance();
-			return new WebCrawlerServiceImpl();
-		}
-		SortedSet<String> urls =
-				ClusterManager.INSTANCE.getNodesByGroupByService(group, WebCrawlerManager.SERVICE_NAME_WEBCRAWLER);
-		if (urls == null || urls.isEmpty())
-			throw new WebApplicationException(
-					"No node available for service " + WebCrawlerManager.SERVICE_NAME_WEBCRAWLER + " group: " + group,
-					Response.Status.NOT_FOUND);
-		switch (urls.size()) {
-		case 1:
-			return new WebCrawlerSingleClient(new RemoteService(urls.first()));
-		default:
-			return new WebCrawlerMultiClient(RemoteService.build(urls));
-		}
-	}
 }
