@@ -16,9 +16,13 @@
 package com.qwazr.crawler.web.test;
 
 import com.qwazr.crawler.web.WebCrawlerServer;
+import com.qwazr.crawler.web.service.WebCrawlStatus;
+import org.junit.Assert;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
+
+import java.util.TreeMap;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class WebCrawlerTest {
@@ -26,6 +30,20 @@ public class WebCrawlerTest {
 	@Test
 	public void test100startServer() throws Exception {
 		WebCrawlerServer.main();
+		Assert.assertNotNull(WebCrawlerServer.getInstance().getService());
+	}
+
+	@Test
+	public void test200emptySessions() {
+		TreeMap<String, WebCrawlStatus> sessions = WebCrawlerServer.getInstance().getService().getSessions(null);
+		Assert.assertNotNull(sessions);
+		Assert.assertTrue(sessions.isEmpty());
+	}
+
+	@Test
+	public void test900stopServer() throws Exception {
+		WebCrawlerServer.shutdown();
+		Assert.assertNull(WebCrawlerServer.getInstance());
 	}
 
 }

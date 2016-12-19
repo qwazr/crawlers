@@ -61,7 +61,7 @@ public class WebCrawlerServer implements BaseServer {
 
 	private static volatile WebCrawlerServer INSTANCE;
 
-	public WebCrawlerServer getInstance() {
+	public static WebCrawlerServer getInstance() {
 		return INSTANCE;
 	}
 
