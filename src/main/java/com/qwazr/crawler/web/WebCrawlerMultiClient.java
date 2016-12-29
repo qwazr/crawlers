@@ -13,11 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-package com.qwazr.crawler.web.client;
+package com.qwazr.crawler.web;
 
-import com.qwazr.crawler.web.service.WebCrawlDefinition;
-import com.qwazr.crawler.web.service.WebCrawlStatus;
-import com.qwazr.crawler.web.service.WebCrawlerServiceInterface;
 import com.qwazr.utils.ExceptionUtils;
 import com.qwazr.utils.http.HttpResponseEntityException;
 import com.qwazr.server.client.JsonMultiClientAbstract;

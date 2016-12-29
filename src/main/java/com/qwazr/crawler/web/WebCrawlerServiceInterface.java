@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-package com.qwazr.crawler.web.service;
+package com.qwazr.crawler.web;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.qwazr.server.ServiceInterface;
 import com.qwazr.server.ServiceName;
 
@@ -60,5 +61,9 @@ public interface WebCrawlerServiceInterface extends ServiceInterface {
 	WebCrawlStatus runSession(@PathParam("session_name") String session_name, WebCrawlDefinition crawlDefinition);
 
 	WebCrawlStatus runSession(String session_name, String jsonCrawlDefinition) throws IOException;
+
+	TypeReference<TreeMap<String, WebCrawlStatus>> TreeMapStringCrawlTypeRef =
+			new TypeReference<TreeMap<String, WebCrawlStatus>>() {
+			};
 
 }

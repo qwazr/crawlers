@@ -18,7 +18,7 @@ package com.qwazr.crawler.web.driver;
 import com.gargoylesoftware.htmlunit.*;
 import com.gargoylesoftware.htmlunit.html.DomElement;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
-import com.qwazr.crawler.web.service.WebRequestDefinition;
+import com.qwazr.crawler.web.WebRequestDefinition;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.http.HttpUtils;
 import org.apache.http.entity.mime.MIME;

@@ -18,7 +18,7 @@ package com.qwazr.crawler.web.driver;
 import com.gargoylesoftware.htmlunit.*;
 import com.gargoylesoftware.htmlunit.html.DomElement;
 import com.gargoylesoftware.htmlunit.util.NameValuePair;
-import com.qwazr.crawler.web.service.WebRequestDefinition;
+import com.qwazr.crawler.web.WebRequestDefinition;
 import org.openqa.selenium.Capabilities;
 import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriverException;

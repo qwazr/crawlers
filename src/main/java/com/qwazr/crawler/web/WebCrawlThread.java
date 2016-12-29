@@ -13,17 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-package com.qwazr.crawler.web.manager;
+package com.qwazr.crawler.web;
 
 import com.google.common.net.InternetDomainName;
-import com.qwazr.crawler.web.CurrentURI;
 import com.qwazr.crawler.web.driver.BrowserDriver;
 import com.qwazr.crawler.web.driver.BrowserDriverBuilder;
-import com.qwazr.crawler.web.service.WebCrawlDefinition;
-import com.qwazr.crawler.web.service.WebCrawlDefinition.EventEnum;
-import com.qwazr.crawler.web.service.WebCrawlDefinition.Script;
-import com.qwazr.crawler.web.service.WebCrawlStatus;
-import com.qwazr.crawler.web.service.WebRequestDefinition;
+import com.qwazr.crawler.web.WebCrawlDefinition.EventEnum;
+import com.qwazr.crawler.web.WebCrawlDefinition.Script;
 import com.qwazr.scripts.ScriptRunThread;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.RegExpUtils;
@@ -124,8 +120,7 @@ public class WebCrawlThread implements Runnable {
 	}
 
 	WebCrawlStatus getStatus() {
-		return new WebCrawlStatus(webCrawlerManager.getClusterManager().getHttpAddressKey(), crawlDefinition.entry_url,
-				session);
+		return new WebCrawlStatus(webCrawlerManager.myAddress, crawlDefinition.entry_url, session);
 	}
 
 	void abort(String reason) {
@@ -515,7 +510,7 @@ public class WebCrawlThread implements Runnable {
 				objects.put("driver", driver);
 			if (currentURI != null)
 				objects.put("current", currentURI);
-			final ScriptRunThread scriptRunThread = webCrawlerManager.getScriptManager().runSync(script.name, objects);
+			final ScriptRunThread scriptRunThread = webCrawlerManager.scriptManager.runSync(script.name, objects);
 			if (scriptRunThread.getException() != null)
 				throw new ServerException(scriptRunThread.getException());
 			return true;

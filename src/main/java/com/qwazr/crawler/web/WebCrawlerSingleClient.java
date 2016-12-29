@@ -13,30 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-package com.qwazr.crawler.web.client;
+package com.qwazr.crawler.web;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.qwazr.crawler.web.service.WebCrawlDefinition;
-import com.qwazr.crawler.web.service.WebCrawlStatus;
-import com.qwazr.crawler.web.service.WebCrawlerServiceInterface;
+import com.qwazr.server.RemoteService;
+import com.qwazr.server.client.JsonClientAbstract;
 import com.qwazr.utils.UBuilder;
 import com.qwazr.utils.http.HttpRequest;
-import com.qwazr.server.client.JsonClientAbstract;
-import com.qwazr.server.RemoteService;
 
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.TreeMap;
 
-public class WebCrawlerSingleClient extends JsonClientAbstract implements WebCrawlerServiceInterface {
+class WebCrawlerSingleClient extends JsonClientAbstract implements WebCrawlerServiceInterface {
 
-	public WebCrawlerSingleClient(final RemoteService remote) {
+	WebCrawlerSingleClient(final RemoteService remote) {
 		super(remote);
 	}
-
-	public final static TypeReference<TreeMap<String, WebCrawlStatus>> TreeMapStringCrawlTypeRef =
-			new TypeReference<TreeMap<String, WebCrawlStatus>>() {
-			};
 
 	@Override
 	public TreeMap<String, WebCrawlStatus> getSessions(final String group) {

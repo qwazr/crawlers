@@ -13,9 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-package com.qwazr.crawler.web.service;
+package com.qwazr.crawler.web;
 
-import com.qwazr.crawler.web.manager.WebCrawlerManager;
 import com.qwazr.server.AbstractServiceImpl;
 import com.qwazr.server.ServerException;
 import org.slf4j.Logger;
@@ -27,13 +26,13 @@ import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
 import java.util.TreeMap;
 
-public class WebCrawlerServiceImpl extends AbstractServiceImpl implements WebCrawlerServiceInterface {
+class WebCrawlerServiceImpl extends AbstractServiceImpl implements WebCrawlerServiceInterface {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(WebCrawlerServiceImpl.class);
 
 	private volatile WebCrawlerManager webrawlerManager;
 
-	public WebCrawlerServiceImpl(WebCrawlerManager webrawlerManager) {
+	WebCrawlerServiceImpl(WebCrawlerManager webrawlerManager) {
 		this.webrawlerManager = webrawlerManager;
 	}
 
@@ -48,7 +47,7 @@ public class WebCrawlerServiceImpl extends AbstractServiceImpl implements WebCra
 	@Override
 	public TreeMap<String, WebCrawlStatus> getSessions(final String group) {
 		// Read the sessions in the local node
-		if (!webrawlerManager.getClusterManager().isGroup(group))
+		if (!webrawlerManager.clusterService.isGroup(group))
 			return new TreeMap<>();
 		return webrawlerManager.getSessions();
 	}
@@ -56,9 +55,8 @@ public class WebCrawlerServiceImpl extends AbstractServiceImpl implements WebCra
 	@Override
 	public WebCrawlStatus getSession(final String session_name, final String group) {
 		try {
-			final WebCrawlStatus status = webrawlerManager.getClusterManager().isGroup(group) ?
-					webrawlerManager.getSession(session_name) :
-					null;
+			final WebCrawlStatus status =
+					webrawlerManager.clusterService.isGroup(group) ? webrawlerManager.getSession(session_name) : null;
 			if (status != null)
 				return status;
 			throw new ServerException(Status.NOT_FOUND, "Session not found");
@@ -70,7 +68,7 @@ public class WebCrawlerServiceImpl extends AbstractServiceImpl implements WebCra
 	@Override
 	public Response abortSession(final String session_name, final String reason, final String group) {
 		try {
-			if (!webrawlerManager.getClusterManager().isGroup(group))
+			if (!webrawlerManager.clusterService.isGroup(group))
 				throw new ServerException(Status.NOT_FOUND, "Session not found");
 			webrawlerManager.abortSession(session_name, reason);
 			return Response.accepted().build();

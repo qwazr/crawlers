@@ -16,8 +16,8 @@
 package com.qwazr.crawler.web.driver;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.qwazr.crawler.web.service.WebCrawlDefinition;
-import com.qwazr.crawler.web.service.WebRequestDefinition;
+import com.qwazr.crawler.web.WebCrawlDefinition;
+import com.qwazr.crawler.web.WebRequestDefinition;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.http.HttpClients;

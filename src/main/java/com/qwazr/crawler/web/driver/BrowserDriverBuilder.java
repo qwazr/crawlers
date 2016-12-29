@@ -15,7 +15,7 @@
  **/
 package com.qwazr.crawler.web.driver;
 
-import com.qwazr.crawler.web.service.WebCrawlDefinition;
+import com.qwazr.crawler.web.WebCrawlDefinition;
 import org.apache.commons.lang3.RandomUtils;
 import org.openqa.selenium.Cookie;
 import org.openqa.selenium.Proxy;

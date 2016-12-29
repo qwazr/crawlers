@@ -14,7 +14,7 @@
  * limitations under the License.
  **/
 
-package com.qwazr.crawler.web.service;
+package com.qwazr.crawler.web;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.gargoylesoftware.htmlunit.HttpMethod;

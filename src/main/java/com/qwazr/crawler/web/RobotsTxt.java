@@ -13,10 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-package com.qwazr.crawler.web.manager;
+package com.qwazr.crawler.web;
 
 import com.qwazr.crawler.web.driver.BrowserDriver;
-import com.qwazr.crawler.web.service.WebCrawlDefinition;
 import com.qwazr.utils.CharsetUtils;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.LinkUtils;

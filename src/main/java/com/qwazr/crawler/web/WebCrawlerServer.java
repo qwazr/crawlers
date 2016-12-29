@@ -16,9 +16,7 @@
 package com.qwazr.crawler.web;
 
 import com.qwazr.classloader.ClassLoaderManager;
-import com.qwazr.cluster.manager.ClusterManager;
-import com.qwazr.crawler.web.manager.WebCrawlerManager;
-import com.qwazr.crawler.web.service.WebCrawlerServiceInterface;
+import com.qwazr.cluster.ClusterManager;
 import com.qwazr.library.LibraryManager;
 import com.qwazr.scripts.ScriptManager;
 import com.qwazr.server.BaseServer;
@@ -55,8 +53,8 @@ public class WebCrawlerServer implements BaseServer {
 		return server;
 	}
 
-	public WebCrawlerServiceInterface getService() {
-		return webCrawlerManager.getService();
+	public WebCrawlerServiceBuilder getServiceBuilder() {
+		return webCrawlerManager.getServiceBuilder();
 	}
 
 	private static volatile WebCrawlerServer INSTANCE;

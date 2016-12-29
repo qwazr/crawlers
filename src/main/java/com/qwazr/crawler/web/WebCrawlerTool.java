@@ -19,7 +19,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.qwazr.crawler.web.driver.BrowserDriver;
 import com.qwazr.crawler.web.driver.BrowserDriverBuilder;
-import com.qwazr.crawler.web.service.WebCrawlDefinition;
 import com.qwazr.library.AbstractLibrary;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.json.JsonMapper;

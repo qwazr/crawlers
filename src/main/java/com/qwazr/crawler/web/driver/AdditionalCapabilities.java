@@ -15,7 +15,7 @@
  **/
 package com.qwazr.crawler.web.driver;
 
-import com.qwazr.crawler.web.service.WebRequestDefinition;
+import com.qwazr.crawler.web.WebRequestDefinition;
 import org.openqa.selenium.WebElement;
 
 import java.io.File;
