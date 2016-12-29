@@ -32,7 +32,7 @@ import java.util.concurrent.Executors;
 public class WebCrawlerServer implements BaseServer {
 
 	private final GenericServer server;
-	private final WebCrawlerManager webCrawlerManager;
+	private final WebCrawlerServiceBuilder serviceBuilder;
 
 	private WebCrawlerServer(final ServerConfiguration configuration) throws IOException, URISyntaxException {
 		final ExecutorService executorService = Executors.newCachedThreadPool();
@@ -44,7 +44,9 @@ public class WebCrawlerServer implements BaseServer {
 		final LibraryManager libraryManager = new LibraryManager(classLoaderManager, null, builder);
 		final ScriptManager scriptManager =
 				new ScriptManager(executorService, classLoaderManager, clusterManager, libraryManager, builder);
-		webCrawlerManager = new WebCrawlerManager(clusterManager, scriptManager, executorService, builder);
+		final WebCrawlerManager webCrawlerManager =
+				new WebCrawlerManager(clusterManager, scriptManager, executorService, builder);
+		serviceBuilder = new WebCrawlerServiceBuilder(clusterManager, webCrawlerManager);
 		server = builder.build();
 	}
 
@@ -54,7 +56,7 @@ public class WebCrawlerServer implements BaseServer {
 	}
 
 	public WebCrawlerServiceBuilder getServiceBuilder() {
-		return webCrawlerManager.getServiceBuilder();
+		return serviceBuilder;
 	}
 
 	private static volatile WebCrawlerServer INSTANCE;

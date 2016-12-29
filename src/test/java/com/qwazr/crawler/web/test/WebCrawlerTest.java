@@ -17,6 +17,7 @@ package com.qwazr.crawler.web.test;
 
 import com.qwazr.crawler.web.WebCrawlStatus;
 import com.qwazr.crawler.web.WebCrawlerServer;
+import com.qwazr.crawler.web.WebCrawlerServiceBuilder;
 import com.qwazr.crawler.web.WebCrawlerServiceInterface;
 import com.qwazr.server.RemoteService;
 import org.junit.Assert;
@@ -29,18 +30,21 @@ import java.util.TreeMap;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class WebCrawlerTest {
 
-	private static WebCrawlerServiceInterface client;
+	private static WebCrawlerServiceInterface local;
+	private static WebCrawlerServiceInterface remote;
 
 	@Test
 	public void test100startServer() throws Exception {
 		WebCrawlerServer.main();
-		client = WebCrawlerServer.getInstance().getServiceBuilder().remote(new RemoteService("http://localhost:9091"));
-		Assert.assertNotNull(client);
+		local = WebCrawlerServer.getInstance().getServiceBuilder().local();
+		Assert.assertNotNull(local);
+		remote = new WebCrawlerServiceBuilder(null, null).remote(new RemoteService("http://localhost:9091"));
+		Assert.assertNotNull(remote);
 	}
 
 	@Test
 	public void test200emptySessions() {
-		TreeMap<String, WebCrawlStatus> sessions = client.getSessions(null);
+		TreeMap<String, WebCrawlStatus> sessions = remote.getSessions(null);
 		Assert.assertNotNull(sessions);
 		Assert.assertTrue(sessions.isEmpty());
 	}

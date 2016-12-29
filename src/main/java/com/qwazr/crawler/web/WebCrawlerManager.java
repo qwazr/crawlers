@@ -16,7 +16,6 @@
 package com.qwazr.crawler.web;
 
 import com.qwazr.cluster.ClusterManager;
-import com.qwazr.cluster.ClusterServiceInterface;
 import com.qwazr.scripts.ScriptManager;
 import com.qwazr.server.GenericServer;
 import com.qwazr.server.ServerException;
@@ -37,36 +36,32 @@ public class WebCrawlerManager {
 	private static final Logger LOGGER = LoggerFactory.getLogger(WebCrawlerManager.class);
 
 	final String myAddress;
-	final ClusterServiceInterface clusterService;
+	final ClusterManager clusterManager;
 	final ScriptManager scriptManager;
 	private final ExecutorService executorService;
 
 	private final LockUtils.ReadWriteLock rwlSessionMap = new LockUtils.ReadWriteLock();
 	private final HashMap<String, WebCrawlThread> crawlSessionMap;
 
-	private WebCrawlerServiceBuilder serviceBuilder;
+	private WebCrawlerServiceImpl service;
 
 	public WebCrawlerManager(final ClusterManager clusterManager, final ScriptManager scriptManager,
 			final ExecutorService executor, final GenericServer.Builder builder)
 			throws IOException, URISyntaxException {
 		this.scriptManager = scriptManager;
-		this.clusterService = clusterManager.getService();
-		myAddress = clusterService.getStatus().me;
+		this.clusterManager = clusterManager;
+		myAddress = clusterManager.getServiceBuilder().local().getStatus().me;
 		this.executorService = executor;
 		crawlSessionMap = new HashMap<>();
 		if (builder != null) {
 			builder.webService(WebCrawlerServiceImpl.class);
 			builder.contextAttribute(this);
 		}
-		serviceBuilder = new WebCrawlerServiceBuilder(new WebCrawlerServiceImpl(this));
+		service = new WebCrawlerServiceImpl(this);
 	}
 
-	WebCrawlerServiceInterface getService() {
-		return serviceBuilder.local;
-	}
-
-	WebCrawlerServiceBuilder getServiceBuilder() {
-		return serviceBuilder;
+	public WebCrawlerServiceInterface getService() {
+		return service;
 	}
 
 	TreeMap<String, WebCrawlStatus> getSessions() {

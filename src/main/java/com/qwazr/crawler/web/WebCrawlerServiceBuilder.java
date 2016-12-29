@@ -15,24 +15,19 @@
  **/
 package com.qwazr.crawler.web;
 
-import com.qwazr.cluster.ServiceBuilderInterface;
+import com.qwazr.cluster.ClusterManager;
+import com.qwazr.cluster.ServiceBuilderAbstract;
 import com.qwazr.server.RemoteService;
 
-public class WebCrawlerServiceBuilder implements ServiceBuilderInterface<WebCrawlerServiceInterface> {
+public class WebCrawlerServiceBuilder extends ServiceBuilderAbstract<WebCrawlerServiceInterface> {
 
-	final WebCrawlerServiceImpl local;
-
-	WebCrawlerServiceBuilder(WebCrawlerServiceImpl local) {
-		this.local = local;
+	public WebCrawlerServiceBuilder(final ClusterManager clusterManager, final WebCrawlerManager webCrawlerManager) {
+		super(clusterManager, WebCrawlerServiceInterface.SERVICE_NAME,
+				webCrawlerManager == null ? null : webCrawlerManager.getService());
 	}
 
 	@Override
-	public WebCrawlerServiceInterface local() {
-		return local;
-	}
-
-	@Override
-	public WebCrawlerServiceInterface remote(RemoteService remote) {
+	final public WebCrawlerServiceInterface remote(final RemoteService remote) {
 		return new WebCrawlerSingleClient(remote);
 	}
 }

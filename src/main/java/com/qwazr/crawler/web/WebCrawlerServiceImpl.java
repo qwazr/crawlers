@@ -47,7 +47,7 @@ class WebCrawlerServiceImpl extends AbstractServiceImpl implements WebCrawlerSer
 	@Override
 	public TreeMap<String, WebCrawlStatus> getSessions(final String group) {
 		// Read the sessions in the local node
-		if (!webrawlerManager.clusterService.isGroup(group))
+		if (!webrawlerManager.clusterManager.isGroup(group))
 			return new TreeMap<>();
 		return webrawlerManager.getSessions();
 	}
@@ -56,7 +56,7 @@ class WebCrawlerServiceImpl extends AbstractServiceImpl implements WebCrawlerSer
 	public WebCrawlStatus getSession(final String session_name, final String group) {
 		try {
 			final WebCrawlStatus status =
-					webrawlerManager.clusterService.isGroup(group) ? webrawlerManager.getSession(session_name) : null;
+					webrawlerManager.clusterManager.isGroup(group) ? webrawlerManager.getSession(session_name) : null;
 			if (status != null)
 				return status;
 			throw new ServerException(Status.NOT_FOUND, "Session not found");
@@ -68,7 +68,7 @@ class WebCrawlerServiceImpl extends AbstractServiceImpl implements WebCrawlerSer
 	@Override
 	public Response abortSession(final String session_name, final String reason, final String group) {
 		try {
-			if (!webrawlerManager.clusterService.isGroup(group))
+			if (!webrawlerManager.clusterManager.isGroup(group))
 				throw new ServerException(Status.NOT_FOUND, "Session not found");
 			webrawlerManager.abortSession(session_name, reason);
 			return Response.accepted().build();
