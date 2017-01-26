@@ -38,7 +38,7 @@ public class WebCrawlerTest {
 		WebCrawlerServer.main();
 		local = WebCrawlerServer.getInstance().getServiceBuilder().local();
 		Assert.assertNotNull(local);
-		remote = new WebCrawlerServiceBuilder(null, null).remote(new RemoteService("http://localhost:9091"));
+		remote = new WebCrawlerServiceBuilder(null, null).remote(RemoteService.of("http://localhost:9091").build());
 		Assert.assertNotNull(remote);
 	}
 
