@@ -73,6 +73,8 @@ public class WebCrawlerTest {
 		webCrawl.setJavascriptEnabled(false);
 		webCrawl.setImplicitlyWait(0);
 		webCrawl.setDownloadImages(false);
+		webCrawl.setMaxUrlNumber(10);
+		webCrawl.setMaxDepth(2);
 		webCrawl.entry_url = WebAppTestServer.URL;
 		return webCrawl;
 	}
@@ -90,7 +92,7 @@ public class WebCrawlerTest {
 	public void test300SimpleCrawl() throws InterruptedException {
 		final String sessionName = RandomStringUtils.randomAlphanumeric(10);
 		remote.runSession(sessionName, getNewWebCrawl());
-		crawlWait(sessionName, 1);
+		crawlWait(sessionName, 3);
 	}
 
 	@Test
@@ -101,8 +103,8 @@ public class WebCrawlerTest {
 		webCrawl.scripts.put(WebCrawlDefinition.EventEnum.before_crawl,
 				new WebCrawlDefinition.Script(BeforeCrawl.class.getName()));
 		remote.runSession(sessionName, webCrawl);
-		crawlWait(sessionName, 1);
-		Assert.assertEquals(2, BeforeCrawl.count.get());
+		crawlWait(sessionName, 3);
+		Assert.assertEquals(4, BeforeCrawl.count.get());
 	}
 
 	@Test
