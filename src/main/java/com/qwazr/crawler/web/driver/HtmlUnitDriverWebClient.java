@@ -32,6 +32,9 @@ import java.util.List;
 
 public class HtmlUnitDriverWebClient extends HtmlUnitDriver {
 
+	public HtmlUnitDriverWebClient() {
+	}
+
 	public HtmlUnitDriverWebClient(Capabilities capabilities) {
 		super(capabilities);
 		if (capabilities != null) {
@@ -132,12 +135,12 @@ public class HtmlUnitDriverWebClient extends HtmlUnitDriver {
 		// Set the form type
 		if (requestDef.form_encoding_type != null) {
 			switch (requestDef.form_encoding_type) {
-				case URL_ENCODED:
-					request.setEncodingType(com.gargoylesoftware.htmlunit.FormEncodingType.URL_ENCODED);
-					break;
-				case MULTIPART:
-					request.setEncodingType(com.gargoylesoftware.htmlunit.FormEncodingType.MULTIPART);
-					break;
+			case URL_ENCODED:
+				request.setEncodingType(com.gargoylesoftware.htmlunit.FormEncodingType.URL_ENCODED);
+				break;
+			case MULTIPART:
+				request.setEncodingType(com.gargoylesoftware.htmlunit.FormEncodingType.MULTIPART);
+				break;
 			}
 		}
 

@@ -42,6 +42,9 @@ public class HtmlUnitBrowserDriver extends HtmlUnitDriverWebClient
 
 	protected static final Logger logger = LoggerFactory.getLogger(HtmlUnitBrowserDriver.class);
 
+	public HtmlUnitBrowserDriver() {
+	}
+	
 	public HtmlUnitBrowserDriver(Capabilities capabilities) {
 		super(capabilities);
 	}

@@ -105,7 +105,7 @@ class CurrentSessionImpl implements CurrentSession {
 	}
 
 	synchronized int incIgnoredCount() {
-		return ignoredCount++;
+		return ++ignoredCount;
 	}
 
 	@Override
@@ -114,7 +114,7 @@ class CurrentSessionImpl implements CurrentSession {
 	}
 
 	synchronized int incCrawledCount() {
-		return crawledCount++;
+		return ++crawledCount;
 	}
 
 	@Override
@@ -123,7 +123,7 @@ class CurrentSessionImpl implements CurrentSession {
 	}
 
 	synchronized int incErrorCount() {
-		return errorCount++;
+		return ++errorCount;
 	}
 
 	@Override
@@ -156,8 +156,8 @@ class CurrentSessionImpl implements CurrentSession {
 	}
 
 	public boolean isURLPatterns() {
-		return crawlDefinition != null && !CollectionUtils.isEmpty(crawlDefinition.inclusion_patterns) &&
-				!CollectionUtils.isEmpty(crawlDefinition.exclusion_patterns);
+		return crawlDefinition != null && !CollectionUtils.isEmpty(crawlDefinition.inclusion_patterns)
+				&& !CollectionUtils.isEmpty(crawlDefinition.exclusion_patterns);
 	}
 
 	public TimeTracker getTimeTracker() {

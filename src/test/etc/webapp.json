@@ -1,5 +1,5 @@
 {
   "statics": {
-    "/*": "html",
+    "/*": "statics/html"
   }
 }

@@ -15,23 +15,41 @@
  **/
 package com.qwazr.crawler.web.test;
 
+import com.qwazr.crawler.web.WebCrawlDefinition;
 import com.qwazr.crawler.web.WebCrawlStatus;
 import com.qwazr.crawler.web.WebCrawlerServer;
 import com.qwazr.crawler.web.WebCrawlerServiceBuilder;
 import com.qwazr.crawler.web.WebCrawlerServiceInterface;
 import com.qwazr.server.RemoteService;
+import com.qwazr.server.client.ErrorWrapper;
+import com.qwazr.utils.WaitFor;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
 import java.util.TreeMap;
+import java.util.HashMap;
+import java.util.concurrent.TimeUnit;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class WebCrawlerTest {
 
 	private static WebCrawlerServiceInterface local;
 	private static WebCrawlerServiceInterface remote;
+
+	@BeforeClass
+	public static void before() throws Exception {
+		WebAppTestServer.start();
+	}
+
+	@AfterClass
+	public static void after() throws InterruptedException {
+		WebAppTestServer.stop();
+	}
 
 	@Test
 	public void test100startServer() throws Exception {
@@ -47,6 +65,44 @@ public class WebCrawlerTest {
 		TreeMap<String, WebCrawlStatus> sessions = remote.getSessions(null);
 		Assert.assertNotNull(sessions);
 		Assert.assertTrue(sessions.isEmpty());
+	}
+
+	private WebCrawlDefinition getNewWebCrawl() {
+		final WebCrawlDefinition webCrawl = new WebCrawlDefinition();
+		webCrawl.setBrowserType("html_unit");
+		webCrawl.setJavascriptEnabled(false);
+		webCrawl.setImplicitlyWait(0);
+		webCrawl.setDownloadImages(false);
+		webCrawl.entry_url = WebAppTestServer.URL;
+		return webCrawl;
+	}
+
+	private void crawlWait(final String sessionName, final int crawlCount) throws InterruptedException {
+		WaitFor.of().timeOut(TimeUnit.MINUTES, 2).until(() -> {
+			WebCrawlStatus status = ErrorWrapper.bypass(() -> remote.getSession(sessionName, null), 404);
+			if (status == null)
+				return false;
+			return status.urls.crawled == crawlCount;
+		});
+	}
+
+	@Test
+	public void test300SimpleCrawl() throws InterruptedException {
+		final String sessionName = RandomStringUtils.randomAlphanumeric(10);
+		remote.runSession(sessionName, getNewWebCrawl());
+		crawlWait(sessionName, 1);
+	}
+
+	@Test
+	public void test400CrawlEvent() throws InterruptedException {
+		final String sessionName = RandomStringUtils.randomAlphanumeric(10);
+		final WebCrawlDefinition webCrawl = getNewWebCrawl();
+		webCrawl.scripts = new HashMap<>();
+		webCrawl.scripts.put(WebCrawlDefinition.EventEnum.before_crawl,
+				new WebCrawlDefinition.Script(BeforeCrawl.class.getName()));
+		remote.runSession(sessionName, webCrawl);
+		crawlWait(sessionName, 1);
+		Assert.assertEquals(2, BeforeCrawl.count.get());
 	}
 
 	@Test
