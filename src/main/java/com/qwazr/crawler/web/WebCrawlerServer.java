@@ -40,7 +40,7 @@ public class WebCrawlerServer implements BaseServer {
 		builder.webService(WelcomeShutdownService.class);
 		final ClassLoaderManager classLoaderManager =
 				new ClassLoaderManager(configuration.dataDirectory, Thread.currentThread());
-		final ClusterManager clusterManager = new ClusterManager(builder);
+		final ClusterManager clusterManager = new ClusterManager(builder, executorService);
 		final LibraryManager libraryManager = new LibraryManager(classLoaderManager, null, builder);
 		final ScriptManager scriptManager =
 				new ScriptManager(executorService, classLoaderManager, clusterManager, libraryManager, builder);
