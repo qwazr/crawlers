@@ -36,16 +36,22 @@ public class WebCrawlerServer implements BaseServer {
 
 	private WebCrawlerServer(final ServerConfiguration configuration) throws IOException, URISyntaxException {
 		final ExecutorService executorService = Executors.newCachedThreadPool();
-		final GenericServer.Builder builder = GenericServer.of(configuration, executorService);
-		builder.webService(WelcomeShutdownService.class);
+		final GenericServer.Builder builder =
+				GenericServer.of(configuration, executorService).webService(WelcomeShutdownService.class);
 		final ClassLoaderManager classLoaderManager =
-				new ClassLoaderManager(configuration.dataDirectory, Thread.currentThread());
-		final ClusterManager clusterManager = new ClusterManager(builder, executorService);
-		final LibraryManager libraryManager = new LibraryManager(classLoaderManager, null, builder);
+				new ClassLoaderManager(configuration.dataDirectory, Thread.currentThread()).registerContextAttribute(
+						builder);
+		final ClusterManager clusterManager =
+				new ClusterManager(executorService, configuration).registerHttpClientMonitoringThread(builder)
+						.registerProtocolListener(builder)
+						.registerWebService(builder);
+		final LibraryManager libraryManager = new LibraryManager(classLoaderManager, null, configuration.dataDirectory,
+				configuration.getEtcFiles()).registerWebService(builder);
 		final ScriptManager scriptManager =
-				new ScriptManager(executorService, classLoaderManager, clusterManager, libraryManager, builder);
+				new ScriptManager(executorService, classLoaderManager, clusterManager, libraryManager,
+						configuration.dataDirectory).registerWebService(builder);
 		final WebCrawlerManager webCrawlerManager =
-				new WebCrawlerManager(clusterManager, scriptManager, executorService, builder);
+				new WebCrawlerManager(clusterManager, scriptManager, executorService).registerWebService(builder);
 		serviceBuilder = new WebCrawlerServiceBuilder(clusterManager, webCrawlerManager);
 		server = builder.build();
 	}

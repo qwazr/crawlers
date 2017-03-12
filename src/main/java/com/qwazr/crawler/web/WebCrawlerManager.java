@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,18 +46,23 @@ public class WebCrawlerManager {
 	private WebCrawlerServiceImpl service;
 
 	public WebCrawlerManager(final ClusterManager clusterManager, final ScriptManager scriptManager,
-			final ExecutorService executor, final GenericServer.Builder builder)
-			throws IOException, URISyntaxException {
+			final ExecutorService executor) throws IOException, URISyntaxException {
 		this.scriptManager = scriptManager;
 		this.clusterManager = clusterManager;
 		myAddress = clusterManager.getServiceBuilder().local().getStatus().me;
 		this.executorService = executor;
 		crawlSessionMap = new HashMap<>();
-		if (builder != null) {
-			builder.webService(WebCrawlerServiceImpl.class);
-			builder.contextAttribute(this);
-		}
 		service = new WebCrawlerServiceImpl(this);
+	}
+
+	public WebCrawlerManager registerContextAttribute(final GenericServer.Builder builder) {
+		builder.contextAttribute(this);
+		return this;
+	}
+
+	public WebCrawlerManager registerWebService(final GenericServer.Builder builder) {
+		builder.webService(WebCrawlerServiceImpl.class);
+		return registerContextAttribute(builder);
 	}
 
 	public WebCrawlerServiceInterface getService() {
