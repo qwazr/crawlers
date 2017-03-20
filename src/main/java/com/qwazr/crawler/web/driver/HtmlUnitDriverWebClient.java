@@ -15,7 +15,15 @@
  **/
 package com.qwazr.crawler.web.driver;
 
-import com.gargoylesoftware.htmlunit.*;
+import com.gargoylesoftware.htmlunit.BrowserVersion;
+import com.gargoylesoftware.htmlunit.NicelyResynchronizingAjaxController;
+import com.gargoylesoftware.htmlunit.Page;
+import com.gargoylesoftware.htmlunit.SilentCssErrorHandler;
+import com.gargoylesoftware.htmlunit.StringWebResponse;
+import com.gargoylesoftware.htmlunit.UnexpectedPage;
+import com.gargoylesoftware.htmlunit.WebClient;
+import com.gargoylesoftware.htmlunit.WebRequest;
+import com.gargoylesoftware.htmlunit.WebWindow;
 import com.gargoylesoftware.htmlunit.html.DomElement;
 import com.gargoylesoftware.htmlunit.util.NameValuePair;
 import com.qwazr.crawler.web.WebRequestDefinition;
@@ -26,7 +34,12 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.htmlunit.HtmlUnitDriver;
 import org.openqa.selenium.htmlunit.HtmlUnitWebElement;
 
-import java.net.*;
+import java.net.ConnectException;
+import java.net.MalformedURLException;
+import java.net.SocketTimeoutException;
+import java.net.URL;
+import java.net.UnknownHostException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -118,7 +131,7 @@ public class HtmlUnitDriverWebClient extends HtmlUnitDriver {
 
 		// Set the charset
 		if (requestDef.charset != null)
-			request.setCharset(requestDef.charset);
+			request.setCharset(Charset.forName(requestDef.charset));
 
 		// Set the request parameters
 		if (requestDef.parameters != null) {
