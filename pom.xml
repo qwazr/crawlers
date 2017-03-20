@@ -115,6 +115,10 @@
                     <artifactId>commons-codec</artifactId>
                     <groupId>commons-codec</groupId>
                 </exclusion>
+                <exclusion>
+                    <artifactId>org.apache.commons</artifactId>
+                    <groupId>commons-lang3</groupId>
+                </exclusion>
             </exclusions>
         </dependency>
     </dependencies>
