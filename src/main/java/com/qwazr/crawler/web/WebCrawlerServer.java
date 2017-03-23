@@ -36,11 +36,12 @@ public class WebCrawlerServer implements BaseServer {
 
 	private WebCrawlerServer(final ServerConfiguration configuration) throws IOException, URISyntaxException {
 		final ExecutorService executorService = Executors.newCachedThreadPool();
-		final GenericServer.Builder builder =
-				GenericServer.of(configuration, executorService).webService(WelcomeShutdownService.class);
 		final ClassLoaderManager classLoaderManager =
-				new ClassLoaderManager(configuration.dataDirectory, Thread.currentThread()).registerContextAttribute(
-						builder);
+				new ClassLoaderManager(configuration.dataDirectory, Thread.currentThread());
+		final GenericServer.Builder builder =
+				GenericServer.of(configuration, executorService, classLoaderManager.getClassLoader())
+						.webService(WelcomeShutdownService.class);
+		classLoaderManager.registerContextAttribute(builder);
 		final ClusterManager clusterManager =
 				new ClusterManager(executorService, configuration).registerHttpClientMonitoringThread(builder)
 						.registerProtocolListener(builder)
