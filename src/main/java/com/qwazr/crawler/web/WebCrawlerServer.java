@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,6 @@
  */
 package com.qwazr.crawler.web;
 
-import com.qwazr.classloader.ClassLoaderManager;
 import com.qwazr.cluster.ClusterManager;
 import com.qwazr.library.LibraryManager;
 import com.qwazr.scripts.ScriptManager;
@@ -36,21 +35,17 @@ public class WebCrawlerServer implements BaseServer {
 
 	private WebCrawlerServer(final ServerConfiguration configuration) throws IOException, URISyntaxException {
 		final ExecutorService executorService = Executors.newCachedThreadPool();
-		final ClassLoaderManager classLoaderManager =
-				new ClassLoaderManager(configuration.dataDirectory, Thread.currentThread());
 		final GenericServer.Builder builder =
-				GenericServer.of(configuration, executorService, classLoaderManager.getClassLoader())
-						.webService(WelcomeShutdownService.class);
-		classLoaderManager.registerContextAttribute(builder);
+				GenericServer.of(configuration, executorService).webService(WelcomeShutdownService.class);
 		final ClusterManager clusterManager =
 				new ClusterManager(executorService, configuration).registerHttpClientMonitoringThread(builder)
 						.registerProtocolListener(builder)
 						.registerWebService(builder);
-		final LibraryManager libraryManager = new LibraryManager(classLoaderManager, null, configuration.dataDirectory,
-				configuration.getEtcFiles()).registerWebService(builder);
-		final ScriptManager scriptManager =
-				new ScriptManager(executorService, classLoaderManager, clusterManager, libraryManager,
-						configuration.dataDirectory).registerWebService(builder);
+		final LibraryManager libraryManager =
+				new LibraryManager(null, configuration.dataDirectory, configuration.getEtcFiles()).registerWebService(
+						builder);
+		final ScriptManager scriptManager = new ScriptManager(executorService, clusterManager, libraryManager,
+				configuration.dataDirectory).registerWebService(builder);
 		final WebCrawlerManager webCrawlerManager =
 				new WebCrawlerManager(clusterManager, scriptManager, executorService).registerWebService(builder);
 		serviceBuilder = new WebCrawlerServiceBuilder(clusterManager, webCrawlerManager);
