@@ -16,8 +16,9 @@
     </parent>
 
     <properties>
-        <selenium.version>3.3.1</selenium.version>
-        <htmlunit.version>2.25</htmlunit.version>
+        <selenium.version>3.4.0</selenium.version>
+        <htmlunit.version>2.26</htmlunit.version>
+        <jetty.version>9.4.3.v20170317</jetty.version>
     </properties>
 
     <scm>
@@ -25,6 +26,41 @@
         <developerConnection>scm:git:git@github.com:qwazr/crawlers.git</developerConnection>
         <url>git@github.com:qwazr/crawlers.git</url>
     </scm>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>xml-apis</groupId>
+                <artifactId>xml-apis</artifactId>
+                <version>1.4.01</version>
+            </dependency>
+            <dependency>
+                <groupId>org.seleniumhq.selenium</groupId>
+                <artifactId>selenium-support</artifactId>
+                <version>${selenium.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.roaringbitmap</groupId>
+                <artifactId>RoaringBitmap</artifactId>
+                <version>0.6.43</version>
+            </dependency>
+            <dependency>
+                <groupId>commons-codec</groupId>
+                <artifactId>commons-codec</artifactId>
+                <version>1.10</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-io</artifactId>
+                <version>${jetty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-util</artifactId>
+                <version>${jetty.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
         <dependency>
@@ -94,7 +130,7 @@
         <dependency>
             <groupId>com.codeborne</groupId>
             <artifactId>phantomjsdriver</artifactId>
-            <version>1.4.1</version>
+            <version>1.4.2</version>
             <exclusions>
                 <exclusion>
                     <artifactId>selenium-api</artifactId>
@@ -131,7 +167,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-shade-plugin</artifactId>
-                        <version>${shade.version}</version>
+                        <version>3.0.0</version>
                         <executions>
                             <execution>
                                 <phase>package</phase>

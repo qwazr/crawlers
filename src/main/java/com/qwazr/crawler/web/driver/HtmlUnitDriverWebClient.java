@@ -24,15 +24,12 @@ import com.gargoylesoftware.htmlunit.UnexpectedPage;
 import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.WebRequest;
 import com.gargoylesoftware.htmlunit.WebWindow;
-import com.gargoylesoftware.htmlunit.html.DomElement;
 import com.gargoylesoftware.htmlunit.util.NameValuePair;
 import com.qwazr.crawler.web.WebRequestDefinition;
 import org.openqa.selenium.Capabilities;
 import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriverException;
-import org.openqa.selenium.WebElement;
 import org.openqa.selenium.htmlunit.HtmlUnitDriver;
-import org.openqa.selenium.htmlunit.HtmlUnitWebElement;
 
 import java.net.ConnectException;
 import java.net.MalformedURLException;
@@ -79,25 +76,6 @@ public class HtmlUnitDriverWebClient extends HtmlUnitDriver {
 		return super.getWebClient();
 	}
 
-	WebElement convertNode(DomElement element) {
-		return newHtmlUnitWebElement(element);
-	}
-
-	protected WebElement newHtmlUnitWebElement(DomElement element) {
-		return new HtmlUnitDriverWebElement(this, element);
-	}
-
-	public class HtmlUnitDriverWebElement extends HtmlUnitWebElement {
-
-		public HtmlUnitDriverWebElement(HtmlUnitDriver parent, DomElement element) {
-			super(parent, element);
-		}
-
-		DomElement getDomElement() {
-			return super.getElement();
-		}
-	}
-
 	public void request(final WebRequestDefinition webRequestDef) {
 		final WebRequest request;
 		try {
@@ -111,7 +89,7 @@ public class HtmlUnitDriverWebClient extends HtmlUnitDriver {
 			window.setEnclosedPage(page);
 		} catch (UnknownHostException e) {
 			window.setEnclosedPage(new UnexpectedPage(new StringWebResponse("Unknown host", request.getUrl()),
-					getCurrentWindow().getTopWindow()));
+													  getCurrentWindow().getTopWindow()));
 		} catch (ConnectException e) {
 			// This might be expected
 		} catch (SocketTimeoutException e) {

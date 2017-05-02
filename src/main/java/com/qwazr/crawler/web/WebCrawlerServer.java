@@ -42,10 +42,10 @@ public class WebCrawlerServer implements BaseServer {
 						.registerProtocolListener(builder)
 						.registerWebService(builder);
 		final LibraryManager libraryManager =
-				new LibraryManager(null, configuration.dataDirectory, configuration.getEtcFiles()).registerWebService(
+				new LibraryManager(configuration.dataDirectory, configuration.getEtcFiles()).registerWebService(
 						builder);
 		final ScriptManager scriptManager = new ScriptManager(executorService, clusterManager, libraryManager,
-				configuration.dataDirectory).registerWebService(builder);
+															  configuration.dataDirectory).registerWebService(builder);
 		final WebCrawlerManager webCrawlerManager =
 				new WebCrawlerManager(clusterManager, scriptManager, executorService).registerWebService(builder);
 		serviceBuilder = new WebCrawlerServiceBuilder(clusterManager, webCrawlerManager);

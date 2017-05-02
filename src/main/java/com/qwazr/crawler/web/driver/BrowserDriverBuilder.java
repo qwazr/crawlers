@@ -21,6 +21,7 @@ import org.openqa.selenium.Cookie;
 import org.openqa.selenium.Proxy;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.phantomjs.PhantomJSDriverService;
+import org.openqa.selenium.remote.BrowserType;
 import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.DesiredCapabilities;
 
@@ -102,8 +103,8 @@ public class BrowserDriverBuilder {
 			// Setup the language
 			if (crawlDefinition.browser_language != null) {
 				capabilities = checkCapabilities(capabilities);
-				capabilities
-						.setCapability(AdditionalCapabilities.QWAZR_BROWSER_LANGUAGE, crawlDefinition.browser_language);
+				capabilities.setCapability(AdditionalCapabilities.QWAZR_BROWSER_LANGUAGE,
+										   crawlDefinition.browser_language);
 				if (browserType == BrowserDriverEnum.phantomjs)
 					capabilities.setCapability(
 							PhantomJSDriverService.PHANTOMJS_PAGE_CUSTOMHEADERS_PREFIX + "Accept-Language",
@@ -115,16 +116,16 @@ public class BrowserDriverBuilder {
 				capabilities = checkCapabilities(capabilities);
 				if (browserType == BrowserDriverEnum.phantomjs)
 					capabilities.setCapability(PhantomJSDriverService.PHANTOMJS_PAGE_SETTINGS_PREFIX + "loadImages",
-							crawlDefinition.download_images);
+											   crawlDefinition.download_images);
 			}
 
 			// Web security
 			if (crawlDefinition.web_security != null) {
 				capabilities = checkCapabilities(capabilities);
 				if (browserType == BrowserDriverEnum.phantomjs)
-					capabilities
-							.setCapability(PhantomJSDriverService.PHANTOMJS_PAGE_SETTINGS_PREFIX + "webSecurityEnabled",
-									crawlDefinition.web_security);
+					capabilities.setCapability(
+							PhantomJSDriverService.PHANTOMJS_PAGE_SETTINGS_PREFIX + "webSecurityEnabled",
+							crawlDefinition.web_security);
 			}
 
 			// Choose a browser name
@@ -143,9 +144,9 @@ public class BrowserDriverBuilder {
 				capabilities = checkCapabilities(capabilities);
 				capabilities.setJavascriptEnabled(crawlDefinition.javascript_enabled);
 				if (browserType == BrowserDriverEnum.phantomjs)
-					capabilities
-							.setCapability(PhantomJSDriverService.PHANTOMJS_PAGE_SETTINGS_PREFIX + "javascriptEnabled",
-									crawlDefinition.javascript_enabled);
+					capabilities.setCapability(
+							PhantomJSDriverService.PHANTOMJS_PAGE_SETTINGS_PREFIX + "javascriptEnabled",
+							crawlDefinition.javascript_enabled);
 
 			}
 
@@ -154,15 +155,22 @@ public class BrowserDriverBuilder {
 
 		if (browserType == BrowserDriverEnum.phantomjs) {
 			capabilities = checkCapabilities(capabilities);
-			capabilities.setCapability(PhantomJSDriverService.PHANTOMJS_CLI_ARGS,
-					new String[] { "--webdriver-loglevel=none", "--ignore-ssl-errors=true", "--ssl-protocol=any" });
+			capabilities.setCapability(PhantomJSDriverService.PHANTOMJS_CLI_ARGS, new String[] {
+					"--webdriver-loglevel=none",
+					"--ignore-ssl-errors=true",
+					"--ssl-protocol=any" });
+		}
+
+		if (browserType == BrowserDriverEnum.html_unit) {
+			capabilities = checkCapabilities(capabilities);
+			capabilities.setBrowserName(BrowserType.HTMLUNIT);
 		}
 
 		final WebDriver driver = browserType.getNewInstance(capabilities);
 		try {
 			final BrowserDriver browserDriver = new BrowserDriver(browserType, driver, proxyDef);
 			browserDriver.setTimeouts(crawlDefinition.implicitly_wait, crawlDefinition.page_load_timeout,
-					crawlDefinition.script_timeout);
+									  crawlDefinition.script_timeout);
 
 			if (crawlDefinition.cookies != null)
 				for (Map.Entry<String, String> cookie : crawlDefinition.cookies.entrySet())

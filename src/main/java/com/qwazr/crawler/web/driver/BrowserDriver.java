@@ -343,10 +343,7 @@ final public class BrowserDriver implements WebDriver, Closeable, AdditionalCapa
 	}
 
 	public void setAttribute(WebElement element, String name, String value) {
-		if (driver instanceof AdditionalCapabilities.SetAttribute)
-			((AdditionalCapabilities.SetAttribute) driver).setAttribute(element, name, value);
-		else
-			this.executeScript("arguments[0].setAttribute(arguments[1], arguments[2])", false, element, name, value);
+		this.executeScript("arguments[0].setAttribute(arguments[1], arguments[2])", false, element, name, value);
 	}
 
 	@Override

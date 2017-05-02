@@ -52,17 +52,12 @@ public class AdditionalCapabilities {
 		void saveBinaryFile(File file) throws IOException;
 	}
 
-	interface SetAttribute {
-
-		void setAttribute(WebElement element, String name, String value);
-	}
-
 	interface WebRequest {
 
 		void request(WebRequestDefinition request);
 	}
 
-	interface All extends ResponseHeader, SafeText, InnerHtml, SaveBinaryFile, SetAttribute, WebRequest {
+	interface All extends ResponseHeader, SafeText, InnerHtml, SaveBinaryFile, WebRequest {
 
 	}
 }

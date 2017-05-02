@@ -101,7 +101,7 @@ public class WebCrawlerTest {
 		final WebCrawlDefinition webCrawl = getNewWebCrawl();
 		webCrawl.scripts = new HashMap<>();
 		webCrawl.scripts.put(WebCrawlDefinition.EventEnum.before_crawl,
-				new WebCrawlDefinition.Script(BeforeCrawl.class.getName()));
+							 new WebCrawlDefinition.Script(BeforeCrawl.class.getName()));
 		remote.runSession(sessionName, webCrawl);
 		crawlWait(sessionName, 3);
 		Assert.assertEquals(4, BeforeCrawl.count.get());
