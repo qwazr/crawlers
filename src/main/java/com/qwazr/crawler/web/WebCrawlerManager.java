@@ -61,7 +61,7 @@ public class WebCrawlerManager {
 	}
 
 	public WebCrawlerManager registerWebService(final GenericServer.Builder builder) {
-		builder.webService(WebCrawlerServiceImpl.class);
+		builder.singletons(service);
 		return registerContextAttribute(builder);
 	}
 
