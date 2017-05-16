@@ -42,7 +42,7 @@
             <dependency>
                 <groupId>org.roaringbitmap</groupId>
                 <artifactId>RoaringBitmap</artifactId>
-                <version>0.6.43</version>
+                <version>0.6.44</version>
             </dependency>
             <dependency>
                 <groupId>commons-codec</groupId>
@@ -107,6 +107,11 @@
                     <groupId>org.seleniumhq.selenium</groupId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.seleniumhq.selenium</groupId>
+            <artifactId>selenium-support</artifactId>
+            <version>${selenium.version}</version>
         </dependency>
         <dependency>
             <groupId>org.seleniumhq.selenium</groupId>
