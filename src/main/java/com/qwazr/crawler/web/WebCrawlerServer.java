@@ -16,15 +16,21 @@
 package com.qwazr.crawler.web;
 
 import com.qwazr.cluster.ClusterManager;
+import com.qwazr.cluster.ClusterServiceInterface;
 import com.qwazr.library.LibraryManager;
+import com.qwazr.library.LibraryServiceInterface;
 import com.qwazr.scripts.ScriptManager;
+import com.qwazr.server.ApplicationBuilder;
 import com.qwazr.server.BaseServer;
 import com.qwazr.server.GenericServer;
+import com.qwazr.server.RestApplication;
 import com.qwazr.server.WelcomeShutdownService;
 import com.qwazr.server.configuration.ServerConfiguration;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -35,19 +41,34 @@ public class WebCrawlerServer implements BaseServer {
 
 	private WebCrawlerServer(final ServerConfiguration configuration) throws IOException, URISyntaxException {
 		final ExecutorService executorService = Executors.newCachedThreadPool();
-		final GenericServer.Builder builder =
-				GenericServer.of(configuration, executorService).singletons(new WelcomeShutdownService());
+		final GenericServer.Builder builder = GenericServer.of(configuration, executorService);
+
+		final Set<String> services = new HashSet<>();
+		services.add(ClusterServiceInterface.SERVICE_NAME);
+		services.add(LibraryServiceInterface.SERVICE_NAME);
+		services.add(WebCrawlerServiceInterface.SERVICE_NAME);
+
+		final ApplicationBuilder webServices = ApplicationBuilder.of("/*").classes(RestApplication.JSON_CLASSES).
+				singletons(new WelcomeShutdownService());
+
 		final ClusterManager clusterManager =
 				new ClusterManager(executorService, configuration).registerHttpClientMonitoringThread(builder)
-						.registerProtocolListener(builder)
-						.registerWebService(builder);
+						.registerProtocolListener(builder, services)
+						.registerContextAttribute(builder)
+						.registerWebService(webServices);
+
 		final LibraryManager libraryManager =
-				new LibraryManager(configuration.dataDirectory, configuration.getEtcFiles()).registerWebService(
-						builder);
+				new LibraryManager(configuration.dataDirectory, configuration.getEtcFiles()).registerIdentityManager(
+						builder).registerContextAttribute(builder).registerWebService(webServices);
+
 		final ScriptManager scriptManager = new ScriptManager(executorService, clusterManager, libraryManager,
-				configuration.dataDirectory).registerWebService(builder);
+				configuration.dataDirectory).registerContextAttribute(builder).registerWebService(webServices);
+
 		final WebCrawlerManager webCrawlerManager =
-				new WebCrawlerManager(clusterManager, scriptManager, executorService).registerWebService(builder);
+				new WebCrawlerManager(clusterManager, scriptManager, executorService).registerContextAttribute(builder)
+						.registerWebService(webServices);
+
+		builder.getWebServiceContext().jaxrs(webServices);
 		serviceBuilder = new WebCrawlerServiceBuilder(clusterManager, webCrawlerManager);
 		server = builder.build();
 	}

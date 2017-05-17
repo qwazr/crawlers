@@ -17,6 +17,7 @@ package com.qwazr.crawler.web;
 
 import com.qwazr.cluster.ClusterManager;
 import com.qwazr.scripts.ScriptManager;
+import com.qwazr.server.ApplicationBuilder;
 import com.qwazr.server.GenericServer;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.LockUtils;
@@ -60,9 +61,9 @@ public class WebCrawlerManager {
 		return this;
 	}
 
-	public WebCrawlerManager registerWebService(final GenericServer.Builder builder) {
+	public WebCrawlerManager registerWebService(final ApplicationBuilder builder) {
 		builder.singletons(service);
-		return registerContextAttribute(builder);
+		return this;
 	}
 
 	public WebCrawlerServiceInterface getService() {

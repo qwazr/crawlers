@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@ package com.qwazr.crawler.web;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.qwazr.server.ServiceInterface;
-import com.qwazr.server.ServiceName;
 
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.Consumes;
@@ -34,7 +33,6 @@ import java.util.TreeMap;
 
 @RolesAllowed(WebCrawlerServiceInterface.SERVICE_NAME)
 @Path("/crawler/web")
-@ServiceName(WebCrawlerServiceInterface.SERVICE_NAME)
 public interface WebCrawlerServiceInterface extends ServiceInterface {
 
 	String SERVICE_NAME = "webcrawler";
