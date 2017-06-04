@@ -469,7 +469,7 @@ public class WebCrawlThread implements Runnable {
 	private void crawlUrlMap(Set<URI> crawledURIs, Map<String, Integer> urlMap) {
 		urlMap.forEach((uri, depth) -> {
 			try {
-				crawlOne(crawledURIs, new GetProvider(uri), null, depth);
+				crawlOne(crawledURIs, new GetProvider(uri), null, depth == null ? 0 : depth);
 			} catch (URISyntaxException e) {
 				LOGGER.warn("Malformed URI: " + uri);
 			} catch (InterruptedException e) {
