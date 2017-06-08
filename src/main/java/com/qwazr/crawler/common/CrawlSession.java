@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-package com.qwazr.crawler.web;
+package com.qwazr.crawler.common;
 
 import com.qwazr.utils.TimeTracker;
 
 import java.util.Map;
 
-public interface CurrentSession {
+public interface CrawlSession {
 
 	Map<String, Object> getVariables();
 

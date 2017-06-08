@@ -1,5 +1,5 @@
-/**
- * Copyright 2014-2016 Emmanuel Keller / QWAZR
+/*
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,11 +15,12 @@
  **/
 package com.qwazr.crawler.web;
 
-import com.qwazr.utils.ExceptionUtils;
-import com.qwazr.utils.http.HttpResponseEntityException;
-import com.qwazr.server.client.JsonMultiClientAbstract;
+import com.qwazr.crawler.common.CrawlStatus;
 import com.qwazr.server.RemoteService;
 import com.qwazr.server.ServerException;
+import com.qwazr.server.client.JsonMultiClientAbstract;
+import com.qwazr.utils.ExceptionUtils;
+import com.qwazr.utils.http.HttpResponseEntityException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,13 +45,13 @@ public class WebCrawlerMultiClient extends JsonMultiClientAbstract<WebCrawlerSin
 	}
 
 	@Override
-	public TreeMap<String, WebCrawlStatus> getSessions(String group) {
+	public TreeMap<String, CrawlStatus> getSessions(String group) {
 
 		// We merge the result of all the nodes
-		TreeMap<String, WebCrawlStatus> globalSessions = new TreeMap<String, WebCrawlStatus>();
+		TreeMap<String, CrawlStatus> globalSessions = new TreeMap<String, CrawlStatus>();
 		for (WebCrawlerSingleClient client : this) {
 			try {
-				TreeMap<String, WebCrawlStatus> localSessions = client.getSessions(group);
+				TreeMap<String, CrawlStatus> localSessions = client.getSessions(group);
 				if (localSessions == null)
 					continue;
 				globalSessions.putAll(localSessions);
@@ -62,7 +63,7 @@ public class WebCrawlerMultiClient extends JsonMultiClientAbstract<WebCrawlerSin
 	}
 
 	@Override
-	public WebCrawlStatus getSession(String session_name, String group) {
+	public CrawlStatus getSession(String session_name, String group) {
 
 		for (WebCrawlerSingleClient client : this) {
 			try {
@@ -93,7 +94,7 @@ public class WebCrawlerMultiClient extends JsonMultiClientAbstract<WebCrawlerSin
 	}
 
 	@Override
-	public WebCrawlStatus runSession(final String session_name, final WebCrawlDefinition crawlDefinition) {
+	public CrawlStatus runSession(final String session_name, final WebCrawlDefinition crawlDefinition) {
 		final ExceptionUtils.Holder exceptionHolder = new ExceptionUtils.Holder(logger);
 		for (WebCrawlerSingleClient client : this) {
 			try {
@@ -112,7 +113,7 @@ public class WebCrawlerMultiClient extends JsonMultiClientAbstract<WebCrawlerSin
 	}
 
 	@Override
-	public WebCrawlStatus runSession(String session_name, String jsonCrawlDefinition) throws IOException {
+	public CrawlStatus runSession(String session_name, String jsonCrawlDefinition) throws IOException {
 		return runSession(session_name, WebCrawlDefinition.newInstance(jsonCrawlDefinition));
 	}
 

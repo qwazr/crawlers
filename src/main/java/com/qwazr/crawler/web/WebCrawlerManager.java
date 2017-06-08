@@ -16,43 +16,29 @@
 package com.qwazr.crawler.web;
 
 import com.qwazr.cluster.ClusterManager;
+import com.qwazr.crawler.common.CrawlManager;
 import com.qwazr.scripts.ScriptManager;
 import com.qwazr.server.ApplicationBuilder;
 import com.qwazr.server.GenericServer;
-import com.qwazr.server.ServerException;
-import com.qwazr.utils.LockUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.TreeMap;
 import java.util.concurrent.ExecutorService;
 
-public class WebCrawlerManager {
+public class WebCrawlerManager extends CrawlManager<WebCrawlThread, WebCrawlDefinition> {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(WebCrawlerManager.class);
 
-	final String myAddress;
-	final ClusterManager clusterManager;
 	final ScriptManager scriptManager;
-	private final ExecutorService executorService;
-
-	private final LockUtils.ReadWriteLock rwlSessionMap = new LockUtils.ReadWriteLock();
-	private final HashMap<String, WebCrawlThread> crawlSessionMap;
 
 	private WebCrawlerServiceImpl service;
 
 	public WebCrawlerManager(final ClusterManager clusterManager, final ScriptManager scriptManager,
 			final ExecutorService executor) throws IOException, URISyntaxException {
+		super(clusterManager, executor, LOGGER);
 		this.scriptManager = scriptManager;
-		this.clusterManager = clusterManager;
-		myAddress = clusterManager.getServiceBuilder().local().getStatus().me;
-		this.executorService = executor;
-		crawlSessionMap = new HashMap<>();
 		service = new WebCrawlerServiceImpl(this);
 	}
 
@@ -70,56 +56,9 @@ public class WebCrawlerManager {
 		return service;
 	}
 
-	TreeMap<String, WebCrawlStatus> getSessions() {
-		return rwlSessionMap.read(() -> {
-			final TreeMap<String, WebCrawlStatus> map = new TreeMap<>();
-			for (Map.Entry<String, WebCrawlThread> entry : crawlSessionMap.entrySet())
-				map.put(entry.getKey(), entry.getValue().getStatus());
-			return map;
-		});
-	}
-
-	WebCrawlStatus getSession(final String sessionName) {
-		return rwlSessionMap.read(() -> {
-			final WebCrawlThread crawlThread = crawlSessionMap.get(sessionName);
-			if (crawlThread == null)
-				return null;
-			return crawlThread.getStatus();
-		});
-	}
-
-	void abortSession(final String sessionName, final String abortingReason) throws ServerException {
-		rwlSessionMap.readEx(() -> {
-			final WebCrawlThread crawlThread = crawlSessionMap.get(sessionName);
-			if (crawlThread == null)
-				throw new ServerException(Status.NOT_FOUND, "Session not found: " + sessionName);
-			if (LOGGER.isInfoEnabled())
-				LOGGER.info("Aborting session: " + sessionName + " - " + abortingReason);
-			crawlThread.abort(abortingReason);
-		});
-	}
-
-	WebCrawlStatus runSession(final String sessionName, final WebCrawlDefinition crawlJson) throws ServerException {
-		return rwlSessionMap.writeEx(() -> {
-			if (crawlSessionMap.containsKey(sessionName))
-				throw new ServerException(Status.CONFLICT, "The session already exists: " + sessionName);
-			if (LOGGER.isInfoEnabled())
-				LOGGER.info("Create session: " + sessionName);
-
-			WebCrawlThread crawlThread = new WebCrawlThread(this, sessionName, crawlJson);
-			crawlSessionMap.put(sessionName, crawlThread);
-			executorService.execute(crawlThread);
-			return crawlThread.getStatus();
-		});
-	}
-
-	void removeSession(final WebCrawlThread crawlThread) {
-		rwlSessionMap.writeEx(() -> {
-			final String sessionName = crawlThread.getSessionName();
-			if (LOGGER.isInfoEnabled())
-				LOGGER.info("Remove session: " + sessionName);
-			crawlSessionMap.remove(sessionName, crawlThread);
-		});
+	@Override
+	protected WebCrawlThread newCrawlThread(String sessionName, WebCrawlDefinition crawlDef) {
+		return new WebCrawlThread(this, sessionName, crawlDef);
 	}
 
 }

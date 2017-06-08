@@ -15,8 +15,8 @@
  **/
 package com.qwazr.crawler.web.test;
 
+import com.qwazr.crawler.common.CrawlStatus;
 import com.qwazr.crawler.web.WebCrawlDefinition;
-import com.qwazr.crawler.web.WebCrawlStatus;
 import com.qwazr.crawler.web.WebCrawlerServer;
 import com.qwazr.crawler.web.WebCrawlerServiceBuilder;
 import com.qwazr.crawler.web.WebCrawlerServiceInterface;
@@ -31,8 +31,8 @@ import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
-import java.util.TreeMap;
 import java.util.HashMap;
+import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -62,7 +62,7 @@ public class WebCrawlerTest {
 
 	@Test
 	public void test200emptySessions() {
-		TreeMap<String, WebCrawlStatus> sessions = remote.getSessions(null);
+		TreeMap<String, CrawlStatus> sessions = remote.getSessions(null);
 		Assert.assertNotNull(sessions);
 		Assert.assertTrue(sessions.isEmpty());
 	}
@@ -81,7 +81,7 @@ public class WebCrawlerTest {
 
 	private void crawlWait(final String sessionName, final int crawlCount) throws InterruptedException {
 		WaitFor.of().timeOut(TimeUnit.MINUTES, 2).until(() -> {
-			WebCrawlStatus status = ErrorWrapper.bypass(() -> remote.getSession(sessionName, null), 404);
+			CrawlStatus status = ErrorWrapper.bypass(() -> remote.getSession(sessionName, null), 404);
 			if (status == null)
 				return false;
 			return status.urls.crawled == crawlCount;
@@ -101,7 +101,7 @@ public class WebCrawlerTest {
 		final WebCrawlDefinition webCrawl = getNewWebCrawl();
 		webCrawl.scripts = new HashMap<>();
 		webCrawl.scripts.put(WebCrawlDefinition.EventEnum.before_crawl,
-							 new WebCrawlDefinition.Script(BeforeCrawl.class.getName()));
+				new WebCrawlDefinition.Script(BeforeCrawl.class.getName()));
 		remote.runSession(sessionName, webCrawl);
 		crawlWait(sessionName, 3);
 		Assert.assertEquals(4, BeforeCrawl.count.get());

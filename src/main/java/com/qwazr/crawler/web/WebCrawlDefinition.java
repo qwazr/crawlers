@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qwazr.crawler.common.CrawlDefinition;
 import com.qwazr.crawler.web.driver.BrowserDriverEnum;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.json.JsonMapper;
@@ -26,10 +27,14 @@ import com.qwazr.utils.json.JsonMapper;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 @JsonInclude(Include.NON_EMPTY)
-public class WebCrawlDefinition implements Cloneable {
+public class WebCrawlDefinition extends CrawlDefinition {
 
 	/**
 	 * URL called before a crawl session starts
@@ -238,82 +243,11 @@ public class WebCrawlDefinition implements Cloneable {
 
 	public Integer page_load_timeout = null;
 
-	/**
-	 * The global variables shared by all the scripts.
-	 */
-	public LinkedHashMap<String, String> variables = null;
-
-	/**
-	 * A list of scripts paths mapped with the events which fire the scripts.
-	 */
-	public Map<EventEnum, Script> scripts = null;
-
-	public enum EventEnum {
-
-		/**
-		 * Executed before the crawl session start
-		 */
-		before_session,
-
-		/**
-		 * Executed after the crawl session ends
-		 */
-		after_session,
-
-		/**
-		 * Executed before an URL is crawled
-		 */
-		before_crawl,
-
-		/**
-		 * Executed after an URL has been crawled
-		 */
-		after_crawl
-	}
-
-	@JsonInclude(Include.NON_EMPTY)
-	public static class Script implements Cloneable {
-
-		/**
-		 * The path to the scripts
-		 */
-		public String name = null;
-
-		/**
-		 * The local variables passed to the scripts
-		 */
-		public Map<String, String> variables = null;
-
-		public Script() {
-		}
-
-		public Script(String name) {
-			this.name = name;
-		}
-
-		protected Script(Script src) {
-			this.name = src.name;
-			this.variables = src.variables == null ? null : new HashMap<String, String>(src.variables);
-		}
-
-		@Override
-		final public Object clone() {
-			return new Script(this);
-		}
-
-		public Script addVariable(String name, String value) {
-			if (variables == null)
-				variables = new HashMap<>();
-			variables.put(name, value);
-			return this;
-		}
-
-	}
-
 	public WebCrawlDefinition() {
 	}
 
 	protected WebCrawlDefinition(WebCrawlDefinition src) {
+		super(src);
 		pre_url = src.pre_url;
 		entry_url = src.entry_url;
 		entry_request = src.entry_request;
@@ -340,13 +274,6 @@ public class WebCrawlDefinition implements Cloneable {
 		script_timeout = src.script_timeout;
 		page_load_timeout = src.page_load_timeout;
 		crawl_wait_ms = src.crawl_wait_ms;
-		variables = src.variables == null ? null : new LinkedHashMap<>(src.variables);
-		if (src.scripts == null) {
-			scripts = null;
-		} else {
-			scripts = new HashMap<>();
-			src.scripts.forEach((eventEnum, script) -> scripts.put(eventEnum, new Script(script)));
-		}
 	}
 
 	public Object clone() {
@@ -671,19 +598,6 @@ public class WebCrawlDefinition implements Cloneable {
 		if (cookies != null)
 			this.cookies.putAll(cookies);
 		return this;
-	}
-
-	@JsonIgnore
-	public Script addScript(final String event, final String name) {
-		if (scripts == null)
-			scripts = new LinkedHashMap<>();
-		Script script = new Script(name);
-		scripts.put(EventEnum.valueOf(event), script);
-		return script;
-	}
-
-	public Map<EventEnum, Script> getScripts() {
-		return scripts;
 	}
 
 	@JsonIgnore

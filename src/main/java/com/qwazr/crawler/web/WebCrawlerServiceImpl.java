@@ -15,6 +15,7 @@
  **/
 package com.qwazr.crawler.web;
 
+import com.qwazr.crawler.common.CrawlStatus;
 import com.qwazr.server.AbstractServiceImpl;
 import com.qwazr.server.ServerException;
 import org.slf4j.Logger;
@@ -45,7 +46,7 @@ class WebCrawlerServiceImpl extends AbstractServiceImpl implements WebCrawlerSer
 	}
 
 	@Override
-	public TreeMap<String, WebCrawlStatus> getSessions(final String group) {
+	public TreeMap<String, CrawlStatus> getSessions(final String group) {
 		// Read the sessions in the local node
 		if (!webrawlerManager.clusterManager.isGroup(group))
 			return new TreeMap<>();
@@ -53,10 +54,10 @@ class WebCrawlerServiceImpl extends AbstractServiceImpl implements WebCrawlerSer
 	}
 
 	@Override
-	public WebCrawlStatus getSession(final String session_name, final String group) {
+	public CrawlStatus getSession(final String session_name, final String group) {
 		try {
-			final WebCrawlStatus status =
-					webrawlerManager.clusterManager.isGroup(group) ? webrawlerManager.getSession(session_name) : null;
+			final CrawlStatus status = webrawlerManager.clusterManager.isGroup(group) ? webrawlerManager.getSession(
+					session_name) : null;
 			if (status != null)
 				return status;
 			throw new ServerException(Status.NOT_FOUND, "Session not found");
@@ -78,7 +79,7 @@ class WebCrawlerServiceImpl extends AbstractServiceImpl implements WebCrawlerSer
 	}
 
 	@Override
-	public WebCrawlStatus runSession(final String session_name, final WebCrawlDefinition crawlDefinition) {
+	public CrawlStatus runSession(final String session_name, final WebCrawlDefinition crawlDefinition) {
 		try {
 			return webrawlerManager.runSession(session_name, crawlDefinition);
 		} catch (ServerException e) {
@@ -86,7 +87,7 @@ class WebCrawlerServiceImpl extends AbstractServiceImpl implements WebCrawlerSer
 		}
 	}
 
-	public WebCrawlStatus runSession(final String session_name, final String jsonCrawlDefinition) throws IOException {
+	public CrawlStatus runSession(final String session_name, final String jsonCrawlDefinition) throws IOException {
 		return runSession(session_name, WebCrawlDefinition.newInstance(jsonCrawlDefinition));
 	}
 

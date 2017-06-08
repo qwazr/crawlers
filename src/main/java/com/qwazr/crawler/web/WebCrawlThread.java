@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +16,13 @@
 package com.qwazr.crawler.web;
 
 import com.google.common.net.InternetDomainName;
+import com.qwazr.crawler.common.CrawlDefinition.EventEnum;
+import com.qwazr.crawler.common.CrawlDefinition.Script;
+import com.qwazr.crawler.common.CrawlSessionImpl;
+import com.qwazr.crawler.common.CrawlStatus;
+import com.qwazr.crawler.common.CrawlThread;
 import com.qwazr.crawler.web.driver.BrowserDriver;
 import com.qwazr.crawler.web.driver.BrowserDriverBuilder;
-import com.qwazr.crawler.web.WebCrawlDefinition.EventEnum;
-import com.qwazr.crawler.web.WebCrawlDefinition.Script;
 import com.qwazr.scripts.ScriptRunThread;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.RegExpUtils;
@@ -55,12 +58,10 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.PatternSyntaxException;
 
-public class WebCrawlThread implements Runnable {
+public class WebCrawlThread extends CrawlThread<WebCrawlerManager> {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(WebCrawlThread.class);
 
-	private final WebCrawlerManager webCrawlerManager;
-	private final CurrentSessionImpl session;
 	private final WebCrawlDefinition crawlDefinition;
 	private final InternetDomainName internetDomainName;
 
@@ -78,10 +79,9 @@ public class WebCrawlThread implements Runnable {
 
 	WebCrawlThread(final WebCrawlerManager webCrawlerManager, final String sessionName,
 			final WebCrawlDefinition crawlDefinition) throws ServerException {
-		timeTracker = new TimeTracker();
-		this.webCrawlerManager = webCrawlerManager;
-		this.session = new CurrentSessionImpl(crawlDefinition, sessionName, timeTracker);
+		super(webCrawlerManager, new CrawlSessionImpl<>(crawlDefinition, sessionName), LOGGER);
 		this.crawlDefinition = crawlDefinition;
+		this.timeTracker = session.getTimeTracker();
 		if (crawlDefinition.browser_type == null)
 			throw new ServerException(Status.NOT_ACCEPTABLE, "The browser_type is missing");
 		if (crawlDefinition.entry_url == null && crawlDefinition.entry_request == null)
@@ -115,16 +115,9 @@ public class WebCrawlThread implements Runnable {
 		}
 	}
 
-	String getSessionName() {
-		return session.getName();
-	}
-
-	WebCrawlStatus getStatus() {
-		return new WebCrawlStatus(webCrawlerManager.myAddress, crawlDefinition.entry_url, session);
-	}
-
-	void abort(String reason) {
-		session.abort(reason);
+	@Override
+	public CrawlStatus getStatus() {
+		return new CrawlStatus(manager.myAddress, crawlDefinition.entry_url, session);
 	}
 
 	/**
@@ -510,7 +503,7 @@ public class WebCrawlThread implements Runnable {
 				objects.put("driver", driver);
 			if (currentURI != null)
 				objects.put("current", currentURI);
-			final ScriptRunThread scriptRunThread = webCrawlerManager.scriptManager.runSync(script.name, objects);
+			final ScriptRunThread scriptRunThread = manager.scriptManager.runSync(script.name, objects);
 			if (scriptRunThread.getException() != null)
 				throw new ServerException(scriptRunThread.getException());
 			return true;
@@ -519,7 +512,7 @@ public class WebCrawlThread implements Runnable {
 		}
 	}
 
-	private void runner()
+	protected void runner()
 			throws URISyntaxException, IOException, ScriptException, ServerException, ReflectiveOperationException,
 			NoSuchAlgorithmException, KeyStoreException, KeyManagementException, InterruptedException {
 		try {
@@ -544,17 +537,6 @@ public class WebCrawlThread implements Runnable {
 				LOGGER.warn(e.getMessage(), e);
 			}
 			script(EventEnum.after_session, null);
-		}
-	}
-
-	@Override
-	final public void run() {
-		try {
-			runner();
-		} catch (Exception e) {
-			LOGGER.error(e.getMessage(), e);
-		} finally {
-			webCrawlerManager.removeSession(this);
 		}
 	}
 

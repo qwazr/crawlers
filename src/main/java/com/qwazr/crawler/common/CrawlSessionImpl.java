@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,18 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-package com.qwazr.crawler.web;
+package com.qwazr.crawler.common;
 
 import com.qwazr.utils.TimeTracker;
-import org.apache.commons.collections4.CollectionUtils;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-class CurrentSessionImpl implements CurrentSession {
+public class CrawlSessionImpl<T extends CrawlDefinition> implements CrawlSession {
 
-	private final WebCrawlDefinition crawlDefinition;
+	private final T crawlDefinition;
 	private final String name;
 	private final AtomicBoolean abort;
 	private final TimeTracker timeTracker;
@@ -37,19 +36,20 @@ class CurrentSessionImpl implements CurrentSession {
 	private volatile Integer currentDepth = null;
 	private volatile String abortingReason = null;
 
-	CurrentSessionImpl(WebCrawlDefinition crawlDefinition, String name, TimeTracker timeTracker) {
+	public CrawlSessionImpl(T crawlDefinition, String name) {
 		this.crawlDefinition = crawlDefinition;
-		this.timeTracker = timeTracker;
+		this.timeTracker = new TimeTracker();
 		this.name = name;
 		abort = new AtomicBoolean(false);
 		this.variables = new ConcurrentHashMap<>();
-		if (crawlDefinition.variables != null)
-			for (Map.Entry<String, String> entry : crawlDefinition.variables.entrySet())
-				if (entry.getKey() != null && entry.getValue() != null)
-					this.variables.put(entry.getKey(), entry.getValue());
+		if (crawlDefinition.variables != null) {
+			crawlDefinition.variables.forEach((key, value) -> {
+				if (key != null && value != null)
+					this.variables.put(key, value);
+			});
+		}
 	}
 
-	@Override
 	public Map<String, Object> getVariables() {
 		return variables;
 	}
@@ -59,7 +59,10 @@ class CurrentSessionImpl implements CurrentSession {
 		return variables.get(name);
 	}
 
-	@Override
+	/**
+	 * @param name the name of the variable
+	 * @return the value of the variable
+	 */
 	public Object setVariable(String name, Object value) {
 		if (value == null)
 			return removeVariable(name);
@@ -104,7 +107,7 @@ class CurrentSessionImpl implements CurrentSession {
 		return abortingReason;
 	}
 
-	synchronized int incIgnoredCount() {
+	public synchronized int incIgnoredCount() {
 		return ++ignoredCount;
 	}
 
@@ -113,7 +116,7 @@ class CurrentSessionImpl implements CurrentSession {
 		return ignoredCount;
 	}
 
-	synchronized int incCrawledCount() {
+	public synchronized int incCrawledCount() {
 		return ++crawledCount;
 	}
 
@@ -122,7 +125,7 @@ class CurrentSessionImpl implements CurrentSession {
 		return crawledCount;
 	}
 
-	synchronized int incErrorCount() {
+	public synchronized int incErrorCount() {
 		return ++errorCount;
 	}
 
@@ -146,18 +149,13 @@ class CurrentSessionImpl implements CurrentSession {
 		return currentDepth;
 	}
 
-	synchronized void setCurrentURI(String currentURI, Integer currentDepth) {
+	public synchronized void setCurrentURI(String currentURI, Integer currentDepth) {
 		this.currentURI = currentURI;
 		this.currentDepth = currentDepth;
 	}
 
-	public WebCrawlDefinition getCrawlDefinition() {
+	public T getCrawlDefinition() {
 		return crawlDefinition;
-	}
-
-	public boolean isURLPatterns() {
-		return crawlDefinition != null && !CollectionUtils.isEmpty(crawlDefinition.inclusion_patterns)
-				&& !CollectionUtils.isEmpty(crawlDefinition.exclusion_patterns);
 	}
 
 	public TimeTracker getTimeTracker() {

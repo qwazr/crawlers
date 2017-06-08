@@ -1,5 +1,5 @@
-/**
- * Copyright 2014-2016 Emmanuel Keller / QWAZR
+/*
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  **/
 package com.qwazr.crawler.web;
 
+import com.qwazr.crawler.common.CrawlStatus;
 import com.qwazr.server.RemoteService;
 import com.qwazr.server.client.JsonClientAbstract;
 import com.qwazr.utils.UBuilder;
@@ -31,19 +32,19 @@ class WebCrawlerSingleClient extends JsonClientAbstract implements WebCrawlerSer
 	}
 
 	@Override
-	public TreeMap<String, WebCrawlStatus> getSessions(final String group) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, "/crawler/web/sessions").setParameter("group", group);
+	public TreeMap<String, CrawlStatus> getSessions(final String group) {
+		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, "/crawler/web/sessions").setParameter("group",
+				group);
 		HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
 		return executeJson(request, null, null, TreeMapStringCrawlTypeRef, valid200Json);
 	}
 
 	@Override
-	public WebCrawlStatus getSession(final String session_name, final String group) {
+	public CrawlStatus getSession(final String session_name, final String group) {
 		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, "/crawler/web/sessions/", session_name)
 				.setParameter("group", group);
 		HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
-		return executeJson(request, null, null, WebCrawlStatus.class, valid200Json);
+		return executeJson(request, null, null, CrawlStatus.class, valid200Json);
 	}
 
 	@Override
@@ -57,14 +58,14 @@ class WebCrawlerSingleClient extends JsonClientAbstract implements WebCrawlerSer
 	}
 
 	@Override
-	public WebCrawlStatus runSession(final String session_name, final WebCrawlDefinition crawlDefinition) {
+	public CrawlStatus runSession(final String session_name, final WebCrawlDefinition crawlDefinition) {
 		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, "/crawler/web/sessions/", session_name);
 		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
-		return executeJson(request, crawlDefinition, null, WebCrawlStatus.class, valid200202Json);
+		return executeJson(request, crawlDefinition, null, CrawlStatus.class, valid200202Json);
 	}
 
 	@Override
-	public WebCrawlStatus runSession(final String session_name, final String jsonCrawlDefinition) throws IOException {
+	public CrawlStatus runSession(final String session_name, final String jsonCrawlDefinition) throws IOException {
 		return runSession(session_name, WebCrawlDefinition.newInstance(jsonCrawlDefinition));
 	}
 

@@ -16,6 +16,7 @@
 package com.qwazr.crawler.web;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.qwazr.crawler.common.CrawlStatus;
 import com.qwazr.server.ServiceInterface;
 
 import javax.annotation.security.RolesAllowed;
@@ -40,12 +41,12 @@ public interface WebCrawlerServiceInterface extends ServiceInterface {
 	@GET
 	@Path("/sessions")
 	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
-	TreeMap<String, WebCrawlStatus> getSessions(@QueryParam("group") String group);
+	TreeMap<String, CrawlStatus> getSessions(@QueryParam("group") String group);
 
 	@GET
 	@Path("/sessions/{session_name}")
 	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
-	WebCrawlStatus getSession(@PathParam("session_name") String session_name, @QueryParam("group") String group);
+	CrawlStatus getSession(@PathParam("session_name") String session_name, @QueryParam("group") String group);
 
 	@DELETE
 	@Path("/sessions/{session_name}")
@@ -56,12 +57,12 @@ public interface WebCrawlerServiceInterface extends ServiceInterface {
 	@Path("/sessions/{session_name}")
 	@Consumes(ServiceInterface.APPLICATION_JSON_UTF8)
 	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
-	WebCrawlStatus runSession(@PathParam("session_name") String session_name, WebCrawlDefinition crawlDefinition);
+	CrawlStatus runSession(@PathParam("session_name") String session_name, WebCrawlDefinition crawlDefinition);
 
-	WebCrawlStatus runSession(String session_name, String jsonCrawlDefinition) throws IOException;
+	CrawlStatus runSession(String session_name, String jsonCrawlDefinition) throws IOException;
 
-	TypeReference<TreeMap<String, WebCrawlStatus>> TreeMapStringCrawlTypeRef =
-			new TypeReference<TreeMap<String, WebCrawlStatus>>() {
+	TypeReference<TreeMap<String, CrawlStatus>> TreeMapStringCrawlTypeRef =
+			new TypeReference<TreeMap<String, CrawlStatus>>() {
 			};
 
 }
