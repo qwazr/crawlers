@@ -1,0 +1,80 @@
+/*
+ * Copyright 2017 Emmanuel Keller / QWAZR
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.qwazr.crawler.web.robotstxt;
+
+import com.qwazr.utils.WildcardMatcher;
+import org.apache.commons.io.IOCase;
+
+interface RobotsTxtPathMatcher {
+
+	boolean match(String path);
+
+	static RobotsTxtPathMatcher of(String pattern) {
+		if (pattern == null)
+			return null;
+		final boolean isWildcard = pattern.indexOf('*') != -1;
+		final boolean isEnding = pattern.endsWith("$");
+		if (isEnding) {
+			pattern = pattern.substring(0, pattern.length() - 1);
+			return isWildcard ? new WildcarsdMatcher(pattern) : new ExactMatcher(pattern);
+		} else {
+			return isWildcard ? new WildcarsdMatcher(pattern + '*') : new StartsWithMatcher(pattern);
+		}
+	}
+
+	final class WildcarsdMatcher implements RobotsTxtPathMatcher {
+
+		private final WildcardMatcher matcher;
+
+		WildcarsdMatcher(String pattern) {
+			matcher = new WildcardMatcher(pattern);
+		}
+
+		@Override
+		final public boolean match(String path) {
+			return path != null && matcher.match(path, IOCase.SENSITIVE);
+		}
+	}
+
+	final class ExactMatcher implements RobotsTxtPathMatcher {
+
+		private final String pattern;
+
+		ExactMatcher(String pattern) {
+			this.pattern = pattern;
+		}
+
+		@Override
+		final public boolean match(final String path) {
+			return path != null && pattern.equals(path);
+		}
+	}
+
+	final class StartsWithMatcher implements RobotsTxtPathMatcher {
+
+		private final String pattern;
+
+		StartsWithMatcher(String pattern) {
+			this.pattern = pattern;
+		}
+
+		@Override
+		final public boolean match(final String path) {
+			return path != null && path.startsWith(pattern);
+		}
+	}
+
+}

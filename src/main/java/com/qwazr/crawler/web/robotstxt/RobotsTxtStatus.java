@@ -13,19 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.qwazr.crawler.web.test;
+package com.qwazr.crawler.web.robotstxt;
 
-import com.qwazr.scripts.ScriptInterface;
+public enum RobotsTxtStatus {
 
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
+	ERROR(false), NO_ROBOTSTXT(true), ALLOW(true), DISALLOW(false);
 
-public class BeforeCrawl implements ScriptInterface {
+	public final boolean isCrawlable;
 
-	public final static AtomicInteger count = new AtomicInteger();
-
-	@Override
-	public void run(final Map<String, ?> map) throws Exception {
-		count.incrementAndGet();
+	RobotsTxtStatus(boolean isCrawlable) {
+		this.isCrawlable = isCrawlable;
 	}
+
 }
