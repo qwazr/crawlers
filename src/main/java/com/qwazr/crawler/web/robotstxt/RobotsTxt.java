@@ -114,9 +114,7 @@ public class RobotsTxt {
 			clauseSet = userAgentMap.get("*");
 		if (clauseSet == null)
 			return RobotsTxtStatus.ALLOW;
-		if (clauseSet.isAllowed(uri.toURL().getFile()))
-			return RobotsTxtStatus.ALLOW;
-		return clauseSet.getDefaultValue() ? RobotsTxtStatus.ALLOW : RobotsTxtStatus.DISALLOW;
+		return clauseSet.isAllowed(uri.toURL().getFile()) ? RobotsTxtStatus.ALLOW : RobotsTxtStatus.DISALLOW;
 	}
 
 	public static RobotsTxt download(final WebCrawlDefinition.ProxyDefinition proxy, final String userAgent,

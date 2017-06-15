@@ -51,15 +51,6 @@ final class RobotsTxtClauseSet {
 		for (Map.Entry<RobotsTxtPathMatcher, Boolean> entry : clauses.entrySet())
 			if (entry.getKey().match(path))
 				return entry.getValue();
-		return true;
-	}
-
-	/**
-	 * If there is any allow entry, the default value if false
-	 *
-	 * @return a default value
-	 */
-	final boolean getDefaultValue() {
 		return defaultValue;
 	}
 

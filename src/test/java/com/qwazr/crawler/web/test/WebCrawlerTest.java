@@ -74,6 +74,7 @@ public class WebCrawlerTest {
 		webCrawl.setImplicitlyWait(0);
 		webCrawl.setDownloadImages(false);
 		webCrawl.setMaxUrlNumber(10);
+		webCrawl.setRobotsTxtEnabled(true);
 		webCrawl.setMaxDepth(2);
 		webCrawl.entry_url = WebAppTestServer.URL;
 		return webCrawl;
@@ -102,9 +103,12 @@ public class WebCrawlerTest {
 		webCrawl.scripts = new HashMap<>();
 		webCrawl.scripts.put(WebCrawlDefinition.EventEnum.before_crawl,
 				new WebCrawlDefinition.Script(BeforeCrawl.class.getName()));
+		webCrawl.scripts.put(WebCrawlDefinition.EventEnum.after_crawl,
+				new WebCrawlDefinition.Script(AfterCrawl.class.getName()));
 		remote.runSession(sessionName, webCrawl);
 		crawlWait(sessionName, 3);
-		Assert.assertEquals(4, BeforeCrawl.count.get());
+		Assert.assertEquals(5, BeforeCrawl.count.get());
+		Assert.assertEquals(3, AfterCrawl.count.get());
 	}
 
 	@Test
