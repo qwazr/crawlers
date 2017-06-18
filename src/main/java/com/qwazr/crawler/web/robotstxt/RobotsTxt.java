@@ -61,7 +61,7 @@ public class RobotsTxt {
 	private final String userAgent;
 	private final int httpStatusCode;
 
-	RobotsTxt(final String userAgent, final InputStream input, final Charset charset) throws IOException {
+	public RobotsTxt(final String userAgent, final InputStream input, final Charset charset) throws IOException {
 		this.userAgent = userAgent;
 		this.userAgentMap = RobotsTxtUserAgentMap.of(input, charset);
 		this.httpStatusCode = 200;
