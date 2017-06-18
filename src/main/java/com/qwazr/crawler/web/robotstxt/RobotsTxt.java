@@ -40,6 +40,7 @@ import java.nio.charset.Charset;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Map;
 
 public class RobotsTxt {
 
@@ -68,6 +69,10 @@ public class RobotsTxt {
 	RobotsTxt(final int statusCode) {
 		this.userAgentMap = null;
 		this.httpStatusCode = statusCode;
+	}
+
+	public Map<String, RobotsTxtClauseSet> getClausesMap() {
+		return userAgentMap == null ? null : userAgentMap.clauseMap;
 	}
 
 	/**

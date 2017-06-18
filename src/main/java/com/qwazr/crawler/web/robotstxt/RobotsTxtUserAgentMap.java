@@ -29,7 +29,7 @@ import java.util.StringTokenizer;
  */
 final class RobotsTxtUserAgentMap {
 
-	private final Map<String, RobotsTxtClauseSet> clauseMap;
+	final Map<String, RobotsTxtClauseSet> clauseMap;
 
 	RobotsTxtUserAgentMap(Builder builder) throws IOException {
 		if (builder.builderMap != null && !builder.builderMap.isEmpty()) {
