@@ -29,12 +29,11 @@ interface RobotsTxtPathMatcher {
 			return null;
 		final boolean isWildcard = pattern.indexOf('*') != -1;
 		final boolean isEnding = pattern.endsWith("$");
-		if (isEnding) {
-			pattern = pattern.substring(0, pattern.length() - 1);
-			return isWildcard ? new WildcarsdMatcher(pattern) : new ExactMatcher(pattern);
-		} else {
-			return isWildcard ? new WildcarsdMatcher(pattern + '*') : new StartsWithMatcher(pattern);
-		}
+		if (isEnding)
+			return isWildcard ? new WildcarsdMatcher(pattern, true) : new ExactMatcher(pattern, true);
+		else
+			return isWildcard ? new WildcarsdMatcher(pattern, false) : new StartsWithMatcher(pattern);
+
 	}
 
 	abstract class PathMatcher implements RobotsTxtPathMatcher {
@@ -56,9 +55,12 @@ interface RobotsTxtPathMatcher {
 
 		private final WildcardMatcher matcher;
 
-		WildcarsdMatcher(String pattern) {
+		WildcarsdMatcher(String pattern, boolean isEnding) {
 			super(pattern);
-			matcher = new WildcardMatcher(pattern);
+			final String wPattern = isEnding ? pattern.substring(0, pattern.length() - 1) : pattern.endsWith("*") ?
+					pattern :
+					pattern + '*';
+			matcher = new WildcardMatcher(wPattern);
 		}
 
 		@Override
@@ -69,13 +71,16 @@ interface RobotsTxtPathMatcher {
 
 	final class ExactMatcher extends PathMatcher {
 
-		ExactMatcher(String pattern) {
+		private String exactPattern;
+
+		ExactMatcher(String pattern, boolean isEnding) {
 			super(pattern);
+			exactPattern = isEnding ? pattern.substring(0, pattern.length() - 1) : pattern;
 		}
 
 		@Override
 		final public boolean match(final String path) {
-			return path != null && pattern.equals(path);
+			return path != null && exactPattern.equals(path);
 		}
 	}
 
