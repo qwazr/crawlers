@@ -22,7 +22,7 @@ import java.util.Map;
 /**
  * Contains the clause list of a "robots.txt" file for one "User-agent".
  */
-final class RobotsTxtClauseSet {
+public final class RobotsTxtClauseSet {
 
 	private final static RobotsTxtClauseSet EMPTY = new RobotsTxtClauseSet();
 
