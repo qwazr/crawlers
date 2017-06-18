@@ -18,6 +18,8 @@ package com.qwazr.crawler.web.robotstxt;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Contains the clause list of a "robots.txt" file for one "User-agent".
@@ -27,16 +29,13 @@ public final class RobotsTxtClauseSet {
 	private final static RobotsTxtClauseSet EMPTY = new RobotsTxtClauseSet();
 
 	private final Map<RobotsTxtPathMatcher, Boolean> clauses;
-	private final boolean defaultValue;
 
 	private RobotsTxtClauseSet(Builder builder) {
 		clauses = Collections.unmodifiableMap(builder.clauses);
-		defaultValue = builder.defautValue;
 	}
 
 	private RobotsTxtClauseSet() {
 		clauses = null;
-		defaultValue = true;
 	}
 
 	/**
@@ -46,12 +45,19 @@ public final class RobotsTxtClauseSet {
 	final boolean isAllowed(String path) {
 		if (clauses == null || path == null)
 			return true;
-		if (path.isEmpty())
-			path = "/";
-		for (Map.Entry<RobotsTxtPathMatcher, Boolean> entry : clauses.entrySet())
-			if (entry.getKey().match(path))
-				return entry.getValue();
-		return defaultValue;
+		final String fpath = path.isEmpty() ? path + '/' : path;
+		final AtomicReference<String> pattern = new AtomicReference<>();
+		final AtomicBoolean status = new AtomicBoolean(true);
+		clauses.forEach((matcher, st) -> {
+			if (matcher.match(fpath)) {
+				final String pt = pattern.get();
+				if (pt != null && pt.length() >= matcher.getPattern().length())
+					return;
+				pattern.set(matcher.getPattern());
+				status.set(st);
+			}
+		});
+		return status.get();
 	}
 
 	public Map<RobotsTxtPathMatcher, Boolean> getClauses() {
@@ -65,15 +71,13 @@ public final class RobotsTxtClauseSet {
 	final static class Builder {
 
 		private Map<RobotsTxtPathMatcher, Boolean> clauses;
-		private boolean defautValue = true;
 
-		private boolean add(final RobotsTxtPathMatcher matcher, final Boolean result) {
+		private void add(final RobotsTxtPathMatcher matcher, final Boolean result) {
 			if (matcher == null)
-				return false;
+				return;
 			if (clauses == null)
 				clauses = new LinkedHashMap<>();
 			clauses.put(matcher, result);
-			return true;
 		}
 
 		/**
@@ -82,8 +86,7 @@ public final class RobotsTxtClauseSet {
 		 * @param pattern the path of the clause
 		 */
 		final void allow(String pattern) {
-			if (add(RobotsTxtPathMatcher.of(pattern), true))
-				defautValue = false; // If we have any allow clause, the default value is false
+			add(RobotsTxtPathMatcher.of(pattern), true);
 		}
 
 		final void disallow(String pattern) {

@@ -15,8 +15,14 @@
  */
 package com.qwazr.crawler.web.robotstxt;
 
+import com.qwazr.utils.CharsetUtils;
+import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
 import org.junit.Test;
+
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 public class RobotsTxtTest {
 
@@ -61,4 +67,19 @@ public class RobotsTxtTest {
 		shouldNotMatch("/fish*.php", "/Fish.PHP");
 	}
 
+	public void checkAllowDisallow(String url, String allow, String disallow, RobotsTxt.Status status)
+			throws IOException, URISyntaxException {
+		Assert.assertEquals(status, new RobotsTxt(
+				IOUtils.toInputStream("user-agent: *\nAllow: " + allow + "\nDisallow: " + disallow,
+						CharsetUtils.CharsetUTF8), CharsetUtils.CharsetUTF8).getStatus(URI.create(url), "ua"));
+	}
+
+	@Test
+	public void allowDisallowTests() throws IOException, URISyntaxException {
+		checkAllowDisallow("http://example.com/page", "/p", "/", RobotsTxt.Status.ALLOW);
+		checkAllowDisallow("http://example.com/folder/page", "/folder/", "/folder", RobotsTxt.Status.ALLOW);
+		//checkAllowDisallow("http://example.com/page.htm", "/page", "/*.htm", RobotsTxt.Status.ALLOW);
+		checkAllowDisallow("http://example.com/", "/$", "/", RobotsTxt.Status.ALLOW);
+		checkAllowDisallow("http://example.com/page.htm", "/$", "/", RobotsTxt.Status.DISALLOW);
+	}
 }
