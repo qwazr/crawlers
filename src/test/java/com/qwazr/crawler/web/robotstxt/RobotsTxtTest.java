@@ -22,12 +22,14 @@ public class RobotsTxtTest {
 
 	void shouldMatch(String pattern, String... paths) {
 		final RobotsTxtPathMatcher matcher = RobotsTxtPathMatcher.of(pattern);
+		Assert.assertEquals(pattern, matcher.getPattern());
 		for (String path : paths)
 			Assert.assertTrue("Path: " + path + " - Pattern: " + pattern, matcher.match(path));
 	}
 
 	void shouldNotMatch(String pattern, String... paths) {
 		final RobotsTxtPathMatcher matcher = RobotsTxtPathMatcher.of(pattern);
+		Assert.assertEquals(pattern, matcher.getPattern());
 		for (String path : paths)
 			Assert.assertFalse("Path: " + path + " - Pattern: " + pattern, matcher.match(path));
 	}

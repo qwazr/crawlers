@@ -54,6 +54,10 @@ final class RobotsTxtClauseSet {
 		return defaultValue;
 	}
 
+	public Map<RobotsTxtPathMatcher, Boolean> getClauses() {
+		return clauses;
+	}
+
 	static Builder of() {
 		return new Builder();
 	}

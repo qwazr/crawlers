@@ -22,6 +22,8 @@ interface RobotsTxtPathMatcher {
 
 	boolean match(String path);
 
+	String getPattern();
+
 	static RobotsTxtPathMatcher of(String pattern) {
 		if (pattern == null)
 			return null;
@@ -35,11 +37,27 @@ interface RobotsTxtPathMatcher {
 		}
 	}
 
-	final class WildcarsdMatcher implements RobotsTxtPathMatcher {
+	abstract class PathMatcher implements RobotsTxtPathMatcher {
+
+		final String pattern;
+
+		PathMatcher(String pattern) {
+			this.pattern = pattern;
+		}
+
+		@Override
+		final public String getPattern() {
+			return pattern;
+		}
+
+	}
+
+	final class WildcarsdMatcher extends PathMatcher {
 
 		private final WildcardMatcher matcher;
 
 		WildcarsdMatcher(String pattern) {
+			super(pattern);
 			matcher = new WildcardMatcher(pattern);
 		}
 
@@ -49,12 +67,10 @@ interface RobotsTxtPathMatcher {
 		}
 	}
 
-	final class ExactMatcher implements RobotsTxtPathMatcher {
-
-		private final String pattern;
+	final class ExactMatcher extends PathMatcher {
 
 		ExactMatcher(String pattern) {
-			this.pattern = pattern;
+			super(pattern);
 		}
 
 		@Override
@@ -63,12 +79,10 @@ interface RobotsTxtPathMatcher {
 		}
 	}
 
-	final class StartsWithMatcher implements RobotsTxtPathMatcher {
-
-		private final String pattern;
+	final class StartsWithMatcher extends PathMatcher {
 
 		StartsWithMatcher(String pattern) {
-			this.pattern = pattern;
+			super(pattern);
 		}
 
 		@Override
