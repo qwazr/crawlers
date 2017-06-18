@@ -24,7 +24,6 @@ import com.qwazr.crawler.common.CrawlThread;
 import com.qwazr.crawler.web.driver.BrowserDriver;
 import com.qwazr.crawler.web.driver.BrowserDriverBuilder;
 import com.qwazr.crawler.web.robotstxt.RobotsTxt;
-import com.qwazr.crawler.web.robotstxt.RobotsTxtStatus;
 import com.qwazr.scripts.ScriptRunThread;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.RegExpUtils;
@@ -353,7 +352,7 @@ public class WebCrawlThread extends CrawlThread<WebCrawlerManager> {
 		currentURI.setFilteredLinks(filteredURIs);
 	}
 
-	private RobotsTxtStatus checkRobotsTxt(CurrentURI currentURI)
+	private RobotsTxt.Status checkRobotsTxt(CurrentURI currentURI)
 			throws IOException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException,
 			KeyManagementException {
 		if (robotsTxtMap == null)
@@ -398,7 +397,7 @@ public class WebCrawlThread extends CrawlThread<WebCrawlerManager> {
 
 			// Check the robotsTxt status
 			try {
-				final RobotsTxtStatus robotsTxtStatus = checkRobotsTxt(currentURI);
+				final RobotsTxt.Status robotsTxtStatus = checkRobotsTxt(currentURI);
 				if (robotsTxtStatus != null && !robotsTxtStatus.isCrawlable) {
 					currentURI.setIgnored(true);
 					currentURI.setRobotsTxtDisallow(true);

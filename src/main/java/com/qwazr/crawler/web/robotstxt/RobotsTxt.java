@@ -43,6 +43,18 @@ import java.security.NoSuchAlgorithmException;
 
 public class RobotsTxt {
 
+	public enum Status {
+
+		ERROR(false), NO_ROBOTSTXT(true), ALLOW(true), DISALLOW(false);
+
+		public final boolean isCrawlable;
+
+		Status(boolean isCrawlable) {
+			this.isCrawlable = isCrawlable;
+		}
+
+	}
+
 	private static final Logger logger = LoggerFactory.getLogger(RobotsTxt.class);
 
 	private final RobotsTxtUserAgentMap userAgentMap;
@@ -90,31 +102,31 @@ public class RobotsTxt {
 	 * @throws MalformedURLException
 	 * @throws URISyntaxException
 	 */
-	public final RobotsTxtStatus getStatus(final URI uri) throws MalformedURLException, URISyntaxException {
-		final RobotsTxtStatus status = getStatusNoLogs(uri);
+	public final Status getStatus(final URI uri) throws MalformedURLException, URISyntaxException {
+		final Status status = getStatusNoLogs(uri);
 		if (logger.isInfoEnabled())
 			logger.info("Check robots.txt returns " + status.name() + " for " + uri);
 		return status;
 	}
 
-	private RobotsTxtStatus getStatusNoLogs(final URI uri) throws MalformedURLException, URISyntaxException {
+	private Status getStatusNoLogs(final URI uri) throws MalformedURLException, URISyntaxException {
 		switch (httpStatusCode) {
 		case 400:
 		case 404:
-			return RobotsTxtStatus.NO_ROBOTSTXT;
+			return Status.NO_ROBOTSTXT;
 		case 200:
 			break;
 		default:
-			return RobotsTxtStatus.ERROR;
+			return Status.ERROR;
 		}
 		if (userAgentMap == null)
-			return RobotsTxtStatus.ALLOW;
+			return Status.ALLOW;
 		RobotsTxtClauseSet clauseSet = userAgentMap.get(userAgent.toLowerCase());
 		if (clauseSet == null)
 			clauseSet = userAgentMap.get("*");
 		if (clauseSet == null)
-			return RobotsTxtStatus.ALLOW;
-		return clauseSet.isAllowed(uri.toURL().getFile()) ? RobotsTxtStatus.ALLOW : RobotsTxtStatus.DISALLOW;
+			return Status.ALLOW;
+		return clauseSet.isAllowed(uri.toURL().getFile()) ? Status.ALLOW : Status.DISALLOW;
 	}
 
 	public static RobotsTxt download(final WebCrawlDefinition.ProxyDefinition proxy, final String userAgent,
