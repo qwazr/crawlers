@@ -58,17 +58,14 @@ public class RobotsTxt {
 	private static final Logger logger = LoggerFactory.getLogger(RobotsTxt.class);
 
 	private final RobotsTxtUserAgentMap userAgentMap;
-	private final String userAgent;
 	private final int httpStatusCode;
 
-	public RobotsTxt(final String userAgent, final InputStream input, final Charset charset) throws IOException {
-		this.userAgent = userAgent;
+	public RobotsTxt(final InputStream input, final Charset charset) throws IOException {
 		this.userAgentMap = RobotsTxtUserAgentMap.of(input, charset);
 		this.httpStatusCode = 200;
 	}
 
-	RobotsTxt(final String userAgent, final int statusCode) {
-		this.userAgent = userAgent;
+	RobotsTxt(final int statusCode) {
 		this.userAgentMap = null;
 		this.httpStatusCode = statusCode;
 	}
@@ -102,14 +99,16 @@ public class RobotsTxt {
 	 * @throws MalformedURLException
 	 * @throws URISyntaxException
 	 */
-	public final Status getStatus(final URI uri) throws MalformedURLException, URISyntaxException {
-		final Status status = getStatusNoLogs(uri);
+	public final Status getStatus(final URI uri, final String userAgent)
+			throws MalformedURLException, URISyntaxException {
+		final Status status = getStatusNoLogs(uri, userAgent);
 		if (logger.isInfoEnabled())
 			logger.info("Check robots.txt returns " + status.name() + " for " + uri);
 		return status;
 	}
 
-	private Status getStatusNoLogs(final URI uri) throws MalformedURLException, URISyntaxException {
+	private Status getStatusNoLogs(final URI uri, final String userAgent)
+			throws MalformedURLException, URISyntaxException {
 		switch (httpStatusCode) {
 		case 400:
 		case 404:
@@ -149,7 +148,7 @@ public class RobotsTxt {
 					final ContentType contentType = ContentType.getOrDefault(entity);
 					final Charset charset = contentType.getCharset();
 					try (final InputStream is = entity.getContent()) {
-						return new RobotsTxt(userAgent, is, charset == null ? CharsetUtils.CharsetUTF8 : charset);
+						return new RobotsTxt(is, charset == null ? CharsetUtils.CharsetUTF8 : charset);
 					}
 				} finally {
 					IOUtils.close((CloseableHttpResponse) response);
@@ -164,7 +163,7 @@ public class RobotsTxt {
 				if (logger.isInfoEnabled())
 					logger.info("Get wrong status (" + sc + " code for: " + uri);
 			}
-			return new RobotsTxt(userAgent, sc);
+			return new RobotsTxt(sc);
 		}
 	}
 

@@ -366,7 +366,7 @@ public class WebCrawlThread extends CrawlThread<WebCrawlerManager> {
 				robotsTxt = RobotsTxt.download(driver.getProxy(), robotsTxtUserAgent, robotsTxtURI);
 				robotsTxtMap.put(robotsTxtURI, robotsTxt);
 			}
-			return robotsTxt.getStatus(uri);
+			return robotsTxt.getStatus(uri, robotsTxtUserAgent);
 		} finally {
 			timeTracker.next("Robots.txt check");
 		}
