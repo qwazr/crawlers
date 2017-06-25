@@ -18,7 +18,8 @@ package com.qwazr.crawler.file;
 import com.qwazr.crawler.common.CrawlSessionImpl;
 import com.qwazr.crawler.common.CrawlStatus;
 import com.qwazr.crawler.common.CrawlThread;
-import org.slf4j.Logger;
+
+import java.util.logging.Logger;
 
 public class FileCrawlThread extends CrawlThread<FileCrawlerManager> {
 

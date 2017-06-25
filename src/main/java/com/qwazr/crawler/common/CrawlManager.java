@@ -17,13 +17,13 @@ package com.qwazr.crawler.common;
 
 import com.qwazr.cluster.ClusterManager;
 import com.qwazr.server.ServerException;
-import org.slf4j.Logger;
 
 import javax.ws.rs.core.Response;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.logging.Logger;
 
 public abstract class CrawlManager<T extends CrawlThread<?>, D extends CrawlDefinition> {
 
@@ -57,7 +57,7 @@ public abstract class CrawlManager<T extends CrawlThread<?>, D extends CrawlDefi
 		final T crawlThread = crawlSessionMap.get(sessionName);
 		if (crawlThread == null)
 			throw new ServerException(Response.Status.NOT_FOUND, "Session not found: " + sessionName);
-		logger.info("Aborting session: {} - {}", sessionName, abortingReason);
+		logger.info(() -> "Aborting session: " + sessionName + " - " + abortingReason);
 		crawlThread.abort(abortingReason);
 	}
 
@@ -68,7 +68,7 @@ public abstract class CrawlManager<T extends CrawlThread<?>, D extends CrawlDefi
 		final AtomicBoolean newThread = new AtomicBoolean(false);
 
 		final T crawlThread = crawlSessionMap.computeIfAbsent(sessionName, key -> {
-			logger.info("Create session: {}", sessionName);
+			logger.info(() -> "Create session: " + sessionName);
 			newThread.set(true);
 			return newCrawlThread(sessionName, crawlDefinition);
 		});
@@ -80,7 +80,7 @@ public abstract class CrawlManager<T extends CrawlThread<?>, D extends CrawlDefi
 	}
 
 	public void removeSession(final T crawlThread) {
-		logger.info("Remove session: {}", crawlThread.getSessionName());
+		logger.info(() -> "Remove session: " + crawlThread.getSessionName());
 		crawlSessionMap.remove(crawlThread.getSessionName(), crawlThread);
 	}
 

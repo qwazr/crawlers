@@ -15,7 +15,8 @@
  */
 package com.qwazr.crawler.common;
 
-import org.slf4j.Logger;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public abstract class CrawlThread<M extends CrawlManager> implements Runnable {
 
@@ -40,7 +41,7 @@ public abstract class CrawlThread<M extends CrawlManager> implements Runnable {
 		try {
 			runner();
 		} catch (Exception e) {
-			logger.error(e.getMessage(), e);
+			logger.log(Level.SEVERE, e, e::getMessage);
 		} finally {
 			manager.removeSession(this);
 		}

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,7 +12,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- **/
+ */
 package com.qwazr.crawler.web;
 
 import com.google.common.net.InternetDomainName;
@@ -26,6 +26,7 @@ import com.qwazr.crawler.web.driver.BrowserDriverBuilder;
 import com.qwazr.crawler.web.robotstxt.RobotsTxt;
 import com.qwazr.scripts.ScriptRunThread;
 import com.qwazr.server.ServerException;
+import com.qwazr.utils.LoggerUtils;
 import com.qwazr.utils.RegExpUtils;
 import com.qwazr.utils.TimeTracker;
 import com.qwazr.utils.UBuilder;
@@ -36,8 +37,6 @@ import org.openqa.selenium.Cookie;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.script.ScriptException;
 import javax.ws.rs.core.Response.Status;
@@ -56,12 +55,14 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.PatternSyntaxException;
 
 public class WebCrawlThread extends CrawlThread<WebCrawlerManager> {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(WebCrawlThread.class);
+	private static final Logger LOGGER = LoggerUtils.getLogger(WebCrawlThread.class);
 
 	private final WebCrawlDefinition crawlDefinition;
 	private final InternetDomainName internetDomainName;
@@ -151,7 +152,7 @@ public class WebCrawlThread extends CrawlThread<WebCrawlerManager> {
 	 * @param uri
 	 * @return
 	 */
-	private URI checkLink(URI uri) {
+	private URI checkLink(final URI uri) {
 		UBuilder uriBuilder = new UBuilder(uri);
 		if (crawlDefinition.remove_fragments != null && crawlDefinition.remove_fragments)
 			uriBuilder.setFragment(null);
@@ -162,7 +163,7 @@ public class WebCrawlThread extends CrawlThread<WebCrawlerManager> {
 		try {
 			return uriBuilder.build();
 		} catch (URISyntaxException e) {
-			LOGGER.warn("Cannot build the URI from " + uri.toString(), e);
+			LOGGER.log(Level.WARNING, e, () -> "Cannot build the URI from " + uri.toString());
 			return null;
 		}
 	}
@@ -224,8 +225,7 @@ public class WebCrawlThread extends CrawlThread<WebCrawlerManager> {
 		if (!"http".equalsIgnoreCase(scheme) && !"https".equalsIgnoreCase(scheme)) {
 			session.incIgnoredCount();
 			currentURI.setIgnored(true);
-			if (LOGGER.isInfoEnabled())
-				LOGGER.info("Ignored (not http) " + uri);
+			LOGGER.info(() -> "Ignored (not http) " + currentURI.getInitialURI());
 			return;
 		}
 
@@ -240,8 +240,7 @@ public class WebCrawlThread extends CrawlThread<WebCrawlerManager> {
 		}
 
 		// Load the URL
-		if (LOGGER.isInfoEnabled())
-			LOGGER.info("Crawling " + uri + " (" + currentURI.getDepth() + ")");
+		LOGGER.info(() -> "Crawling " + currentURI.getInitialURI() + " (" + currentURI.getDepth() + ")");
 		try {
 			timeTracker.next(null);
 			crawlProvider.apply();
@@ -268,8 +267,7 @@ public class WebCrawlThread extends CrawlThread<WebCrawlerManager> {
 		// Check again with exclusion/inclusion list
 		// in case of redirection
 		if (currentURI.isRedirected()) {
-			if (LOGGER.isInfoEnabled())
-				LOGGER.info("Redirected " + currentURI.getInitialURI() + " to " + uriString);
+			LOGGER.info(() -> "Redirected " + currentURI.getInitialURI() + " to " + currentURI.getUri());
 			try {
 				scriptBeforeCrawl(currentURI, uriString);
 			} catch (Exception e) {
@@ -299,15 +297,13 @@ public class WebCrawlThread extends CrawlThread<WebCrawlerManager> {
 					try {
 						currentURI.setBaseURI(new URI(href));
 					} catch (URISyntaxException e) {
-						if (LOGGER.isWarnEnabled())
-							LOGGER.warn("Invalid URI in base HREF: " + href + " in " + uriString);
+						LOGGER.warning(() -> "Invalid URI in base HREF: " + href + " in " + currentURI.getUri());
 					}
 				}
 			} catch (org.openqa.selenium.NoSuchElementException e) {
-				// OK that's not really an error
+				// OK that's not an error
 			} catch (Exception e) {
-				if (LOGGER.isWarnEnabled())
-					LOGGER.warn("Cannot locate base href for " + uriString + " " + e.getMessage());
+				LOGGER.warning(() -> "Cannot locate base href for " + currentURI.getUri() + " " + e.getMessage());
 			}
 		}
 
@@ -322,8 +318,7 @@ public class WebCrawlThread extends CrawlThread<WebCrawlerManager> {
 			timeTracker.next(null);
 			driver.findLinks(driver, hrefSet);
 		} catch (Exception e) {
-			if (LOGGER.isWarnEnabled())
-				LOGGER.warn("Cannot extract links from " + uriString, e);
+			LOGGER.log(Level.WARNING, e, () -> "Cannot extract links from " + currentURI.getUri());
 		} finally {
 			timeTracker.next("Find links");
 		}
@@ -332,8 +327,7 @@ public class WebCrawlThread extends CrawlThread<WebCrawlerManager> {
 		final ArrayList<URI> uris = new ArrayList<>(hrefSet.size());
 		currentURI.hrefToURICollection(hrefSet, uris);
 		currentURI.setLinks(uris);
-		if (LOGGER.isInfoEnabled())
-			LOGGER.info("Link founds " + uri + " : " + uris.size());
+		LOGGER.info(() -> "Link founds " + currentURI.getUri() + " : " + uris.size());
 
 		final ArrayList<URI> filteredURIs = new ArrayList<>();
 		for (URI u : uris) {
@@ -465,13 +459,13 @@ public class WebCrawlThread extends CrawlThread<WebCrawlerManager> {
 			try {
 				crawlOne(crawledURIs, new GetProvider(uri), null, depth == null ? 0 : depth);
 			} catch (URISyntaxException e) {
-				LOGGER.warn("Malformed URI: " + uri);
+				LOGGER.warning(() -> "Malformed URI: " + uri);
 			} catch (InterruptedException e) {
-				LOGGER.warn("Interruption on " + uri, e);
+				LOGGER.log(Level.WARNING, e, () -> "Interruption on " + uri);
 			} catch (IOException e) {
-				LOGGER.warn("IO Exception on " + uri, e);
+				LOGGER.log(Level.WARNING, e, () -> "IO Exception on " + uri);
 			} catch (ClassNotFoundException e) {
-				LOGGER.error("Cannot crawl " + uri, e);
+				LOGGER.log(Level.SEVERE, e, () -> "Cannot crawl " + uri);
 			}
 		});
 	}
@@ -535,7 +529,7 @@ public class WebCrawlThread extends CrawlThread<WebCrawlerManager> {
 				if (driver != null)
 					driver.quit();
 			} catch (Exception e) {
-				LOGGER.warn(e.getMessage(), e);
+				LOGGER.log(Level.WARNING, e, e::getMessage);
 			}
 			script(EventEnum.after_session, null);
 		}

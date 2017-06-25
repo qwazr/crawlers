@@ -1,5 +1,5 @@
-/**
- * Copyright 2016 Emmanuel Keller / QWAZR
+/*
+ * Copyright 2016-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,7 +12,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- **/
+ */
 package com.qwazr.crawler.web.test;
 
 import com.qwazr.crawler.common.CrawlStatus;
@@ -22,8 +22,8 @@ import com.qwazr.crawler.web.WebCrawlerServiceBuilder;
 import com.qwazr.crawler.web.WebCrawlerServiceInterface;
 import com.qwazr.server.RemoteService;
 import com.qwazr.server.client.ErrorWrapper;
+import com.qwazr.utils.RandomUtils;
 import com.qwazr.utils.WaitFor;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -91,14 +91,14 @@ public class WebCrawlerTest {
 
 	@Test
 	public void test300SimpleCrawl() throws InterruptedException {
-		final String sessionName = RandomStringUtils.randomAlphanumeric(10);
+		final String sessionName = RandomUtils.alphanumeric(10);
 		remote.runSession(sessionName, getNewWebCrawl());
 		crawlWait(sessionName, 3);
 	}
 
 	@Test
 	public void test400CrawlEvent() throws InterruptedException {
-		final String sessionName = RandomStringUtils.randomAlphanumeric(10);
+		final String sessionName = RandomUtils.alphanumeric(10);
 		final WebCrawlDefinition webCrawl = getNewWebCrawl();
 		webCrawl.scripts = new HashMap<>();
 		webCrawl.scripts.put(WebCrawlDefinition.EventEnum.before_crawl,

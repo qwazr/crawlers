@@ -20,6 +20,7 @@ import com.qwazr.crawler.web.driver.BrowserDriver;
 import com.qwazr.utils.CharsetUtils;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.LinkUtils;
+import com.qwazr.utils.LoggerUtils;
 import com.qwazr.utils.http.HttpClients;
 import com.qwazr.utils.http.HttpRequest;
 import org.apache.http.HttpEntity;
@@ -28,8 +29,6 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.entity.ContentType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -41,6 +40,7 @@ import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Map;
+import java.util.logging.Logger;
 
 public class RobotsTxt {
 
@@ -56,7 +56,7 @@ public class RobotsTxt {
 
 	}
 
-	private static final Logger logger = LoggerFactory.getLogger(RobotsTxt.class);
+	private static final Logger logger = LoggerUtils.getLogger(RobotsTxt.class);
 
 	private final RobotsTxtUserAgentMap userAgentMap;
 	private final int httpStatusCode;
@@ -107,8 +107,7 @@ public class RobotsTxt {
 	public final Status getStatus(final URI uri, final String userAgent)
 			throws MalformedURLException, URISyntaxException {
 		final Status status = getStatusNoLogs(uri, userAgent);
-		if (logger.isInfoEnabled())
-			logger.info("Check robots.txt returns " + status.name() + " for " + uri);
+		logger.info(() -> "Check robots.txt returns " + status.name() + " for " + uri);
 		return status;
 	}
 
@@ -139,9 +138,7 @@ public class RobotsTxt {
 			final HttpRequest request = HttpRequest.Get(uri.toString()).addHeader("Connection", "close").addHeader(
 					"User-Agent", userAgent);
 			BrowserDriver.applyProxy(proxy, uri, request);
-
-			if (logger.isInfoEnabled())
-				logger.info("Try to download robots.txt " + uri);
+			logger.info(() -> "Try to download robots.txt " + uri);
 			return HttpClients.UNSECURE_HTTP_CLIENT.execute(request.request, response -> {
 				try {
 					final StatusLine statusLine = response.getStatusLine();
@@ -161,13 +158,10 @@ public class RobotsTxt {
 			});
 		} catch (HttpResponseException e) {
 			int sc = e.getStatusCode();
-			if (sc != 404) {
-				if (logger.isWarnEnabled())
-					logger.warn("Get wrong status (" + sc + " code for: " + uri);
-			} else {
-				if (logger.isInfoEnabled())
-					logger.info("Get wrong status (" + sc + " code for: " + uri);
-			}
+			if (sc != 404)
+				logger.warning(() -> "Get wrong status (" + sc + " code for: " + uri);
+			else
+				logger.info(() -> "Get wrong status (" + sc + " code for: " + uri);
 			return new RobotsTxt(sc);
 		}
 	}

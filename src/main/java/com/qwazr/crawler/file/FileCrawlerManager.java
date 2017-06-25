@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,21 +12,21 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- **/
+ */
 package com.qwazr.crawler.file;
 
 import com.qwazr.cluster.ClusterManager;
 import com.qwazr.crawler.common.CrawlManager;
 import com.qwazr.crawler.common.CrawlSessionImpl;
 import com.qwazr.crawler.web.WebCrawlerManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.qwazr.utils.LoggerUtils;
 
 import java.util.concurrent.ExecutorService;
+import java.util.logging.Logger;
 
 public class FileCrawlerManager extends CrawlManager<FileCrawlThread, FileCrawlDefinition> {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(WebCrawlerManager.class);
+	private static final Logger LOGGER = LoggerUtils.getLogger(WebCrawlerManager.class);
 
 	protected FileCrawlerManager(ClusterManager clusterManager, ExecutorService executorService, Logger logger) {
 		super(clusterManager, executorService, logger);

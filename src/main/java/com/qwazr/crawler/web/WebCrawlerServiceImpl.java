@@ -1,5 +1,5 @@
-/**
- * Copyright 2014-2016 Emmanuel Keller / QWAZR
+/*
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,24 +12,24 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- **/
+ */
 package com.qwazr.crawler.web;
 
 import com.qwazr.crawler.common.CrawlStatus;
 import com.qwazr.server.AbstractServiceImpl;
 import com.qwazr.server.ServerException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.qwazr.utils.LoggerUtils;
 
 import javax.annotation.PostConstruct;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
 import java.util.TreeMap;
+import java.util.logging.Logger;
 
 class WebCrawlerServiceImpl extends AbstractServiceImpl implements WebCrawlerServiceInterface {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(WebCrawlerServiceImpl.class);
+	private static final Logger LOGGER = LoggerUtils.getLogger(WebCrawlerServiceImpl.class);
 
 	private volatile WebCrawlerManager webrawlerManager;
 

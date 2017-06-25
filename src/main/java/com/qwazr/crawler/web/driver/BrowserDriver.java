@@ -1,5 +1,5 @@
-/**
- * Copyright 2014-2016 Emmanuel Keller / QWAZR
+/*
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,13 +12,14 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- **/
+ */
 package com.qwazr.crawler.web.driver;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.qwazr.crawler.web.WebCrawlDefinition;
 import com.qwazr.crawler.web.WebRequestDefinition;
 import com.qwazr.utils.IOUtils;
+import com.qwazr.utils.LoggerUtils;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.http.HttpClients;
 import com.qwazr.utils.http.HttpRequest;
@@ -29,14 +30,26 @@ import org.apache.http.StatusLine;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
-import org.openqa.selenium.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.openqa.selenium.By;
+import org.openqa.selenium.Dimension;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.NoSuchElementException;
+import org.openqa.selenium.NoSuchFrameException;
+import org.openqa.selenium.OutputType;
+import org.openqa.selenium.SearchContext;
+import org.openqa.selenium.TakesScreenshot;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebDriverException;
+import org.openqa.selenium.WebElement;
 import org.w3c.css.sac.CSSException;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.Closeable;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.KeyManagementException;
@@ -47,10 +60,12 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 final public class BrowserDriver implements WebDriver, Closeable, AdditionalCapabilities.All {
 
-	protected static final Logger logger = LoggerFactory.getLogger(BrowserDriver.class);
+	protected static final Logger logger = LoggerUtils.getLogger(BrowserDriver.class);
 
 	private final WebCrawlDefinition.ProxyDefinition currentProxy;
 	private final BrowserDriverEnum type;
@@ -98,7 +113,6 @@ final public class BrowserDriver implements WebDriver, Closeable, AdditionalCapa
 		} catch (WebDriverException e) {
 			if (!faultTolerant)
 				throw e;
-			logger.warn(e.getMessage(), e);
 			return null;
 		}
 	}
@@ -254,8 +268,7 @@ final public class BrowserDriver implements WebDriver, Closeable, AdditionalCapa
 			try {
 				text = getTextSafe(element);
 			} catch (CSSException e) {
-				if (logger.isWarnEnabled())
-					logger.warn("Cannot extract snippet: " + e.getMessage(), e);
+				logger.log(Level.WARNING, e, () -> "Cannot extract snippet: " + e.getMessage());
 			}
 			if (text == null)
 				continue;

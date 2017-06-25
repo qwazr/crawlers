@@ -18,37 +18,40 @@ package com.qwazr.crawler.web;
 import com.qwazr.crawler.common.CrawlStatus;
 import com.qwazr.server.RemoteService;
 import com.qwazr.server.ServerException;
-import com.qwazr.server.client.JsonMultiClientAbstract;
+import com.qwazr.server.client.MultiClient;
 import com.qwazr.utils.ExceptionUtils;
+import com.qwazr.utils.LoggerUtils;
 import com.qwazr.utils.http.HttpResponseEntityException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
 import java.util.TreeMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-public class WebCrawlerMultiClient extends JsonMultiClientAbstract<WebCrawlerSingleClient>
-		implements WebCrawlerServiceInterface {
+public class WebCrawlerMultiClient extends MultiClient<WebCrawlerSingleClient> implements WebCrawlerServiceInterface {
 
-	private static final Logger logger = LoggerFactory.getLogger(WebCrawlerMultiClient.class);
+	private static final Logger logger = LoggerUtils.getLogger(WebCrawlerMultiClient.class);
 
-	public WebCrawlerMultiClient(final RemoteService... remote) {
-		super(new WebCrawlerSingleClient[remote.length], remote);
+	public WebCrawlerMultiClient(final RemoteService... remotes) {
+		super(getClients(remotes));
 	}
 
-	@Override
-	protected WebCrawlerSingleClient newClient(final RemoteService remote) {
-		return new WebCrawlerSingleClient(remote);
+	private static WebCrawlerSingleClient[] getClients(final RemoteService... remotes) {
+		final WebCrawlerSingleClient[] clients = new WebCrawlerSingleClient[remotes.length];
+		int i = 0;
+		for (RemoteService remote : remotes)
+			clients[i++] = new WebCrawlerSingleClient(remote);
+		return clients;
 	}
 
 	@Override
 	public TreeMap<String, CrawlStatus> getSessions(String group) {
 
 		// We merge the result of all the nodes
-		TreeMap<String, CrawlStatus> globalSessions = new TreeMap<String, CrawlStatus>();
+		final TreeMap<String, CrawlStatus> globalSessions = new TreeMap<>();
 		for (WebCrawlerSingleClient client : this) {
 			try {
 				TreeMap<String, CrawlStatus> localSessions = client.getSessions(group);
@@ -56,7 +59,7 @@ public class WebCrawlerMultiClient extends JsonMultiClientAbstract<WebCrawlerSin
 					continue;
 				globalSessions.putAll(localSessions);
 			} catch (WebApplicationException e) {
-				logger.warn(e.getMessage(), e);
+				logger.log(Level.WARNING, e, e::getMessage);
 			}
 		}
 		return globalSessions;

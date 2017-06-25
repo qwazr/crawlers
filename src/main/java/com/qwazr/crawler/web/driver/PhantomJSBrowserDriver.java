@@ -1,5 +1,5 @@
-/**
- * Copyright 2014-2016 Emmanuel Keller / QWAZR
+/*
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,14 +15,13 @@
  */
 package com.qwazr.crawler.web.driver;
 
+import com.qwazr.utils.LoggerUtils;
 import com.qwazr.utils.http.HttpUtils;
 import com.qwazr.utils.process.ProcessUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.apache.http.entity.mime.MIME;
 import org.openqa.selenium.Capabilities;
 import org.openqa.selenium.phantomjs.PhantomJSDriver;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.LinkedHashMap;
@@ -30,10 +29,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class PhantomJSBrowserDriver extends PhantomJSDriver implements AdditionalCapabilities.ResponseHeader {
 
-	protected static final Logger logger = LoggerFactory.getLogger(PhantomJSBrowserDriver.class);
+	protected static final Logger logger = LoggerUtils.getLogger(PhantomJSBrowserDriver.class);
 
 	private final AtomicReference<Number> pid = new AtomicReference<>(null);
 
@@ -72,8 +73,7 @@ public class PhantomJSBrowserDriver extends PhantomJSDriver implements Additiona
 			try {
 				ProcessUtils.forceKill(pid.getAndSet(null));
 			} catch (IOException | InterruptedException e) {
-				if (logger.isWarnEnabled())
-					logger.warn("Cannot kill PhantomJS PID " + pid.get(), e);
+				logger.log(Level.WARNING, e, () -> "Cannot kill PhantomJS PID " + pid.get());
 			}
 			return;
 		}
@@ -85,8 +85,7 @@ public class PhantomJSBrowserDriver extends PhantomJSDriver implements Additiona
 			try {
 				ProcessUtils.kill(pid.get());
 			} catch (IOException | InterruptedException e) {
-				if (logger.isWarnEnabled())
-					logger.warn("Cannot check if PhantomJS PID is running " + pid.get(), e);
+				logger.log(Level.WARNING, e, () -> "Cannot check if PhantomJS PID is running " + pid.get());
 			}
 			if (!processIsRunning()) {
 				pid.set(null);
@@ -95,8 +94,7 @@ public class PhantomJSBrowserDriver extends PhantomJSDriver implements Additiona
 			try {
 				ProcessUtils.forceKill(pid.get());
 			} catch (IOException | InterruptedException e) {
-				if (logger.isWarnEnabled())
-					logger.warn("Cannot check if PhantomJS PID is running " + pid.get(), e);
+				logger.log(Level.WARNING, e, () -> "Cannot check if PhantomJS PID is running " + pid.get());
 			}
 		}
 	}
@@ -105,20 +103,18 @@ public class PhantomJSBrowserDriver extends PhantomJSDriver implements Additiona
 		if (pid.get() == null)
 			return false;
 		try {
-			if (logger.isInfoEnabled())
-				logger.info("Check if PhantomJS PID is running: " + pid.get());
+			logger.info(() -> "Check if PhantomJS PID is running: " + pid.get());
 			return ProcessUtils.isRunning(pid.get());
 		} catch (IOException | InterruptedException e) {
-			if (logger.isWarnEnabled())
-				logger.warn("Cannot check if PID is running " + pid.get(), e);
+			logger.log(Level.WARNING, e, () -> "Cannot check if PID is running " + pid.get());
 			return true;
 		}
 	}
 
 	private String JS_FIND_END_ENTRY =
-			"if (!this.resources) return; " + "for (var key in this.resources) { " + "var res = this.resources[key]; "
-					+ "if (res.endReply) { " + "if (res.endReply.url == arguments[0]) { " + "return res.endReply; "
-					+ " } " + " } " + " } ";
+			"if (!this.resources) return; " + "for (var key in this.resources) { " + "var res = this.resources[key]; " +
+					"if (res.endReply) { " + "if (res.endReply.url == arguments[0]) { " + "return res.endReply; " +
+					" } " + " } " + " } ";
 
 	private boolean findEndEntry(String url) {
 		endEntry = (Map<String, ?>) executePhantomJS(JS_FIND_END_ENTRY, url);
@@ -143,7 +139,7 @@ public class PhantomJSBrowserDriver extends PhantomJSDriver implements Additiona
 		} catch (InterruptedException e) {
 		}
 		if (!found)
-			logger.warn("PhantomJSDriver: Resource EndEntry not found: " + requestedUrl);
+			logger.warning(() -> "PhantomJSDriver: Resource EndEntry not found: " + requestedUrl);
 	}
 
 	@Override
