@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>qwazr-crawlers</artifactId>
     <name>QWAZR Crawlers</name>
-    <version>1.2.0</version>
+    <version>1.2.1-SNAPSHOT</version>
     <description>Web and File Crawlers for QWAZR</description>
     <packaging>jar</packaging>
 
@@ -17,17 +18,21 @@
     <properties>
         <selenium.version>3.4.0</selenium.version>
         <htmlunit.version>2.27</htmlunit.version>
-        <jetty.version>9.4.3.v20170317</jetty.version>
+        <jetty.version>9.4.6.v20170531</jetty.version>
     </properties>
 
     <scm>
         <connection>scm:git:git@github.com:qwazr/crawlers.git</connection>
         <developerConnection>scm:git:git@github.com:qwazr/crawlers.git</developerConnection>
         <url>git@github.com:qwazr/crawlers.git</url>
-      <tag>v1.2.0</tag>
-  </scm>
+    </scm>
 
     <dependencies>
+        <dependency>
+            <artifactId>neko-htmlunit</artifactId>
+            <groupId>net.sourceforge.htmlunit</groupId>
+            <version>${htmlunit.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-util</artifactId>
@@ -36,6 +41,21 @@
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-io</artifactId>
+            <version>${jetty.version}</version>
+        </dependency>
+        <dependency>
+            <artifactId>websocket-client</artifactId>
+            <groupId>org.eclipse.jetty.websocket</groupId>
+            <version>${jetty.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty.websocket</groupId>
+            <artifactId>websocket-common</artifactId>
+            <version>${jetty.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty.websocket</groupId>
+            <artifactId>websocket-api</artifactId>
             <version>${jetty.version}</version>
         </dependency>
         <dependency>
@@ -103,6 +123,34 @@
                 <exclusion>
                     <artifactId>jetty-io</artifactId>
                     <groupId>org.eclipse.jetty</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>websocket-client</artifactId>
+                    <groupId>org.eclipse.jetty.websocket</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>websocket-api</artifactId>
+                    <groupId>org.eclipse.jetty.websocket</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>websocket-common</artifactId>
+                    <groupId>org.eclipse.jetty.websocket</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>neko-htmlunit</artifactId>
+                    <groupId>net.sourceforge.htmlunit</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>htmlunit-core-js</artifactId>
+                    <groupId>net.sourceforge.htmlunit</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>htmlunit</artifactId>
+                    <groupId>net.sourceforge.htmlunit</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>cssparser</artifactId>
+                    <groupId>net.sourceforge.cssparser</groupId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -180,7 +228,8 @@
                                     <shadedArtifactAttached>true</shadedArtifactAttached>
                                     <shadedClassifierName>exec</shadedClassifierName>
                                     <transformers>
-                                        <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                        <transformer
+                                                implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                             <manifestEntries>
                                                 <Main-Class>com.qwazr.crawler.web.WebCrawlerServer</Main-Class>
                                                 <Implementation-Version>${project.version}-${buildNumber}
