@@ -16,11 +16,11 @@
 package com.qwazr.crawler.web;
 
 import com.google.common.net.InternetDomainName;
-import com.qwazr.crawler.common.CrawlDefinition.EventEnum;
-import com.qwazr.crawler.common.CrawlDefinition.Script;
 import com.qwazr.crawler.common.CrawlSessionImpl;
 import com.qwazr.crawler.common.CrawlStatus;
 import com.qwazr.crawler.common.CrawlThread;
+import com.qwazr.crawler.common.EventEnum;
+import com.qwazr.crawler.common.ScriptDefinition;
 import com.qwazr.crawler.web.driver.BrowserDriver;
 import com.qwazr.crawler.web.driver.BrowserDriverBuilder;
 import com.qwazr.crawler.web.robotstxt.RobotsTxt;
@@ -84,27 +84,27 @@ public class WebCrawlThread extends CrawlThread<WebCrawlerManager> {
 		super(webCrawlerManager, new CrawlSessionImpl<>(crawlDefinition, sessionName), LOGGER);
 		this.crawlDefinition = crawlDefinition;
 		this.timeTracker = session.getTimeTracker();
-		if (crawlDefinition.browser_type == null)
+		if (crawlDefinition.browserType == null)
 			throw new ServerException(Status.NOT_ACCEPTABLE, "The browser_type is missing");
-		if (crawlDefinition.entry_url == null && crawlDefinition.entry_request == null)
+		if (crawlDefinition.entryUrl == null && crawlDefinition.entryRequest == null)
 			throw new ServerException(Status.NOT_ACCEPTABLE, "Either the entry_url or the entry_request is missing");
 		try {
-			parametersMatcherList = RegExpUtils.getMatcherList(crawlDefinition.parameters_patterns);
-			pathCleanerMatcherList = RegExpUtils.getMatcherList(crawlDefinition.path_cleaner_patterns);
+			parametersMatcherList = RegExpUtils.getMatcherList(crawlDefinition.parametersPatterns);
+			pathCleanerMatcherList = RegExpUtils.getMatcherList(crawlDefinition.pathCleanerPatterns);
 		} catch (PatternSyntaxException e) {
 			throw new ServerException(Status.NOT_ACCEPTABLE, e.getMessage());
 		}
-		exclusionMatcherList = WildcardMatcher.getList(crawlDefinition.exclusion_patterns);
-		inclusionMatcherList = WildcardMatcher.getList(crawlDefinition.inclusion_patterns);
-		if (crawlDefinition.robots_txt_enabled != null && crawlDefinition.robots_txt_enabled)
+		exclusionMatcherList = WildcardMatcher.getList(crawlDefinition.exclusionPatterns);
+		inclusionMatcherList = WildcardMatcher.getList(crawlDefinition.inclusionPatterns);
+		if (crawlDefinition.robotsTxtEnabled != null && crawlDefinition.robotsTxtEnabled)
 			robotsTxtMap = new HashMap<>();
 		else
 			robotsTxtMap = null;
 		robotsTxtUserAgent =
-				crawlDefinition.robots_txt_useragent == null ? "QWAZR_BOT" : crawlDefinition.robots_txt_useragent;
+				crawlDefinition.robotsTxtUseragent == null ? "QWAZR_BOT" : crawlDefinition.robotsTxtUseragent;
 		final String u;
 		try {
-			u = crawlDefinition.entry_url != null ? crawlDefinition.entry_url : crawlDefinition.entry_request.url;
+			u = crawlDefinition.entryUrl != null ? crawlDefinition.entryUrl : crawlDefinition.entryRequest.url;
 			URI uri = new URI(u);
 			String host = uri.getHost();
 			if (host == null)
@@ -119,7 +119,7 @@ public class WebCrawlThread extends CrawlThread<WebCrawlerManager> {
 
 	@Override
 	public CrawlStatus getStatus() {
-		return new CrawlStatus(manager.myAddress, crawlDefinition.entry_url, session);
+		return new CrawlStatus(manager.myAddress, crawlDefinition.entryUrl, session);
 	}
 
 	/**
@@ -154,7 +154,7 @@ public class WebCrawlThread extends CrawlThread<WebCrawlerManager> {
 	 */
 	private URI checkLink(final URI uri) {
 		UBuilder uriBuilder = new UBuilder(uri);
-		if (crawlDefinition.remove_fragments != null && crawlDefinition.remove_fragments)
+		if (crawlDefinition.removeFragments != null && crawlDefinition.removeFragments)
 			uriBuilder.setFragment(null);
 		if (parametersMatcherList != null && !parametersMatcherList.isEmpty())
 			uriBuilder.removeMatchingParameters(parametersMatcherList);
@@ -309,8 +309,8 @@ public class WebCrawlThread extends CrawlThread<WebCrawlerManager> {
 
 		final int crawledCount = session.incCrawledCount();
 		currentURI.setCrawled();
-		if (crawlDefinition.max_url_number != null && crawledCount >= crawlDefinition.max_url_number)
-			abort("Max URL number reached: " + crawlDefinition.max_url_number);
+		if (crawlDefinition.maxUrlNumber != null && crawledCount >= crawlDefinition.maxUrlNumber)
+			abort("Max URL number reached: " + crawlDefinition.maxUrlNumber);
 
 		// Let's look for the a tags
 		final Set<String> hrefSet = new LinkedHashSet<>();
@@ -386,8 +386,8 @@ public class WebCrawlThread extends CrawlThread<WebCrawlerManager> {
 
 		if (!currentURI.isIgnored()) {
 
-			if (crawlDefinition.crawl_wait_ms != null)
-				Thread.sleep(crawlDefinition.crawl_wait_ms);
+			if (crawlDefinition.crawlWaitMs != null)
+				Thread.sleep(crawlDefinition.crawlWaitMs);
 
 			// Check the robotsTxt status
 			try {
@@ -427,7 +427,7 @@ public class WebCrawlThread extends CrawlThread<WebCrawlerManager> {
 			throws ServerException, IOException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException,
 			KeyManagementException, ClassNotFoundException, InterruptedException {
 
-		if (crawlDefinition.max_depth == null || depth > crawlDefinition.max_depth)
+		if (crawlDefinition.maxDepth == null || depth > crawlDefinition.maxDepth)
 			return;
 
 		if (session.isAborting())
@@ -485,7 +485,7 @@ public class WebCrawlThread extends CrawlThread<WebCrawlerManager> {
 			throws ServerException, IOException, ClassNotFoundException {
 		if (crawlDefinition.scripts == null)
 			return false;
-		Script script = crawlDefinition.scripts.get(event);
+		final ScriptDefinition script = crawlDefinition.scripts.get(event);
 		if (script == null)
 			return false;
 		timeTracker.next(null);
@@ -513,16 +513,16 @@ public class WebCrawlThread extends CrawlThread<WebCrawlerManager> {
 		try {
 			driver = new BrowserDriverBuilder(crawlDefinition).build();
 			script(EventEnum.before_session, null);
-			if (crawlDefinition.pre_url != null && !crawlDefinition.pre_url.isEmpty())
-				driver.get(crawlDefinition.pre_url);
+			if (crawlDefinition.preUrl != null && !crawlDefinition.preUrl.isEmpty())
+				driver.get(crawlDefinition.preUrl);
 			final Set<URI> crawledURIs = new HashSet<>();
 			if (crawlDefinition.urls != null && !crawlDefinition.urls.isEmpty())
 				crawlUrlMap(crawledURIs, crawlDefinition.urls);
 			else {
-				if (crawlDefinition.entry_url != null)
-					crawlStart(crawledURIs, new GetProvider(crawlDefinition.entry_url));
-				else if (crawlDefinition.entry_request != null)
-					crawlStart(crawledURIs, new RequestProvider(crawlDefinition.entry_request));
+				if (crawlDefinition.entryUrl != null)
+					crawlStart(crawledURIs, new GetProvider(crawlDefinition.entryUrl));
+				else if (crawlDefinition.entryRequest != null)
+					crawlStart(crawledURIs, new RequestProvider(crawlDefinition.entryRequest));
 			}
 		} finally {
 			try {

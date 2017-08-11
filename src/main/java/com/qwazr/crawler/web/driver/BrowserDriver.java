@@ -16,7 +16,7 @@
 package com.qwazr.crawler.web.driver;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.qwazr.crawler.web.WebCrawlDefinition;
+import com.qwazr.crawler.web.ProxyDefinition;
 import com.qwazr.crawler.web.WebRequestDefinition;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.LoggerUtils;
@@ -67,11 +67,11 @@ final public class BrowserDriver implements WebDriver, Closeable, AdditionalCapa
 
 	protected static final Logger logger = LoggerUtils.getLogger(BrowserDriver.class);
 
-	private final WebCrawlDefinition.ProxyDefinition currentProxy;
+	private final ProxyDefinition currentProxy;
 	private final BrowserDriverEnum type;
 	private final WebDriver driver;
 
-	BrowserDriver(BrowserDriverEnum type, WebDriver driver, WebCrawlDefinition.ProxyDefinition currentProxy) {
+	BrowserDriver(BrowserDriverEnum type, WebDriver driver, ProxyDefinition currentProxy) {
 		this.type = type;
 		this.driver = driver;
 		this.currentProxy = currentProxy;
@@ -144,7 +144,7 @@ final public class BrowserDriver implements WebDriver, Closeable, AdditionalCapa
 			timeOuts.setScriptTimeout(script, TimeUnit.SECONDS);
 	}
 
-	final public WebCrawlDefinition.ProxyDefinition getProxy() {
+	final public ProxyDefinition getProxy() {
 		return this.currentProxy;
 	}
 
@@ -374,14 +374,14 @@ final public class BrowserDriver implements WebDriver, Closeable, AdditionalCapa
 		}
 	}
 
-	public static final HttpRequest applyProxy(WebCrawlDefinition.ProxyDefinition proxy, URI uri, HttpRequest request) {
+	public static final HttpRequest applyProxy(ProxyDefinition proxy, URI uri, HttpRequest request) {
 		if (proxy == null)
 			return request;
 		RequestConfig.Builder builder = RequestConfig.custom();
-		if (proxy.http_proxy != null && !proxy.http_proxy.isEmpty())
-			builder.setProxy(HttpHost.create(proxy.http_proxy));
-		if ("https".equals(uri.getScheme()) && proxy.ssl_proxy != null && !proxy.ssl_proxy.isEmpty())
-			builder.setProxy(HttpHost.create(proxy.ssl_proxy));
+		if (proxy.httpProxy != null && !proxy.httpProxy.isEmpty())
+			builder.setProxy(HttpHost.create(proxy.httpProxy));
+		if ("https".equals(uri.getScheme()) && proxy.sslProxy != null && !proxy.sslProxy.isEmpty())
+			builder.setProxy(HttpHost.create(proxy.sslProxy));
 		request.request.setConfig(builder.build());
 		return request;
 	}

@@ -1,5 +1,5 @@
-/**
- * Copyright 2014-2016 Emmanuel Keller / QWAZR
+/*
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,9 +12,10 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- **/
+ */
 package com.qwazr.crawler.web.driver;
 
+import com.qwazr.crawler.web.ProxyDefinition;
 import com.qwazr.crawler.web.WebCrawlDefinition;
 import org.apache.commons.lang3.RandomUtils;
 import org.openqa.selenium.Cookie;
@@ -47,14 +48,14 @@ public class BrowserDriverBuilder {
 		return capabilities;
 	}
 
-	private WebCrawlDefinition.ProxyDefinition selectProxy() {
+	private ProxyDefinition selectProxy() {
 		if (crawlDefinition.proxy == null && (crawlDefinition.proxies == null || crawlDefinition.proxies.isEmpty()))
 			return null;
-		final List<WebCrawlDefinition.ProxyDefinition> activeProxies = new ArrayList<>();
+		final List<ProxyDefinition> activeProxies = new ArrayList<>();
 		if (crawlDefinition.proxy != null)
 			activeProxies.add(crawlDefinition.proxy);
 		if (crawlDefinition.proxies != null)
-			for (WebCrawlDefinition.ProxyDefinition proxy : crawlDefinition.proxies)
+			for (ProxyDefinition proxy : crawlDefinition.proxies)
 				if (proxy.enabled == null || proxy.enabled)
 					activeProxies.add(proxy);
 		if (activeProxies.size() == 0)
@@ -65,15 +66,15 @@ public class BrowserDriverBuilder {
 	public BrowserDriver build() throws ReflectiveOperationException, SecurityException {
 		BrowserDriverEnum browserType = BrowserDriverEnum.html_unit;
 
-		final WebCrawlDefinition.ProxyDefinition proxyDef;
+		final ProxyDefinition proxyDef;
 
 		DesiredCapabilities capabilities = null;
 
 		if (crawlDefinition != null) {
 
 			// Choose a browser type
-			if (crawlDefinition.browser_type != null)
-				browserType = crawlDefinition.browser_type;
+			if (crawlDefinition.browserType != null)
+				browserType = crawlDefinition.browserType;
 
 			proxyDef = selectProxy();
 
@@ -81,72 +82,72 @@ public class BrowserDriverBuilder {
 			if (proxyDef != null) {
 				capabilities = checkCapabilities(capabilities);
 				org.openqa.selenium.Proxy proxy = new Proxy();
-				if (proxyDef.http_proxy != null)
-					proxy.setHttpProxy(proxyDef.http_proxy);
-				if (proxyDef.ftp_proxy != null)
-					proxy.setFtpProxy(proxyDef.ftp_proxy);
-				if (proxyDef.ssl_proxy != null)
-					proxy.setSslProxy(proxyDef.ssl_proxy);
-				if (proxyDef.socks_proxy != null)
-					proxy.setSocksProxy(proxyDef.socks_proxy);
-				if (proxyDef.socks_username != null)
-					proxy.setSocksUsername(proxyDef.socks_username);
-				if (proxyDef.socks_password != null)
-					proxy.setSocksPassword(proxyDef.socks_password);
-				if (proxyDef.no_proxy != null)
-					proxy.setNoProxy(proxyDef.no_proxy);
-				if (proxyDef.proxy_autoconfig_url != null)
-					proxy.setProxyAutoconfigUrl(proxyDef.proxy_autoconfig_url);
+				if (proxyDef.httpProxy != null)
+					proxy.setHttpProxy(proxyDef.httpProxy);
+				if (proxyDef.ftpProxy != null)
+					proxy.setFtpProxy(proxyDef.ftpProxy);
+				if (proxyDef.sslProxy != null)
+					proxy.setSslProxy(proxyDef.sslProxy);
+				if (proxyDef.socksProxy != null)
+					proxy.setSocksProxy(proxyDef.socksProxy);
+				if (proxyDef.socksUsername != null)
+					proxy.setSocksUsername(proxyDef.socksUsername);
+				if (proxyDef.socksPassword != null)
+					proxy.setSocksPassword(proxyDef.socksPassword);
+				if (proxyDef.noProxy != null)
+					proxy.setNoProxy(proxyDef.noProxy);
+				if (proxyDef.proxyAutoconfigUrl != null)
+					proxy.setProxyAutoconfigUrl(proxyDef.proxyAutoconfigUrl);
 				capabilities.setCapability(CapabilityType.PROXY, proxy);
 			}
 
 			// Setup the language
-			if (crawlDefinition.browser_language != null) {
+			if (crawlDefinition.browserLanguage != null) {
 				capabilities = checkCapabilities(capabilities);
 				capabilities.setCapability(AdditionalCapabilities.QWAZR_BROWSER_LANGUAGE,
-										   crawlDefinition.browser_language);
+						crawlDefinition.browserLanguage);
 				if (browserType == BrowserDriverEnum.phantomjs)
 					capabilities.setCapability(
 							PhantomJSDriverService.PHANTOMJS_PAGE_CUSTOMHEADERS_PREFIX + "Accept-Language",
-							crawlDefinition.browser_language);
+							crawlDefinition.browserLanguage);
 			}
 
 			// Download images
-			if (crawlDefinition.download_images != null) {
+			if (crawlDefinition.downloadImages != null) {
 				capabilities = checkCapabilities(capabilities);
 				if (browserType == BrowserDriverEnum.phantomjs)
 					capabilities.setCapability(PhantomJSDriverService.PHANTOMJS_PAGE_SETTINGS_PREFIX + "loadImages",
-											   crawlDefinition.download_images);
+							crawlDefinition.downloadImages);
 			}
 
 			// Web security
-			if (crawlDefinition.web_security != null) {
+			if (crawlDefinition.webSecurity != null) {
 				capabilities = checkCapabilities(capabilities);
 				if (browserType == BrowserDriverEnum.phantomjs)
 					capabilities.setCapability(
 							PhantomJSDriverService.PHANTOMJS_PAGE_SETTINGS_PREFIX + "webSecurityEnabled",
-							crawlDefinition.web_security);
+							crawlDefinition.webSecurity);
 			}
 
 			// Choose a browser name
-			if (crawlDefinition.browser_name != null) {
+			if (crawlDefinition.browserName != null) {
 				capabilities = checkCapabilities(capabilities);
-				capabilities.setBrowserName(crawlDefinition.browser_name);
+				capabilities.setBrowserName(crawlDefinition.browserName);
 			}
 
-			if (crawlDefinition.browser_version != null) {
+			if (crawlDefinition.browserVersion != null) {
 				capabilities = checkCapabilities(capabilities);
-				capabilities.setVersion(crawlDefinition.browser_version);
+				capabilities.setVersion(crawlDefinition.browserVersion);
 			}
 
 			// Javascript capability
-			if (crawlDefinition.javascript_enabled != null) {
+			if (crawlDefinition.javascriptEnabled != null) {
 				capabilities = checkCapabilities(capabilities);
-				capabilities.setJavascriptEnabled(crawlDefinition.javascript_enabled);
+				capabilities.setJavascriptEnabled(crawlDefinition.javascriptEnabled);
 				if (browserType == BrowserDriverEnum.phantomjs)
 					capabilities.setCapability(
 							PhantomJSDriverService.PHANTOMJS_PAGE_SETTINGS_PREFIX + "javascriptEnabled",
-							crawlDefinition.javascript_enabled);
+							crawlDefinition.javascriptEnabled);
 
 			}
 
@@ -155,10 +156,8 @@ public class BrowserDriverBuilder {
 
 		if (browserType == BrowserDriverEnum.phantomjs) {
 			capabilities = checkCapabilities(capabilities);
-			capabilities.setCapability(PhantomJSDriverService.PHANTOMJS_CLI_ARGS, new String[] {
-					"--webdriver-loglevel=none",
-					"--ignore-ssl-errors=true",
-					"--ssl-protocol=any" });
+			capabilities.setCapability(PhantomJSDriverService.PHANTOMJS_CLI_ARGS,
+					new String[] { "--webdriver-loglevel=none", "--ignore-ssl-errors=true", "--ssl-protocol=any" });
 		}
 
 		if (browserType == BrowserDriverEnum.html_unit) {
@@ -169,8 +168,8 @@ public class BrowserDriverBuilder {
 		final WebDriver driver = browserType.getNewInstance(capabilities);
 		try {
 			final BrowserDriver browserDriver = new BrowserDriver(browserType, driver, proxyDef);
-			browserDriver.setTimeouts(crawlDefinition.implicitly_wait, crawlDefinition.page_load_timeout,
-									  crawlDefinition.script_timeout);
+			browserDriver.setTimeouts(crawlDefinition.implicitlyWait, crawlDefinition.pageLoadTimeout,
+					crawlDefinition.scriptTimeout);
 
 			if (crawlDefinition.cookies != null)
 				for (Map.Entry<String, String> cookie : crawlDefinition.cookies.entrySet())

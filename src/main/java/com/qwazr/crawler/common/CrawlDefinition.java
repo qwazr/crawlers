@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,120 +12,84 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- **/
+ */
 package com.qwazr.crawler.common;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 @JsonInclude(Include.NON_EMPTY)
-public class CrawlDefinition implements Cloneable {
+public abstract class CrawlDefinition {
 
 	/**
 	 * The global variables shared by all the scripts.
 	 */
-	public LinkedHashMap<String, String> variables = null;
+	final public Map<String, String> variables;
 
 	/**
 	 * A list of scripts paths mapped with the events which fire the scripts.
 	 */
-	public Map<EventEnum, Script> scripts = null;
+	final public Map<EventEnum, ScriptDefinition> scripts;
 
-	public enum EventEnum {
-
-		/**
-		 * Executed before the crawl session start
-		 */
-		before_session,
-
-		/**
-		 * Executed after the crawl session ends
-		 */
-		after_session,
-
-		/**
-		 * Executed before an URL is crawled
-		 */
-		before_crawl,
-
-		/**
-		 * Executed after an URL has been crawled
-		 */
-		after_crawl
+	protected CrawlDefinition() {
+		variables = null;
+		scripts = null;
 	}
 
-	@JsonInclude(Include.NON_EMPTY)
-	public static class Script implements Cloneable {
-
-		/**
-		 * The path to the scripts
-		 */
-		public String name = null;
-
-		/**
-		 * The local variables passed to the scripts
-		 */
-		public Map<String, String> variables = null;
-
-		public Script() {
-		}
-
-		public Script(String name) {
-			this.name = name;
-		}
-
-		protected Script(Script src) {
-			this.name = src.name;
-			this.variables = src.variables == null ? null : new HashMap<String, String>(src.variables);
-		}
-
-		@Override
-		final public Object clone() {
-			return new Script(this);
-		}
-
-		public Script addVariable(String name, String value) {
-			if (variables == null)
-				variables = new HashMap<>();
-			variables.put(name, value);
-			return this;
-		}
-
+	@JsonCreator
+	protected CrawlDefinition(@JsonProperty("variables") LinkedHashMap<String, String> variables,
+			@JsonProperty("scripts") Map<EventEnum, ScriptDefinition> scripts) {
+		this.variables = variables == null ? null : Collections.unmodifiableMap(variables);
+		this.scripts = scripts == null ? null : Collections.unmodifiableMap(scripts);
 	}
 
-	public CrawlDefinition() {
+	protected CrawlDefinition(AbstractBuilder<? extends CrawlDefinition, ?> builder) {
+		this(builder.variables, builder.scripts);
 	}
 
-	protected CrawlDefinition(CrawlDefinition src) {
-		variables = src.variables == null ? null : new LinkedHashMap<>(src.variables);
-		if (src.scripts == null) {
-			scripts = null;
-		} else {
-			scripts = new HashMap<>();
-			src.scripts.forEach((eventEnum, script) -> scripts.put(eventEnum, new Script(script)));
-		}
+	public Map<String, String> getVariables() {
+		return variables;
 	}
 
-	public Object clone() {
-		return new CrawlDefinition(this);
-	}
-
-	@JsonIgnore
-	public Script addScript(final String event, final String name) {
-		if (scripts == null)
-			scripts = new LinkedHashMap<>();
-		Script script = new Script(name);
-		scripts.put(EventEnum.valueOf(event), script);
-		return script;
-	}
-
-	public Map<EventEnum, Script> getScripts() {
+	public Map<EventEnum, ScriptDefinition> getScripts() {
 		return scripts;
 	}
 
+	public static abstract class AbstractBuilder<D extends CrawlDefinition, B extends AbstractBuilder<D, ?>> {
+
+		protected LinkedHashMap<String, String> variables;
+
+		protected Map<EventEnum, ScriptDefinition> scripts;
+
+		protected AbstractBuilder() {
+		}
+
+		protected AbstractBuilder(D crawlDefinition) {
+			variables = crawlDefinition.variables == null ? null : new LinkedHashMap<>(crawlDefinition.variables);
+			scripts = crawlDefinition.scripts == null ? null : new LinkedHashMap<>(crawlDefinition.scripts);
+		}
+
+		public B variable(final String name, final String value) {
+			if (variables == null)
+				variables = new LinkedHashMap<>();
+			variables.put(name, value);
+			return (B) this;
+		}
+
+		public B script(final EventEnum event, final ScriptDefinition script) {
+			if (scripts == null)
+				scripts = new LinkedHashMap<>();
+			scripts.put(event, script);
+			return (B) this;
+		}
+
+		public abstract D build();
+
+	}
 }

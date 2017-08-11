@@ -15,7 +15,7 @@
  */
 package com.qwazr.crawler.web.robotstxt;
 
-import com.qwazr.crawler.web.WebCrawlDefinition;
+import com.qwazr.crawler.web.ProxyDefinition;
 import com.qwazr.crawler.web.driver.BrowserDriver;
 import com.qwazr.utils.CharsetUtils;
 import com.qwazr.utils.IOUtils;
@@ -132,8 +132,8 @@ public class RobotsTxt {
 		return clauseSet.isAllowed(uri.toURL().getFile()) ? Status.ALLOW : Status.DISALLOW;
 	}
 
-	public static RobotsTxt download(final WebCrawlDefinition.ProxyDefinition proxy, final String userAgent,
-			final URI uri) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
+	public static RobotsTxt download(final ProxyDefinition proxy, final String userAgent, final URI uri)
+			throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
 		try {
 			final HttpRequest request = HttpRequest.Get(uri.toString()).addHeader("Connection", "close").addHeader(
 					"User-Agent", userAgent);

@@ -18,14 +18,20 @@ package com.qwazr.crawler.file;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.crawler.common.CrawlDefinition;
+import com.qwazr.crawler.common.EventEnum;
+import com.qwazr.crawler.common.ScriptDefinition;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.json.JsonMapper;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @JsonInclude(Include.NON_EMPTY)
 public class FileCrawlDefinition extends CrawlDefinition {
@@ -33,77 +39,101 @@ public class FileCrawlDefinition extends CrawlDefinition {
 	/**
 	 * The entry point PATH of the crawl.
 	 */
-	public String entry_path = null;
+	@JsonProperty("entry_path")
+	final public String entryPath;
 
 	/**
 	 * A list of regular expression patterns. An URL may not be crawled if it
 	 * matches any pattern.
 	 */
-	public List<String> exclusion_patterns = null;
+	@JsonProperty("exclusion_patterns")
+	final public List<String> exclusionPatterns;
 
 	/**
 	 * Time wait on successfull crawl
 	 */
-	public Integer crawl_wait_ms = null;
+	@JsonProperty("crawl_wait_ms")
+	final public Integer crawlWaitMs;
 
-	public FileCrawlDefinition() {
-	}
-
-	protected FileCrawlDefinition(FileCrawlDefinition src) {
-		super(src);
-		entry_path = src.entry_path;
-		exclusion_patterns = src.exclusion_patterns == null ? null : new ArrayList<>(src.exclusion_patterns);
-		crawl_wait_ms = src.crawl_wait_ms;
-	}
-
-	public Object clone() {
-		return new FileCrawlDefinition(this);
-	}
-
-	@JsonIgnore
-	public FileCrawlDefinition setEntryPath(final String entryPath) {
-		this.entry_path = entryPath;
-		return this;
+	protected FileCrawlDefinition(@JsonProperty("entry_path") String entryPath,
+			@JsonProperty("exclusion_patterns") List<String> exclusionPatterns,
+			@JsonProperty("crawl_wait_ms") Integer crawlWaitMs,
+			@JsonProperty("variables") LinkedHashMap<String, String> variables,
+			@JsonProperty("scripts") Map<EventEnum, ScriptDefinition> scripts) {
+		super(variables, scripts);
+		this.entryPath = entryPath;
+		this.exclusionPatterns = exclusionPatterns == null ? null : Collections.unmodifiableList(
+				new ArrayList<>(exclusionPatterns));
+		this.crawlWaitMs = crawlWaitMs;
 	}
 
 	@JsonIgnore
 	public String getEntryPath() {
-		return this.entry_path;
-	}
-
-	@JsonIgnore
-	public FileCrawlDefinition setExclusionPattern(final String exclusionPatternText) throws IOException {
-		if (exclusionPatternText == null) {
-			exclusion_patterns = null;
-			return this;
-		}
-		exclusion_patterns = new ArrayList<>();
-		StringUtils.linesCollector(exclusionPatternText, false, exclusion_patterns);
-		return this;
-	}
-
-	@JsonIgnore
-	public FileCrawlDefinition addExclusionPattern(final String exclusionPattern) {
-		if (exclusion_patterns == null)
-			exclusion_patterns = new ArrayList<>();
-		exclusion_patterns.add(exclusionPattern);
-		return this;
+		return this.entryPath;
 	}
 
 	@JsonIgnore
 	public Collection<String> getExclusionPatterns() {
-		return exclusion_patterns;
-	}
-
-	@JsonIgnore
-	public FileCrawlDefinition setCrawlWaitMs(Integer crawlWaitMs) {
-		this.crawl_wait_ms = crawlWaitMs;
-		return this;
+		return exclusionPatterns;
 	}
 
 	@JsonIgnore
 	public Integer getCrawlWaitMs() {
-		return crawl_wait_ms;
+		return crawlWaitMs;
+	}
+
+	public static class Builder extends AbstractBuilder<FileCrawlDefinition, Builder> {
+
+		private String entryPath;
+
+		private List<String> exclusionPatterns;
+
+		private Integer crawlWaitMs;
+
+		protected Builder(FileCrawlDefinition crawlDefinition) {
+			super(crawlDefinition);
+			entryPath = crawlDefinition.entryPath;
+			exclusionPatterns =
+					crawlDefinition.exclusionPatterns == null || crawlDefinition.exclusionPatterns.isEmpty() ?
+							null :
+							new ArrayList<>(crawlDefinition.exclusionPatterns);
+			crawlWaitMs = crawlDefinition.crawlWaitMs;
+		}
+
+		public Builder entryPath(final String entryPath) {
+			this.entryPath = entryPath;
+			return this;
+		}
+
+		public Builder setExclusionPatterns(final String exclusionPatternText) throws IOException {
+			if (StringUtils.isBlank(exclusionPatternText)) {
+				exclusionPatterns = null;
+				return this;
+			}
+			exclusionPatterns = new ArrayList<>();
+			StringUtils.linesCollector(exclusionPatternText, false, exclusionPatterns);
+			return this;
+		}
+
+		public Builder addExclusionPattern(final String exclusionPattern) {
+			if (StringUtils.isBlank(exclusionPattern))
+				return this;
+			if (exclusionPatterns == null)
+				exclusionPatterns = new ArrayList<>();
+			exclusionPatterns.add(exclusionPattern);
+			return this;
+		}
+
+		@JsonIgnore
+		public Builder setCrawlWaitMs(Integer crawlWaitMs) {
+			this.crawlWaitMs = crawlWaitMs;
+			return this;
+		}
+
+		@Override
+		public FileCrawlDefinition build() {
+			return new FileCrawlDefinition(entryPath, exclusionPatterns, crawlWaitMs, variables, scripts);
+		}
 	}
 
 	@JsonIgnore

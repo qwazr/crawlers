@@ -16,6 +16,8 @@
 package com.qwazr.crawler.web.test;
 
 import com.qwazr.crawler.common.CrawlStatus;
+import com.qwazr.crawler.common.EventEnum;
+import com.qwazr.crawler.common.ScriptDefinition;
 import com.qwazr.crawler.web.WebCrawlDefinition;
 import com.qwazr.crawler.web.WebCrawlerServer;
 import com.qwazr.crawler.web.WebCrawlerServiceBuilder;
@@ -31,7 +33,6 @@ import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
-import java.util.HashMap;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 
@@ -67,8 +68,8 @@ public class WebCrawlerTest {
 		Assert.assertTrue(sessions.isEmpty());
 	}
 
-	private WebCrawlDefinition getNewWebCrawl() {
-		final WebCrawlDefinition webCrawl = new WebCrawlDefinition();
+	private WebCrawlDefinition.Builder getNewWebCrawl() {
+		final WebCrawlDefinition.Builder webCrawl = WebCrawlDefinition.of();
 		webCrawl.setBrowserType("html_unit");
 		webCrawl.setJavascriptEnabled(false);
 		webCrawl.setImplicitlyWait(0);
@@ -76,7 +77,7 @@ public class WebCrawlerTest {
 		webCrawl.setMaxUrlNumber(10);
 		webCrawl.setRobotsTxtEnabled(true);
 		webCrawl.setMaxDepth(2);
-		webCrawl.entry_url = WebAppTestServer.URL;
+		webCrawl.setEntryUrl(WebAppTestServer.URL);
 		return webCrawl;
 	}
 
@@ -92,20 +93,17 @@ public class WebCrawlerTest {
 	@Test
 	public void test300SimpleCrawl() throws InterruptedException {
 		final String sessionName = RandomUtils.alphanumeric(10);
-		remote.runSession(sessionName, getNewWebCrawl());
+		remote.runSession(sessionName, getNewWebCrawl().build());
 		crawlWait(sessionName, 3);
 	}
 
 	@Test
 	public void test400CrawlEvent() throws InterruptedException {
 		final String sessionName = RandomUtils.alphanumeric(10);
-		final WebCrawlDefinition webCrawl = getNewWebCrawl();
-		webCrawl.scripts = new HashMap<>();
-		webCrawl.scripts.put(WebCrawlDefinition.EventEnum.before_crawl,
-				new WebCrawlDefinition.Script(BeforeCrawl.class.getName()));
-		webCrawl.scripts.put(WebCrawlDefinition.EventEnum.after_crawl,
-				new WebCrawlDefinition.Script(AfterCrawl.class.getName()));
-		remote.runSession(sessionName, webCrawl);
+		final WebCrawlDefinition.Builder webCrawl = getNewWebCrawl();
+		webCrawl.script(EventEnum.before_crawl, ScriptDefinition.of().name(BeforeCrawl.class.getName()).build());
+		webCrawl.script(EventEnum.after_crawl, ScriptDefinition.of().name(AfterCrawl.class.getName()).build());
+		remote.runSession(sessionName, webCrawl.build());
 		crawlWait(sessionName, 3);
 		Assert.assertEquals(5, BeforeCrawl.count.get());
 		Assert.assertEquals(3, AfterCrawl.count.get());

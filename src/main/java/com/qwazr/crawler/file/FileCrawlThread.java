@@ -37,6 +37,6 @@ public class FileCrawlThread extends CrawlThread<FileCrawlerManager> {
 
 	@Override
 	public CrawlStatus getStatus() {
-		return new CrawlStatus(manager.myAddress, crawlDefinition.entry_path, session);
+		return new CrawlStatus(manager.myAddress, crawlDefinition.entryPath, session);
 	}
 }
