@@ -19,6 +19,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qwazr.utils.CollectionsUtils;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -59,6 +60,16 @@ public abstract class CrawlDefinition {
 
 	public Map<EventEnum, ScriptDefinition> getScripts() {
 		return scripts;
+	}
+
+	@Override
+	public boolean equals(final Object o) {
+		if (o == null || !(o instanceof CrawlDefinition))
+			return false;
+		if (o == this)
+			return true;
+		final CrawlDefinition c = (CrawlDefinition) o;
+		return CollectionsUtils.equals(variables, c.variables) && CollectionsUtils.equals(scripts, c.scripts);
 	}
 
 	public static abstract class AbstractBuilder<D extends CrawlDefinition, B extends AbstractBuilder<D, ?>> {

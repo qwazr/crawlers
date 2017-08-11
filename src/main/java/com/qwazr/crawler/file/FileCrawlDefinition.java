@@ -22,6 +22,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.crawler.common.CrawlDefinition;
 import com.qwazr.crawler.common.EventEnum;
 import com.qwazr.crawler.common.ScriptDefinition;
+import com.qwazr.utils.CollectionsUtils;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.json.JsonMapper;
 
@@ -32,6 +33,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @JsonInclude(Include.NON_EMPTY)
 public class FileCrawlDefinition extends CrawlDefinition {
@@ -67,6 +69,24 @@ public class FileCrawlDefinition extends CrawlDefinition {
 		this.crawlWaitMs = crawlWaitMs;
 	}
 
+	@Override
+	public boolean equals(final Object o) {
+		if (!super.equals(o))
+			return false;
+		if (!(o instanceof FileCrawlDefinition))
+			return false;
+		if (o == this)
+			return true;
+		final FileCrawlDefinition f = (FileCrawlDefinition) o;
+		if (!Objects.equals(entryPath, f.entryPath))
+			return false;
+		if (!CollectionsUtils.equals(exclusionPatterns, f.exclusionPatterns))
+			return false;
+		if (!Objects.equals(crawlWaitMs, f.crawlWaitMs))
+			return false;
+		return true;
+	}
+
 	@JsonIgnore
 	public String getEntryPath() {
 		return this.entryPath;
@@ -82,6 +102,14 @@ public class FileCrawlDefinition extends CrawlDefinition {
 		return crawlWaitMs;
 	}
 
+	public static Builder of() {
+		return new Builder();
+	}
+
+	public static Builder of(FileCrawlDefinition crawlDefinition) {
+		return new Builder(crawlDefinition);
+	}
+
 	public static class Builder extends AbstractBuilder<FileCrawlDefinition, Builder> {
 
 		private String entryPath;
@@ -89,6 +117,9 @@ public class FileCrawlDefinition extends CrawlDefinition {
 		private List<String> exclusionPatterns;
 
 		private Integer crawlWaitMs;
+
+		protected Builder() {
+		}
 
 		protected Builder(FileCrawlDefinition crawlDefinition) {
 			super(crawlDefinition);

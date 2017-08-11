@@ -1,0 +1,7 @@
+{
+  "entry_path": "/usr/share/docs",
+  "exclusion_patterns": [
+    "*/.*"
+  ],
+  "crawl_wait_ms": 100
+}

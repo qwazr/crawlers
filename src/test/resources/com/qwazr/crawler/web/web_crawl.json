@@ -1,0 +1,9 @@
+{
+  "entry_url": "https://www.qwazr.com",
+  "inclusion_patterns": [
+    "https://www.qwazr.com/*"
+  ],
+  "exclusion_patterns": [
+    "https://www.qwazr.com/search"
+  ]
+}

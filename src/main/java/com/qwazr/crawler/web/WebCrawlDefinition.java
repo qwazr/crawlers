@@ -22,6 +22,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.crawler.common.CrawlDefinition;
 import com.qwazr.crawler.web.driver.BrowserDriverEnum;
+import com.qwazr.utils.CollectionsUtils;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.json.JsonMapper;
 
@@ -32,6 +33,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @JsonInclude(Include.NON_EMPTY)
 public class WebCrawlDefinition extends CrawlDefinition {
@@ -382,7 +384,70 @@ public class WebCrawlDefinition extends CrawlDefinition {
 		return pageLoadTimeout;
 	}
 
-	@JsonIgnore
+	@Override
+	public boolean equals(Object o) {
+		if (!super.equals(o))
+			return false;
+		if (!(o instanceof WebCrawlDefinition))
+			return false;
+		if (o == this)
+			return true;
+		final WebCrawlDefinition w = (WebCrawlDefinition) o;
+		if (!Objects.equals(entryUrl, w.entryUrl))
+			return false;
+		if (!Objects.equals(entryRequest, w.entryRequest))
+			return false;
+		if (!CollectionsUtils.equals(urls, w.urls))
+			return false;
+		if (!Objects.equals(maxDepth, w.maxDepth))
+			return false;
+		if (!Objects.equals(maxUrlNumber, w.maxUrlNumber))
+			return false;
+		if (!CollectionsUtils.equals(parametersPatterns, w.parametersPatterns))
+			return false;
+		if (!CollectionsUtils.equals(pathCleanerPatterns, w.pathCleanerPatterns))
+			return false;
+		if (!CollectionsUtils.equals(inclusionPatterns, w.inclusionPatterns))
+			return false;
+		if (!CollectionsUtils.equals(exclusionPatterns, w.exclusionPatterns))
+			return false;
+		if (!Objects.equals(removeFragments, w.removeFragments))
+			return false;
+		if (!Objects.equals(browserName, w.browserName))
+			return false;
+		if (!Objects.equals(browserLanguage, w.browserLanguage))
+			return false;
+		if (!Objects.equals(browserVersion, w.browserVersion))
+			return false;
+		if (!Objects.equals(browserType, w.browserType))
+			return false;
+		if (!Objects.equals(javascriptEnabled, w.javascriptEnabled))
+			return false;
+		if (!Objects.equals(downloadImages, w.downloadImages))
+			return false;
+		if (!Objects.equals(webSecurity, w.webSecurity))
+			return false;
+		if (!Objects.equals(robotsTxtEnabled, w.robotsTxtEnabled))
+			return false;
+		if (!Objects.equals(robotsTxtUseragent, w.robotsTxtUseragent))
+			return false;
+		if (!CollectionsUtils.equals(cookies, w.cookies))
+			return false;
+		if (!Objects.equals(proxy, w.proxy))
+			return false;
+		if (!CollectionsUtils.equals(proxies, w.proxies))
+			return false;
+		if (!Objects.equals(implicitlyWait, w.implicitlyWait))
+			return false;
+		if (!Objects.equals(scriptTimeout, w.scriptTimeout))
+			return false;
+		if (!Objects.equals(pageLoadTimeout, w.pageLoadTimeout))
+			return false;
+		if (!Objects.equals(crawlWaitMs, w.crawlWaitMs))
+			return false;
+		return true;
+	}
+
 	public static WebCrawlDefinition newInstance(final String json) throws IOException {
 		return JsonMapper.MAPPER.readValue(json, WebCrawlDefinition.class);
 	}
