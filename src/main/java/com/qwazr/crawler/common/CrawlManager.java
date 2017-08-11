@@ -16,6 +16,7 @@
 package com.qwazr.crawler.common;
 
 import com.qwazr.cluster.ClusterManager;
+import com.qwazr.scripts.ScriptManager;
 import com.qwazr.server.ServerException;
 
 import javax.ws.rs.core.Response;
@@ -30,16 +31,26 @@ public abstract class CrawlManager<T extends CrawlThread<?>, D extends CrawlDefi
 	private final ConcurrentHashMap<String, T> crawlSessionMap;
 	private final ExecutorService executorService;
 	private final Logger logger;
-	public final String myAddress;
-	public final ClusterManager clusterManager;
+	protected final String myAddress;
+	protected final ClusterManager clusterManager;
+	protected final ScriptManager scriptManager;
 
-	protected CrawlManager(final ClusterManager clusterManager, final ExecutorService executorService,
-			final Logger logger) {
+	protected CrawlManager(final ClusterManager clusterManager, final ScriptManager scriptManager,
+			final ExecutorService executorService, final Logger logger) {
 		crawlSessionMap = new ConcurrentHashMap<>();
 		this.clusterManager = clusterManager;
-		this.myAddress = clusterManager.getServiceBuilder().local().getStatus().me;
+		this.scriptManager = scriptManager;
+		this.myAddress = clusterManager != null ? clusterManager.getServiceBuilder().local().getStatus().me : null;
 		this.executorService = executorService;
 		this.logger = logger;
+	}
+
+	public String getMyAddress() {
+		return myAddress;
+	}
+
+	public ClusterManager getClusterManager() {
+		return clusterManager;
 	}
 
 	public TreeMap<String, CrawlStatus> getSessions() {

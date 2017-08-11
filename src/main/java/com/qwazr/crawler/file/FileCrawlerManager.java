@@ -18,7 +18,7 @@ package com.qwazr.crawler.file;
 import com.qwazr.cluster.ClusterManager;
 import com.qwazr.crawler.common.CrawlManager;
 import com.qwazr.crawler.common.CrawlSessionImpl;
-import com.qwazr.crawler.web.WebCrawlerManager;
+import com.qwazr.scripts.ScriptManager;
 import com.qwazr.utils.LoggerUtils;
 
 import java.util.concurrent.ExecutorService;
@@ -26,10 +26,11 @@ import java.util.logging.Logger;
 
 public class FileCrawlerManager extends CrawlManager<FileCrawlThread, FileCrawlDefinition> {
 
-	private static final Logger LOGGER = LoggerUtils.getLogger(WebCrawlerManager.class);
+	private static final Logger LOGGER = LoggerUtils.getLogger(FileCrawlerManager.class);
 
-	protected FileCrawlerManager(ClusterManager clusterManager, ExecutorService executorService, Logger logger) {
-		super(clusterManager, executorService, logger);
+	protected FileCrawlerManager(ClusterManager clusterManager, ScriptManager scriptManager,
+			ExecutorService executorService) {
+		super(clusterManager, scriptManager, executorService, LOGGER);
 	}
 
 	@Override

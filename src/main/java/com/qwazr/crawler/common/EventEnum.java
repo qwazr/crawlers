@@ -36,5 +36,5 @@ public enum EventEnum {
 	 * Executed after an URL has been crawled
 	 */
 	after_crawl
-
+	
 }

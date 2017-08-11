@@ -20,11 +20,9 @@ import com.qwazr.crawler.common.CrawlSessionImpl;
 import com.qwazr.crawler.common.CrawlStatus;
 import com.qwazr.crawler.common.CrawlThread;
 import com.qwazr.crawler.common.EventEnum;
-import com.qwazr.crawler.common.ScriptDefinition;
 import com.qwazr.crawler.web.driver.BrowserDriver;
 import com.qwazr.crawler.web.driver.BrowserDriverBuilder;
 import com.qwazr.crawler.web.robotstxt.RobotsTxt;
-import com.qwazr.scripts.ScriptRunThread;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.LoggerUtils;
 import com.qwazr.utils.RegExpUtils;
@@ -119,7 +117,7 @@ public class WebCrawlThread extends CrawlThread<WebCrawlerManager> {
 
 	@Override
 	public CrawlStatus getStatus() {
-		return new CrawlStatus(manager.myAddress, crawlDefinition.entryUrl, session);
+		return new CrawlStatus(manager.getMyAddress(), crawlDefinition.entryUrl, session);
 	}
 
 	/**
@@ -481,30 +479,14 @@ public class WebCrawlThread extends CrawlThread<WebCrawlerManager> {
 	 * @throws IOException            if any I/O exception occurs
 	 * @throws ClassNotFoundException if the JAVA class is not found
 	 */
-	private boolean script(EventEnum event, CurrentURI currentURI)
+	private void script(EventEnum event, CurrentURI currentURI)
 			throws ServerException, IOException, ClassNotFoundException {
-		if (crawlDefinition.scripts == null)
-			return false;
-		final ScriptDefinition script = crawlDefinition.scripts.get(event);
-		if (script == null)
-			return false;
-		timeTracker.next(null);
-		try {
-			final Map<String, Object> objects = new HashMap<>();
-			objects.put("session", session);
-			if (script.variables != null)
-				objects.putAll(script.variables);
+		super.script(event, (attributes) -> {
 			if (driver != null)
-				objects.put("driver", driver);
+				attributes.put("driver", driver);
 			if (currentURI != null)
-				objects.put("current", currentURI);
-			final ScriptRunThread scriptRunThread = manager.scriptManager.runSync(script.name, objects);
-			if (scriptRunThread.getException() != null)
-				throw new ServerException(scriptRunThread.getException());
-			return true;
-		} finally {
-			timeTracker.next("Event: " + event.name());
-		}
+				attributes.put("current", currentURI);
+		});
 	}
 
 	protected void runner()
@@ -512,7 +494,7 @@ public class WebCrawlThread extends CrawlThread<WebCrawlerManager> {
 			NoSuchAlgorithmException, KeyStoreException, KeyManagementException, InterruptedException {
 		try {
 			driver = new BrowserDriverBuilder(crawlDefinition).build();
-			script(EventEnum.before_session, null);
+			script(EventEnum.before_session, (CurrentURI) null);
 			if (crawlDefinition.preUrl != null && !crawlDefinition.preUrl.isEmpty())
 				driver.get(crawlDefinition.preUrl);
 			final Set<URI> crawledURIs = new HashSet<>();
@@ -531,7 +513,7 @@ public class WebCrawlThread extends CrawlThread<WebCrawlerManager> {
 			} catch (Exception e) {
 				LOGGER.log(Level.WARNING, e, e::getMessage);
 			}
-			script(EventEnum.after_session, null);
+			script(EventEnum.after_session, (CurrentURI) null);
 		}
 	}
 

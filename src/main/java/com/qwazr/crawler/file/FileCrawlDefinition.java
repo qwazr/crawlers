@@ -45,6 +45,12 @@ public class FileCrawlDefinition extends CrawlDefinition {
 	final public String entryPath;
 
 	/**
+	 * The maximum number of directory levels to visit.
+	 */
+	@JsonProperty("max_depth")
+	final public Integer maxDepth;
+
+	/**
 	 * A list of regular expression patterns. An URL may not be crawled if it
 	 * matches any pattern.
 	 */
@@ -58,12 +64,14 @@ public class FileCrawlDefinition extends CrawlDefinition {
 	final public Integer crawlWaitMs;
 
 	protected FileCrawlDefinition(@JsonProperty("entry_path") String entryPath,
+			@JsonProperty("max_depth") Integer maxDepth,
 			@JsonProperty("exclusion_patterns") List<String> exclusionPatterns,
 			@JsonProperty("crawl_wait_ms") Integer crawlWaitMs,
 			@JsonProperty("variables") LinkedHashMap<String, String> variables,
 			@JsonProperty("scripts") Map<EventEnum, ScriptDefinition> scripts) {
 		super(variables, scripts);
 		this.entryPath = entryPath;
+		this.maxDepth = maxDepth;
 		this.exclusionPatterns = exclusionPatterns == null ? null : Collections.unmodifiableList(
 				new ArrayList<>(exclusionPatterns));
 		this.crawlWaitMs = crawlWaitMs;
@@ -80,6 +88,8 @@ public class FileCrawlDefinition extends CrawlDefinition {
 		final FileCrawlDefinition f = (FileCrawlDefinition) o;
 		if (!Objects.equals(entryPath, f.entryPath))
 			return false;
+		if (!Objects.equals(maxDepth, f.maxDepth))
+			return false;
 		if (!CollectionsUtils.equals(exclusionPatterns, f.exclusionPatterns))
 			return false;
 		if (!Objects.equals(crawlWaitMs, f.crawlWaitMs))
@@ -90,6 +100,11 @@ public class FileCrawlDefinition extends CrawlDefinition {
 	@JsonIgnore
 	public String getEntryPath() {
 		return this.entryPath;
+	}
+
+	@JsonIgnore
+	public Integer getMaxDepth() {
+		return this.maxDepth;
 	}
 
 	@JsonIgnore
@@ -116,6 +131,8 @@ public class FileCrawlDefinition extends CrawlDefinition {
 
 		private List<String> exclusionPatterns;
 
+		private Integer maxDepth;
+
 		private Integer crawlWaitMs;
 
 		protected Builder() {
@@ -124,6 +141,7 @@ public class FileCrawlDefinition extends CrawlDefinition {
 		protected Builder(FileCrawlDefinition crawlDefinition) {
 			super(crawlDefinition);
 			entryPath = crawlDefinition.entryPath;
+			maxDepth = crawlDefinition.maxDepth;
 			exclusionPatterns =
 					crawlDefinition.exclusionPatterns == null || crawlDefinition.exclusionPatterns.isEmpty() ?
 							null :
@@ -133,6 +151,11 @@ public class FileCrawlDefinition extends CrawlDefinition {
 
 		public Builder entryPath(final String entryPath) {
 			this.entryPath = entryPath;
+			return this;
+		}
+
+		public Builder maxDepth(final Integer maxDepth) {
+			this.maxDepth = maxDepth;
 			return this;
 		}
 
@@ -163,7 +186,7 @@ public class FileCrawlDefinition extends CrawlDefinition {
 
 		@Override
 		public FileCrawlDefinition build() {
-			return new FileCrawlDefinition(entryPath, exclusionPatterns, crawlWaitMs, variables, scripts);
+			return new FileCrawlDefinition(entryPath, maxDepth, exclusionPatterns, crawlWaitMs, variables, scripts);
 		}
 	}
 

@@ -1,5 +1,6 @@
 {
   "entry_path": "/usr/share/docs",
+  "max_depth": 16,
   "exclusion_patterns": [
     "*/.*"
   ],

@@ -31,14 +31,11 @@ public class WebCrawlerManager extends CrawlManager<WebCrawlThread, WebCrawlDefi
 
 	private static final Logger LOGGER = LoggerUtils.getLogger(WebCrawlerManager.class);
 
-	final ScriptManager scriptManager;
-
 	private WebCrawlerServiceImpl service;
 
 	public WebCrawlerManager(final ClusterManager clusterManager, final ScriptManager scriptManager,
 			final ExecutorService executor) throws IOException, URISyntaxException {
-		super(clusterManager, executor, LOGGER);
-		this.scriptManager = scriptManager;
+		super(clusterManager, scriptManager, executor, LOGGER);
 		service = new WebCrawlerServiceImpl(this);
 	}
 
