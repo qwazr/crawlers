@@ -16,11 +16,9 @@
 package com.qwazr.crawler.file;
 
 import com.qwazr.crawler.common.CrawlSessionImpl;
-import com.qwazr.crawler.common.CrawlStatus;
 import com.qwazr.crawler.common.CrawlThread;
 import com.qwazr.crawler.common.EventEnum;
 import com.qwazr.utils.WildcardMatcher;
-import com.qwazr.utils.concurrent.ThreadUtils;
 
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
@@ -32,7 +30,6 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -41,6 +38,7 @@ public class FileCrawlThread extends CrawlThread<FileCrawlerManager> implements 
 
 	private final FileCrawlDefinition crawlDefinition;
 	private final List<WildcardMatcher> exclusionMatcherList;
+	private int currentDepth;
 
 	public FileCrawlThread(FileCrawlerManager manager, CrawlSessionImpl<FileCrawlDefinition> session, Logger logger) {
 		super(manager, session, logger);
@@ -65,12 +63,8 @@ public class FileCrawlThread extends CrawlThread<FileCrawlerManager> implements 
 	}
 
 	@Override
-	public CrawlStatus getStatus() {
-		return new CrawlStatus(manager.getMyAddress(), crawlDefinition.entryPath, session);
-	}
-
-	@Override
 	public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+		currentDepth++;
 		if (session.isAborting())
 			return FileVisitResult.TERMINATE;
 		if (exclusionMatcherList != null && WildcardMatcher.anyMatch(dir.toString(), exclusionMatcherList))
@@ -89,22 +83,25 @@ public class FileCrawlThread extends CrawlThread<FileCrawlerManager> implements 
 			attributes.put("attrs", attrs);
 		};
 		try {
+			session.setCurrentCrawl(file.toString(), currentDepth);
 			script(EventEnum.before_crawl, attributesProvider);
 			session.incCrawledCount();
 		} catch (Exception e) {
-			logger.log(Level.WARNING, e, () -> "File crawling error on " + file.toAbsolutePath());
-			session.incErrorCount();
+			final String error = "File crawling error on " + file;
+			logger.log(Level.WARNING, error, e);
+			session.incErrorCount(error);
 		}
 		if (crawlDefinition.crawlWaitMs != null)
-			ThreadUtils.sleep(crawlDefinition.crawlWaitMs, TimeUnit.MILLISECONDS);
+			session.sleep(crawlDefinition.crawlWaitMs);
 		script(EventEnum.after_crawl, attributesProvider);
 		return FileVisitResult.CONTINUE;
 	}
 
 	@Override
 	public FileVisitResult visitFileFailed(Path file, IOException e) throws IOException {
-		logger.log(Level.WARNING, e, () -> "File crawling error on " + file);
-		session.incErrorCount();
+		final String error = "File crawling error on " + file;
+		logger.log(Level.WARNING, error, e);
+		session.incErrorCount(error);
 		return FileVisitResult.CONTINUE;
 	}
 
@@ -112,6 +109,8 @@ public class FileCrawlThread extends CrawlThread<FileCrawlerManager> implements 
 	public FileVisitResult postVisitDirectory(Path dir, IOException e) throws IOException {
 		if (e != null)
 			logger.log(Level.WARNING, e, () -> "Directory crawling error on " + dir);
+		else
+			currentDepth--;
 		return FileVisitResult.CONTINUE;
 	}
 }

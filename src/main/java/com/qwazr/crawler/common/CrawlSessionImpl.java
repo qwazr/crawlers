@@ -29,17 +29,15 @@ public class CrawlSessionImpl<T extends CrawlDefinition> implements CrawlSession
 	private final TimeTracker timeTracker;
 	private final ConcurrentHashMap<String, Object> variables;
 
-	private volatile int ignoredCount = 0;
-	private volatile int errorCount = 0;
-	private volatile int crawledCount = 0;
-	private volatile String currentURI = null;
-	private volatile Integer currentDepth = null;
-	private volatile String abortingReason = null;
+	private volatile CrawlStatus crawlStatus;
+	private final CrawlStatus.Builder crawlStatusBuilder;
 
-	public CrawlSessionImpl(T crawlDefinition, String name) {
-		this.crawlDefinition = crawlDefinition;
+	public CrawlSessionImpl(String sessionName, String nodeAddress, T crawlDefinition, String entryCrawl) {
 		this.timeTracker = new TimeTracker();
-		this.name = name;
+		this.crawlStatusBuilder = CrawlStatus.of(entryCrawl, nodeAddress, timeTracker);
+		this.crawlStatus = crawlStatusBuilder.build();
+		this.crawlDefinition = crawlDefinition;
+		this.name = sessionName;
 		abort = new AtomicBoolean(false);
 		this.variables = new ConcurrentHashMap<>();
 		if (crawlDefinition.variables != null) {
@@ -48,6 +46,11 @@ public class CrawlSessionImpl<T extends CrawlDefinition> implements CrawlSession
 					this.variables.put(key, value);
 			});
 		}
+	}
+
+	@Override
+	public CrawlStatus getCrawlStatus() {
+		return crawlStatus;
 	}
 
 	public Map<String, Object> getVariables() {
@@ -86,15 +89,10 @@ public class CrawlSessionImpl<T extends CrawlDefinition> implements CrawlSession
 	}
 
 	@Override
-	public void abort() {
-		this.abort(null);
-	}
-
-	@Override
 	public void abort(String reason) {
 		if (abort.getAndSet(true))
 			return;
-		abortingReason = reason;
+		crawlStatus = crawlStatusBuilder.abort(reason).build();
 	}
 
 	@Override
@@ -102,36 +100,16 @@ public class CrawlSessionImpl<T extends CrawlDefinition> implements CrawlSession
 		return abort.get();
 	}
 
-	@Override
-	public String getAbortingReason() {
-		return abortingReason;
+	public void incIgnoredCount() {
+		crawlStatus = crawlStatusBuilder.incIgnored().build();
 	}
 
-	public synchronized int incIgnoredCount() {
-		return ++ignoredCount;
+	public int incCrawledCount() {
+		return (crawlStatus = crawlStatusBuilder.incCrawled().build()).crawled;
 	}
 
-	@Override
-	public Integer getIgnoredCount() {
-		return ignoredCount;
-	}
-
-	public synchronized int incCrawledCount() {
-		return ++crawledCount;
-	}
-
-	@Override
-	public Integer getCrawledCount() {
-		return crawledCount;
-	}
-
-	public synchronized int incErrorCount() {
-		return ++errorCount;
-	}
-
-	@Override
-	public Integer getErrorCount() {
-		return errorCount;
+	public void incErrorCount(String errorMessage) {
+		crawlStatus = crawlStatusBuilder.error(errorMessage).build();
 	}
 
 	@Override
@@ -139,19 +117,8 @@ public class CrawlSessionImpl<T extends CrawlDefinition> implements CrawlSession
 		return name;
 	}
 
-	@Override
-	public String getCurrentURI() {
-		return currentURI;
-	}
-
-	@Override
-	public Integer getCurrentDepth() {
-		return currentDepth;
-	}
-
-	public synchronized void setCurrentURI(String currentURI, Integer currentDepth) {
-		this.currentURI = currentURI;
-		this.currentDepth = currentDepth;
+	public void setCurrentCrawl(String currentCrawl, Integer currentDepth) {
+		crawlStatus = crawlStatusBuilder.crawl(currentCrawl, currentDepth).build();
 	}
 
 	public T getCrawlDefinition() {
@@ -161,4 +128,5 @@ public class CrawlSessionImpl<T extends CrawlDefinition> implements CrawlSession
 	public TimeTracker getTimeTracker() {
 		return timeTracker;
 	}
+
 }

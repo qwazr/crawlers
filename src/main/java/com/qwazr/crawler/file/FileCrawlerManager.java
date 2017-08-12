@@ -35,6 +35,7 @@ public class FileCrawlerManager extends CrawlManager<FileCrawlThread, FileCrawlD
 
 	@Override
 	protected FileCrawlThread newCrawlThread(String sessionName, FileCrawlDefinition crawlDefinition) {
-		return new FileCrawlThread(this, new CrawlSessionImpl<>(crawlDefinition, sessionName), LOGGER);
+		return new FileCrawlThread(this,
+				new CrawlSessionImpl<>(sessionName, myAddress, crawlDefinition, crawlDefinition.entryPath), LOGGER);
 	}
 }

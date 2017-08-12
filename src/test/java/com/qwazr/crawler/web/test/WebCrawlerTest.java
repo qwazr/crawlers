@@ -86,7 +86,7 @@ public class WebCrawlerTest {
 			CrawlStatus status = ErrorWrapper.bypass(() -> remote.getSession(sessionName, null), 404);
 			if (status == null)
 				return false;
-			return status.urls.crawled == crawlCount;
+			return status.crawled == crawlCount;
 		});
 	}
 

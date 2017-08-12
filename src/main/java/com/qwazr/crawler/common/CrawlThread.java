@@ -97,7 +97,9 @@ public abstract class CrawlThread<M extends CrawlManager> implements Runnable {
 		}
 	}
 
-	public abstract CrawlStatus getStatus();
+	final public CrawlStatus getStatus() {
+		return session.getCrawlStatus();
+	}
 
 	public void abort(final String abortingReason) {
 		session.abort(abortingReason);

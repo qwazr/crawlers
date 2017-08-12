@@ -17,7 +17,6 @@ package com.qwazr.crawler.web;
 
 import com.google.common.net.InternetDomainName;
 import com.qwazr.crawler.common.CrawlSessionImpl;
-import com.qwazr.crawler.common.CrawlStatus;
 import com.qwazr.crawler.common.CrawlThread;
 import com.qwazr.crawler.common.EventEnum;
 import com.qwazr.crawler.web.driver.BrowserDriver;
@@ -79,7 +78,8 @@ public class WebCrawlThread extends CrawlThread<WebCrawlerManager> {
 
 	WebCrawlThread(final WebCrawlerManager webCrawlerManager, final String sessionName,
 			final WebCrawlDefinition crawlDefinition) throws ServerException {
-		super(webCrawlerManager, new CrawlSessionImpl<>(crawlDefinition, sessionName), LOGGER);
+		super(webCrawlerManager, new CrawlSessionImpl<>(sessionName, webCrawlerManager.getMyAddress(), crawlDefinition,
+				crawlDefinition.entryUrl), LOGGER);
 		this.crawlDefinition = crawlDefinition;
 		this.timeTracker = session.getTimeTracker();
 		if (crawlDefinition.browserType == null)
@@ -113,11 +113,6 @@ public class WebCrawlThread extends CrawlThread<WebCrawlerManager> {
 		} finally {
 			timeTracker.next("Initialization");
 		}
-	}
-
-	@Override
-	public CrawlStatus getStatus() {
-		return new CrawlStatus(manager.getMyAddress(), crawlDefinition.entryUrl, session);
 	}
 
 	/**
@@ -216,7 +211,7 @@ public class WebCrawlThread extends CrawlThread<WebCrawlerManager> {
 
 		URI uri = currentURI.getInitialURI();
 		String uriString = uri.toString();
-		session.setCurrentURI(uriString, currentURI.getDepth());
+		session.setCurrentCrawl(uriString, currentURI.getDepth());
 
 		// Check if the URL is well formated
 		String scheme = uri.getScheme();
@@ -245,7 +240,7 @@ public class WebCrawlThread extends CrawlThread<WebCrawlerManager> {
 			//if (mainWindow != null && !mainWindow.equals(driver.getWindowHandle()))
 			//	driver.switchTo().window(mainWindow);
 		} catch (Exception e) {
-			session.incErrorCount();
+			session.incErrorCount("Error on " + uriString + ": " + e.getMessage());
 			currentURI.setError(driver, e);
 			return;
 		} finally {
@@ -257,7 +252,7 @@ public class WebCrawlThread extends CrawlThread<WebCrawlerManager> {
 			uri = new URI(uriString);
 			currentURI.setFinalURI(uri);
 		} catch (URISyntaxException e) {
-			session.incErrorCount();
+			session.incErrorCount("Error on " + uriString + ": " + e.getMessage());
 			currentURI.setError(driver, e);
 			return;
 		}
@@ -269,7 +264,7 @@ public class WebCrawlThread extends CrawlThread<WebCrawlerManager> {
 			try {
 				scriptBeforeCrawl(currentURI, uriString);
 			} catch (Exception e) {
-				session.incErrorCount();
+				session.incErrorCount("Error on " + uriString + ": " + e.getMessage());
 				currentURI.setError(driver, e);
 				return;
 			}
@@ -395,7 +390,7 @@ public class WebCrawlThread extends CrawlThread<WebCrawlerManager> {
 					currentURI.setRobotsTxtDisallow(true);
 				}
 			} catch (Exception e) {
-				session.incErrorCount();
+				session.incErrorCount("Error on robots.txt extraction: " + e.getMessage());
 				currentURI.setError(driver, e);
 			}
 

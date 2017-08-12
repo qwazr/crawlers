@@ -1,5 +1,5 @@
-/**
- * Copyright 2016 Emmanuel Keller / QWAZR
+/*
+ * Copyright 2016-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,7 +12,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- **/
+ */
 package com.qwazr.crawler.common;
 
 import com.qwazr.utils.TimeTracker;
@@ -20,6 +20,11 @@ import com.qwazr.utils.TimeTracker;
 import java.util.Map;
 
 public interface CrawlSession {
+
+	/**
+	 * @return the current crawl status
+	 */
+	CrawlStatus getCrawlStatus();
 
 	Map<String, Object> getVariables();
 
@@ -50,11 +55,6 @@ public interface CrawlSession {
 	void sleep(int millis);
 
 	/**
-	 * Call this method to abort of the current session
-	 */
-	void abort();
-
-	/**
 	 * Call this method to abort the current session and set the reason.
 	 * If it was previously aborted, the reason is not updated
 	 *
@@ -70,39 +70,9 @@ public interface CrawlSession {
 	boolean isAborting();
 
 	/**
-	 * @return the aborting reason if any
-	 */
-	String getAbortingReason();
-
-	/**
-	 * @return The number of ignored URLs
-	 */
-	Integer getIgnoredCount();
-
-	/**
-	 * @return The number of crawled URLs
-	 */
-	Integer getCrawledCount();
-
-	/**
-	 * @return The number of erroneous URLs
-	 */
-	Integer getErrorCount();
-
-	/**
 	 * @return the name of the session
 	 */
 	String getName();
-
-	/**
-	 * @return the currentUri
-	 */
-	String getCurrentURI();
-
-	/**
-	 * @return the currentDepth
-	 */
-	Integer getCurrentDepth();
 
 	/**
 	 * @return time information about the current crawl session
