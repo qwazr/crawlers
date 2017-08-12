@@ -92,7 +92,9 @@ public abstract class CrawlThread<M extends CrawlManager> implements Runnable {
 			runner();
 		} catch (Exception e) {
 			logger.log(Level.SEVERE, e, e::getMessage);
+			session.error(e);
 		} finally {
+			session.done();
 			manager.removeSession(this);
 		}
 	}

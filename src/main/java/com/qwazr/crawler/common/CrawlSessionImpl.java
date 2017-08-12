@@ -15,6 +15,7 @@
  **/
 package com.qwazr.crawler.common;
 
+import com.qwazr.utils.ExceptionUtils;
 import com.qwazr.utils.TimeTracker;
 
 import java.util.Map;
@@ -109,7 +110,11 @@ public class CrawlSessionImpl<T extends CrawlDefinition> implements CrawlSession
 	}
 
 	public void incErrorCount(String errorMessage) {
-		crawlStatus = crawlStatusBuilder.error(errorMessage).build();
+		crawlStatus = crawlStatusBuilder.lastError(errorMessage).incError().build();
+	}
+
+	public void error(Exception e) {
+		crawlStatus = crawlStatusBuilder.lastError(ExceptionUtils.getRootCauseMessage(e)).build();
 	}
 
 	@Override
@@ -129,4 +134,7 @@ public class CrawlSessionImpl<T extends CrawlDefinition> implements CrawlSession
 		return timeTracker;
 	}
 
+	public void done() {
+		crawlStatus = crawlStatusBuilder.done().build();
+	}
 }

@@ -65,7 +65,7 @@ public interface CrawlSession {
 	/**
 	 * Check if the session is currently aborting
 	 *
-	 * @return
+	 * @return true if the session is aborting
 	 */
 	boolean isAborting();
 
@@ -78,4 +78,5 @@ public interface CrawlSession {
 	 * @return time information about the current crawl session
 	 */
 	TimeTracker getTimeTracker();
+
 }

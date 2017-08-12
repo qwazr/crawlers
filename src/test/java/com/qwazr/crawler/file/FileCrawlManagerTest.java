@@ -46,7 +46,7 @@ public class FileCrawlManagerTest {
 		CrawlStatus crawlStatus = fileCrawlerManager.runSession("myFileCrawlSession",
 				FileCrawlDefinition.of().entryPath("src/test/file_crawl").build());
 		Assert.assertNotNull(crawlStatus);
-		while (crawlStatus != null) {
+		while (crawlStatus.endTime != null) {
 			crawlStatus = fileCrawlerManager.getSession("myFileCrawlSession");
 			Thread.sleep(500);
 		}

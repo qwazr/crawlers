@@ -18,8 +18,11 @@ package com.qwazr.crawler.common;
 import com.qwazr.cluster.ClusterManager;
 import com.qwazr.scripts.ScriptManager;
 import com.qwazr.server.ServerException;
+import com.qwazr.utils.CollectionsUtils;
 
 import javax.ws.rs.core.Response;
+import java.util.Collections;
+import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -28,6 +31,7 @@ import java.util.logging.Logger;
 
 public abstract class CrawlManager<T extends CrawlThread<?>, D extends CrawlDefinition> {
 
+	private final Map<String, CrawlStatus> statusHistory;
 	private final ConcurrentHashMap<String, T> crawlSessionMap;
 	private final ExecutorService executorService;
 	private final Logger logger;
@@ -37,7 +41,8 @@ public abstract class CrawlManager<T extends CrawlThread<?>, D extends CrawlDefi
 
 	protected CrawlManager(final ClusterManager clusterManager, final ScriptManager scriptManager,
 			final ExecutorService executorService, final Logger logger) {
-		crawlSessionMap = new ConcurrentHashMap<>();
+		this.crawlSessionMap = new ConcurrentHashMap<>();
+		this.statusHistory = Collections.synchronizedMap(new CollectionsUtils.EldestFixedSizeMap<>(250));
 		this.clusterManager = clusterManager;
 		this.scriptManager = scriptManager;
 		this.myAddress = clusterManager != null ? clusterManager.getServiceBuilder().local().getStatus().me : null;
@@ -61,7 +66,7 @@ public abstract class CrawlManager<T extends CrawlThread<?>, D extends CrawlDefi
 
 	public CrawlStatus getSession(final String sessionName) {
 		final T crawlThread = crawlSessionMap.get(sessionName);
-		return crawlThread == null ? null : crawlThread.getStatus();
+		return crawlThread == null ? statusHistory.get(sessionName) : crawlThread.getStatus();
 	}
 
 	public void abortSession(final String sessionName, final String abortingReason) throws ServerException {
@@ -83,16 +88,19 @@ public abstract class CrawlManager<T extends CrawlThread<?>, D extends CrawlDefi
 			newThread.set(true);
 			return newCrawlThread(sessionName, crawlDefinition);
 		});
-
+		statusHistory.remove(sessionName);
 		if (!newThread.get())
 			throw new ServerException(Response.Status.CONFLICT, "The session already exists: " + sessionName);
 		executorService.execute(crawlThread);
 		return crawlThread.getStatus();
 	}
 
-	public void removeSession(final T crawlThread) {
-		logger.info(() -> "Remove session: " + crawlThread.getSessionName());
-		crawlSessionMap.remove(crawlThread.getSessionName(), crawlThread);
+	void removeSession(final T crawlThread) {
+		final String sessionName = crawlThread.getSessionName();
+		logger.info(() -> "Remove session: " + sessionName);
+		final CrawlStatus lastCrawlStatus = crawlThread.getStatus();
+		statusHistory.put(sessionName, lastCrawlStatus);
+		crawlSessionMap.remove(sessionName, crawlThread);
 	}
 
 }

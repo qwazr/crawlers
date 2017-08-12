@@ -77,6 +77,12 @@ public class CrawlStatus {
 	@JsonProperty("current_depth")
 	final public Integer currentDepth;
 
+	@JsonProperty("start_time")
+	final public Long startTime;
+
+	@JsonProperty("end_time")
+	final public Long endTime;
+
 	final public TimeTracker.Status timer;
 
 	@JsonCreator
@@ -85,6 +91,7 @@ public class CrawlStatus {
 			@JsonProperty("timer") TimeTracker.Status timer, @JsonProperty("crawled") Integer crawled,
 			@JsonProperty("ignored") Integer ignored, @JsonProperty("error") Integer error,
 			@JsonProperty("last_error") String lastError, @JsonProperty("current_crawl") String currentCrawl,
+			@JsonProperty("start_time") final Long startTime, @JsonProperty("end_time") final Long endTime,
 			@JsonProperty("current_depth") Integer currentDepth) {
 		this.nodeAddress = nodeAddress;
 		this.timer = timer;
@@ -97,6 +104,8 @@ public class CrawlStatus {
 		this.lastError = lastError;
 		this.currentCrawl = currentCrawl;
 		this.currentDepth = currentDepth;
+		this.startTime = startTime;
+		this.endTime = endTime;
 	}
 
 	public CrawlStatus(Builder builder) {
@@ -111,6 +120,8 @@ public class CrawlStatus {
 		this.lastError = builder.lastError;
 		this.currentCrawl = builder.currentCrawl;
 		this.currentDepth = builder.currentDepth;
+		this.startTime = builder.startTime;
+		this.endTime = builder.endTime;
 	}
 
 	public static Builder of(String entryCrawl, String nodeAddress, TimeTracker timeTracker) {
@@ -121,7 +132,8 @@ public class CrawlStatus {
 
 		private final String entryCrawl;
 		private final String nodeAddress;
-		private TimeTracker timeTracker;
+		private final long startTime;
+		private final TimeTracker timeTracker;
 
 		private Boolean aborting;
 		private String abortingReason;
@@ -131,10 +143,12 @@ public class CrawlStatus {
 		private String lastError;
 		private String currentCrawl;
 		private Integer currentDepth;
+		private Long endTime;
 
 		private Builder(String entryCrawl, String nodeAddress, TimeTracker timeTracker) {
 			this.entryCrawl = entryCrawl;
 			this.nodeAddress = nodeAddress;
+			this.startTime = System.currentTimeMillis();
 			this.timeTracker = timeTracker;
 		}
 
@@ -154,8 +168,12 @@ public class CrawlStatus {
 			return this;
 		}
 
-		public Builder error(String errorMessage) {
+		public Builder incError() {
 			error++;
+			return this;
+		}
+
+		public Builder lastError(String errorMessage) {
 			this.lastError = errorMessage;
 			return this;
 		}
@@ -163,6 +181,11 @@ public class CrawlStatus {
 		public Builder crawl(String currentCrawl, Integer currentDepth) {
 			this.currentCrawl = currentCrawl;
 			this.currentDepth = currentDepth;
+			return this;
+		}
+
+		public Builder done() {
+			this.endTime = System.currentTimeMillis();
 			return this;
 		}
 
