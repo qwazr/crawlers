@@ -25,6 +25,7 @@ import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.qwazr.crawler.web.WebRequestDefinition;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.LoggerUtils;
+import com.qwazr.utils.ObjectMappers;
 import com.qwazr.utils.http.HttpUtils;
 import org.apache.http.entity.mime.MIME;
 import org.openqa.selenium.Capabilities;
@@ -37,8 +38,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import static com.qwazr.utils.json.JsonMapper.MAPPER;
 
 public class HtmlUnitBrowserDriver extends HtmlUnitDriverWebClient
 		implements AdditionalCapabilities.ResponseHeader, AdditionalCapabilities.SafeText,
@@ -137,7 +136,7 @@ public class HtmlUnitBrowserDriver extends HtmlUnitDriverWebClient
 	}
 
 	public void request(final String json) throws IOException {
-		request(MAPPER.readValue(json, WebRequestDefinition.class));
+		request(ObjectMappers.JSON.readValue(json, WebRequestDefinition.class));
 	}
 
 	@Override

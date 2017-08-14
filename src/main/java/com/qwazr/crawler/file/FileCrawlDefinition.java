@@ -23,8 +23,8 @@ import com.qwazr.crawler.common.CrawlDefinition;
 import com.qwazr.crawler.common.EventEnum;
 import com.qwazr.crawler.common.ScriptDefinition;
 import com.qwazr.utils.CollectionsUtils;
+import com.qwazr.utils.ObjectMappers;
 import com.qwazr.utils.StringUtils;
-import com.qwazr.utils.json.JsonMapper;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -192,7 +192,7 @@ public class FileCrawlDefinition extends CrawlDefinition {
 
 	@JsonIgnore
 	public static FileCrawlDefinition newInstance(final String json) throws IOException {
-		return JsonMapper.MAPPER.readValue(json, FileCrawlDefinition.class);
+		return ObjectMappers.JSON.readValue(json, FileCrawlDefinition.class);
 	}
 
 }

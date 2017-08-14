@@ -20,10 +20,10 @@ import com.qwazr.crawler.web.ProxyDefinition;
 import com.qwazr.crawler.web.WebRequestDefinition;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.LoggerUtils;
+import com.qwazr.utils.ObjectMappers;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.http.HttpClients;
 import com.qwazr.utils.http.HttpRequest;
-import com.qwazr.utils.json.JsonMapper;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.StatusLine;
@@ -454,7 +454,7 @@ final public class BrowserDriver implements WebDriver, Closeable, AdditionalCapa
 		if (!msg.startsWith("{"))
 			return msg;
 		try {
-			JsonNode json = JsonMapper.MAPPER.readTree(msg);
+			JsonNode json = ObjectMappers.JSON.readTree(msg);
 			JsonNode jsonMsg = json.get("errorMessage");
 			if (jsonMsg != null && jsonMsg.isTextual())
 				return jsonMsg.textValue();

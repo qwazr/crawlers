@@ -23,8 +23,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.crawler.common.CrawlDefinition;
 import com.qwazr.crawler.web.driver.BrowserDriverEnum;
 import com.qwazr.utils.CollectionsUtils;
+import com.qwazr.utils.ObjectMappers;
 import com.qwazr.utils.StringUtils;
-import com.qwazr.utils.json.JsonMapper;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -449,7 +449,7 @@ public class WebCrawlDefinition extends CrawlDefinition {
 	}
 
 	public static WebCrawlDefinition newInstance(final String json) throws IOException {
-		return JsonMapper.MAPPER.readValue(json, WebCrawlDefinition.class);
+		return ObjectMappers.JSON.readValue(json, WebCrawlDefinition.class);
 	}
 
 	public static Builder of() {

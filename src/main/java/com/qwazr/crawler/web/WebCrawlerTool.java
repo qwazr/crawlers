@@ -21,7 +21,7 @@ import com.qwazr.crawler.web.driver.BrowserDriver;
 import com.qwazr.crawler.web.driver.BrowserDriverBuilder;
 import com.qwazr.library.AbstractLibrary;
 import com.qwazr.utils.IOUtils;
-import com.qwazr.utils.json.JsonMapper;
+import com.qwazr.utils.ObjectMappers;
 
 import java.io.IOException;
 
@@ -38,7 +38,7 @@ public class WebCrawlerTool extends AbstractLibrary {
 	@JsonIgnore
 	public BrowserDriver getNewWebDriver(final IOUtils.CloseableContext context, final String json)
 			throws ReflectiveOperationException, SecurityException, IOException {
-		final WebCrawlDefinition webCrawlDef = JsonMapper.MAPPER.readValue(json, WebCrawlDefinition.class);
+		final WebCrawlDefinition webCrawlDef = ObjectMappers.JSON.readValue(json, WebCrawlDefinition.class);
 		final BrowserDriver browserDriver = new BrowserDriverBuilder(webCrawlDef).build();
 		return context == null ? browserDriver : context.add(browserDriver);
 	}
