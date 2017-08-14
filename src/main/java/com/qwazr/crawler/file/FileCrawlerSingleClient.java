@@ -12,27 +12,25 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */
-package com.qwazr.crawler.web;
+ **/
+package com.qwazr.crawler.file;
 
+import com.qwazr.crawler.common.CommonCrawlerSingleClient;
 import com.qwazr.crawler.common.CrawlStatus;
-import com.qwazr.crawler.common.CrawlerServiceImpl;
-import com.qwazr.utils.LoggerUtils;
+import com.qwazr.server.RemoteService;
 
 import java.io.IOException;
-import java.util.logging.Logger;
 
-class WebCrawlerServiceImpl extends CrawlerServiceImpl<WebCrawlerManager, WebCrawlDefinition>
-		implements WebCrawlerServiceInterface {
+class FileCrawlerSingleClient extends CommonCrawlerSingleClient<FileCrawlDefinition>
+		implements FileCrawlerServiceInterface {
 
-	private static final Logger LOGGER = LoggerUtils.getLogger(WebCrawlerServiceImpl.class);
-
-	WebCrawlerServiceImpl(WebCrawlerManager webrawlerManager) {
-		super(LOGGER, webrawlerManager);
+	FileCrawlerSingleClient(final RemoteService remote) {
+		super(remote, "/crawler/file/");
 	}
 
+	@Override
 	public CrawlStatus runSession(final String session_name, final String jsonCrawlDefinition) throws IOException {
-		return runSession(session_name, WebCrawlDefinition.newInstance(jsonCrawlDefinition));
+		return runSession(session_name, FileCrawlDefinition.newInstance(jsonCrawlDefinition));
 	}
 
 }

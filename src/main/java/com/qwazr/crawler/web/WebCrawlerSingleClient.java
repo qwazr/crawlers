@@ -15,53 +15,17 @@
  **/
 package com.qwazr.crawler.web;
 
+import com.qwazr.crawler.common.CommonCrawlerSingleClient;
 import com.qwazr.crawler.common.CrawlStatus;
 import com.qwazr.server.RemoteService;
-import com.qwazr.server.client.JsonClientAbstract;
-import com.qwazr.utils.UBuilder;
-import com.qwazr.utils.http.HttpRequest;
 
-import javax.ws.rs.core.Response;
 import java.io.IOException;
-import java.util.TreeMap;
 
-class WebCrawlerSingleClient extends JsonClientAbstract implements WebCrawlerServiceInterface {
+class WebCrawlerSingleClient extends CommonCrawlerSingleClient<WebCrawlDefinition>
+		implements WebCrawlerServiceInterface {
 
 	WebCrawlerSingleClient(final RemoteService remote) {
-		super(remote);
-	}
-
-	@Override
-	public TreeMap<String, CrawlStatus> getSessions(final String group) {
-		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, "/crawler/web/sessions").setParameter("group",
-				group);
-		HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
-		return executeJson(request, null, null, TreeMapStringCrawlTypeRef, valid200Json);
-	}
-
-	@Override
-	public CrawlStatus getSession(final String session_name, final String group) {
-		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, "/crawler/web/sessions/", session_name)
-				.setParameter("group", group);
-		HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
-		return executeJson(request, null, null, CrawlStatus.class, valid200Json);
-	}
-
-	@Override
-	public Response abortSession(final String session_name, final String reason, final String group) {
-		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, "/crawler/web/sessions/", session_name)
-				.setParameter("group", group)
-				.setParameterObject("reason", reason);
-		final HttpRequest request = HttpRequest.Delete(uriBuilder.buildNoEx());
-		final Integer statusCode = executeStatusCode(request, null, null, valid200202);
-		return Response.status(statusCode).build();
-	}
-
-	@Override
-	public CrawlStatus runSession(final String session_name, final WebCrawlDefinition crawlDefinition) {
-		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, "/crawler/web/sessions/", session_name);
-		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
-		return executeJson(request, crawlDefinition, null, CrawlStatus.class, valid200202Json);
+		super(remote, "/crawler/web/");
 	}
 
 	@Override

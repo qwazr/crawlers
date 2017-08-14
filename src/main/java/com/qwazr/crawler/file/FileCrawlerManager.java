@@ -19,6 +19,8 @@ import com.qwazr.cluster.ClusterManager;
 import com.qwazr.crawler.common.CrawlManager;
 import com.qwazr.crawler.common.CrawlSessionImpl;
 import com.qwazr.scripts.ScriptManager;
+import com.qwazr.server.ApplicationBuilder;
+import com.qwazr.server.GenericServer;
 import com.qwazr.utils.LoggerUtils;
 
 import java.util.concurrent.ExecutorService;
@@ -27,10 +29,26 @@ import java.util.logging.Logger;
 public class FileCrawlerManager extends CrawlManager<FileCrawlThread, FileCrawlDefinition> {
 
 	private static final Logger LOGGER = LoggerUtils.getLogger(FileCrawlerManager.class);
+	private final FileCrawlerServiceInterface service;
 
-	protected FileCrawlerManager(ClusterManager clusterManager, ScriptManager scriptManager,
+	public FileCrawlerManager(ClusterManager clusterManager, ScriptManager scriptManager,
 			ExecutorService executorService) {
 		super(clusterManager, scriptManager, executorService, LOGGER);
+		service = new FileCrawlerServiceImpl(this);
+	}
+
+	public FileCrawlerServiceInterface getService() {
+		return service;
+	}
+
+	public FileCrawlerManager registerContextAttribute(final GenericServer.Builder builder) {
+		builder.contextAttribute(this);
+		return this;
+	}
+
+	public FileCrawlerManager registerWebService(final ApplicationBuilder builder) {
+		builder.singletons(service);
+		return this;
 	}
 
 	@Override

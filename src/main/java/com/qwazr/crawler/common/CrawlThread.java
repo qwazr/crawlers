@@ -18,9 +18,11 @@ package com.qwazr.crawler.common;
 import com.qwazr.scripts.ScriptRunThread;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.TimeTracker;
+import com.qwazr.utils.WildcardMatcher;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.logging.Level;
@@ -105,6 +107,18 @@ public abstract class CrawlThread<M extends CrawlManager> implements Runnable {
 
 	public void abort(final String abortingReason) {
 		session.abort(abortingReason);
-
 	}
+
+	/**
+	 * Check the matching list. Returns the default value if the matching list is empty.
+	 *
+	 * @param text the text to check
+	 * @return true if a pattern matched the text
+	 */
+	protected static Boolean matches(String text, List<WildcardMatcher> matchers, Boolean defaultValue) {
+		if (matchers == null || matchers.isEmpty())
+			return defaultValue;
+		return WildcardMatcher.anyMatch(text, matchers);
+	}
+
 }

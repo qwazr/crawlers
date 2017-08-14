@@ -51,6 +51,13 @@ public class FileCrawlDefinition extends CrawlDefinition {
 	final public Integer maxDepth;
 
 	/**
+	 * A list of regular expression patterns. An URL will be crawled if it
+	 * matches one pattern.
+	 */
+	@JsonProperty("inclusion_patterns")
+	final public List<String> inclusionPatterns;
+
+	/**
 	 * A list of regular expression patterns. An URL may not be crawled if it
 	 * matches any pattern.
 	 */
@@ -65,6 +72,7 @@ public class FileCrawlDefinition extends CrawlDefinition {
 
 	protected FileCrawlDefinition(@JsonProperty("entry_path") String entryPath,
 			@JsonProperty("max_depth") Integer maxDepth,
+			@JsonProperty("inclusion_patterns") List<String> inclusionPatterns,
 			@JsonProperty("exclusion_patterns") List<String> exclusionPatterns,
 			@JsonProperty("crawl_wait_ms") Integer crawlWaitMs,
 			@JsonProperty("variables") LinkedHashMap<String, String> variables,
@@ -72,8 +80,10 @@ public class FileCrawlDefinition extends CrawlDefinition {
 		super(variables, scripts);
 		this.entryPath = entryPath;
 		this.maxDepth = maxDepth;
-		this.exclusionPatterns = exclusionPatterns == null ? null : Collections.unmodifiableList(
-				new ArrayList<>(exclusionPatterns));
+		this.inclusionPatterns =
+				inclusionPatterns == null ? null : Collections.unmodifiableList(new ArrayList<>(inclusionPatterns));
+		this.exclusionPatterns =
+				exclusionPatterns == null ? null : Collections.unmodifiableList(new ArrayList<>(exclusionPatterns));
 		this.crawlWaitMs = crawlWaitMs;
 	}
 
@@ -90,6 +100,8 @@ public class FileCrawlDefinition extends CrawlDefinition {
 			return false;
 		if (!Objects.equals(maxDepth, f.maxDepth))
 			return false;
+		if (!CollectionsUtils.equals(inclusionPatterns, f.inclusionPatterns))
+			return false;
 		if (!CollectionsUtils.equals(exclusionPatterns, f.exclusionPatterns))
 			return false;
 		if (!Objects.equals(crawlWaitMs, f.crawlWaitMs))
@@ -105,6 +117,11 @@ public class FileCrawlDefinition extends CrawlDefinition {
 	@JsonIgnore
 	public Integer getMaxDepth() {
 		return this.maxDepth;
+	}
+
+	@JsonIgnore
+	public Collection<String> getInclusionPatterns() {
+		return inclusionPatterns;
 	}
 
 	@JsonIgnore
@@ -129,6 +146,8 @@ public class FileCrawlDefinition extends CrawlDefinition {
 
 		private String entryPath;
 
+		private List<String> inclusionPatterns;
+
 		private List<String> exclusionPatterns;
 
 		private Integer maxDepth;
@@ -142,6 +161,10 @@ public class FileCrawlDefinition extends CrawlDefinition {
 			super(crawlDefinition);
 			entryPath = crawlDefinition.entryPath;
 			maxDepth = crawlDefinition.maxDepth;
+			inclusionPatterns =
+					crawlDefinition.inclusionPatterns == null || crawlDefinition.inclusionPatterns.isEmpty() ?
+							null :
+							new ArrayList<>(crawlDefinition.inclusionPatterns);
 			exclusionPatterns =
 					crawlDefinition.exclusionPatterns == null || crawlDefinition.exclusionPatterns.isEmpty() ?
 							null :
@@ -156,6 +179,25 @@ public class FileCrawlDefinition extends CrawlDefinition {
 
 		public Builder maxDepth(final Integer maxDepth) {
 			this.maxDepth = maxDepth;
+			return this;
+		}
+
+		public Builder setInclusionPatterns(final String inclusionPatternText) throws IOException {
+			if (StringUtils.isBlank(inclusionPatternText)) {
+				inclusionPatterns = null;
+				return this;
+			}
+			inclusionPatterns = new ArrayList<>();
+			StringUtils.linesCollector(inclusionPatternText, false, inclusionPatterns);
+			return this;
+		}
+
+		public Builder addInclusionPattern(final String inclusionPattern) {
+			if (StringUtils.isBlank(inclusionPattern))
+				return this;
+			if (inclusionPatterns == null)
+				inclusionPatterns = new ArrayList<>();
+			inclusionPatterns.add(inclusionPattern);
 			return this;
 		}
 
@@ -186,7 +228,8 @@ public class FileCrawlDefinition extends CrawlDefinition {
 
 		@Override
 		public FileCrawlDefinition build() {
-			return new FileCrawlDefinition(entryPath, maxDepth, exclusionPatterns, crawlWaitMs, variables, scripts);
+			return new FileCrawlDefinition(entryPath, maxDepth, inclusionPatterns, exclusionPatterns, crawlWaitMs,
+					variables, scripts);
 		}
 	}
 

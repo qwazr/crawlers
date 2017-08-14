@@ -13,17 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.qwazr.crawler.web;
+package com.qwazr.crawler.file;
 
 import com.qwazr.crawler.common.CrawlerServiceInterface;
 
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.Path;
 
-@RolesAllowed(WebCrawlerServiceInterface.SERVICE_NAME)
-@Path("/crawler/web")
-public interface WebCrawlerServiceInterface extends CrawlerServiceInterface<WebCrawlDefinition> {
+@RolesAllowed(FileCrawlerServiceInterface.SERVICE_NAME)
+@Path("/crawler/file")
+public interface FileCrawlerServiceInterface extends CrawlerServiceInterface<FileCrawlDefinition> {
 
-	String SERVICE_NAME = "webcrawler";
+	String SERVICE_NAME = "filecrawler";
 
 }

@@ -13,10 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.qwazr.crawler.web;
+package com.qwazr.crawler;
 
 import com.qwazr.cluster.ClusterManager;
 import com.qwazr.cluster.ClusterServiceInterface;
+import com.qwazr.crawler.file.FileCrawlerManager;
+import com.qwazr.crawler.file.FileCrawlerServiceBuilder;
+import com.qwazr.crawler.file.FileCrawlerServiceInterface;
+import com.qwazr.crawler.web.WebCrawlerManager;
+import com.qwazr.crawler.web.WebCrawlerServiceBuilder;
+import com.qwazr.crawler.web.WebCrawlerServiceInterface;
 import com.qwazr.library.LibraryManager;
 import com.qwazr.library.LibraryServiceInterface;
 import com.qwazr.scripts.ScriptManager;
@@ -34,12 +40,13 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class WebCrawlerServer implements BaseServer {
+public class CrawlerServer implements BaseServer {
 
 	private final GenericServer server;
-	private final WebCrawlerServiceBuilder serviceBuilder;
+	private final WebCrawlerServiceBuilder webServiceBuilder;
+	private final FileCrawlerServiceBuilder fileServiceBuilder;
 
-	private WebCrawlerServer(final ServerConfiguration configuration) throws IOException, URISyntaxException {
+	private CrawlerServer(final ServerConfiguration configuration) throws IOException, URISyntaxException {
 		final ExecutorService executorService = Executors.newCachedThreadPool();
 		final GenericServer.Builder builder = GenericServer.of(configuration, executorService);
 
@@ -47,6 +54,7 @@ public class WebCrawlerServer implements BaseServer {
 		services.add(ClusterServiceInterface.SERVICE_NAME);
 		services.add(LibraryServiceInterface.SERVICE_NAME);
 		services.add(WebCrawlerServiceInterface.SERVICE_NAME);
+		services.add(FileCrawlerServiceInterface.SERVICE_NAME);
 
 		final ApplicationBuilder webServices = ApplicationBuilder.of("/*").classes(RestApplication.JSON_CLASSES).
 				singletons(new WelcomeShutdownService());
@@ -68,8 +76,13 @@ public class WebCrawlerServer implements BaseServer {
 				new WebCrawlerManager(clusterManager, scriptManager, executorService).registerContextAttribute(builder)
 						.registerWebService(webServices);
 
+		final FileCrawlerManager fileCrawlerManager =
+				new FileCrawlerManager(clusterManager, scriptManager, executorService).registerContextAttribute(builder)
+						.registerWebService(webServices);
+
 		builder.getWebServiceContext().jaxrs(webServices);
-		serviceBuilder = new WebCrawlerServiceBuilder(clusterManager, webCrawlerManager);
+		webServiceBuilder = new WebCrawlerServiceBuilder(clusterManager, webCrawlerManager);
+		fileServiceBuilder = new FileCrawlerServiceBuilder(clusterManager, fileCrawlerManager);
 		server = builder.build();
 	}
 
@@ -78,19 +91,23 @@ public class WebCrawlerServer implements BaseServer {
 		return server;
 	}
 
-	public WebCrawlerServiceBuilder getServiceBuilder() {
-		return serviceBuilder;
+	public WebCrawlerServiceBuilder getWebServiceBuilder() {
+		return webServiceBuilder;
 	}
 
-	private static volatile WebCrawlerServer INSTANCE;
+	public FileCrawlerServiceBuilder getFileServiceBuilder() {
+		return fileServiceBuilder;
+	}
 
-	public static WebCrawlerServer getInstance() {
+	private static volatile CrawlerServer INSTANCE;
+
+	public static CrawlerServer getInstance() {
 		return INSTANCE;
 	}
 
 	public static synchronized void main(final String... args) throws Exception {
 		shutdown();
-		INSTANCE = new WebCrawlerServer(new ServerConfiguration(args));
+		INSTANCE = new CrawlerServer(new ServerConfiguration(args));
 		INSTANCE.start();
 	}
 

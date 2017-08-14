@@ -1,6 +1,10 @@
 {
   "entry_path": "/usr/share/docs",
   "max_depth": 16,
+  "inclusion_patterns": [
+    "*.md",
+    "*.txt"
+  ],
   "exclusion_patterns": [
     "*/.*"
   ],

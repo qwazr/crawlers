@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.qwazr.crawler.web;
+package com.qwazr.crawler.file;
 
 import com.qwazr.crawler.common.CrawlStatus;
 import com.qwazr.crawler.common.CrawlerServiceImpl;
@@ -22,17 +22,17 @@ import com.qwazr.utils.LoggerUtils;
 import java.io.IOException;
 import java.util.logging.Logger;
 
-class WebCrawlerServiceImpl extends CrawlerServiceImpl<WebCrawlerManager, WebCrawlDefinition>
-		implements WebCrawlerServiceInterface {
+class FileCrawlerServiceImpl extends CrawlerServiceImpl<FileCrawlerManager, FileCrawlDefinition>
+		implements FileCrawlerServiceInterface {
 
-	private static final Logger LOGGER = LoggerUtils.getLogger(WebCrawlerServiceImpl.class);
+	private static final Logger LOGGER = LoggerUtils.getLogger(FileCrawlerServiceImpl.class);
 
-	WebCrawlerServiceImpl(WebCrawlerManager webrawlerManager) {
-		super(LOGGER, webrawlerManager);
+	FileCrawlerServiceImpl(FileCrawlerManager crawlerManager) {
+		super(LOGGER, crawlerManager);
 	}
 
 	public CrawlStatus runSession(final String session_name, final String jsonCrawlDefinition) throws IOException {
-		return runSession(session_name, WebCrawlDefinition.newInstance(jsonCrawlDefinition));
+		return runSession(session_name, FileCrawlDefinition.newInstance(jsonCrawlDefinition));
 	}
 
 }

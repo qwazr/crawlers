@@ -37,12 +37,14 @@ import java.util.logging.Logger;
 public class FileCrawlThread extends CrawlThread<FileCrawlerManager> implements FileVisitor<Path> {
 
 	private final FileCrawlDefinition crawlDefinition;
+	private final List<WildcardMatcher> inclusionMatcherList;
 	private final List<WildcardMatcher> exclusionMatcherList;
 	private int currentDepth;
 
 	public FileCrawlThread(FileCrawlerManager manager, CrawlSessionImpl<FileCrawlDefinition> session, Logger logger) {
 		super(manager, session, logger);
 		this.crawlDefinition = session.getCrawlDefinition();
+		this.inclusionMatcherList = WildcardMatcher.getList(crawlDefinition.inclusionPatterns);
 		this.exclusionMatcherList = WildcardMatcher.getList(crawlDefinition.exclusionPatterns);
 	}
 
@@ -62,12 +64,21 @@ public class FileCrawlThread extends CrawlThread<FileCrawlerManager> implements 
 		}
 	}
 
+	private boolean checkPattern(Path path) {
+		final String text = path.toString();
+		final Boolean inc = matches(text, inclusionMatcherList, null);
+		if (inc != null && !inc)
+			return false;
+		final Boolean exc = matches(text, exclusionMatcherList, false);
+		return exc == null || !exc;
+	}
+
 	@Override
 	public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-		currentDepth++;
 		if (session.isAborting())
 			return FileVisitResult.TERMINATE;
-		if (exclusionMatcherList != null && WildcardMatcher.anyMatch(dir.toString(), exclusionMatcherList))
+		currentDepth++;
+		if (crawlDefinition.maxDepth != null && currentDepth >= crawlDefinition.maxDepth)
 			return FileVisitResult.SKIP_SUBTREE;
 		return FileVisitResult.CONTINUE;
 	}
@@ -76,8 +87,10 @@ public class FileCrawlThread extends CrawlThread<FileCrawlerManager> implements 
 	public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
 		if (session.isAborting())
 			return FileVisitResult.TERMINATE;
-		if (exclusionMatcherList != null && WildcardMatcher.anyMatch(file.toString(), exclusionMatcherList))
+		if (!checkPattern(file)) {
+			session.incIgnoredCount();
 			return FileVisitResult.CONTINUE;
+		}
 		final Consumer<Map<String, Object>> attributesProvider = attributes -> {
 			attributes.put("path", file);
 			attributes.put("attrs", attrs);

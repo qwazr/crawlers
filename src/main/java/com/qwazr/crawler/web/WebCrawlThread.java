@@ -116,30 +116,6 @@ public class WebCrawlThread extends CrawlThread<WebCrawlerManager> {
 	}
 
 	/**
-	 * Check the inclusion list. Returns null if the inclusion list is empty.
-	 *
-	 * @param uriString
-	 * @return
-	 */
-	private Boolean matchesInclusion(String uriString) {
-		if (inclusionMatcherList == null || inclusionMatcherList.isEmpty())
-			return null;
-		return WildcardMatcher.anyMatch(uriString, inclusionMatcherList);
-	}
-
-	/**
-	 * Check the exclusion list. Returns null if the exclusion list is empty.
-	 *
-	 * @param uriString
-	 * @return
-	 */
-	private Boolean matchesExclusion(String uriString) {
-		if (exclusionMatcherList == null || exclusionMatcherList.isEmpty())
-			return false;
-		return WildcardMatcher.anyMatch(uriString, exclusionMatcherList);
-	}
-
-	/**
 	 * Remove the fragment and the query parameters following the configuration
 	 *
 	 * @param uri
@@ -174,25 +150,22 @@ public class WebCrawlThread extends CrawlThread<WebCrawlerManager> {
 	}
 
 	private boolean matchesInitialDomain(final URI uri) {
-		String host = uri.getHost();
-		if (StringUtils.isEmpty(host))
-			return false;
-		if (!InternetDomainName.isValid(host))
-			return false;
-		return internetDomainName.equals(InternetDomainName.from(host));
+		final String host = uri.getHost();
+		return !StringUtils.isEmpty(host) && InternetDomainName.isValid(host) &&
+				internetDomainName.equals(InternetDomainName.from(host));
 	}
 
 	private String scriptBeforeCrawl(final CurrentURIImpl currentURI, String uriString)
 			throws ServerException, IOException, ClassNotFoundException {
-		URI uri = currentURI.getURI();
+		final URI uri = currentURI.getURI();
 		if (uriString == null)
 			uriString = uri.toString();
 
 		currentURI.setStartDomain(matchesInitialDomain(uri));
 
 		// We check the inclusion/exclusion.
-		currentURI.setInInclusion(matchesInclusion(uriString));
-		currentURI.setInExclusion(matchesExclusion(uriString));
+		currentURI.setInInclusion(matches(uriString, inclusionMatcherList, null));
+		currentURI.setInExclusion(matches(uriString, exclusionMatcherList, false));
 
 		if (currentURI.isInInclusion() != null && !currentURI.isInInclusion())
 			currentURI.setIgnored(true);
@@ -327,11 +300,11 @@ public class WebCrawlThread extends CrawlThread<WebCrawlerManager> {
 			u = checkLink(u);
 			if (u == null)
 				continue;
-			String us = u.toString();
-			Boolean inc = matchesInclusion(us);
+			final String us = u.toString();
+			final Boolean inc = matches(us, inclusionMatcherList, null);
 			if (inc != null && !inc)
 				continue;
-			Boolean exc = matchesExclusion(us);
+			final Boolean exc = matches(us, exclusionMatcherList, false);
 			if (exc != null && exc)
 				continue;
 			filteredURIs.add(u);

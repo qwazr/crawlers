@@ -31,12 +31,16 @@ public class WebCrawlerManager extends CrawlManager<WebCrawlThread, WebCrawlDefi
 
 	private static final Logger LOGGER = LoggerUtils.getLogger(WebCrawlerManager.class);
 
-	private WebCrawlerServiceImpl service;
+	private final WebCrawlerServiceInterface service;
 
 	public WebCrawlerManager(final ClusterManager clusterManager, final ScriptManager scriptManager,
 			final ExecutorService executor) throws IOException, URISyntaxException {
 		super(clusterManager, scriptManager, executor, LOGGER);
 		service = new WebCrawlerServiceImpl(this);
+	}
+
+	public WebCrawlerServiceInterface getService() {
+		return service;
 	}
 
 	public WebCrawlerManager registerContextAttribute(final GenericServer.Builder builder) {
@@ -47,10 +51,6 @@ public class WebCrawlerManager extends CrawlManager<WebCrawlThread, WebCrawlDefi
 	public WebCrawlerManager registerWebService(final ApplicationBuilder builder) {
 		builder.singletons(service);
 		return this;
-	}
-
-	public WebCrawlerServiceInterface getService() {
-		return service;
 	}
 
 	@Override

@@ -43,12 +43,19 @@ public class FileCrawlManagerTest {
 
 	@Test
 	public void crawlFullTest() throws InterruptedException {
-		CrawlStatus crawlStatus = fileCrawlerManager.runSession("myFileCrawlSession",
-				FileCrawlDefinition.of().entryPath("src/test/file_crawl").build());
+		CrawlStatus crawlStatus = fileCrawlerManager.runSession("myFileCrawlSession", FileCrawlDefinition.of()
+				.entryPath("src/test/file_crawl")
+				.addInclusionPattern("*.txt")
+				.addExclusionPattern("*/ignore.*")
+				.build());
 		Assert.assertNotNull(crawlStatus);
-		while (crawlStatus.endTime != null) {
+		while (crawlStatus.endTime == null) {
 			crawlStatus = fileCrawlerManager.getSession("myFileCrawlSession");
 			Thread.sleep(500);
 		}
+		Assert.assertEquals(2, crawlStatus.crawled);
+		Assert.assertEquals(1, crawlStatus.ignored);
+		Assert.assertEquals(0, crawlStatus.error);
+		Assert.assertNull(crawlStatus.lastError);
 	}
 }
