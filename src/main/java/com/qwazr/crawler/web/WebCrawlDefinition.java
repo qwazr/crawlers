@@ -24,7 +24,6 @@ import com.qwazr.crawler.common.CrawlDefinition;
 import com.qwazr.crawler.web.driver.BrowserDriverEnum;
 import com.qwazr.utils.CollectionsUtils;
 import com.qwazr.utils.ObjectMappers;
-import com.qwazr.utils.StringUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -85,20 +84,6 @@ public class WebCrawlDefinition extends CrawlDefinition {
 	 */
 	@JsonProperty("path_cleaner_patterns")
 	final public List<String> pathCleanerPatterns;
-
-	/**
-	 * A list of regular expression patterns. An URL may be crawled only if it
-	 * matches any pattern.
-	 */
-	@JsonProperty("inclusion_patterns")
-	final public List<String> inclusionPatterns;
-
-	/**
-	 * A list of regular expression patterns. An URL may not be crawled if it
-	 * matches any pattern.
-	 */
-	@JsonProperty("exclusion_patterns")
-	final public List<String> exclusionPatterns;
 
 	/**
 	 * Remove fragments from detected links
@@ -197,8 +182,6 @@ public class WebCrawlDefinition extends CrawlDefinition {
 		maxUrlNumber = null;
 		parametersPatterns = null;
 		pathCleanerPatterns = null;
-		inclusionPatterns = null;
-		exclusionPatterns = null;
 		removeFragments = null;
 		browserName = null;
 		browserLanguage = null;
@@ -226,14 +209,12 @@ public class WebCrawlDefinition extends CrawlDefinition {
 		urls = builder.urls == null ? null : Collections.unmodifiableMap(new LinkedHashMap<>(builder.urls));
 		maxDepth = builder.maxDepth;
 		maxUrlNumber = builder.maxUrlNumber;
-		parametersPatterns = builder.parametersPatterns == null ? null : Collections.unmodifiableList(
-				new ArrayList<>(builder.parametersPatterns));
-		pathCleanerPatterns = builder.pathCleanerPatterns == null ? null : Collections.unmodifiableList(
-				new ArrayList<>(builder.pathCleanerPatterns));
-		inclusionPatterns = builder.inclusionPatterns == null ? null : Collections.unmodifiableList(
-				new ArrayList<>(builder.inclusionPatterns));
-		exclusionPatterns = builder.exclusionPatterns == null ? null : Collections.unmodifiableList(
-				new ArrayList<>(builder.exclusionPatterns));
+		parametersPatterns = builder.parametersPatterns == null ?
+				null :
+				Collections.unmodifiableList(new ArrayList<>(builder.parametersPatterns));
+		pathCleanerPatterns = builder.pathCleanerPatterns == null ?
+				null :
+				Collections.unmodifiableList(new ArrayList<>(builder.pathCleanerPatterns));
 		removeFragments = builder.removeFragments;
 		browserName = builder.browserName;
 		browserLanguage = builder.browserLanguage;
@@ -290,16 +271,6 @@ public class WebCrawlDefinition extends CrawlDefinition {
 	@JsonIgnore
 	public Collection<String> getPathCleanerPatterns() {
 		return pathCleanerPatterns;
-	}
-
-	@JsonIgnore
-	public Collection<String> getInclusionPatterns() {
-		return inclusionPatterns;
-	}
-
-	@JsonIgnore
-	public Collection<String> getExclusionPatterns() {
-		return exclusionPatterns;
 	}
 
 	@JsonIgnore
@@ -407,10 +378,6 @@ public class WebCrawlDefinition extends CrawlDefinition {
 			return false;
 		if (!CollectionsUtils.equals(pathCleanerPatterns, w.pathCleanerPatterns))
 			return false;
-		if (!CollectionsUtils.equals(inclusionPatterns, w.inclusionPatterns))
-			return false;
-		if (!CollectionsUtils.equals(exclusionPatterns, w.exclusionPatterns))
-			return false;
 		if (!Objects.equals(removeFragments, w.removeFragments))
 			return false;
 		if (!Objects.equals(browserName, w.browserName))
@@ -470,8 +437,6 @@ public class WebCrawlDefinition extends CrawlDefinition {
 		private Integer maxUrlNumber;
 		private List<String> parametersPatterns;
 		private List<String> pathCleanerPatterns;
-		private List<String> inclusionPatterns;
-		private List<String> exclusionPatterns;
 		private Boolean removeFragments;
 		private BrowserDriverEnum browserType;
 		private String browserLanguage;
@@ -502,10 +467,8 @@ public class WebCrawlDefinition extends CrawlDefinition {
 			this.maxDepth = src.maxDepth;
 			this.maxUrlNumber = src.maxUrlNumber;
 			this.parametersPatterns = src.parametersPatterns == null ? null : new ArrayList<>(src.parametersPatterns);
-			this.pathCleanerPatterns = src.pathCleanerPatterns == null ? null : new ArrayList<>(
-					src.pathCleanerPatterns);
-			this.inclusionPatterns = src.inclusionPatterns == null ? null : new ArrayList<>(src.inclusionPatterns);
-			this.exclusionPatterns = src.exclusionPatterns == null ? null : new ArrayList<>(src.exclusionPatterns);
+			this.pathCleanerPatterns =
+					src.pathCleanerPatterns == null ? null : new ArrayList<>(src.pathCleanerPatterns);
 			this.removeFragments = src.removeFragments;
 			this.browserType = src.browserType;
 			this.browserLanguage = src.browserLanguage;
@@ -573,40 +536,6 @@ public class WebCrawlDefinition extends CrawlDefinition {
 			if (this.pathCleanerPatterns == null)
 				this.pathCleanerPatterns = new ArrayList<>();
 			this.pathCleanerPatterns.add(pathCleanerPattern);
-			return this;
-		}
-
-		public Builder addInclusionPattern(final String inclusionPattern) {
-			if (this.inclusionPatterns == null)
-				this.inclusionPatterns = new ArrayList<>();
-			this.inclusionPatterns.add(inclusionPattern);
-			return this;
-		}
-
-		public Builder setInclusionPattern(final String inclusionPatternText) throws IOException {
-			if (inclusionPatternText == null) {
-				this.inclusionPatterns = null;
-				return this;
-			}
-			this.inclusionPatterns = new ArrayList<>();
-			StringUtils.linesCollector(inclusionPatternText, false, this.inclusionPatterns);
-			return this;
-		}
-
-		public Builder setExclusionPattern(final String exclusionPatternText) throws IOException {
-			if (exclusionPatternText == null) {
-				this.exclusionPatterns = null;
-				return this;
-			}
-			this.exclusionPatterns = new ArrayList<>();
-			StringUtils.linesCollector(exclusionPatternText, false, this.exclusionPatterns);
-			return this;
-		}
-
-		public Builder addExclusionPattern(final String exclusionPattern) {
-			if (this.exclusionPatterns == null)
-				this.exclusionPatterns = new ArrayList<>();
-			this.exclusionPatterns.add(exclusionPattern);
 			return this;
 		}
 

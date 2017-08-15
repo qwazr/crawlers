@@ -13,20 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.qwazr.crawler.web.test;
+package com.qwazr.crawler.web;
 
+import com.qwazr.crawler.CrawlerServer;
+import com.qwazr.crawler.ServerTest;
 import com.qwazr.crawler.common.CrawlStatus;
-import com.qwazr.crawler.common.CrawlerServiceInterface;
 import com.qwazr.crawler.common.EventEnum;
 import com.qwazr.crawler.common.ScriptDefinition;
-import com.qwazr.crawler.web.WebCrawlDefinition;
-import com.qwazr.crawler.CrawlerServer;
-import com.qwazr.crawler.web.WebCrawlerServiceBuilder;
-import com.qwazr.crawler.web.WebCrawlerServiceInterface;
 import com.qwazr.server.RemoteService;
-import com.qwazr.server.client.ErrorWrapper;
 import com.qwazr.utils.RandomUtils;
-import com.qwazr.utils.WaitFor;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -35,8 +30,6 @@ import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
 import java.util.TreeMap;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class WebCrawlerTest {
@@ -56,7 +49,7 @@ public class WebCrawlerTest {
 
 	@Test
 	public void test100startServer() throws Exception {
-		CrawlerServer.main();
+		ServerTest.checkStarted();
 		local = CrawlerServer.getInstance().getWebServiceBuilder().local();
 		Assert.assertNotNull(local);
 		remote = new WebCrawlerServiceBuilder(null, null).remote(RemoteService.of("http://localhost:9091").build());
@@ -83,40 +76,31 @@ public class WebCrawlerTest {
 		return webCrawl;
 	}
 
-	public static CrawlStatus crawlWait(final String sessionName, final CrawlerServiceInterface service)
-			throws InterruptedException {
-		final AtomicReference<CrawlStatus> statusRef = new AtomicReference<>();
-		WaitFor.of().timeOut(TimeUnit.MINUTES, 2).until(() -> {
-			final CrawlStatus status = ErrorWrapper.bypass(() -> service.getSession(sessionName, null), 404);
-			statusRef.set(status);
-			return status != null && status.endTime != null;
-		});
-		return statusRef.get();
-	}
-
 	@Test
 	public void test300SimpleCrawl() throws InterruptedException {
 		final String sessionName = RandomUtils.alphanumeric(10);
 		remote.runSession(sessionName, getNewWebCrawl().build());
-		crawlWait(sessionName, remote);
+		ServerTest.crawlWait(sessionName, remote);
 	}
 
 	@Test
 	public void test400CrawlEvent() throws InterruptedException {
 		final String sessionName = RandomUtils.alphanumeric(10);
 		final WebCrawlDefinition.Builder webCrawl = getNewWebCrawl();
-		webCrawl.script(EventEnum.before_crawl, ScriptDefinition.of().name(BeforeCrawl.class.getName()).build());
-		webCrawl.script(EventEnum.after_crawl, ScriptDefinition.of().name(AfterCrawl.class.getName()).build());
+		webCrawl.script(EventEnum.before_crawl,
+				ScriptDefinition.of().name(WebEvents.BeforeCrawl.class.getName()).build());
+		webCrawl.script(EventEnum.after_crawl,
+				ScriptDefinition.of().name(WebEvents.AfterCrawl.class.getName()).build());
+		webCrawl.script(EventEnum.before_session,
+				ScriptDefinition.of().name(WebEvents.BeforeSession.class.getName()).build());
+		webCrawl.script(EventEnum.after_session,
+				ScriptDefinition.of().name(WebEvents.AfterSession.class.getName()).build());
 		remote.runSession(sessionName, webCrawl.build());
-		crawlWait(sessionName, remote);
-		Assert.assertEquals(5, BeforeCrawl.count.get());
-		Assert.assertEquals(4, AfterCrawl.count.get());
-	}
-
-	@Test
-	public void test900stopServer() throws Exception {
-		CrawlerServer.shutdown();
-		Assert.assertNull(CrawlerServer.getInstance());
+		ServerTest.crawlWait(sessionName, remote);
+		Assert.assertEquals(5, WebEvents.counters.get(EventEnum.before_crawl).get());
+		Assert.assertEquals(4, WebEvents.counters.get(EventEnum.after_crawl).get());
+		Assert.assertEquals(1, WebEvents.counters.get(EventEnum.before_session).get());
+		Assert.assertEquals(1, WebEvents.counters.get(EventEnum.after_session).get());
 	}
 
 }

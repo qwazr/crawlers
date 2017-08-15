@@ -15,10 +15,12 @@
  */
 package com.qwazr.crawler.web;
 
+import com.qwazr.crawler.common.CurrentCrawl;
+
 import java.net.URI;
 import java.util.Collection;
 
-public interface CurrentURI {
+public interface CurrentURI extends CurrentCrawl {
 
 	/**
 	 * @return the initial URI
@@ -38,45 +40,9 @@ public interface CurrentURI {
 	URI getURI();
 
 	/**
-	 * @return the depth of the current URL
-	 */
-	Integer getDepth();
-
-	/**
-	 * @return true if the URL matches an inclusion item
-	 */
-	Boolean isInInclusion();
-
-	/**
-	 * @return true if the URL matches an exclusion item
-	 */
-	Boolean isInExclusion();
-
-	/**
 	 * @return true if the Robots.txt disallow the current URI
 	 */
 	boolean isRobotsTxtDisallow();
-
-	/**
-	 * Set the ignored flag
-	 *
-	 * @param ignored
-	 */
-	void setIgnored(boolean ignored);
-
-	/**
-	 * Check if the URL is ignored. An ignored URL is not crawled
-	 *
-	 * @return true if the URL is ignored
-	 */
-	boolean isIgnored();
-
-	/**
-	 * Check if the URL has been crawled
-	 *
-	 * @return true if the URL has been crawled
-	 */
-	boolean isCrawled();
 
 	/**
 	 * Check if the URL has been redirected
@@ -84,8 +50,6 @@ public interface CurrentURI {
 	 * @return true if the URL has been redirected
 	 */
 	boolean isRedirected();
-
-	String getError();
 
 	void setSameLevelLinks(Collection<URI> links);
 

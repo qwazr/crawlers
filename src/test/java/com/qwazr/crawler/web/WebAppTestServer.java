@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.qwazr.crawler.web.test;
+package com.qwazr.crawler.web;
 
 import com.google.common.io.Files;
 import com.qwazr.utils.process.ProcessUtils;

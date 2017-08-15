@@ -15,14 +15,13 @@
  **/
 package com.qwazr.crawler.web;
 
-import com.qwazr.crawler.common.CommonCrawlerSingleClient;
+import com.qwazr.crawler.common.CrawlerSingleClient;
 import com.qwazr.crawler.common.CrawlStatus;
 import com.qwazr.server.RemoteService;
 
 import java.io.IOException;
 
-class WebCrawlerSingleClient extends CommonCrawlerSingleClient<WebCrawlDefinition>
-		implements WebCrawlerServiceInterface {
+class WebCrawlerSingleClient extends CrawlerSingleClient<WebCrawlDefinition> implements WebCrawlerServiceInterface {
 
 	WebCrawlerSingleClient(final RemoteService remote) {
 		super(remote, "/crawler/web/");

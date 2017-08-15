@@ -15,6 +15,7 @@
  */
 package com.qwazr.crawler.web;
 
+import com.qwazr.crawler.common.CurrentCrawlImpl;
 import com.qwazr.crawler.web.driver.BrowserDriver;
 import com.qwazr.utils.LinkUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -22,32 +23,24 @@ import org.apache.commons.lang3.StringUtils;
 import java.net.URI;
 import java.util.Collection;
 
-class CurrentURIImpl implements CurrentURI {
-
-	final private Integer depth;
+class CurrentURIImpl extends CurrentCrawlImpl implements CurrentURI {
 
 	final private URI initialURI;
 	private volatile URI finalURI;
 	private volatile URI baseURI;
 
-	private volatile boolean isIgnored = false;
-	private volatile boolean isCrawled = false;
 	private volatile boolean isRedirected = false;
-	private volatile Boolean isInInclusion = null;
-	private volatile Boolean isInExclusion = null;
 	private volatile boolean isStartDomain = false;
 	private volatile boolean isStartSubDomain = false;
 	private volatile boolean isRobotsTxtDisallow = false;
-
-	private String error = null;
 
 	private volatile Collection<URI> sameLevelLinks = null;
 	private volatile Collection<URI> nextLevelLinks = null;
 	private volatile Collection<URI> filteredLinks = null;
 
 	CurrentURIImpl(URI uri, Integer depth) {
+		super(depth);
 		this.initialURI = uri;
-		this.depth = depth;
 	}
 
 	@Override
@@ -65,11 +58,6 @@ class CurrentURIImpl implements CurrentURI {
 		return finalURI != null ? finalURI : initialURI;
 	}
 
-	@Override
-	public Integer getDepth() {
-		return depth;
-	}
-
 	void setBaseURI(URI uri) {
 		baseURI = uri;
 	}
@@ -78,34 +66,6 @@ class CurrentURIImpl implements CurrentURI {
 		finalURI = uri;
 		if (finalURI != null)
 			isRedirected = !finalURI.equals(initialURI);
-	}
-
-	void setInInclusion(Boolean isInInclusion) {
-		this.isInInclusion = isInInclusion;
-	}
-
-	@Override
-	public Boolean isInInclusion() {
-		return isInInclusion;
-	}
-
-	public void setInExclusion(Boolean isInExclusion) {
-		this.isInExclusion = isInExclusion;
-	}
-
-	@Override
-	public Boolean isInExclusion() {
-		return isInExclusion;
-	}
-
-	@Override
-	public void setIgnored(boolean ignored) {
-		isIgnored = ignored;
-	}
-
-	@Override
-	public boolean isIgnored() {
-		return isIgnored;
 	}
 
 	void setRobotsTxtDisallow(boolean disallow) {
@@ -117,15 +77,6 @@ class CurrentURIImpl implements CurrentURI {
 		return isRobotsTxtDisallow;
 	}
 
-	void setCrawled() {
-		isCrawled = true;
-	}
-
-	@Override
-	public boolean isCrawled() {
-		return isCrawled;
-	}
-
 	@Override
 	public boolean isRedirected() {
 		return isRedirected;
@@ -133,19 +84,15 @@ class CurrentURIImpl implements CurrentURI {
 
 	void setError(BrowserDriver driver, Exception e) {
 		if (e == null) {
-			error = null;
+			setError((String) null);
 			return;
 		}
-		error = driver == null ? e.getMessage() : driver.getErrorMessage(e);
-		if (StringUtils.isEmpty(error))
-			error = e.toString();
-		if (StringUtils.isEmpty(error))
-			error = e.getClass().getName();
-	}
-
-	@Override
-	public String getError() {
-		return error;
+		String err = driver == null ? e.getMessage() : driver.getErrorMessage(e);
+		if (StringUtils.isBlank(err))
+			err = e.toString();
+		if (StringUtils.isBlank(err))
+			err = e.getClass().getName();
+		setError(err);
 	}
 
 	@Override

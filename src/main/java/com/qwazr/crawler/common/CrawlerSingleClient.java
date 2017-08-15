@@ -23,12 +23,12 @@ import com.qwazr.utils.http.HttpRequest;
 import javax.ws.rs.core.Response;
 import java.util.TreeMap;
 
-abstract public class CommonCrawlerSingleClient<T extends CrawlDefinition> extends JsonClientAbstract
+abstract public class CrawlerSingleClient<T extends CrawlDefinition> extends JsonClientAbstract
 		implements CrawlerServiceInterface<T> {
 
 	private final String pathPrefix;
 
-	protected CommonCrawlerSingleClient(final RemoteService remote, final String pathPrefix) {
+	protected CrawlerSingleClient(final RemoteService remote, final String pathPrefix) {
 		super(remote);
 		this.pathPrefix = pathPrefix;
 	}

@@ -18,7 +18,7 @@ package com.qwazr.crawler.file;
 import com.qwazr.crawler.common.CrawlSessionImpl;
 import com.qwazr.crawler.common.CrawlThread;
 import com.qwazr.crawler.common.EventEnum;
-import com.qwazr.utils.WildcardMatcher;
+import com.qwazr.utils.ExceptionUtils;
 
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
@@ -28,24 +28,17 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class FileCrawlThread extends CrawlThread<FileCrawlerManager> implements FileVisitor<Path> {
 
 	private final FileCrawlDefinition crawlDefinition;
-	private final List<WildcardMatcher> inclusionMatcherList;
-	private final List<WildcardMatcher> exclusionMatcherList;
 	private int currentDepth;
 
 	public FileCrawlThread(FileCrawlerManager manager, CrawlSessionImpl<FileCrawlDefinition> session, Logger logger) {
 		super(manager, session, logger);
 		this.crawlDefinition = session.getCrawlDefinition();
-		this.inclusionMatcherList = WildcardMatcher.getList(crawlDefinition.inclusionPatterns);
-		this.exclusionMatcherList = WildcardMatcher.getList(crawlDefinition.exclusionPatterns);
 	}
 
 	@Override
@@ -64,15 +57,6 @@ public class FileCrawlThread extends CrawlThread<FileCrawlerManager> implements 
 		}
 	}
 
-	private boolean checkPattern(Path path) {
-		final String text = path.toString();
-		final Boolean inc = matches(text, inclusionMatcherList, null);
-		if (inc != null && !inc)
-			return false;
-		final Boolean exc = matches(text, exclusionMatcherList, false);
-		return exc == null || !exc;
-	}
-
 	@Override
 	public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
 		if (session.isAborting())
@@ -83,30 +67,28 @@ public class FileCrawlThread extends CrawlThread<FileCrawlerManager> implements 
 		return FileVisitResult.CONTINUE;
 	}
 
+	private void crawl(final CurrentPath current) {
+		try {
+			scriptBeforeCrawl(current, current.pathString);
+			if (current.isIgnored())
+				session.incIgnoredCount();
+			else
+				session.incCrawledCount();
+			script(EventEnum.after_crawl, current);
+		} catch (Exception e) {
+			final String err = "File crawling error on " + current.pathString;
+			logger.log(Level.WARNING, err, e);
+			session.incErrorCount(err + ": " + ExceptionUtils.getRootCauseMessage(e));
+		}
+	}
+
 	@Override
 	public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
 		if (session.isAborting())
 			return FileVisitResult.TERMINATE;
-		if (!checkPattern(file)) {
-			session.incIgnoredCount();
-			return FileVisitResult.CONTINUE;
-		}
-		final Consumer<Map<String, Object>> attributesProvider = attributes -> {
-			attributes.put("path", file);
-			attributes.put("attrs", attrs);
-		};
-		try {
-			session.setCurrentCrawl(file.toString(), currentDepth);
-			script(EventEnum.before_crawl, attributesProvider);
-			session.incCrawledCount();
-		} catch (Exception e) {
-			final String error = "File crawling error on " + file;
-			logger.log(Level.WARNING, error, e);
-			session.incErrorCount(error);
-		}
 		if (crawlDefinition.crawlWaitMs != null)
 			session.sleep(crawlDefinition.crawlWaitMs);
-		script(EventEnum.after_crawl, attributesProvider);
+		crawl(new CurrentPath(file, attrs, currentDepth));
 		return FileVisitResult.CONTINUE;
 	}
 

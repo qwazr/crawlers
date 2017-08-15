@@ -16,8 +16,10 @@
 package com.qwazr.crawler.file;
 
 import com.qwazr.crawler.CrawlerServer;
+import com.qwazr.crawler.ServerTest;
 import com.qwazr.crawler.common.CrawlStatus;
-import com.qwazr.crawler.web.test.WebCrawlerTest;
+import com.qwazr.crawler.common.EventEnum;
+import com.qwazr.crawler.common.ScriptDefinition;
 import com.qwazr.server.RemoteService;
 import com.qwazr.utils.RandomUtils;
 import org.junit.Assert;
@@ -35,7 +37,7 @@ public class FileCrawlerTest {
 
 	@Test
 	public void test100startServer() throws Exception {
-		CrawlerServer.main();
+		ServerTest.checkStarted();
 		local = CrawlerServer.getInstance().getFileServiceBuilder().local();
 		Assert.assertNotNull(local);
 		remote = new FileCrawlerServiceBuilder(null, null).remote(RemoteService.of("http://localhost:9091").build());
@@ -62,7 +64,7 @@ public class FileCrawlerTest {
 	public void test300SimpleCrawl() throws InterruptedException {
 		final String sessionName = RandomUtils.alphanumeric(10);
 		remote.runSession(sessionName, getNewCrawl().build());
-		final CrawlStatus status = WebCrawlerTest.crawlWait(sessionName, remote);
+		final CrawlStatus status = ServerTest.crawlWait(sessionName, remote);
 		Assert.assertEquals(2, status.crawled);
 		Assert.assertEquals(1, status.ignored);
 		Assert.assertEquals(0, status.error);
@@ -70,8 +72,22 @@ public class FileCrawlerTest {
 	}
 
 	@Test
-	public void test900stopServer() throws Exception {
-		CrawlerServer.shutdown();
-		Assert.assertNull(CrawlerServer.getInstance());
+	public void test400CrawlEvent() throws InterruptedException {
+		final String sessionName = RandomUtils.alphanumeric(10);
+		final FileCrawlDefinition.Builder crawl = getNewCrawl();
+		crawl.script(EventEnum.before_crawl,
+				ScriptDefinition.of().name(FileEvents.BeforeCrawl.class.getName()).build());
+		crawl.script(EventEnum.after_crawl, ScriptDefinition.of().name(FileEvents.AfterCrawl.class.getName()).build());
+		crawl.script(EventEnum.before_session,
+				ScriptDefinition.of().name(FileEvents.BeforeSession.class.getName()).build());
+		crawl.script(EventEnum.after_session,
+				ScriptDefinition.of().name(FileEvents.AfterSession.class.getName()).build());
+		remote.runSession(sessionName, crawl.build());
+		ServerTest.crawlWait(sessionName, remote);
+		Assert.assertEquals(3, FileEvents.counters.get(EventEnum.before_crawl).get());
+		Assert.assertEquals(3, FileEvents.counters.get(EventEnum.after_crawl).get());
+		Assert.assertEquals(1, FileEvents.counters.get(EventEnum.before_session).get());
+		Assert.assertEquals(1, FileEvents.counters.get(EventEnum.after_session).get());
 	}
+
 }

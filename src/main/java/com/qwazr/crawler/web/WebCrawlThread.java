@@ -27,7 +27,6 @@ import com.qwazr.utils.LoggerUtils;
 import com.qwazr.utils.RegExpUtils;
 import com.qwazr.utils.TimeTracker;
 import com.qwazr.utils.UBuilder;
-import com.qwazr.utils.WildcardMatcher;
 import org.apache.commons.lang3.StringUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Cookie;
@@ -66,8 +65,6 @@ public class WebCrawlThread extends CrawlThread<WebCrawlerManager> {
 
 	private final List<Matcher> parametersMatcherList;
 	private final List<Matcher> pathCleanerMatcherList;
-	private final List<WildcardMatcher> exclusionMatcherList;
-	private final List<WildcardMatcher> inclusionMatcherList;
 
 	private BrowserDriver driver = null;
 
@@ -92,8 +89,6 @@ public class WebCrawlThread extends CrawlThread<WebCrawlerManager> {
 		} catch (PatternSyntaxException e) {
 			throw new ServerException(Status.NOT_ACCEPTABLE, e.getMessage());
 		}
-		exclusionMatcherList = WildcardMatcher.getList(crawlDefinition.exclusionPatterns);
-		inclusionMatcherList = WildcardMatcher.getList(crawlDefinition.inclusionPatterns);
 		if (crawlDefinition.robotsTxtEnabled != null && crawlDefinition.robotsTxtEnabled)
 			robotsTxtMap = new HashMap<>();
 		else
@@ -155,26 +150,14 @@ public class WebCrawlThread extends CrawlThread<WebCrawlerManager> {
 				internetDomainName.equals(InternetDomainName.from(host));
 	}
 
-	private String scriptBeforeCrawl(final CurrentURIImpl currentURI, String uriString)
-			throws ServerException, IOException, ClassNotFoundException {
+	private void scriptBeforeCrawl(final CurrentURIImpl currentURI, String uriString) {
 		final URI uri = currentURI.getURI();
 		if (uriString == null)
 			uriString = uri.toString();
 
 		currentURI.setStartDomain(matchesInitialDomain(uri));
 
-		// We check the inclusion/exclusion.
-		currentURI.setInInclusion(matches(uriString, inclusionMatcherList, null));
-		currentURI.setInExclusion(matches(uriString, exclusionMatcherList, false));
-
-		if (currentURI.isInInclusion() != null && !currentURI.isInInclusion())
-			currentURI.setIgnored(true);
-
-		if (currentURI.isInExclusion() != null && currentURI.isInExclusion())
-			currentURI.setIgnored(true);
-
-		script(EventEnum.before_crawl, currentURI);
-		return uriString;
+		super.scriptBeforeCrawl(currentURI, uriString);
 	}
 
 	private void crawl(final CurrentURIImpl currentURI, final CrawlProvider crawlProvider) {
@@ -301,13 +284,8 @@ public class WebCrawlThread extends CrawlThread<WebCrawlerManager> {
 			if (u == null)
 				continue;
 			final String us = u.toString();
-			final Boolean inc = matches(us, inclusionMatcherList, null);
-			if (inc != null && !inc)
-				continue;
-			final Boolean exc = matches(us, exclusionMatcherList, false);
-			if (exc != null && exc)
-				continue;
-			filteredURIs.add(u);
+			if (checkPassInclusionExclusion(us, null, null))
+				filteredURIs.add(u);
 		}
 		currentURI.setFilteredLinks(filteredURIs);
 	}
@@ -333,7 +311,7 @@ public class WebCrawlThread extends CrawlThread<WebCrawlerManager> {
 	}
 
 	private void crawlOne(final Set<URI> crawledURIs, final CrawlProvider crawlProvider, final Set<URI> nextLevelURIs,
-			final int depth) throws ServerException, IOException, ClassNotFoundException, InterruptedException {
+			final int depth) throws IOException, InterruptedException {
 
 		if (session.isAborting())
 			return;
@@ -345,7 +323,7 @@ public class WebCrawlThread extends CrawlThread<WebCrawlerManager> {
 			crawledURIs.add(crawlProvider.uri);
 		}
 
-		CurrentURIImpl currentURI = new CurrentURIImpl(crawlProvider.uri, depth);
+		final CurrentURIImpl currentURI = new CurrentURIImpl(crawlProvider.uri, depth);
 
 		// Give the hand to the "before_crawl" scripts
 		scriptBeforeCrawl(currentURI, null);
@@ -375,6 +353,8 @@ public class WebCrawlThread extends CrawlThread<WebCrawlerManager> {
 					crawledURIs.add(currentURI.getURI());
 			}
 		}
+
+		// Give the hand to the "after_crawl" scripts
 		script(EventEnum.after_crawl, currentURI);
 
 		Collection<URI> sameLevelLinks = checkLinks(currentURI.getSameLevelLinks());
@@ -430,30 +410,7 @@ public class WebCrawlThread extends CrawlThread<WebCrawlerManager> {
 				LOGGER.log(Level.WARNING, e, () -> "Interruption on " + uri);
 			} catch (IOException e) {
 				LOGGER.log(Level.WARNING, e, () -> "IO Exception on " + uri);
-			} catch (ClassNotFoundException e) {
-				LOGGER.log(Level.SEVERE, e, () -> "Cannot crawl " + uri);
 			}
-		});
-	}
-
-	/**
-	 * Execute the scripts related to the passed event.
-	 *
-	 * @param event      the expected event
-	 * @param currentURI the current URI description
-	 * @return true if the scripts was executed, false if no scripts is attached
-	 * to the event
-	 * @throws ServerException        if the execution of the scripts failed
-	 * @throws IOException            if any I/O exception occurs
-	 * @throws ClassNotFoundException if the JAVA class is not found
-	 */
-	private void script(EventEnum event, CurrentURI currentURI)
-			throws ServerException, IOException, ClassNotFoundException {
-		super.script(event, (attributes) -> {
-			if (driver != null)
-				attributes.put("driver", driver);
-			if (currentURI != null)
-				attributes.put("current", currentURI);
 		});
 	}
 
@@ -462,7 +419,8 @@ public class WebCrawlThread extends CrawlThread<WebCrawlerManager> {
 			NoSuchAlgorithmException, KeyStoreException, KeyManagementException, InterruptedException {
 		try {
 			driver = new BrowserDriverBuilder(crawlDefinition).build();
-			script(EventEnum.before_session, (CurrentURI) null);
+			registerScriptGlobalObject("driver", driver);
+			script(EventEnum.before_session, null);
 			if (crawlDefinition.preUrl != null && !crawlDefinition.preUrl.isEmpty())
 				driver.get(crawlDefinition.preUrl);
 			final Set<URI> crawledURIs = new HashSet<>();
@@ -481,7 +439,7 @@ public class WebCrawlThread extends CrawlThread<WebCrawlerManager> {
 			} catch (Exception e) {
 				LOGGER.log(Level.WARNING, e, e::getMessage);
 			}
-			script(EventEnum.after_session, (CurrentURI) null);
+			script(EventEnum.after_session, null);
 		}
 	}
 

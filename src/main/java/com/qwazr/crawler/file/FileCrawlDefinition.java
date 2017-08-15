@@ -22,14 +22,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.crawler.common.CrawlDefinition;
 import com.qwazr.crawler.common.EventEnum;
 import com.qwazr.crawler.common.ScriptDefinition;
-import com.qwazr.utils.CollectionsUtils;
 import com.qwazr.utils.ObjectMappers;
 import com.qwazr.utils.StringUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -51,20 +48,6 @@ public class FileCrawlDefinition extends CrawlDefinition {
 	final public Integer maxDepth;
 
 	/**
-	 * A list of regular expression patterns. An URL will be crawled if it
-	 * matches one pattern.
-	 */
-	@JsonProperty("inclusion_patterns")
-	final public List<String> inclusionPatterns;
-
-	/**
-	 * A list of regular expression patterns. An URL may not be crawled if it
-	 * matches any pattern.
-	 */
-	@JsonProperty("exclusion_patterns")
-	final public List<String> exclusionPatterns;
-
-	/**
 	 * Time wait on successfull crawl
 	 */
 	@JsonProperty("crawl_wait_ms")
@@ -77,13 +60,9 @@ public class FileCrawlDefinition extends CrawlDefinition {
 			@JsonProperty("crawl_wait_ms") Integer crawlWaitMs,
 			@JsonProperty("variables") LinkedHashMap<String, String> variables,
 			@JsonProperty("scripts") Map<EventEnum, ScriptDefinition> scripts) {
-		super(variables, scripts);
+		super(variables, scripts, inclusionPatterns, exclusionPatterns);
 		this.entryPath = entryPath;
 		this.maxDepth = maxDepth;
-		this.inclusionPatterns =
-				inclusionPatterns == null ? null : Collections.unmodifiableList(new ArrayList<>(inclusionPatterns));
-		this.exclusionPatterns =
-				exclusionPatterns == null ? null : Collections.unmodifiableList(new ArrayList<>(exclusionPatterns));
 		this.crawlWaitMs = crawlWaitMs;
 	}
 
@@ -100,10 +79,6 @@ public class FileCrawlDefinition extends CrawlDefinition {
 			return false;
 		if (!Objects.equals(maxDepth, f.maxDepth))
 			return false;
-		if (!CollectionsUtils.equals(inclusionPatterns, f.inclusionPatterns))
-			return false;
-		if (!CollectionsUtils.equals(exclusionPatterns, f.exclusionPatterns))
-			return false;
 		if (!Objects.equals(crawlWaitMs, f.crawlWaitMs))
 			return false;
 		return true;
@@ -117,16 +92,6 @@ public class FileCrawlDefinition extends CrawlDefinition {
 	@JsonIgnore
 	public Integer getMaxDepth() {
 		return this.maxDepth;
-	}
-
-	@JsonIgnore
-	public Collection<String> getInclusionPatterns() {
-		return inclusionPatterns;
-	}
-
-	@JsonIgnore
-	public Collection<String> getExclusionPatterns() {
-		return exclusionPatterns;
 	}
 
 	@JsonIgnore

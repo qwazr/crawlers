@@ -15,14 +15,13 @@
  **/
 package com.qwazr.crawler.file;
 
-import com.qwazr.crawler.common.CommonCrawlerSingleClient;
+import com.qwazr.crawler.common.CrawlerSingleClient;
 import com.qwazr.crawler.common.CrawlStatus;
 import com.qwazr.server.RemoteService;
 
 import java.io.IOException;
 
-class FileCrawlerSingleClient extends CommonCrawlerSingleClient<FileCrawlDefinition>
-		implements FileCrawlerServiceInterface {
+class FileCrawlerSingleClient extends CrawlerSingleClient<FileCrawlDefinition> implements FileCrawlerServiceInterface {
 
 	FileCrawlerSingleClient(final RemoteService remote) {
 		super(remote, "/crawler/file/");
