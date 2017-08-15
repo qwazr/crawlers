@@ -28,7 +28,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
-import java.util.List;
+import java.util.LinkedHashSet;
 import java.util.Map;
 
 @JsonInclude(Include.NON_EMPTY)
@@ -49,14 +49,14 @@ public abstract class CrawlDefinition {
 	 * matches any pattern.
 	 */
 	@JsonProperty("inclusion_patterns")
-	final public List<String> inclusionPatterns;
+	final public Collection<String> inclusionPatterns;
 
 	/**
 	 * A list of regular expression patterns. An item may not be crawled if it
 	 * matches any pattern.
 	 */
 	@JsonProperty("exclusion_patterns")
-	final public List<String> exclusionPatterns;
+	final public Collection<String> exclusionPatterns;
 
 	protected CrawlDefinition() {
 		variables = null;
@@ -68,8 +68,8 @@ public abstract class CrawlDefinition {
 	@JsonCreator
 	protected CrawlDefinition(@JsonProperty("variables") LinkedHashMap<String, String> variables,
 			@JsonProperty("scripts") Map<EventEnum, ScriptDefinition> scripts,
-			@JsonProperty("inclusion_patterns") List<String> inclusionPatterns,
-			@JsonProperty("exclusion_patterns") List<String> exclusionPatterns) {
+			@JsonProperty("inclusion_patterns") Collection<String> inclusionPatterns,
+			@JsonProperty("exclusion_patterns") Collection<String> exclusionPatterns) {
 		this.variables = variables == null ? null : Collections.unmodifiableMap(variables);
 		this.scripts = scripts == null ? null : Collections.unmodifiableMap(scripts);
 		this.inclusionPatterns =
@@ -119,8 +119,8 @@ public abstract class CrawlDefinition {
 
 		protected Map<EventEnum, ScriptDefinition> scripts;
 
-		private List<String> inclusionPatterns;
-		private List<String> exclusionPatterns;
+		protected LinkedHashSet<String> inclusionPatterns;
+		protected LinkedHashSet<String> exclusionPatterns;
 
 		protected AbstractBuilder() {
 		}
@@ -128,8 +128,12 @@ public abstract class CrawlDefinition {
 		protected AbstractBuilder(D src) {
 			variables = src.variables == null ? null : new LinkedHashMap<>(src.variables);
 			scripts = src.scripts == null ? null : new LinkedHashMap<>(src.scripts);
-			this.inclusionPatterns = src.inclusionPatterns == null ? null : new ArrayList<>(src.inclusionPatterns);
-			this.exclusionPatterns = src.exclusionPatterns == null ? null : new ArrayList<>(src.exclusionPatterns);
+			inclusionPatterns = src.inclusionPatterns == null || src.inclusionPatterns.isEmpty() ?
+					null :
+					new LinkedHashSet<>(src.inclusionPatterns);
+			exclusionPatterns = src.exclusionPatterns == null || src.exclusionPatterns.isEmpty() ?
+					null :
+					new LinkedHashSet<>(src.exclusionPatterns);
 		}
 
 		public B variable(final String name, final String value) {
@@ -146,37 +150,61 @@ public abstract class CrawlDefinition {
 			return (B) this;
 		}
 
+		public B setInclusionPatterns(final Collection<String> inclusionPatterns) throws IOException {
+			this.inclusionPatterns = inclusionPatterns == null || inclusionPatterns.isEmpty() ?
+					null :
+					new LinkedHashSet<>(inclusionPatterns);
+			return (B) this;
+		}
+
+		public B setInclusionPatterns(final String inclusionPatternText) throws IOException {
+			if (StringUtils.isBlank(inclusionPatternText)) {
+				inclusionPatterns = null;
+				return (B) this;
+			}
+			if (inclusionPatterns != null)
+				inclusionPatterns.clear();
+			else
+				inclusionPatterns = new LinkedHashSet<>();
+			StringUtils.linesCollector(inclusionPatternText, false, inclusionPatterns);
+			return (B) this;
+		}
+
 		public B addInclusionPattern(final String inclusionPattern) {
-			if (this.inclusionPatterns == null)
-				this.inclusionPatterns = new ArrayList<>();
-			this.inclusionPatterns.add(inclusionPattern);
+			if (StringUtils.isBlank(inclusionPattern))
+				return (B) this;
+			if (inclusionPatterns == null)
+				inclusionPatterns = new LinkedHashSet<>();
+			inclusionPatterns.add(inclusionPattern);
 			return (B) this;
 		}
 
-		public B setInclusionPattern(final String inclusionPatternText) throws IOException {
-			if (inclusionPatternText == null) {
-				this.inclusionPatterns = null;
-				return (B) this;
-			}
-			this.inclusionPatterns = new ArrayList<>();
-			StringUtils.linesCollector(inclusionPatternText, false, this.inclusionPatterns);
+		public B setExclusionPatterns(final Collection<String> exclusionPatterns) throws IOException {
+			this.exclusionPatterns = exclusionPatterns == null || exclusionPatterns.isEmpty() ?
+					null :
+					new LinkedHashSet<>(exclusionPatterns);
 			return (B) this;
 		}
 
-		public B setExclusionPattern(final String exclusionPatternText) throws IOException {
-			if (exclusionPatternText == null) {
-				this.exclusionPatterns = null;
+		public B setExclusionPatterns(final String exclusionPatternText) throws IOException {
+			if (StringUtils.isBlank(exclusionPatternText)) {
+				exclusionPatterns = null;
 				return (B) this;
 			}
-			this.exclusionPatterns = new ArrayList<>();
-			StringUtils.linesCollector(exclusionPatternText, false, this.exclusionPatterns);
+			if (exclusionPatterns != null)
+				exclusionPatterns.clear();
+			else
+				exclusionPatterns = new LinkedHashSet<>();
+			StringUtils.linesCollector(exclusionPatternText, false, exclusionPatterns);
 			return (B) this;
 		}
 
 		public B addExclusionPattern(final String exclusionPattern) {
-			if (this.exclusionPatterns == null)
-				this.exclusionPatterns = new ArrayList<>();
-			this.exclusionPatterns.add(exclusionPattern);
+			if (StringUtils.isBlank(exclusionPattern))
+				return (B) this;
+			if (exclusionPatterns == null)
+				exclusionPatterns = new LinkedHashSet<>();
+			exclusionPatterns.add(exclusionPattern);
 			return (B) this;
 		}
 

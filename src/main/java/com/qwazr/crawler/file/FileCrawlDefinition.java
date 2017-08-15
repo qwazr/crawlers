@@ -23,12 +23,10 @@ import com.qwazr.crawler.common.CrawlDefinition;
 import com.qwazr.crawler.common.EventEnum;
 import com.qwazr.crawler.common.ScriptDefinition;
 import com.qwazr.utils.ObjectMappers;
-import com.qwazr.utils.StringUtils;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -55,8 +53,8 @@ public class FileCrawlDefinition extends CrawlDefinition {
 
 	protected FileCrawlDefinition(@JsonProperty("entry_path") String entryPath,
 			@JsonProperty("max_depth") Integer maxDepth,
-			@JsonProperty("inclusion_patterns") List<String> inclusionPatterns,
-			@JsonProperty("exclusion_patterns") List<String> exclusionPatterns,
+			@JsonProperty("inclusion_patterns") Collection<String> inclusionPatterns,
+			@JsonProperty("exclusion_patterns") Collection<String> exclusionPatterns,
 			@JsonProperty("crawl_wait_ms") Integer crawlWaitMs,
 			@JsonProperty("variables") LinkedHashMap<String, String> variables,
 			@JsonProperty("scripts") Map<EventEnum, ScriptDefinition> scripts) {
@@ -111,10 +109,6 @@ public class FileCrawlDefinition extends CrawlDefinition {
 
 		private String entryPath;
 
-		private List<String> inclusionPatterns;
-
-		private List<String> exclusionPatterns;
-
 		private Integer maxDepth;
 
 		private Integer crawlWaitMs;
@@ -126,14 +120,6 @@ public class FileCrawlDefinition extends CrawlDefinition {
 			super(crawlDefinition);
 			entryPath = crawlDefinition.entryPath;
 			maxDepth = crawlDefinition.maxDepth;
-			inclusionPatterns =
-					crawlDefinition.inclusionPatterns == null || crawlDefinition.inclusionPatterns.isEmpty() ?
-							null :
-							new ArrayList<>(crawlDefinition.inclusionPatterns);
-			exclusionPatterns =
-					crawlDefinition.exclusionPatterns == null || crawlDefinition.exclusionPatterns.isEmpty() ?
-							null :
-							new ArrayList<>(crawlDefinition.exclusionPatterns);
 			crawlWaitMs = crawlDefinition.crawlWaitMs;
 		}
 
@@ -144,44 +130,6 @@ public class FileCrawlDefinition extends CrawlDefinition {
 
 		public Builder maxDepth(final Integer maxDepth) {
 			this.maxDepth = maxDepth;
-			return this;
-		}
-
-		public Builder setInclusionPatterns(final String inclusionPatternText) throws IOException {
-			if (StringUtils.isBlank(inclusionPatternText)) {
-				inclusionPatterns = null;
-				return this;
-			}
-			inclusionPatterns = new ArrayList<>();
-			StringUtils.linesCollector(inclusionPatternText, false, inclusionPatterns);
-			return this;
-		}
-
-		public Builder addInclusionPattern(final String inclusionPattern) {
-			if (StringUtils.isBlank(inclusionPattern))
-				return this;
-			if (inclusionPatterns == null)
-				inclusionPatterns = new ArrayList<>();
-			inclusionPatterns.add(inclusionPattern);
-			return this;
-		}
-
-		public Builder setExclusionPatterns(final String exclusionPatternText) throws IOException {
-			if (StringUtils.isBlank(exclusionPatternText)) {
-				exclusionPatterns = null;
-				return this;
-			}
-			exclusionPatterns = new ArrayList<>();
-			StringUtils.linesCollector(exclusionPatternText, false, exclusionPatterns);
-			return this;
-		}
-
-		public Builder addExclusionPattern(final String exclusionPattern) {
-			if (StringUtils.isBlank(exclusionPattern))
-				return this;
-			if (exclusionPatterns == null)
-				exclusionPatterns = new ArrayList<>();
-			exclusionPatterns.add(exclusionPattern);
 			return this;
 		}
 
