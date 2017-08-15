@@ -66,7 +66,9 @@ public class FileCrawlerTest {
 	private FileCrawlDefinition.Builder getNewCrawl() {
 		return FileCrawlDefinition.of()
 				.entryPath("src/test/file_crawl")
+				.addInclusionPattern("*/")
 				.addInclusionPattern("*.txt")
+				.addExclusionPattern("*/ignore/")
 				.addExclusionPattern("*/ignore.*")
 				.setCrawlWaitMs(10)
 				.maxDepth(10);
@@ -77,8 +79,8 @@ public class FileCrawlerTest {
 		final String sessionName = RandomUtils.alphanumeric(10);
 		remote.runSession(sessionName, getNewCrawl().build());
 		final CrawlStatus status = CommonEvent.crawlWait(sessionName, remote);
-		Assert.assertEquals(2, status.crawled);
-		Assert.assertEquals(1, status.ignored);
+		Assert.assertEquals(6, status.crawled);
+		Assert.assertEquals(2, status.ignored);
 		Assert.assertEquals(0, status.error);
 		Assert.assertNull(status.lastError);
 	}
@@ -97,8 +99,8 @@ public class FileCrawlerTest {
 				ScriptDefinition.of().name(FileEvents.AfterSession.class.getName()).build());
 		remote.runSession(sessionName, crawl.build());
 		CommonEvent.crawlWait(sessionName, remote);
-		Assert.assertEquals(3, FileEvents.counters.get(EventEnum.before_crawl).get());
-		Assert.assertEquals(3, FileEvents.counters.get(EventEnum.after_crawl).get());
+		Assert.assertEquals(8, FileEvents.counters.get(EventEnum.before_crawl).get());
+		Assert.assertEquals(8, FileEvents.counters.get(EventEnum.after_crawl).get());
 		Assert.assertEquals(1, FileEvents.counters.get(EventEnum.before_session).get());
 		Assert.assertEquals(1, FileEvents.counters.get(EventEnum.after_session).get());
 	}

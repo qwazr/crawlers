@@ -64,6 +64,10 @@ public class FileCrawlThread extends CrawlThread<FileCrawlerManager> implements 
 		currentDepth++;
 		if (crawlDefinition.maxDepth != null && currentDepth >= crawlDefinition.maxDepth)
 			return FileVisitResult.SKIP_SUBTREE;
+		final CurrentPath currentPath = new CurrentPath(dir, attrs, currentDepth);
+		crawl(currentPath);
+		if (currentPath.isIgnored())
+			return FileVisitResult.SKIP_SUBTREE;
 		return FileVisitResult.CONTINUE;
 	}
 

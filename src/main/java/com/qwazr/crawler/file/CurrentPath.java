@@ -16,7 +16,9 @@
 package com.qwazr.crawler.file;
 
 import com.qwazr.crawler.common.CurrentCrawlImpl;
+import com.qwazr.utils.StringUtils;
 
+import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 
@@ -30,7 +32,8 @@ public class CurrentPath extends CurrentCrawlImpl {
 		super(depth);
 		this.path = path;
 		this.attributes = attributes;
-		this.pathString = path.toString();
+		this.pathString =
+				attributes.isDirectory() ? StringUtils.ensureSuffix(path.toString(), File.separator) : path.toString();
 	}
 
 	/**
