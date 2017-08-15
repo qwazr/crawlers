@@ -16,10 +16,13 @@
 package com.qwazr.crawler.common;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.utils.TimeTracker;
+
+import java.util.Objects;
 
 @JsonInclude(Include.NON_NULL)
 public class CrawlStatus {
@@ -122,6 +125,108 @@ public class CrawlStatus {
 		this.currentDepth = builder.currentDepth;
 		this.startTime = builder.startTime;
 		this.endTime = builder.endTime;
+	}
+
+	/**
+	 * @return The entry point of the crawl
+	 */
+	@JsonIgnore
+	public String getEntryCrawl() {
+		return entryCrawl;
+	}
+
+	/**
+	 * @return The identifier of the current node
+	 */
+	@JsonIgnore
+	public String getNodeAddress() {
+		return nodeAddress;
+	}
+
+	/**
+	 * @return Is the session currently aborting ?
+	 */
+	public Boolean getAborting() {
+		return aborting;
+	}
+
+	/**
+	 * @return the aborting reason if any
+	 */
+	@JsonIgnore
+	public String getAbortingReason() {
+		return abortingReason;
+	}
+
+	/**
+	 * @return The number of crawled items
+	 */
+	public int getCrawled() {
+		return crawled;
+	}
+
+	/**
+	 * @return The number of ignored crawl items
+	 */
+	public int getIgnored() {
+		return ignored;
+	}
+
+	/**
+	 * @return The number of erroneous crawls
+	 */
+	public int getError() {
+		return error;
+	}
+
+	@JsonIgnore
+	public String getLastError() {
+		return lastError;
+	}
+
+	/**
+	 * @return the current crawl item
+	 */
+	@JsonIgnore
+	public String getCurrentCrawl() {
+		return currentCrawl;
+	}
+
+	/**
+	 * @return the depth of the current crawled item
+	 */
+	@JsonIgnore
+	public Integer getCurrentDepth() {
+		return currentDepth;
+	}
+
+	@JsonIgnore
+	public Long getStartTime() {
+		return startTime;
+	}
+
+	@JsonIgnore
+	public Long getEndTime() {
+		return endTime;
+	}
+
+	public TimeTracker.Status getTimer() {
+		return timer;
+	}
+
+	@Override
+	public boolean equals(final Object o) {
+		if (o == null || !(o instanceof CrawlStatus))
+			return false;
+		if (o == this)
+			return true;
+		final CrawlStatus s = (CrawlStatus) o;
+		return Objects.equals(entryCrawl, s.entryCrawl) && Objects.equals(nodeAddress, s.nodeAddress) &&
+				Objects.equals(startTime, s.startTime) && Objects.equals(aborting, s.aborting) &&
+				Objects.equals(abortingReason, s.abortingReason) && crawled == s.crawled && ignored == s.ignored &&
+				error == s.error && Objects.equals(lastError, s.lastError) &&
+				Objects.equals(currentCrawl, s.currentCrawl) && Objects.equals(currentDepth, s.currentDepth) &&
+				Objects.equals(endTime, s.endTime) && Objects.equals(timer, s.timer);
 	}
 
 	public static Builder of(String entryCrawl, String nodeAddress, TimeTracker timeTracker) {
