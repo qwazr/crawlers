@@ -150,7 +150,7 @@ public abstract class CrawlDefinition {
 			return (B) this;
 		}
 
-		public B setInclusionPatterns(final Collection<String> inclusionPatterns) throws IOException {
+		public B setInclusionPatterns(final Collection<String> inclusionPatterns) {
 			this.inclusionPatterns = inclusionPatterns == null || inclusionPatterns.isEmpty() ?
 					null :
 					new LinkedHashSet<>(inclusionPatterns);
@@ -179,7 +179,7 @@ public abstract class CrawlDefinition {
 			return (B) this;
 		}
 
-		public B setExclusionPatterns(final Collection<String> exclusionPatterns) throws IOException {
+		public B setExclusionPatterns(final Collection<String> exclusionPatterns) {
 			this.exclusionPatterns = exclusionPatterns == null || exclusionPatterns.isEmpty() ?
 					null :
 					new LinkedHashSet<>(exclusionPatterns);
