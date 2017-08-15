@@ -24,7 +24,7 @@ import java.io.IOException;
 public class FileCrawlerSingleClient extends CrawlerSingleClient<FileCrawlDefinition>
 		implements FileCrawlerServiceInterface {
 
-	FileCrawlerSingleClient(final RemoteService remote) {
+	public FileCrawlerSingleClient(final RemoteService remote) {
 		super(remote, "/crawler/file/");
 	}
 

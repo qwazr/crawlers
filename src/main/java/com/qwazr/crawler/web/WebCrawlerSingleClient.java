@@ -24,7 +24,7 @@ import java.io.IOException;
 public class WebCrawlerSingleClient extends CrawlerSingleClient<WebCrawlDefinition>
 		implements WebCrawlerServiceInterface {
 
-	WebCrawlerSingleClient(final RemoteService remote) {
+	public WebCrawlerSingleClient(final RemoteService remote) {
 		super(remote, "/crawler/web/");
 	}
 
