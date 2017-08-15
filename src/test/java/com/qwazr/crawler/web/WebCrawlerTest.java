@@ -85,6 +85,7 @@ public class WebCrawlerTest {
 
 	@Test
 	public void test400CrawlEvent() throws InterruptedException {
+		WebEvents.counters.clear();
 		final String sessionName = RandomUtils.alphanumeric(10);
 		final WebCrawlDefinition.Builder webCrawl = getNewWebCrawl();
 		webCrawl.script(EventEnum.before_crawl,

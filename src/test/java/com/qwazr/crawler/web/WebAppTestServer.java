@@ -16,16 +16,24 @@
 package com.qwazr.crawler.web;
 
 import com.google.common.io.Files;
+import com.qwazr.utils.WaitFor;
 import com.qwazr.utils.process.ProcessUtils;
 import com.qwazr.webapps.WebappServer;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 
 public class WebAppTestServer {
+
+	private final static Logger LOGGER = Logger.getLogger(WebAppTestServer.class.getName());
 
 	private static Process webAppProcess;
 
@@ -44,6 +52,19 @@ public class WebAppTestServer {
 		env.put("WEBSERVICE_PORT", "9191");
 		env.put("QWAZR_ETC_DIR", new File("src/test/etc").getAbsolutePath());
 		webAppProcess = ProcessUtils.java(WebappServer.class, env);
+
+		final URL url = new URL(URL);
+		WaitFor.of().timeOut(TimeUnit.MINUTES, 1).until(() -> {
+			try {
+				return 200 == ((HttpURLConnection) url.openConnection()).getResponseCode();
+			} catch (IOException e) {
+				LOGGER.warning(() -> "WebAppTestServer failed: " + e.getMessage());
+				Thread.sleep(500);
+				return false;
+			}
+		});
+		LOGGER.info(() -> "WebAppTestServer started");
+.
 	}
 
 	public static synchronized void stop() throws InterruptedException {

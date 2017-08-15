@@ -31,6 +31,7 @@ public class WebEvents {
 		public BeforeCrawl() {
 			super(EventEnum.before_crawl, counters, CurrentURIImpl.class);
 		}
+
 	}
 
 	public static class AfterCrawl extends CommonEvent.CrawlEvent<CurrentURIImpl> {

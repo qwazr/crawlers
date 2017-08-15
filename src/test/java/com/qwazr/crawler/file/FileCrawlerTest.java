@@ -73,6 +73,7 @@ public class FileCrawlerTest {
 
 	@Test
 	public void test400CrawlEvent() throws InterruptedException {
+		FileEvents.counters.clear();
 		final String sessionName = RandomUtils.alphanumeric(10);
 		final FileCrawlDefinition.Builder crawl = getNewCrawl();
 		crawl.script(EventEnum.before_crawl,

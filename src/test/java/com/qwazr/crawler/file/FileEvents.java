@@ -31,6 +31,12 @@ public class FileEvents {
 		public BeforeCrawl() {
 			super(EventEnum.before_crawl, counters, CurrentPath.class);
 		}
+
+		@Override
+		public void run(final Map<String, ?> map) throws Exception {
+			super.run(map);
+
+		}
 	}
 
 	public static class AfterCrawl extends CommonEvent.CrawlEvent<CurrentPath> {
