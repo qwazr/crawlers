@@ -21,7 +21,8 @@ import com.qwazr.server.RemoteService;
 
 import java.io.IOException;
 
-class FileCrawlerSingleClient extends CrawlerSingleClient<FileCrawlDefinition> implements FileCrawlerServiceInterface {
+public class FileCrawlerSingleClient extends CrawlerSingleClient<FileCrawlDefinition>
+		implements FileCrawlerServiceInterface {
 
 	FileCrawlerSingleClient(final RemoteService remote) {
 		super(remote, "/crawler/file/");

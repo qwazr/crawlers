@@ -21,7 +21,8 @@ import com.qwazr.server.RemoteService;
 
 import java.io.IOException;
 
-class WebCrawlerSingleClient extends CrawlerSingleClient<WebCrawlDefinition> implements WebCrawlerServiceInterface {
+public class WebCrawlerSingleClient extends CrawlerSingleClient<WebCrawlDefinition>
+		implements WebCrawlerServiceInterface {
 
 	WebCrawlerSingleClient(final RemoteService remote) {
 		super(remote, "/crawler/web/");
