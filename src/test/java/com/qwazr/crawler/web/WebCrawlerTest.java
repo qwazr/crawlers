@@ -16,7 +16,7 @@
 package com.qwazr.crawler.web;
 
 import com.qwazr.crawler.CrawlerServer;
-import com.qwazr.crawler.ServerTest;
+import com.qwazr.crawler.common.CommonEvent;
 import com.qwazr.crawler.common.CrawlStatus;
 import com.qwazr.crawler.common.EventEnum;
 import com.qwazr.crawler.common.ScriptDefinition;
@@ -39,17 +39,19 @@ public class WebCrawlerTest {
 
 	@BeforeClass
 	public static void before() throws Exception {
+		if (CrawlerServer.getInstance() == null)
+			CrawlerServer.main();
 		WebAppTestServer.start();
 	}
 
 	@AfterClass
 	public static void after() throws InterruptedException {
 		WebAppTestServer.stop();
+		CrawlerServer.shutdown();
 	}
 
 	@Test
 	public void test100startServer() throws Exception {
-		ServerTest.checkStarted();
 		local = CrawlerServer.getInstance().getWebServiceBuilder().local();
 		Assert.assertNotNull(local);
 		remote = new WebCrawlerServiceBuilder(null, null).remote(RemoteService.of("http://localhost:9091").build());
@@ -80,7 +82,7 @@ public class WebCrawlerTest {
 	public void test300SimpleCrawl() throws InterruptedException {
 		final String sessionName = RandomUtils.alphanumeric(10);
 		remote.runSession(sessionName, getNewWebCrawl().build());
-		ServerTest.crawlWait(sessionName, remote);
+		CommonEvent.crawlWait(sessionName, remote);
 	}
 
 	@Test
@@ -97,7 +99,7 @@ public class WebCrawlerTest {
 		webCrawl.script(EventEnum.after_session,
 				ScriptDefinition.of().name(WebEvents.AfterSession.class.getName()).build());
 		remote.runSession(sessionName, webCrawl.build());
-		ServerTest.crawlWait(sessionName, remote);
+		CommonEvent.crawlWait(sessionName, remote);
 		Assert.assertEquals(5, WebEvents.counters.get(EventEnum.before_crawl).get());
 		Assert.assertEquals(4, WebEvents.counters.get(EventEnum.after_crawl).get());
 		Assert.assertEquals(1, WebEvents.counters.get(EventEnum.before_session).get());

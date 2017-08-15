@@ -16,14 +16,29 @@
 package com.qwazr.crawler.common;
 
 import com.qwazr.scripts.ScriptInterface;
+import com.qwazr.server.client.ErrorWrapper;
+import com.qwazr.utils.WaitFor;
 import org.junit.Assert;
 
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Logger;
 
 public class CommonEvent {
 
+	public static CrawlStatus crawlWait(final String sessionName, final CrawlerServiceInterface service)
+			throws InterruptedException {
+		final AtomicReference<CrawlStatus> statusRef = new AtomicReference<>();
+		WaitFor.of().timeOut(TimeUnit.MINUTES, 2).until(() -> {
+			final CrawlStatus status = ErrorWrapper.bypass(() -> service.getSession(sessionName, null), 404);
+			statusRef.set(status);
+			return status != null && status.endTime != null;
+		});
+		return statusRef.get();
+	}
+	
 	private final static Logger LOGGER = Logger.getLogger(CommonEvent.class.getName());
 
 	public static class SessionEvent implements ScriptInterface {

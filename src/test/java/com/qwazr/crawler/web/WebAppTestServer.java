@@ -52,19 +52,19 @@ public class WebAppTestServer {
 		env.put("WEBSERVICE_PORT", "9191");
 		env.put("QWAZR_ETC_DIR", new File("src/test/etc").getAbsolutePath());
 		webAppProcess = ProcessUtils.java(WebappServer.class, env);
+		Thread.sleep(1000);
 
 		final URL url = new URL(URL);
 		WaitFor.of().timeOut(TimeUnit.MINUTES, 1).until(() -> {
 			try {
 				return 200 == ((HttpURLConnection) url.openConnection()).getResponseCode();
 			} catch (IOException e) {
-				LOGGER.warning(() -> "WebAppTestServer failed: " + e.getMessage());
+				LOGGER.warning(() -> "Waiting for WebAppTestServer to start: " + e.getMessage());
 				Thread.sleep(500);
 				return false;
 			}
 		});
 		LOGGER.info(() -> "WebAppTestServer started");
-.
 	}
 
 	public static synchronized void stop() throws InterruptedException {

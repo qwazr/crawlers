@@ -16,13 +16,15 @@
 package com.qwazr.crawler.file;
 
 import com.qwazr.crawler.CrawlerServer;
-import com.qwazr.crawler.ServerTest;
+import com.qwazr.crawler.common.CommonEvent;
 import com.qwazr.crawler.common.CrawlStatus;
 import com.qwazr.crawler.common.EventEnum;
 import com.qwazr.crawler.common.ScriptDefinition;
 import com.qwazr.server.RemoteService;
 import com.qwazr.utils.RandomUtils;
+import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
@@ -35,9 +37,19 @@ public class FileCrawlerTest {
 	private static FileCrawlerServiceInterface local;
 	private static FileCrawlerServiceInterface remote;
 
+	@BeforeClass
+	public static void before() throws Exception {
+		if (CrawlerServer.getInstance() == null)
+			CrawlerServer.main();
+	}
+
+	@AfterClass
+	public static void after() throws InterruptedException {
+		CrawlerServer.shutdown();
+	}
+
 	@Test
 	public void test100startServer() throws Exception {
-		ServerTest.checkStarted();
 		local = CrawlerServer.getInstance().getFileServiceBuilder().local();
 		Assert.assertNotNull(local);
 		remote = new FileCrawlerServiceBuilder(null, null).remote(RemoteService.of("http://localhost:9091").build());
@@ -64,7 +76,7 @@ public class FileCrawlerTest {
 	public void test300SimpleCrawl() throws InterruptedException {
 		final String sessionName = RandomUtils.alphanumeric(10);
 		remote.runSession(sessionName, getNewCrawl().build());
-		final CrawlStatus status = ServerTest.crawlWait(sessionName, remote);
+		final CrawlStatus status = CommonEvent.crawlWait(sessionName, remote);
 		Assert.assertEquals(2, status.crawled);
 		Assert.assertEquals(1, status.ignored);
 		Assert.assertEquals(0, status.error);
@@ -84,7 +96,7 @@ public class FileCrawlerTest {
 		crawl.script(EventEnum.after_session,
 				ScriptDefinition.of().name(FileEvents.AfterSession.class.getName()).build());
 		remote.runSession(sessionName, crawl.build());
-		ServerTest.crawlWait(sessionName, remote);
+		CommonEvent.crawlWait(sessionName, remote);
 		Assert.assertEquals(3, FileEvents.counters.get(EventEnum.before_crawl).get());
 		Assert.assertEquals(3, FileEvents.counters.get(EventEnum.after_crawl).get());
 		Assert.assertEquals(1, FileEvents.counters.get(EventEnum.before_session).get());
