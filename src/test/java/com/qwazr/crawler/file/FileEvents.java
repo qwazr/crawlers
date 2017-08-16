@@ -16,6 +16,7 @@
 package com.qwazr.crawler.file;
 
 import com.qwazr.crawler.common.CommonEvent;
+import com.qwazr.crawler.common.CrawlSession;
 import com.qwazr.crawler.common.EventEnum;
 import org.junit.Assert;
 
@@ -34,11 +35,12 @@ public class FileEvents {
 		}
 
 		@Override
-		protected void checkCurrent(CurrentPath current) {
-			super.checkCurrent(current);
-			Assert.assertNotNull(current.path);
+		protected void run(final CrawlSession crawlSession, final CurrentPath currentCrawl,
+				final Map<String, ?> attributes) throws Exception {
+			super.run(crawlSession, currentCrawl, attributes);
+			Assert.assertNotNull(currentCrawl.path);
+			Assert.assertNotNull(currentCrawl.attributes);
 		}
-
 
 	}
 

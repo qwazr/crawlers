@@ -15,7 +15,6 @@
  */
 package com.qwazr.crawler.common;
 
-import com.qwazr.scripts.ScriptInterface;
 import com.qwazr.server.client.ErrorWrapper;
 import com.qwazr.utils.WaitFor;
 import org.junit.Assert;
@@ -38,10 +37,10 @@ public class CommonEvent {
 		});
 		return statusRef.get();
 	}
-	
+
 	private final static Logger LOGGER = Logger.getLogger(CommonEvent.class.getName());
 
-	public static class SessionEvent implements ScriptInterface {
+	public static class SessionEvent<T extends CurrentCrawl> extends CrawlScriptEvents<T> {
 
 		private final EventEnum eventEnum;
 		private final Map<EventEnum, AtomicInteger> counters;
@@ -52,15 +51,15 @@ public class CommonEvent {
 		}
 
 		@Override
-		public void run(final Map<String, ?> map) throws Exception {
+		protected void run(final CrawlSession crawlSession, final T currentCrawl, final Map<String, ?> attributes)
+				throws Exception {
 			counters.computeIfAbsent(eventEnum, (key) -> new AtomicInteger()).incrementAndGet();
-			final CrawlSession crawlSession = (CrawlSession) map.get("session");
 			Assert.assertNotNull(crawlSession);
 			LOGGER.info(eventEnum.name());
 		}
 	}
 
-	public static class CrawlEvent<T extends CurrentCrawl> extends SessionEvent {
+	public static class CrawlEvent<T extends CurrentCrawl> extends SessionEvent<T> {
 
 		private final Class<T> currentClassClass;
 
@@ -69,17 +68,15 @@ public class CommonEvent {
 			this.currentClassClass = currentClassClass;
 		}
 
-		protected void checkCurrent(T current) {
-			Assert.assertNotNull(current);
-			Assert.assertEquals(currentClassClass, current.getClass());
-			Assert.assertEquals(null, current.getError());
+		@Override
+		protected void run(final CrawlSession crawlSession, final T currentCrawl, final Map<String, ?> attributes)
+				throws Exception {
+			super.run(crawlSession, currentCrawl, attributes);
+			Assert.assertNotNull(currentCrawl);
+			Assert.assertEquals(currentClassClass, currentCrawl.getClass());
+			Assert.assertEquals(null, currentCrawl.getError());
 		}
 
-		@Override
-		public void run(final Map<String, ?> map) throws Exception {
-			super.run(map);
-			checkCurrent((T) map.get("current"));
-		}
 	}
 
 }

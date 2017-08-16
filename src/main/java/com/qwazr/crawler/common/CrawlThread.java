@@ -77,7 +77,8 @@ public abstract class CrawlThread<M extends CrawlManager> implements Runnable {
 		try {
 			final Map<String, Object> attributes = new HashMap<>(scriptGlobalObjects);
 			attributes.put("session", session);
-			attributes.put("current", currentCrawl);
+			if (currentCrawl != null)
+				attributes.put("current", currentCrawl);
 			if (script.variables != null)
 				attributes.putAll(script.variables);
 			final ScriptRunThread scriptRunThread;
