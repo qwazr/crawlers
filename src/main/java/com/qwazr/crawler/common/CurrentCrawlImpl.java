@@ -56,8 +56,10 @@ public class CurrentCrawlImpl implements CurrentCrawl {
 	}
 
 	@Override
-	public void setIgnored(boolean ignored) {
-		isIgnored = ignored;
+	public void setIgnored() {
+		if (isCrawled || isIgnored)
+			return;
+		isIgnored = true;
 	}
 
 	@Override
@@ -65,8 +67,10 @@ public class CurrentCrawlImpl implements CurrentCrawl {
 		return isIgnored;
 	}
 
-	public void setCrawled() {
-		isCrawled = true;
+	protected void setCrawled(boolean crawled) {
+		if (isIgnored)
+			isIgnored = false;
+		this.isCrawled = crawled;
 	}
 
 	@Override

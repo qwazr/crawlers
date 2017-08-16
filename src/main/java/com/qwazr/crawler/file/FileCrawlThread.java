@@ -73,11 +73,16 @@ public class FileCrawlThread extends CrawlThread<FileCrawlerManager> implements 
 
 	private void crawl(final CurrentPath current) {
 		try {
-			scriptBeforeCrawl(current, current.pathString);
+
+			checkPassInclusionExclusion(current, current.pathString);
+			script(EventEnum.before_crawl, current);
+
 			if (current.isIgnored())
 				session.incIgnoredCount();
-			else
+			else {
+				current.setCrawled();
 				session.incCrawledCount();
+			}
 			script(EventEnum.after_crawl, current);
 		} catch (Exception e) {
 			final String err = "File crawling error on " + current.pathString;

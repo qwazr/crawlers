@@ -157,7 +157,8 @@ public class WebCrawlThread extends CrawlThread<WebCrawlerManager> {
 
 		currentURI.setStartDomain(matchesInitialDomain(uri));
 
-		super.scriptBeforeCrawl(currentURI, uriString);
+		checkPassInclusionExclusion(currentURI, uriString);
+		script(EventEnum.before_crawl, currentURI);
 	}
 
 	private void crawl(final CurrentURIImpl currentURI, final CrawlProvider crawlProvider) {
@@ -173,7 +174,7 @@ public class WebCrawlThread extends CrawlThread<WebCrawlerManager> {
 		String scheme = uri.getScheme();
 		if (!"http".equalsIgnoreCase(scheme) && !"https".equalsIgnoreCase(scheme)) {
 			session.incIgnoredCount();
-			currentURI.setIgnored(true);
+			currentURI.setIgnored();
 			LOGGER.info(() -> "Ignored (not http) " + currentURI.getInitialURI());
 			return;
 		}
@@ -337,7 +338,7 @@ public class WebCrawlThread extends CrawlThread<WebCrawlerManager> {
 			try {
 				final RobotsTxt.Status robotsTxtStatus = checkRobotsTxt(currentURI);
 				if (robotsTxtStatus != null && !robotsTxtStatus.isCrawlable) {
-					currentURI.setIgnored(true);
+					currentURI.setIgnored();
 					currentURI.setRobotsTxtDisallow(true);
 				}
 			} catch (Exception e) {

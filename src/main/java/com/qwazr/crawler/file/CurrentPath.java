@@ -46,6 +46,10 @@ public class CurrentPath extends CurrentCrawlImpl {
 	public String getPathString() {
 		return pathString;
 	}
+	
+	void setCrawled() {
+		super.setCrawled(true);
+	}
 
 	/**
 	 * @return the attributes of the current path

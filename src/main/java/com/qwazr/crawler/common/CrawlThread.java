@@ -121,12 +121,7 @@ public abstract class CrawlThread<M extends CrawlManager> implements Runnable {
 
 	protected void checkPassInclusionExclusion(CurrentCrawlImpl current, String itemText) {
 		if (!checkPassInclusionExclusion(itemText, current::setInInclusion, current::setInExclusion))
-			current.setIgnored(true);
-	}
-
-	protected void scriptBeforeCrawl(final CurrentCrawlImpl current, String itemText) {
-		checkPassInclusionExclusion(current, itemText);
-		script(EventEnum.before_crawl, current);
+			current.setIgnored();
 	}
 
 	@Override

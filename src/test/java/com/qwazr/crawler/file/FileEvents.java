@@ -17,6 +17,7 @@ package com.qwazr.crawler.file;
 
 import com.qwazr.crawler.common.CommonEvent;
 import com.qwazr.crawler.common.EventEnum;
+import org.junit.Assert;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -33,10 +34,12 @@ public class FileEvents {
 		}
 
 		@Override
-		public void run(final Map<String, ?> map) throws Exception {
-			super.run(map);
-
+		protected void checkCurrent(CurrentPath current) {
+			super.checkCurrent(current);
+			Assert.assertNotNull(current.path);
 		}
+
+
 	}
 
 	public static class AfterCrawl extends CommonEvent.CrawlEvent<CurrentPath> {

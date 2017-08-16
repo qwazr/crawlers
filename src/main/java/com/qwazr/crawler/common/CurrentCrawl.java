@@ -34,10 +34,8 @@ public interface CurrentCrawl {
 
 	/**
 	 * Set the ignored flag
-	 *
-	 * @param ignored
 	 */
-	void setIgnored(boolean ignored);
+	void setIgnored();
 
 	/**
 	 * Check if the URL is ignored. An ignored URL is not crawled

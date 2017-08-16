@@ -72,6 +72,10 @@ class CurrentURIImpl extends CurrentCrawlImpl implements CurrentURI {
 		this.isRobotsTxtDisallow = disallow;
 	}
 
+	void setCrawled() {
+		super.setCrawled(true);
+	}
+
 	@Override
 	public boolean isRobotsTxtDisallow() {
 		return isRobotsTxtDisallow;
