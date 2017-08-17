@@ -48,13 +48,13 @@ public class WebCrawlerMultiClient extends MultiClient<WebCrawlerSingleClient> i
 	}
 
 	@Override
-	public TreeMap<String, CrawlStatus> getSessions(String group) {
+	public TreeMap<String, CrawlStatus> getSessions() {
 
 		// We merge the result of all the nodes
 		final TreeMap<String, CrawlStatus> globalSessions = new TreeMap<>();
 		for (WebCrawlerSingleClient client : this) {
 			try {
-				TreeMap<String, CrawlStatus> localSessions = client.getSessions(group);
+				TreeMap<String, CrawlStatus> localSessions = client.getSessions();
 				if (localSessions == null)
 					continue;
 				globalSessions.putAll(localSessions);
@@ -66,26 +66,26 @@ public class WebCrawlerMultiClient extends MultiClient<WebCrawlerSingleClient> i
 	}
 
 	@Override
-	public CrawlStatus getSession(String session_name, String group) {
+	public CrawlStatus getSession(String sessionName) {
 
 		for (WebCrawlerSingleClient client : this) {
 			try {
-				return client.getSession(session_name, group);
+				return client.getSession(sessionName);
 			} catch (WebApplicationException e) {
 				if (e.getResponse().getStatus() != 404)
 					throw e;
 			}
 		}
-		throw new ServerException(Status.NOT_FOUND, "Session " + session_name + " not found").getJsonException();
+		throw new ServerException(Status.NOT_FOUND, "Session " + sessionName + " not found").getJsonException();
 	}
 
 	@Override
-	public Response abortSession(String session_name, String reason, String group) {
+	public Response abortSession(String sessionName, String reason) {
 
 		boolean aborted = false;
 		for (WebCrawlerSingleClient client : this) {
 			try {
-				int code = client.abortSession(session_name, reason, group).getStatus();
+				int code = client.abortSession(sessionName, reason).getStatus();
 				if (code == 200 || code == 202)
 					aborted = true;
 			} catch (WebApplicationException e) {

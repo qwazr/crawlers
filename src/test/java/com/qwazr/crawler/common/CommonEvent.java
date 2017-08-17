@@ -31,7 +31,7 @@ public class CommonEvent {
 			throws InterruptedException {
 		final AtomicReference<CrawlStatus> statusRef = new AtomicReference<>();
 		WaitFor.of().timeOut(TimeUnit.MINUTES, 2).until(() -> {
-			final CrawlStatus status = ErrorWrapper.bypass(() -> service.getSession(sessionName, null), 404);
+			final CrawlStatus status = ErrorWrapper.bypass(() -> service.getSession(sessionName), 404);
 			statusRef.set(status);
 			return status != null && status.endTime != null;
 		});

@@ -31,10 +31,14 @@ public class FileCrawlerManager extends CrawlManager<FileCrawlThread, FileCrawlD
 	private static final Logger LOGGER = LoggerUtils.getLogger(FileCrawlerManager.class);
 	private final FileCrawlerServiceInterface service;
 
+	public FileCrawlerManager(String myAddress, ScriptManager scriptManager, ExecutorService executorService) {
+		super(myAddress, scriptManager, executorService, LOGGER);
+		service = new FileCrawlerServiceImpl(this);
+	}
+
 	public FileCrawlerManager(ClusterManager clusterManager, ScriptManager scriptManager,
 			ExecutorService executorService) {
-		super(clusterManager, scriptManager, executorService, LOGGER);
-		service = new FileCrawlerServiceImpl(this);
+		this(clusterManager.getServiceBuilder().local().getStatus().me, scriptManager, executorService);
 	}
 
 	public FileCrawlerServiceInterface getService() {

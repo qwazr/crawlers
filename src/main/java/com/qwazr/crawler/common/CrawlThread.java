@@ -95,14 +95,15 @@ public abstract class CrawlThread<M extends CrawlManager> implements Runnable {
 	}
 
 	/**
-	 * Check the matching list. Returns the default value if the matching list is empty.
+	 * Check the matching list. Returns false if the matching list is empty.
 	 *
-	 * @param text the text to check
+	 * @param text     the text to check
+	 * @param matchers a list of wildcard patterns
 	 * @return true if a pattern matched the text
-	 */
-	protected static Boolean matches(String text, List<WildcardMatcher> matchers, Boolean defaultValue) {
+	 **/
+	protected static Boolean matches(String text, List<WildcardMatcher> matchers) {
 		if (matchers == null || matchers.isEmpty())
-			return defaultValue;
+			return false;
 		return WildcardMatcher.anyMatch(text, matchers);
 	}
 
@@ -110,8 +111,8 @@ public abstract class CrawlThread<M extends CrawlManager> implements Runnable {
 			Consumer<Boolean> exclusionConsumer) {
 
 		// We check the inclusion/exclusion.
-		final Boolean inInclusion = matches(itemText, inclusionMatcherList, null);
-		final Boolean inExclusion = matches(itemText, exclusionMatcherList, null);
+		final Boolean inInclusion = matches(itemText, inclusionMatcherList);
+		final Boolean inExclusion = matches(itemText, exclusionMatcherList);
 		if (inclusionConsumer != null)
 			inclusionConsumer.accept(inInclusion);
 		if (exclusionConsumer != null)

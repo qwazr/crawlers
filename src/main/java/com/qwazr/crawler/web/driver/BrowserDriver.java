@@ -214,7 +214,7 @@ final public class BrowserDriver implements WebDriver, Closeable, AdditionalCapa
 	/**
 	 * Iterate over every frames and extract all links. The driver is set to defaultContent()
 	 *
-	 * @param hrefCollection
+	 * @param hrefCollection the collection to fill
 	 */
 	public void findEveryFramesLinks(Collection<String> hrefCollection) {
 		driver.switchTo().defaultContent();

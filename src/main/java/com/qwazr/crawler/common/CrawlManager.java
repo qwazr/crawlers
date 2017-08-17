@@ -15,7 +15,6 @@
  */
 package com.qwazr.crawler.common;
 
-import com.qwazr.cluster.ClusterManager;
 import com.qwazr.scripts.ScriptManager;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.CollectionsUtils;
@@ -36,26 +35,20 @@ public abstract class CrawlManager<T extends CrawlThread<?>, D extends CrawlDefi
 	private final ExecutorService executorService;
 	private final Logger logger;
 	protected final String myAddress;
-	protected final ClusterManager clusterManager;
 	protected final ScriptManager scriptManager;
 
-	protected CrawlManager(final ClusterManager clusterManager, final ScriptManager scriptManager,
+	protected CrawlManager(final String myAddress, final ScriptManager scriptManager,
 			final ExecutorService executorService, final Logger logger) {
 		this.crawlSessionMap = new ConcurrentHashMap<>();
 		this.statusHistory = Collections.synchronizedMap(new CollectionsUtils.EldestFixedSizeMap<>(250));
-		this.clusterManager = clusterManager;
 		this.scriptManager = scriptManager;
-		this.myAddress = clusterManager != null ? clusterManager.getServiceBuilder().local().getStatus().me : null;
+		this.myAddress = myAddress;
 		this.executorService = executorService;
 		this.logger = logger;
 	}
 
 	public String getMyAddress() {
 		return myAddress;
-	}
-
-	public ClusterManager getClusterManager() {
-		return clusterManager;
 	}
 
 	public TreeMap<String, CrawlStatus> getSessions() {

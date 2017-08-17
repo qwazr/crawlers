@@ -34,34 +34,31 @@ abstract public class CrawlerSingleClient<T extends CrawlDefinition> extends Jso
 	}
 
 	@Override
-	public TreeMap<String, CrawlStatus> getSessions(final String group) {
-		final UBuilder uriBuilder =
-				RemoteService.getNewUBuilder(remote, pathPrefix + "sessions").setParameter("group", group);
+	public TreeMap<String, CrawlStatus> getSessions() {
+		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, pathPrefix + "sessions");
 		HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
 		return executeJson(request, null, null, TreeMapStringCrawlTypeRef, valid200Json);
 	}
 
 	@Override
-	public CrawlStatus getSession(final String session_name, final String group) {
-		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, pathPrefix + "sessions/", session_name)
-				.setParameter("group", group);
+	public CrawlStatus getSession(final String sessionName) {
+		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, pathPrefix + "sessions/", sessionName);
 		HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
 		return executeJson(request, null, null, CrawlStatus.class, valid200Json);
 	}
 
 	@Override
-	public Response abortSession(final String session_name, final String reason, final String group) {
-		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, pathPrefix + "sessions/", session_name)
-				.setParameter("group", group)
-				.setParameterObject("reason", reason);
+	public Response abortSession(final String sessionName, final String reason) {
+		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, pathPrefix + "sessions/", sessionName)
+				.setParameter("reason", reason);
 		final HttpRequest request = HttpRequest.Delete(uriBuilder.buildNoEx());
 		final Integer statusCode = executeStatusCode(request, null, null, valid200202);
 		return Response.status(statusCode).build();
 	}
 
 	@Override
-	public CrawlStatus runSession(final String session_name, final T crawlDefinition) {
-		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, pathPrefix + "sessions/", session_name);
+	public CrawlStatus runSession(final String sessionName, final T crawlDefinition) {
+		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, pathPrefix + "sessions/", sessionName);
 		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
 		return executeJson(request, crawlDefinition, null, CrawlStatus.class, valid200202Json);
 	}

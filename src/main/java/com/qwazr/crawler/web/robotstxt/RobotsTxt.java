@@ -76,12 +76,12 @@ public class RobotsTxt {
 	}
 
 	/**
-	 * Construit l'URL d'accès au fichier robots.txt à partir d'une URL donnée
+	 * Build the Robots.txt URL from a reference URL
 	 *
-	 * @param uri
-	 * @return
-	 * @throws MalformedURLException
-	 * @throws URISyntaxException
+	 * @param uri the reference URI
+	 * @return a Robots.txt URI
+	 * @throws MalformedURLException if the URL is malformed
+	 * @throws URISyntaxException    if the URI syntax is wrong
 	 */
 	public static URI getRobotsURI(final URI uri) throws MalformedURLException, URISyntaxException {
 		StringBuilder sb = new StringBuilder();
@@ -99,10 +99,10 @@ public class RobotsTxt {
 	/**
 	 * Return the status of the specified URL
 	 *
-	 * @param uri
+	 * @param uri the URI to test against the Robots.txt rules
 	 * @return the robotsTxt status
-	 * @throws MalformedURLException
-	 * @throws URISyntaxException
+	 * @throws MalformedURLException if the URL is malformed
+	 * @throws URISyntaxException    if the URI syntax is wrong
 	 */
 	public final Status getStatus(final URI uri, final String userAgent)
 			throws MalformedURLException, URISyntaxException {
@@ -135,8 +135,8 @@ public class RobotsTxt {
 	public static RobotsTxt download(final ProxyDefinition proxy, final String userAgent, final URI uri)
 			throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
 		try {
-			final HttpRequest request = HttpRequest.Get(uri.toString()).addHeader("Connection", "close").addHeader(
-					"User-Agent", userAgent);
+			final HttpRequest request =
+					HttpRequest.Get(uri.toString()).addHeader("Connection", "close").addHeader("User-Agent", userAgent);
 			BrowserDriver.applyProxy(proxy, uri, request);
 			logger.info(() -> "Try to download robots.txt " + uri);
 			return HttpClients.UNSECURE_HTTP_CLIENT.execute(request.request, response -> {

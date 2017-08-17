@@ -35,17 +35,16 @@ public interface CrawlerServiceInterface<T extends CrawlDefinition> extends Serv
 	@GET
 	@Path("/sessions")
 	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
-	TreeMap<String, CrawlStatus> getSessions(@QueryParam("group") String group);
+	TreeMap<String, CrawlStatus> getSessions();
 
 	@GET
 	@Path("/sessions/{session_name}")
 	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
-	CrawlStatus getSession(@PathParam("session_name") String session_name, @QueryParam("group") String group);
+	CrawlStatus getSession(@PathParam("session_name") String sessionName);
 
 	@DELETE
 	@Path("/sessions/{session_name}")
-	Response abortSession(@PathParam("session_name") String session_name, @QueryParam("reason") String aborting_reason,
-			@QueryParam("group") String group);
+	Response abortSession(@PathParam("session_name") String sessionName, @QueryParam("reason") String abortingReason);
 
 	@POST
 	@Path("/sessions/{session_name}")

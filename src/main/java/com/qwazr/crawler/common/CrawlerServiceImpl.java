@@ -36,18 +36,14 @@ public abstract class CrawlerServiceImpl<M extends CrawlManager, T extends Crawl
 	}
 
 	@Override
-	public TreeMap<String, CrawlStatus> getSessions(final String group) {
-		// Read the sessions in the local node
-		if (!crawlManager.getClusterManager().isGroup(group))
-			return new TreeMap<>();
+	public TreeMap<String, CrawlStatus> getSessions() {
 		return crawlManager.getSessions();
 	}
 
 	@Override
-	public CrawlStatus getSession(final String session_name, final String group) {
+	public CrawlStatus getSession(final String sessionName) {
 		try {
-			final CrawlStatus status =
-					crawlManager.getClusterManager().isGroup(group) ? crawlManager.getSession(session_name) : null;
+			final CrawlStatus status = crawlManager.getSession(sessionName);
 			if (status != null)
 				return status;
 			throw new ServerException(Status.NOT_FOUND, "Session not found");
@@ -57,11 +53,9 @@ public abstract class CrawlerServiceImpl<M extends CrawlManager, T extends Crawl
 	}
 
 	@Override
-	public Response abortSession(final String session_name, final String reason, final String group) {
+	public Response abortSession(final String sessionName, final String reason) {
 		try {
-			if (!crawlManager.getClusterManager().isGroup(group))
-				throw new ServerException(Status.NOT_FOUND, "Session not found");
-			crawlManager.abortSession(session_name, reason);
+			crawlManager.abortSession(sessionName, reason);
 			return Response.accepted().build();
 		} catch (ServerException e) {
 			throw ServerException.getTextException(logger, e);

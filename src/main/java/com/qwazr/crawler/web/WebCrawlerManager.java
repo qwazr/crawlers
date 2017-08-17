@@ -22,8 +22,6 @@ import com.qwazr.server.ApplicationBuilder;
 import com.qwazr.server.GenericServer;
 import com.qwazr.utils.LoggerUtils;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.concurrent.ExecutorService;
 import java.util.logging.Logger;
 
@@ -33,10 +31,15 @@ public class WebCrawlerManager extends CrawlManager<WebCrawlThread, WebCrawlDefi
 
 	private final WebCrawlerServiceInterface service;
 
-	public WebCrawlerManager(final ClusterManager clusterManager, final ScriptManager scriptManager,
-			final ExecutorService executor) throws IOException, URISyntaxException {
-		super(clusterManager, scriptManager, executor, LOGGER);
+	public WebCrawlerManager(final String myAddress, final ScriptManager scriptManager,
+			final ExecutorService executor) {
+		super(myAddress, scriptManager, executor, LOGGER);
 		service = new WebCrawlerServiceImpl(this);
+	}
+
+	public WebCrawlerManager(ClusterManager clusterManager, ScriptManager scriptManager,
+			ExecutorService executorService) {
+		this(clusterManager.getServiceBuilder().local().getStatus().me, scriptManager, executorService);
 	}
 
 	public WebCrawlerServiceInterface getService() {
