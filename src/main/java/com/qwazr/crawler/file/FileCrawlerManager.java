@@ -41,6 +41,10 @@ public class FileCrawlerManager extends CrawlManager<FileCrawlThread, FileCrawlD
 		this(clusterManager.getServiceBuilder().local().getStatus().me, scriptManager, executorService);
 	}
 
+	public FileCrawlerManager(ScriptManager scriptManager, ExecutorService executorService) {
+		this((String) null, scriptManager, executorService);
+	}
+
 	public FileCrawlerServiceInterface getService() {
 		return service;
 	}

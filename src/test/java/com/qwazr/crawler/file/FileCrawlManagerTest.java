@@ -32,7 +32,7 @@ public class FileCrawlManagerTest {
 	@BeforeClass
 	public static void setup() {
 		executorService = Executors.newCachedThreadPool();
-		fileCrawlerManager = new FileCrawlerManager((String) null, null, executorService);
+		fileCrawlerManager = new FileCrawlerManager(null, executorService);
 	}
 
 	@AfterClass
