@@ -100,9 +100,9 @@ public class WebCrawlerTest {
 				ScriptDefinition.of().name(WebEvents.AfterSession.class.getName()).build());
 		remote.runSession(sessionName, webCrawl.build());
 		CommonEvent.crawlWait(sessionName, remote);
+		Assert.assertEquals(1, WebEvents.counters.get(EventEnum.before_session).get());
 		Assert.assertEquals(5, WebEvents.counters.get(EventEnum.before_crawl).get());
 		Assert.assertEquals(4, WebEvents.counters.get(EventEnum.after_crawl).get());
-		Assert.assertEquals(1, WebEvents.counters.get(EventEnum.before_session).get());
 		Assert.assertEquals(1, WebEvents.counters.get(EventEnum.after_session).get());
 	}
 

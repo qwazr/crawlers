@@ -95,7 +95,7 @@ public abstract class CrawlThread<M extends CrawlManager> implements Runnable {
 	}
 
 	/**
-	 * Check the matching list. Returns false if the matching list is empty.
+	 * Check the matching list. Returns null if the matching list is empty.
 	 *
 	 * @param text     the text to check
 	 * @param matchers a list of wildcard patterns
@@ -103,7 +103,7 @@ public abstract class CrawlThread<M extends CrawlManager> implements Runnable {
 	 **/
 	protected static Boolean matches(String text, List<WildcardMatcher> matchers) {
 		if (matchers == null || matchers.isEmpty())
-			return false;
+			return null;
 		return WildcardMatcher.anyMatch(text, matchers);
 	}
 

@@ -29,8 +29,8 @@ public class WebCrawlerSingleClient extends CrawlerSingleClient<WebCrawlDefiniti
 	}
 
 	@Override
-	public CrawlStatus runSession(final String session_name, final String jsonCrawlDefinition) throws IOException {
-		return runSession(session_name, WebCrawlDefinition.newInstance(jsonCrawlDefinition));
+	public CrawlStatus runSession(final String sessionSame, final String jsonCrawlDefinition) throws IOException {
+		return runSession(sessionSame, WebCrawlDefinition.newInstance(jsonCrawlDefinition));
 	}
 
 }
