@@ -27,7 +27,7 @@ import java.util.Map;
 public class ScriptDefinition {
 
 	/**
-	 * The path to the scripts
+	 * The path to the scripts or the full name of a class with a public empty constructor
 	 */
 	final public String name;
 
@@ -43,19 +43,22 @@ public class ScriptDefinition {
 		this.variables = variables == null ? null : Collections.unmodifiableMap(new LinkedHashMap<>(variables));
 	}
 
-	public static Builder of() {
-		return new Builder();
+	public static Builder of(String name) {
+		return new Builder(name);
+	}
+
+	public static Builder of(Class<?> scriptClass) {
+		return new Builder(scriptClass.getName());
 	}
 
 	public static class Builder {
 
-		private String name;
+		private final String name;
 
 		private LinkedHashMap<String, String> variables;
 
-		public Builder name(String name) {
+		public Builder(String name) {
 			this.name = name;
-			return this;
 		}
 
 		public Builder variable(String name, String value) {

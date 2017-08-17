@@ -20,6 +20,7 @@ import com.qwazr.utils.WaitFor;
 import org.junit.Assert;
 
 import java.util.Map;
+import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -43,17 +44,17 @@ public class CommonEvent {
 	public static class SessionEvent<T extends CurrentCrawl> extends CrawlScriptEvents<T> {
 
 		private final EventEnum eventEnum;
-		private final Map<EventEnum, AtomicInteger> counters;
+		private final Map<EventEnum, Feedback> feedbacks;
 
-		protected SessionEvent(EventEnum eventEnum, Map<EventEnum, AtomicInteger> counters) {
+		protected SessionEvent(EventEnum eventEnum, Map<EventEnum, Feedback> feedbacks) {
 			this.eventEnum = eventEnum;
-			this.counters = counters;
+			this.feedbacks = feedbacks;
 		}
 
 		@Override
 		protected void run(final CrawlSession crawlSession, final T currentCrawl, final Map<String, ?> attributes)
 				throws Exception {
-			counters.computeIfAbsent(eventEnum, (key) -> new AtomicInteger()).incrementAndGet();
+			feedbacks.computeIfAbsent(eventEnum, f -> new Feedback()).inform(attributes);
 			Assert.assertNotNull(crawlSession);
 			LOGGER.info(eventEnum.name());
 		}
@@ -63,8 +64,8 @@ public class CommonEvent {
 
 		private final Class<T> currentClassClass;
 
-		protected CrawlEvent(EventEnum eventEnum, Map<EventEnum, AtomicInteger> counters, Class<T> currentClassClass) {
-			super(eventEnum, counters);
+		protected CrawlEvent(EventEnum eventEnum, Map<EventEnum, Feedback> feedbacks, Class<T> currentClassClass) {
+			super(eventEnum, feedbacks);
 			this.currentClassClass = currentClassClass;
 		}
 
@@ -77,6 +78,31 @@ public class CommonEvent {
 			Assert.assertEquals(null, currentCrawl.getError());
 		}
 
+	}
+
+	public static class Feedback {
+
+		public final AtomicInteger counters;
+		public final Map<String, Object> runAttributes;
+
+		Feedback() {
+			counters = new AtomicInteger();
+			runAttributes = new HashMap<>();
+		}
+
+		public void inform(Map<String, ?> attributes) {
+			counters.incrementAndGet();
+			if (attributes != null)
+				runAttributes.putAll(attributes);
+		}
+
+		public int count() {
+			return counters.get();
+		}
+
+		public Object attribute(String key) {
+			return runAttributes.get(key);
+		}
 	}
 
 }

@@ -20,16 +20,15 @@ import com.qwazr.crawler.common.EventEnum;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class WebEvents {
 
-	public final static Map<EventEnum, AtomicInteger> counters = new HashMap<>();
+	public final static Map<EventEnum, CommonEvent.Feedback> feedbacks = new HashMap<>();
 
 	public static class BeforeCrawl extends CommonEvent.CrawlEvent<CurrentURIImpl> {
 
 		public BeforeCrawl() {
-			super(EventEnum.before_crawl, counters, CurrentURIImpl.class);
+			super(EventEnum.before_crawl, feedbacks, CurrentURIImpl.class);
 		}
 
 	}
@@ -37,14 +36,14 @@ public class WebEvents {
 	public static class AfterCrawl extends CommonEvent.CrawlEvent<CurrentURIImpl> {
 
 		public AfterCrawl() {
-			super(EventEnum.after_crawl, counters, CurrentURIImpl.class);
+			super(EventEnum.after_crawl, feedbacks, CurrentURIImpl.class);
 		}
 	}
 
 	public static class BeforeSession extends CommonEvent.SessionEvent {
 
 		public BeforeSession() {
-			super(EventEnum.before_session, counters);
+			super(EventEnum.before_session, feedbacks);
 		}
 
 	}
@@ -52,7 +51,7 @@ public class WebEvents {
 	public static class AfterSession extends CommonEvent.SessionEvent {
 
 		public AfterSession() {
-			super(EventEnum.after_session, counters);
+			super(EventEnum.after_session, feedbacks);
 		}
 	}
 }

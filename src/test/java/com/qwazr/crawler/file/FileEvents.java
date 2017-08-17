@@ -22,16 +22,15 @@ import org.junit.Assert;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class FileEvents {
 
-	public final static Map<EventEnum, AtomicInteger> counters = new HashMap<>();
+	public final static Map<EventEnum, CommonEvent.Feedback> feedbacks = new HashMap<>();
 
 	public static class BeforeCrawl extends CommonEvent.CrawlEvent<CurrentPath> {
 
 		public BeforeCrawl() {
-			super(EventEnum.before_crawl, counters, CurrentPath.class);
+			super(EventEnum.before_crawl, feedbacks, CurrentPath.class);
 		}
 
 		@Override
@@ -47,14 +46,14 @@ public class FileEvents {
 	public static class AfterCrawl extends CommonEvent.CrawlEvent<CurrentPath> {
 
 		public AfterCrawl() {
-			super(EventEnum.after_crawl, counters, CurrentPath.class);
+			super(EventEnum.after_crawl, feedbacks, CurrentPath.class);
 		}
 	}
 
 	public static class BeforeSession extends CommonEvent.SessionEvent {
 
 		public BeforeSession() {
-			super(EventEnum.before_session, counters);
+			super(EventEnum.before_session, feedbacks);
 		}
 
 	}
@@ -62,7 +61,7 @@ public class FileEvents {
 	public static class AfterSession extends CommonEvent.SessionEvent {
 
 		public AfterSession() {
-			super(EventEnum.after_session, counters);
+			super(EventEnum.after_session, feedbacks);
 		}
 	}
 }

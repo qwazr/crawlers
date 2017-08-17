@@ -87,23 +87,32 @@ public class WebCrawlerTest {
 
 	@Test
 	public void test400CrawlEvent() throws InterruptedException {
-		WebEvents.counters.clear();
+		WebEvents.feedbacks.clear();
 		final String sessionName = RandomUtils.alphanumeric(10);
 		final WebCrawlDefinition.Builder webCrawl = getNewWebCrawl();
-		webCrawl.script(EventEnum.before_crawl,
-				ScriptDefinition.of().name(WebEvents.BeforeCrawl.class.getName()).build());
-		webCrawl.script(EventEnum.after_crawl,
-				ScriptDefinition.of().name(WebEvents.AfterCrawl.class.getName()).build());
-		webCrawl.script(EventEnum.before_session,
-				ScriptDefinition.of().name(WebEvents.BeforeSession.class.getName()).build());
-		webCrawl.script(EventEnum.after_session,
-				ScriptDefinition.of().name(WebEvents.AfterSession.class.getName()).build());
+		final String variableName = RandomUtils.alphanumeric(5);
+		final String variableValue = RandomUtils.alphanumeric(6);
+		webCrawl.script(EventEnum.before_crawl, ScriptDefinition.of(WebEvents.BeforeCrawl.class)
+				.variable(variableName, variableValue + EventEnum.before_crawl.name())
+				.build());
+		webCrawl.script(EventEnum.after_crawl, ScriptDefinition.of(WebEvents.AfterCrawl.class)
+				.variable(variableName, variableValue + EventEnum.after_crawl.name())
+				.build());
+		webCrawl.script(EventEnum.before_session, ScriptDefinition.of(WebEvents.BeforeSession.class)
+				.variable(variableName, variableValue + EventEnum.before_session.name())
+				.build());
+		webCrawl.script(EventEnum.after_session, ScriptDefinition.of(WebEvents.AfterSession.class)
+				.variable(variableName, variableValue + EventEnum.after_session.name())
+				.build());
 		remote.runSession(sessionName, webCrawl.build());
 		CommonEvent.crawlWait(sessionName, remote);
-		Assert.assertEquals(1, WebEvents.counters.get(EventEnum.before_session).get());
-		Assert.assertEquals(5, WebEvents.counters.get(EventEnum.before_crawl).get());
-		Assert.assertEquals(4, WebEvents.counters.get(EventEnum.after_crawl).get());
-		Assert.assertEquals(1, WebEvents.counters.get(EventEnum.after_session).get());
+		Assert.assertEquals(1, WebEvents.feedbacks.get(EventEnum.before_session).count());
+		Assert.assertEquals(5, WebEvents.feedbacks.get(EventEnum.before_crawl).count());
+		Assert.assertEquals(4, WebEvents.feedbacks.get(EventEnum.after_crawl).count());
+		Assert.assertEquals(1, WebEvents.feedbacks.get(EventEnum.after_session).count());
+		for (EventEnum eventEnum : EventEnum.values())
+			Assert.assertEquals(variableValue + eventEnum.name(),
+					WebEvents.feedbacks.get(eventEnum).attribute(variableName));
 	}
 
 }
