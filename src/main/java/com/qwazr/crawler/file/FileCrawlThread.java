@@ -31,12 +31,14 @@ import java.util.Collections;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class FileCrawlThread extends CrawlThread<FileCrawlerManager> implements FileVisitor<Path> {
+public class FileCrawlThread extends CrawlThread<FileCrawlDefinition, FileCrawlStatus, FileCrawlerManager>
+		implements FileVisitor<Path> {
 
 	private final FileCrawlDefinition crawlDefinition;
 	private int currentDepth;
 
-	public FileCrawlThread(FileCrawlerManager manager, CrawlSessionImpl<FileCrawlDefinition> session, Logger logger) {
+	public FileCrawlThread(FileCrawlerManager manager, CrawlSessionImpl<FileCrawlDefinition, FileCrawlStatus> session,
+			Logger logger) {
 		super(manager, session, logger);
 		this.crawlDefinition = session.getCrawlDefinition();
 	}

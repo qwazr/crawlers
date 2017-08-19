@@ -111,7 +111,7 @@ public abstract class CrawlStatus<T extends CrawlDefinition> {
 		this.crawlDefinition = crawlDefinition;
 	}
 
-	public CrawlStatus(AbstractBuilder<T> builder) {
+	public CrawlStatus(AbstractBuilder<T, ?> builder) {
 		this.nodeAddress = builder.nodeAddress;
 		this.timer = builder.timeTracker == null ? null : builder.timeTracker.getStatus();
 		this.aborting = builder.aborting;
@@ -226,12 +226,12 @@ public abstract class CrawlStatus<T extends CrawlDefinition> {
 				Objects.equals(timer, s.timer) && Objects.equals(crawlDefinition, s.crawlDefinition);
 	}
 
-	public abstract static class AbstractBuilder<T extends CrawlDefinition> {
+	public abstract static class AbstractBuilder<D extends CrawlDefinition, S extends CrawlStatus<D>> {
 
 		private final String nodeAddress;
 		private final long startTime;
 		private final TimeTracker timeTracker;
-		private final T crawlDefinition;
+		private final D crawlDefinition;
 
 		private Boolean aborting;
 		private String abortingReason;
@@ -243,51 +243,51 @@ public abstract class CrawlStatus<T extends CrawlDefinition> {
 		private Integer currentDepth;
 		private Long endTime;
 
-		protected AbstractBuilder(String nodeAddress, TimeTracker timeTracker, T crawlDefinition) {
+		protected AbstractBuilder(String nodeAddress, TimeTracker timeTracker, D crawlDefinition) {
 			this.nodeAddress = nodeAddress;
 			this.startTime = System.currentTimeMillis();
 			this.timeTracker = timeTracker;
 			this.crawlDefinition = crawlDefinition;
 		}
 
-		public AbstractBuilder<T> abort(String abortingReason) {
+		public AbstractBuilder<D, S> abort(String abortingReason) {
 			this.aborting = true;
 			this.abortingReason = abortingReason;
 			return this;
 		}
 
-		public AbstractBuilder<T> incCrawled() {
+		public AbstractBuilder<D, S> incCrawled() {
 			crawled++;
 			return this;
 		}
 
-		public AbstractBuilder<T> incIgnored() {
+		public AbstractBuilder<D, S> incIgnored() {
 			ignored++;
 			return this;
 		}
 
-		public AbstractBuilder<T> incError() {
+		public AbstractBuilder<D, S> incError() {
 			error++;
 			return this;
 		}
 
-		public AbstractBuilder<T> lastError(String errorMessage) {
+		public AbstractBuilder<D, S> lastError(String errorMessage) {
 			this.lastError = errorMessage;
 			return this;
 		}
 
-		public AbstractBuilder<T> crawl(String currentCrawl, Integer currentDepth) {
+		public AbstractBuilder<D, S> crawl(String currentCrawl, Integer currentDepth) {
 			this.currentCrawl = currentCrawl;
 			this.currentDepth = currentDepth;
 			return this;
 		}
 
-		public AbstractBuilder<T> done() {
+		public AbstractBuilder<D, S> done() {
 			this.endTime = System.currentTimeMillis();
 			return this;
 		}
 
-		public abstract CrawlStatus<T> build();
+		public abstract S build();
 	}
 
 }

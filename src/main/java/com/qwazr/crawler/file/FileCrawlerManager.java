@@ -27,7 +27,7 @@ import com.qwazr.utils.TimeTracker;
 import java.util.concurrent.ExecutorService;
 import java.util.logging.Logger;
 
-public class FileCrawlerManager extends CrawlManager<FileCrawlThread, FileCrawlDefinition> {
+public class FileCrawlerManager extends CrawlManager<FileCrawlThread, FileCrawlDefinition, FileCrawlStatus> {
 
 	private static final Logger LOGGER = LoggerUtils.getLogger(FileCrawlerManager.class);
 	private final FileCrawlerServiceInterface service;
@@ -64,7 +64,7 @@ public class FileCrawlerManager extends CrawlManager<FileCrawlThread, FileCrawlD
 	protected FileCrawlThread newCrawlThread(String sessionName, FileCrawlDefinition crawlDefinition) {
 		final TimeTracker timeTracker = new TimeTracker();
 		final FileCrawlStatus.Builder crawlStatusBuilder = FileCrawlStatus.of(myAddress, timeTracker, crawlDefinition);
-		final CrawlSessionImpl<FileCrawlDefinition> session =
+		final CrawlSessionImpl<FileCrawlDefinition, FileCrawlStatus> session =
 				new CrawlSessionImpl<>(sessionName, timeTracker, crawlDefinition, crawlStatusBuilder);
 		return new FileCrawlThread(this, session, LOGGER);
 	}

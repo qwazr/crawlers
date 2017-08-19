@@ -58,7 +58,7 @@ public class FileCrawlerTest {
 
 	@Test
 	public void test200emptySessions() {
-		TreeMap<String, CrawlStatus> sessions = remote.getSessions();
+		TreeMap<String, FileCrawlStatus> sessions = remote.getSessions();
 		Assert.assertNotNull(sessions);
 		Assert.assertTrue(sessions.isEmpty());
 	}

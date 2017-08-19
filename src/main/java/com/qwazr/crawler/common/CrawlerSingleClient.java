@@ -15,6 +15,7 @@
  **/
 package com.qwazr.crawler.common;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.qwazr.server.RemoteService;
 import com.qwazr.server.client.JsonClientAbstract;
 import com.qwazr.utils.UBuilder;
@@ -23,28 +24,31 @@ import com.qwazr.utils.http.HttpRequest;
 import javax.ws.rs.core.Response;
 import java.util.TreeMap;
 
-abstract public class CrawlerSingleClient<T extends CrawlDefinition> extends JsonClientAbstract
-		implements CrawlerServiceInterface<T> {
+abstract public class CrawlerSingleClient<D extends CrawlDefinition, S extends CrawlStatus<D>>
+		extends JsonClientAbstract implements CrawlerServiceInterface<D, S> {
 
 	private final String pathPrefix;
-	private final Class<? extends CrawlStatus<T>> crawlStatusClass;
+	private final Class<S> crawlStatusClass;
+	private final TypeReference<TreeMap<String, S>> mapStatusType;
 
-	protected CrawlerSingleClient(final RemoteService remote, final String pathPrefix,
-			Class<? extends CrawlStatus<T>> crawlStatusClass) {
+	protected CrawlerSingleClient(final RemoteService remote, final String pathPrefix, Class<S> crawlStatusClass,
+			TypeReference<TreeMap<String, S>> mapStatusType) {
 		super(remote);
 		this.pathPrefix = pathPrefix;
 		this.crawlStatusClass = crawlStatusClass;
+		this.mapStatusType = mapStatusType;
+
 	}
 
 	@Override
-	public TreeMap<String, CrawlStatus> getSessions() {
+	public TreeMap<String, S> getSessions() {
 		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, pathPrefix + "sessions");
 		HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
-		return executeJson(request, null, null, TreeMapStringCrawlTypeRef, valid200Json);
+		return executeJson(request, null, null, mapStatusType, valid200Json);
 	}
 
 	@Override
-	public CrawlStatus<T> getSession(final String sessionName) {
+	public S getSession(final String sessionName) {
 		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, pathPrefix + "sessions/", sessionName);
 		HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
 		return executeJson(request, null, null, crawlStatusClass, valid200Json);
@@ -60,7 +64,7 @@ abstract public class CrawlerSingleClient<T extends CrawlDefinition> extends Jso
 	}
 
 	@Override
-	public CrawlStatus<T> runSession(final String sessionName, final T crawlDefinition) {
+	public S runSession(final String sessionName, final D crawlDefinition) {
 		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, pathPrefix + "sessions/", sessionName);
 		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
 		return executeJson(request, crawlDefinition, null, crawlStatusClass, valid200202Json);

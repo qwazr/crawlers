@@ -17,7 +17,6 @@ package com.qwazr.crawler.web;
 
 import com.qwazr.crawler.CrawlerServer;
 import com.qwazr.crawler.common.CommonEvent;
-import com.qwazr.crawler.common.CrawlStatus;
 import com.qwazr.crawler.common.EventEnum;
 import com.qwazr.crawler.common.ScriptDefinition;
 import com.qwazr.server.RemoteService;
@@ -60,7 +59,7 @@ public class WebCrawlerTest {
 
 	@Test
 	public void test200emptySessions() {
-		TreeMap<String, CrawlStatus> sessions = remote.getSessions();
+		TreeMap<String, WebCrawlStatus> sessions = remote.getSessions();
 		Assert.assertNotNull(sessions);
 		Assert.assertTrue(sessions.isEmpty());
 	}

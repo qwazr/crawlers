@@ -56,7 +56,7 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.PatternSyntaxException;
 
-public class WebCrawlThread extends CrawlThread<WebCrawlerManager> {
+public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStatus, WebCrawlerManager> {
 
 	private static final Logger LOGGER = LoggerUtils.getLogger(WebCrawlThread.class);
 
@@ -73,8 +73,9 @@ public class WebCrawlThread extends CrawlThread<WebCrawlerManager> {
 
 	private final TimeTracker timeTracker;
 
-	WebCrawlThread(final WebCrawlerManager webCrawlerManager, CrawlSessionImpl<WebCrawlDefinition> session,
-			final WebCrawlDefinition crawlDefinition) throws ServerException {
+	WebCrawlThread(final WebCrawlerManager webCrawlerManager,
+			CrawlSessionImpl<WebCrawlDefinition, WebCrawlStatus> session, final WebCrawlDefinition crawlDefinition)
+			throws ServerException {
 		super(webCrawlerManager, session, LOGGER);
 		this.crawlDefinition = crawlDefinition;
 		this.timeTracker = session.getTimeTracker();

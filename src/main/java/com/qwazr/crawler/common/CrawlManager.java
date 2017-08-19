@@ -22,15 +22,15 @@ import com.qwazr.utils.CollectionsUtils;
 import javax.ws.rs.core.Response;
 import java.util.Collections;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BiConsumer;
 import java.util.logging.Logger;
 
-public abstract class CrawlManager<T extends CrawlThread<?>, D extends CrawlDefinition> {
+public abstract class CrawlManager<T extends CrawlThread<D, S, ?>, D extends CrawlDefinition, S extends CrawlStatus<D>> {
 
-	private final Map<String, CrawlStatus> statusHistory;
+	private final Map<String, S> statusHistory;
 	private final ConcurrentHashMap<String, T> crawlSessionMap;
 	private final ExecutorService executorService;
 	private final Logger logger;
@@ -51,13 +51,11 @@ public abstract class CrawlManager<T extends CrawlThread<?>, D extends CrawlDefi
 		return myAddress;
 	}
 
-	public TreeMap<String, CrawlStatus> getSessions() {
-		final TreeMap<String, CrawlStatus> map = new TreeMap<>();
-		crawlSessionMap.forEach((key, crawl) -> map.put(key, crawl.getStatus()));
-		return map;
+	public void forEachSession(BiConsumer<String, S> consumer) {
+		crawlSessionMap.forEach((key, crawl) -> consumer.accept(key, crawl.getStatus()));
 	}
 
-	public CrawlStatus<D> getSession(final String sessionName) {
+	public S getSession(final String sessionName) {
 		final T crawlThread = crawlSessionMap.get(sessionName);
 		return crawlThread == null ? statusHistory.get(sessionName) : crawlThread.getStatus();
 	}
@@ -72,7 +70,7 @@ public abstract class CrawlManager<T extends CrawlThread<?>, D extends CrawlDefi
 
 	protected abstract T newCrawlThread(final String sessionName, final D crawlDefinition);
 
-	public CrawlStatus<D> runSession(final String sessionName, final D crawlDefinition) throws ServerException {
+	public S runSession(final String sessionName, final D crawlDefinition) throws ServerException {
 
 		final AtomicBoolean newThread = new AtomicBoolean(false);
 
@@ -88,10 +86,10 @@ public abstract class CrawlManager<T extends CrawlThread<?>, D extends CrawlDefi
 		return crawlThread.getStatus();
 	}
 
-	void removeSession(final T crawlThread) {
+	void removeSession(final CrawlThread<D, S, ?> crawlThread) {
 		final String sessionName = crawlThread.getSessionName();
 		logger.info(() -> "Remove session: " + sessionName);
-		final CrawlStatus lastCrawlStatus = crawlThread.getStatus();
+		final S lastCrawlStatus = crawlThread.getStatus();
 		statusHistory.put(sessionName, lastCrawlStatus);
 		crawlSessionMap.remove(sessionName, crawlThread);
 	}

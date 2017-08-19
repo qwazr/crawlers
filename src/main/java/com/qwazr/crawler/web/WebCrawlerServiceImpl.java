@@ -15,14 +15,17 @@
  */
 package com.qwazr.crawler.web;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.qwazr.crawler.common.CrawlStatus;
 import com.qwazr.crawler.common.CrawlerServiceImpl;
 import com.qwazr.utils.LoggerUtils;
 
+import javax.ws.rs.core.Response;
 import java.io.IOException;
+import java.util.TreeMap;
 import java.util.logging.Logger;
 
-class WebCrawlerServiceImpl extends CrawlerServiceImpl<WebCrawlerManager, WebCrawlDefinition>
+class WebCrawlerServiceImpl extends CrawlerServiceImpl<WebCrawlerManager, WebCrawlDefinition, WebCrawlStatus>
 		implements WebCrawlerServiceInterface {
 
 	private static final Logger LOGGER = LoggerUtils.getLogger(WebCrawlerServiceImpl.class);
@@ -31,8 +34,15 @@ class WebCrawlerServiceImpl extends CrawlerServiceImpl<WebCrawlerManager, WebCra
 		super(LOGGER, webrawlerManager);
 	}
 
-	public CrawlStatus runSession(final String session_name, final String jsonCrawlDefinition) throws IOException {
-		return runSession(session_name, WebCrawlDefinition.newInstance(jsonCrawlDefinition));
+	@Override
+	public TreeMap<String, WebCrawlStatus> getSessions() {
+		final TreeMap<String, WebCrawlStatus> map = new TreeMap<>();
+		crawlManager.forEachSession((name, status) -> map.put(name, (WebCrawlStatus) status));
+		return map;
+	}
+
+	public WebCrawlStatus runSession(final String sessionName, final String jsonCrawlDefinition) throws IOException {
+		return runSession(sessionName, WebCrawlDefinition.newInstance(jsonCrawlDefinition));
 	}
 
 }

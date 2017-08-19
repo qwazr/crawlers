@@ -15,6 +15,7 @@
  */
 package com.qwazr.crawler.common;
 
+import com.qwazr.crawler.web.WebCrawlStatus;
 import com.qwazr.server.AbstractServiceImpl;
 import com.qwazr.server.ServerException;
 
@@ -23,8 +24,8 @@ import javax.ws.rs.core.Response.Status;
 import java.util.TreeMap;
 import java.util.logging.Logger;
 
-public abstract class CrawlerServiceImpl<M extends CrawlManager, T extends CrawlDefinition> extends AbstractServiceImpl
-		implements CrawlerServiceInterface<T> {
+public abstract class CrawlerServiceImpl<M extends CrawlManager<?, D, S>, D extends CrawlDefinition, S extends CrawlStatus<D>>
+		extends AbstractServiceImpl implements CrawlerServiceInterface<D, S> {
 
 	protected final Logger logger;
 
@@ -36,14 +37,15 @@ public abstract class CrawlerServiceImpl<M extends CrawlManager, T extends Crawl
 	}
 
 	@Override
-	public TreeMap<String, CrawlStatus> getSessions() {
-		return crawlManager.getSessions();
+	public TreeMap<String, S> getSessions() {
+		final TreeMap<String, S> map = new TreeMap<>();
+		crawlManager.forEachSession((name, status) -> map.put(name, (S) status));
+		return map;
 	}
 
-	@Override
-	public CrawlStatus getSession(final String sessionName) {
+	public S getSession(final String sessionName) {
 		try {
-			final CrawlStatus status = crawlManager.getSession(sessionName);
+			final S status = crawlManager.getSession(sessionName);
 			if (status != null)
 				return status;
 			throw new ServerException(Status.NOT_FOUND, "Session not found");
@@ -62,8 +64,7 @@ public abstract class CrawlerServiceImpl<M extends CrawlManager, T extends Crawl
 		}
 	}
 
-	@Override
-	public CrawlStatus runSession(final String session_name, final T crawlDefinition) {
+	public S runSession(final String session_name, final D crawlDefinition) {
 		try {
 			return crawlManager.runSession(session_name, crawlDefinition);
 		} catch (ServerException e) {

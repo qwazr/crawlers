@@ -42,7 +42,7 @@ public class WebCrawlStatus extends CrawlStatus<WebCrawlDefinition> {
 		return new Builder(nodeAddress, timeTracker, crawlDefinition);
 	}
 
-	public static class Builder extends AbstractBuilder<WebCrawlDefinition> {
+	public static class Builder extends AbstractBuilder<WebCrawlDefinition, WebCrawlStatus> {
 
 		private Builder(String nodeAddress, TimeTracker timeTracker, WebCrawlDefinition crawlDefinition) {
 			super(nodeAddress, timeTracker, crawlDefinition);

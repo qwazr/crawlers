@@ -15,7 +15,6 @@
  */
 package com.qwazr.crawler.common;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.qwazr.server.ServiceInterface;
 
 import javax.ws.rs.Consumes;
@@ -30,17 +29,17 @@ import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.TreeMap;
 
-public interface CrawlerServiceInterface<T extends CrawlDefinition> extends ServiceInterface {
+public interface CrawlerServiceInterface<D extends CrawlDefinition, T extends CrawlStatus<D>> extends ServiceInterface {
 
 	@GET
 	@Path("/sessions")
 	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
-	TreeMap<String, CrawlStatus> getSessions();
+	TreeMap<String, T> getSessions();
 
 	@GET
 	@Path("/sessions/{session_name}")
 	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
-	CrawlStatus<T> getSession(@PathParam("session_name") String sessionName);
+	T getSession(@PathParam("session_name") String sessionName);
 
 	@DELETE
 	@Path("/sessions/{session_name}")
@@ -50,11 +49,7 @@ public interface CrawlerServiceInterface<T extends CrawlDefinition> extends Serv
 	@Path("/sessions/{session_name}")
 	@Consumes(ServiceInterface.APPLICATION_JSON_UTF8)
 	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
-	CrawlStatus<T> runSession(@PathParam("session_name") String session_name, T crawlDefinition);
+	T runSession(@PathParam("session_name") String sessionName, D crawlDefinition);
 
-	CrawlStatus<T> runSession(String session_name, String jsonCrawlDefinition) throws IOException;
-
-	TypeReference<TreeMap<String, CrawlStatus>> TreeMapStringCrawlTypeRef =
-			new TypeReference<TreeMap<String, CrawlStatus>>() {
-			};
+	T runSession(String sessionName, String jsonCrawlDefinition) throws IOException;
 }

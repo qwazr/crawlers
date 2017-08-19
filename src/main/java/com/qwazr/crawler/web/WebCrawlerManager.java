@@ -27,7 +27,7 @@ import com.qwazr.utils.TimeTracker;
 import java.util.concurrent.ExecutorService;
 import java.util.logging.Logger;
 
-public class WebCrawlerManager extends CrawlManager<WebCrawlThread, WebCrawlDefinition> {
+public class WebCrawlerManager extends CrawlManager<WebCrawlThread, WebCrawlDefinition, WebCrawlStatus> {
 
 	private static final Logger LOGGER = LoggerUtils.getLogger(WebCrawlerManager.class);
 
@@ -62,7 +62,7 @@ public class WebCrawlerManager extends CrawlManager<WebCrawlThread, WebCrawlDefi
 	protected WebCrawlThread newCrawlThread(String sessionName, WebCrawlDefinition webCrawlDefinition) {
 		final TimeTracker timeTracker = new TimeTracker();
 		final WebCrawlStatus.Builder crawlStatusBuilder = WebCrawlStatus.of(myAddress, timeTracker, webCrawlDefinition);
-		final CrawlSessionImpl<WebCrawlDefinition> session =
+		final CrawlSessionImpl<WebCrawlDefinition, WebCrawlStatus> session =
 				new CrawlSessionImpl<>(sessionName, timeTracker, webCrawlDefinition, crawlStatusBuilder);
 		return new WebCrawlThread(this, session, webCrawlDefinition);
 	}

@@ -42,7 +42,7 @@ public class FileCrawlStatus extends CrawlStatus<FileCrawlDefinition> {
 		return new Builder(nodeAddress, timeTracker, crawlDefinition);
 	}
 
-	public static class Builder extends AbstractBuilder<FileCrawlDefinition> {
+	public static class Builder extends AbstractBuilder<FileCrawlDefinition, FileCrawlStatus> {
 
 		private Builder(String nodeAddress, TimeTracker timeTracker, FileCrawlDefinition crawlDefinition) {
 			super(nodeAddress, timeTracker, crawlDefinition);

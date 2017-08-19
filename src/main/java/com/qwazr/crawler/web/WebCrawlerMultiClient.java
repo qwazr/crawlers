@@ -15,7 +15,6 @@
  **/
 package com.qwazr.crawler.web;
 
-import com.qwazr.crawler.common.CrawlStatus;
 import com.qwazr.server.RemoteService;
 import com.qwazr.server.ServerException;
 import com.qwazr.server.client.MultiClient;
@@ -48,13 +47,13 @@ public class WebCrawlerMultiClient extends MultiClient<WebCrawlerSingleClient> i
 	}
 
 	@Override
-	public TreeMap<String, CrawlStatus> getSessions() {
+	public TreeMap<String, WebCrawlStatus> getSessions() {
 
 		// We merge the result of all the nodes
-		final TreeMap<String, CrawlStatus> globalSessions = new TreeMap<>();
+		final TreeMap<String, WebCrawlStatus> globalSessions = new TreeMap<>();
 		for (WebCrawlerSingleClient client : this) {
 			try {
-				TreeMap<String, CrawlStatus> localSessions = client.getSessions();
+				final TreeMap<String, WebCrawlStatus> localSessions = client.getSessions();
 				if (localSessions == null)
 					continue;
 				globalSessions.putAll(localSessions);
@@ -66,7 +65,7 @@ public class WebCrawlerMultiClient extends MultiClient<WebCrawlerSingleClient> i
 	}
 
 	@Override
-	public CrawlStatus getSession(String sessionName) {
+	public WebCrawlStatus getSession(String sessionName) {
 
 		for (WebCrawlerSingleClient client : this) {
 			try {
@@ -97,7 +96,7 @@ public class WebCrawlerMultiClient extends MultiClient<WebCrawlerSingleClient> i
 	}
 
 	@Override
-	public CrawlStatus runSession(final String session_name, final WebCrawlDefinition crawlDefinition) {
+	public WebCrawlStatus runSession(final String session_name, final WebCrawlDefinition crawlDefinition) {
 		final ExceptionUtils.Holder exceptionHolder = new ExceptionUtils.Holder(logger);
 		for (WebCrawlerSingleClient client : this) {
 			try {
@@ -116,7 +115,7 @@ public class WebCrawlerMultiClient extends MultiClient<WebCrawlerSingleClient> i
 	}
 
 	@Override
-	public CrawlStatus runSession(String session_name, String jsonCrawlDefinition) throws IOException {
+	public WebCrawlStatus runSession(String session_name, String jsonCrawlDefinition) throws IOException {
 		return runSession(session_name, WebCrawlDefinition.newInstance(jsonCrawlDefinition));
 	}
 

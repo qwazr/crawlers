@@ -15,14 +15,13 @@
  */
 package com.qwazr.crawler.file;
 
-import com.qwazr.crawler.common.CrawlStatus;
 import com.qwazr.crawler.common.CrawlerServiceImpl;
 import com.qwazr.utils.LoggerUtils;
 
 import java.io.IOException;
 import java.util.logging.Logger;
 
-class FileCrawlerServiceImpl extends CrawlerServiceImpl<FileCrawlerManager, FileCrawlDefinition>
+class FileCrawlerServiceImpl extends CrawlerServiceImpl<FileCrawlerManager, FileCrawlDefinition, FileCrawlStatus>
 		implements FileCrawlerServiceInterface {
 
 	private static final Logger LOGGER = LoggerUtils.getLogger(FileCrawlerServiceImpl.class);
@@ -31,8 +30,8 @@ class FileCrawlerServiceImpl extends CrawlerServiceImpl<FileCrawlerManager, File
 		super(LOGGER, crawlerManager);
 	}
 
-	public CrawlStatus runSession(final String session_name, final String jsonCrawlDefinition) throws IOException {
-		return runSession(session_name, FileCrawlDefinition.newInstance(jsonCrawlDefinition));
+	public FileCrawlStatus runSession(final String sessionName, final String jsonCrawlDefinition) throws IOException {
+		return runSession(sessionName, FileCrawlDefinition.newInstance(jsonCrawlDefinition));
 	}
 
 }

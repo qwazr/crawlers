@@ -28,18 +28,19 @@ import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public abstract class CrawlThread<M extends CrawlManager> implements Runnable {
+public abstract class CrawlThread<D extends CrawlDefinition, S extends CrawlStatus<D>, M extends CrawlManager<?, D, S>>
+		implements Runnable {
 
 	private final CrawlDefinition crawlDefinition;
 	private final TimeTracker timeTracker;
 	protected final M manager;
-	protected final CrawlSessionImpl session;
+	protected final CrawlSessionImpl<D, S> session;
 	protected final Logger logger;
 	private final List<WildcardMatcher> exclusionMatcherList;
 	private final List<WildcardMatcher> inclusionMatcherList;
 	private final Map<String, Object> scriptGlobalObjects;
 
-	protected CrawlThread(final M manager, final CrawlSessionImpl session, final Logger logger) {
+	protected CrawlThread(final M manager, final CrawlSessionImpl<D, S> session, final Logger logger) {
 		this.manager = manager;
 		this.session = session;
 		this.crawlDefinition = session.getCrawlDefinition();
@@ -139,7 +140,7 @@ public abstract class CrawlThread<M extends CrawlManager> implements Runnable {
 		}
 	}
 
-	final public CrawlStatus getStatus() {
+	final public S getStatus() {
 		return session.getCrawlStatus();
 	}
 

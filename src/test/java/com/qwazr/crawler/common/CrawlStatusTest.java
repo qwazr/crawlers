@@ -30,8 +30,8 @@ import java.io.IOException;
 public class CrawlStatusTest {
 
 	<T extends CrawlDefinition, C extends CrawlStatus<T>> void checkBuilderAndGetter(
-			final CrawlStatus.AbstractBuilder<T> crawlStatus, final String nodeAddress, final TimeTracker timeTracker,
-			final T crawlDefinition, Class<C> crawlStatusClass) throws IOException {
+			final CrawlStatus.AbstractBuilder<T, C> crawlStatus, final String nodeAddress,
+			final TimeTracker timeTracker, final T crawlDefinition, Class<C> crawlStatusClass) throws IOException {
 
 		final String lastError = RandomUtils.alphanumeric(20);
 		final String currentCrawl = RandomUtils.alphanumeric(16);

@@ -22,19 +22,19 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class CrawlSessionImpl<T extends CrawlDefinition> implements CrawlSession {
+public class CrawlSessionImpl<D extends CrawlDefinition, S extends CrawlStatus<D>> implements CrawlSession {
 
-	private final T crawlDefinition;
+	private final D crawlDefinition;
 	private final String name;
 	private final AtomicBoolean abort;
 	private final TimeTracker timeTracker;
 	private final ConcurrentHashMap<String, Object> variables;
 
-	private volatile CrawlStatus<T> crawlStatus;
-	private final CrawlStatus.AbstractBuilder<T> crawlStatusBuilder;
+	private volatile S crawlStatus;
+	private final CrawlStatus.AbstractBuilder<D, S> crawlStatusBuilder;
 
-	public CrawlSessionImpl(String sessionName, TimeTracker timeTracker, T crawlDefinition,
-			CrawlStatus.AbstractBuilder<T> crawlStatusBuilder) {
+	public CrawlSessionImpl(String sessionName, TimeTracker timeTracker, D crawlDefinition,
+			CrawlStatus.AbstractBuilder<D, S> crawlStatusBuilder) {
 		this.timeTracker = timeTracker;
 		this.crawlStatusBuilder = crawlStatusBuilder;
 		this.crawlStatus = crawlStatusBuilder.build();
@@ -51,7 +51,7 @@ public class CrawlSessionImpl<T extends CrawlDefinition> implements CrawlSession
 	}
 
 	@Override
-	public CrawlStatus getCrawlStatus() {
+	public S getCrawlStatus() {
 		return crawlStatus;
 	}
 
@@ -127,7 +127,7 @@ public class CrawlSessionImpl<T extends CrawlDefinition> implements CrawlSession
 		crawlStatus = crawlStatusBuilder.crawl(currentCrawl, currentDepth).build();
 	}
 
-	public T getCrawlDefinition() {
+	public D getCrawlDefinition() {
 		return crawlDefinition;
 	}
 

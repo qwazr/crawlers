@@ -15,15 +15,21 @@
  */
 package com.qwazr.crawler.web;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.qwazr.crawler.common.CrawlerServiceInterface;
 
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.Path;
+import java.util.TreeMap;
 
 @RolesAllowed(WebCrawlerServiceInterface.SERVICE_NAME)
 @Path("/crawler/web")
-public interface WebCrawlerServiceInterface extends CrawlerServiceInterface<WebCrawlDefinition> {
+public interface WebCrawlerServiceInterface extends CrawlerServiceInterface<WebCrawlDefinition, WebCrawlStatus> {
 
 	String SERVICE_NAME = "webcrawler";
+
+	TypeReference<TreeMap<String, WebCrawlStatus>> TreeMapStringCrawlTypeRef =
+			new TypeReference<TreeMap<String, WebCrawlStatus>>() {
+			};
 
 }
