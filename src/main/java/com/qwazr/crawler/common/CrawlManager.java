@@ -57,7 +57,7 @@ public abstract class CrawlManager<T extends CrawlThread<?>, D extends CrawlDefi
 		return map;
 	}
 
-	public CrawlStatus getSession(final String sessionName) {
+	public CrawlStatus<D> getSession(final String sessionName) {
 		final T crawlThread = crawlSessionMap.get(sessionName);
 		return crawlThread == null ? statusHistory.get(sessionName) : crawlThread.getStatus();
 	}
@@ -72,7 +72,7 @@ public abstract class CrawlManager<T extends CrawlThread<?>, D extends CrawlDefi
 
 	protected abstract T newCrawlThread(final String sessionName, final D crawlDefinition);
 
-	public CrawlStatus runSession(final String sessionName, final D crawlDefinition) throws ServerException {
+	public CrawlStatus<D> runSession(final String sessionName, final D crawlDefinition) throws ServerException {
 
 		final AtomicBoolean newThread = new AtomicBoolean(false);
 

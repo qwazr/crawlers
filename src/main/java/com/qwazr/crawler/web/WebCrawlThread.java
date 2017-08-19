@@ -73,10 +73,9 @@ public class WebCrawlThread extends CrawlThread<WebCrawlerManager> {
 
 	private final TimeTracker timeTracker;
 
-	WebCrawlThread(final WebCrawlerManager webCrawlerManager, final String sessionName,
+	WebCrawlThread(final WebCrawlerManager webCrawlerManager, CrawlSessionImpl<WebCrawlDefinition> session,
 			final WebCrawlDefinition crawlDefinition) throws ServerException {
-		super(webCrawlerManager, new CrawlSessionImpl<>(sessionName, webCrawlerManager.getMyAddress(), crawlDefinition,
-				crawlDefinition.entryUrl), LOGGER);
+		super(webCrawlerManager, session, LOGGER);
 		this.crawlDefinition = crawlDefinition;
 		this.timeTracker = session.getTimeTracker();
 		if (crawlDefinition.browserType == null)

@@ -22,6 +22,7 @@ import com.qwazr.scripts.ScriptManager;
 import com.qwazr.server.ApplicationBuilder;
 import com.qwazr.server.GenericServer;
 import com.qwazr.utils.LoggerUtils;
+import com.qwazr.utils.TimeTracker;
 
 import java.util.concurrent.ExecutorService;
 import java.util.logging.Logger;
@@ -61,7 +62,11 @@ public class FileCrawlerManager extends CrawlManager<FileCrawlThread, FileCrawlD
 
 	@Override
 	protected FileCrawlThread newCrawlThread(String sessionName, FileCrawlDefinition crawlDefinition) {
-		return new FileCrawlThread(this,
-				new CrawlSessionImpl<>(sessionName, myAddress, crawlDefinition, crawlDefinition.entryPath), LOGGER);
+		final TimeTracker timeTracker = new TimeTracker();
+		final FileCrawlStatus.Builder crawlStatusBuilder = FileCrawlStatus.of(myAddress, timeTracker, crawlDefinition);
+		final CrawlSessionImpl<FileCrawlDefinition> session =
+				new CrawlSessionImpl<>(sessionName, timeTracker, crawlDefinition, crawlStatusBuilder);
+		return new FileCrawlThread(this, session, LOGGER);
 	}
+
 }

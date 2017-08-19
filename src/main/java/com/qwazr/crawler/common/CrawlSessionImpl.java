@@ -30,12 +30,13 @@ public class CrawlSessionImpl<T extends CrawlDefinition> implements CrawlSession
 	private final TimeTracker timeTracker;
 	private final ConcurrentHashMap<String, Object> variables;
 
-	private volatile CrawlStatus crawlStatus;
-	private final CrawlStatus.Builder crawlStatusBuilder;
+	private volatile CrawlStatus<T> crawlStatus;
+	private final CrawlStatus.AbstractBuilder<T> crawlStatusBuilder;
 
-	public CrawlSessionImpl(String sessionName, String nodeAddress, T crawlDefinition, String entryCrawl) {
-		this.timeTracker = new TimeTracker();
-		this.crawlStatusBuilder = CrawlStatus.of(entryCrawl, nodeAddress, timeTracker);
+	public CrawlSessionImpl(String sessionName, TimeTracker timeTracker, T crawlDefinition,
+			CrawlStatus.AbstractBuilder<T> crawlStatusBuilder) {
+		this.timeTracker = timeTracker;
+		this.crawlStatusBuilder = crawlStatusBuilder;
 		this.crawlStatus = crawlStatusBuilder.build();
 		this.crawlDefinition = crawlDefinition;
 		this.name = sessionName;

@@ -40,7 +40,7 @@ public interface CrawlerServiceInterface<T extends CrawlDefinition> extends Serv
 	@GET
 	@Path("/sessions/{session_name}")
 	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
-	CrawlStatus getSession(@PathParam("session_name") String sessionName);
+	CrawlStatus<T> getSession(@PathParam("session_name") String sessionName);
 
 	@DELETE
 	@Path("/sessions/{session_name}")
@@ -50,9 +50,9 @@ public interface CrawlerServiceInterface<T extends CrawlDefinition> extends Serv
 	@Path("/sessions/{session_name}")
 	@Consumes(ServiceInterface.APPLICATION_JSON_UTF8)
 	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
-	CrawlStatus runSession(@PathParam("session_name") String session_name, T crawlDefinition);
+	CrawlStatus<T> runSession(@PathParam("session_name") String session_name, T crawlDefinition);
 
-	CrawlStatus runSession(String session_name, String jsonCrawlDefinition) throws IOException;
+	CrawlStatus<T> runSession(String session_name, String jsonCrawlDefinition) throws IOException;
 
 	TypeReference<TreeMap<String, CrawlStatus>> TreeMapStringCrawlTypeRef =
 			new TypeReference<TreeMap<String, CrawlStatus>>() {

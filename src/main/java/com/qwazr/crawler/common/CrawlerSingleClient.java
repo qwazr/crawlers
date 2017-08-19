@@ -27,10 +27,13 @@ abstract public class CrawlerSingleClient<T extends CrawlDefinition> extends Jso
 		implements CrawlerServiceInterface<T> {
 
 	private final String pathPrefix;
+	private final Class<? extends CrawlStatus<T>> crawlStatusClass;
 
-	protected CrawlerSingleClient(final RemoteService remote, final String pathPrefix) {
+	protected CrawlerSingleClient(final RemoteService remote, final String pathPrefix,
+			Class<? extends CrawlStatus<T>> crawlStatusClass) {
 		super(remote);
 		this.pathPrefix = pathPrefix;
+		this.crawlStatusClass = crawlStatusClass;
 	}
 
 	@Override
@@ -41,10 +44,10 @@ abstract public class CrawlerSingleClient<T extends CrawlDefinition> extends Jso
 	}
 
 	@Override
-	public CrawlStatus getSession(final String sessionName) {
+	public CrawlStatus<T> getSession(final String sessionName) {
 		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, pathPrefix + "sessions/", sessionName);
 		HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
-		return executeJson(request, null, null, CrawlStatus.class, valid200Json);
+		return executeJson(request, null, null, crawlStatusClass, valid200Json);
 	}
 
 	@Override
@@ -57,10 +60,10 @@ abstract public class CrawlerSingleClient<T extends CrawlDefinition> extends Jso
 	}
 
 	@Override
-	public CrawlStatus runSession(final String sessionName, final T crawlDefinition) {
+	public CrawlStatus<T> runSession(final String sessionName, final T crawlDefinition) {
 		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, pathPrefix + "sessions/", sessionName);
 		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
-		return executeJson(request, crawlDefinition, null, CrawlStatus.class, valid200202Json);
+		return executeJson(request, crawlDefinition, null, crawlStatusClass, valid200202Json);
 	}
 
 }

@@ -25,7 +25,7 @@ public class FileCrawlerSingleClient extends CrawlerSingleClient<FileCrawlDefini
 		implements FileCrawlerServiceInterface {
 
 	public FileCrawlerSingleClient(final RemoteService remote) {
-		super(remote, "/crawler/file/");
+		super(remote, "/crawler/file/", FileCrawlStatus.class);
 	}
 
 	@Override
