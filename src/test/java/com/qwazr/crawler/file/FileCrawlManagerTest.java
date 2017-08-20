@@ -55,7 +55,7 @@ public class FileCrawlManagerTest {
 			crawlStatus = fileCrawlerManager.getSession("myFileCrawlSession");
 			Thread.sleep(500);
 		}
-		Assert.assertEquals(6, crawlStatus.crawled);
+		Assert.assertEquals(7, crawlStatus.crawled);
 		Assert.assertEquals(2, crawlStatus.ignored);
 		Assert.assertEquals(0, crawlStatus.error);
 		Assert.assertNull(crawlStatus.lastError);

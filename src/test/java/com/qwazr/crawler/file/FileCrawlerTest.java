@@ -79,7 +79,7 @@ public class FileCrawlerTest {
 		final String sessionName = RandomUtils.alphanumeric(10);
 		remote.runSession(sessionName, getNewCrawl().build());
 		final CrawlStatus status = CommonEvent.crawlWait(sessionName, remote);
-		Assert.assertEquals(6, status.crawled);
+		Assert.assertEquals(7, status.crawled);
 		Assert.assertEquals(2, status.ignored);
 		Assert.assertEquals(0, status.error);
 		Assert.assertNull(status.lastError);
@@ -106,13 +106,24 @@ public class FileCrawlerTest {
 				.build());
 		remote.runSession(sessionName, crawl.build());
 		CommonEvent.crawlWait(sessionName, remote);
-		Assert.assertEquals(8, FileEvents.feedbacks.get(EventEnum.before_crawl).count());
-		Assert.assertEquals(8, FileEvents.feedbacks.get(EventEnum.after_crawl).count());
+		Assert.assertEquals(9, FileEvents.feedbacks.get(EventEnum.before_crawl).count());
+		Assert.assertEquals(9, FileEvents.feedbacks.get(EventEnum.after_crawl).count());
 		Assert.assertEquals(1, FileEvents.feedbacks.get(EventEnum.before_session).count());
 		Assert.assertEquals(1, FileEvents.feedbacks.get(EventEnum.after_session).count());
 		for (EventEnum eventEnum : EventEnum.values())
 			Assert.assertEquals(variableValue + eventEnum.name(),
 					FileEvents.feedbacks.get(eventEnum).attribute(variableName));
+
+		CommonEvent.Feedback<CurrentPath> feedback = FileEvents.feedbacks.get(EventEnum.before_crawl);
+		Assert.assertEquals(0, feedback.crawlDepth("src/test/file_crawl/"), 0);
+		Assert.assertEquals(1, feedback.crawlDepth("src/test/file_crawl/file0.txt"), 0);
+		Assert.assertEquals(1, feedback.crawlDepth("src/test/file_crawl/dir1/"), 0);
+		Assert.assertEquals(2, feedback.crawlDepth("src/test/file_crawl/dir1/subdir/"), 0);
+		Assert.assertEquals(3, feedback.crawlDepth("src/test/file_crawl/dir1/subdir/file1.txt"), 0);
+		Assert.assertEquals(1, feedback.crawlDepth("src/test/file_crawl/dir2/"), 0);
+		Assert.assertEquals(2, feedback.crawlDepth("src/test/file_crawl/dir2/file2.txt"), 0);
+		Assert.assertEquals(2, feedback.crawlDepth("src/test/file_crawl/dir2/ignore.txt"), 0);
+		Assert.assertEquals(1, feedback.crawlDepth("src/test/file_crawl/ignore/"), 0);
 	}
 
 }

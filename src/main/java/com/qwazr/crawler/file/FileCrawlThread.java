@@ -35,19 +35,29 @@ public class FileCrawlThread extends CrawlThread<FileCrawlDefinition, FileCrawlS
 		implements FileVisitor<Path> {
 
 	private final FileCrawlDefinition crawlDefinition;
-	private int currentDepth;
+	private final Path startPath;
 
 	public FileCrawlThread(FileCrawlerManager manager, CrawlSessionImpl<FileCrawlDefinition, FileCrawlStatus> session,
 			Logger logger) {
 		super(manager, session, logger);
 		this.crawlDefinition = session.getCrawlDefinition();
+		this.startPath = Paths.get(crawlDefinition.getEntryPath());
+	}
+
+	private int computeDepth(final Path path) {
+		int depth = 0;
+		Path p = path;
+		while (p != null && !p.equals(startPath)) {
+			p = p.getParent();
+			depth++;
+		}
+		return depth;
 	}
 
 	@Override
 	protected void runner() throws Exception {
 		script(EventEnum.before_session, null);
 		try {
-			final Path startPath = Paths.get(crawlDefinition.getEntryPath());
 			if (!Files.exists(startPath)) {
 				logger.warning(() -> "The path does not exists: " + startPath.toAbsolutePath());
 				return;
@@ -63,10 +73,7 @@ public class FileCrawlThread extends CrawlThread<FileCrawlDefinition, FileCrawlS
 	public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
 		if (session.isAborting())
 			return FileVisitResult.TERMINATE;
-		currentDepth++;
-		if (crawlDefinition.maxDepth != null && currentDepth >= crawlDefinition.maxDepth)
-			return FileVisitResult.SKIP_SUBTREE;
-		final CurrentPath currentPath = new CurrentPath(dir, attrs, currentDepth);
+		final CurrentPath currentPath = new CurrentPath(dir, attrs, computeDepth(dir));
 		crawl(currentPath);
 		if (currentPath.isIgnored())
 			return FileVisitResult.SKIP_SUBTREE;
@@ -99,7 +106,7 @@ public class FileCrawlThread extends CrawlThread<FileCrawlDefinition, FileCrawlS
 			return FileVisitResult.TERMINATE;
 		if (crawlDefinition.crawlWaitMs != null)
 			session.sleep(crawlDefinition.crawlWaitMs);
-		crawl(new CurrentPath(file, attrs, currentDepth));
+		crawl(new CurrentPath(file, attrs, computeDepth(file)));
 		return FileVisitResult.CONTINUE;
 	}
 
@@ -115,8 +122,6 @@ public class FileCrawlThread extends CrawlThread<FileCrawlDefinition, FileCrawlS
 	public FileVisitResult postVisitDirectory(Path dir, IOException e) throws IOException {
 		if (e != null)
 			logger.log(Level.WARNING, e, () -> "Directory crawling error on " + dir);
-		else
-			currentDepth--;
 		return FileVisitResult.CONTINUE;
 	}
 }

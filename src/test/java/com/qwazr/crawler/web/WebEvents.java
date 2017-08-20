@@ -23,12 +23,13 @@ import java.util.Map;
 
 public class WebEvents {
 
-	public final static Map<EventEnum, CommonEvent.Feedback> feedbacks = new HashMap<>();
+	public final static Map<EventEnum, CommonEvent.Feedback<CurrentURIImpl>> feedbacks = new HashMap<>();
 
 	public static class BeforeCrawl extends CommonEvent.CrawlEvent<CurrentURIImpl> {
 
 		public BeforeCrawl() {
-			super(EventEnum.before_crawl, feedbacks, CurrentURIImpl.class);
+			super(EventEnum.before_crawl, WebEvents.feedbacks, CurrentURIImpl.class,
+					currentURI -> currentURI.getURI().toString());
 		}
 
 	}
@@ -36,14 +37,15 @@ public class WebEvents {
 	public static class AfterCrawl extends CommonEvent.CrawlEvent<CurrentURIImpl> {
 
 		public AfterCrawl() {
-			super(EventEnum.after_crawl, feedbacks, CurrentURIImpl.class);
+			super(EventEnum.after_crawl, WebEvents.feedbacks, CurrentURIImpl.class,
+					currentURI -> currentURI.getURI().toString());
 		}
 	}
 
 	public static class BeforeSession extends CommonEvent.SessionEvent {
 
 		public BeforeSession() {
-			super(EventEnum.before_session, feedbacks);
+			super(EventEnum.before_session, WebEvents.feedbacks);
 		}
 
 	}
@@ -51,7 +53,7 @@ public class WebEvents {
 	public static class AfterSession extends CommonEvent.SessionEvent {
 
 		public AfterSession() {
-			super(EventEnum.after_session, feedbacks);
+			super(EventEnum.after_session, WebEvents.feedbacks);
 		}
 	}
 }

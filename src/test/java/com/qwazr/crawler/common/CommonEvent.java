@@ -19,11 +19,12 @@ import com.qwazr.server.client.ErrorWrapper;
 import com.qwazr.utils.WaitFor;
 import org.junit.Assert;
 
-import java.util.Map;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 import java.util.logging.Logger;
 
 public class CommonEvent {
@@ -43,10 +44,10 @@ public class CommonEvent {
 
 	public static class SessionEvent<T extends CurrentCrawl> extends CrawlScriptEvents<T> {
 
-		private final EventEnum eventEnum;
-		private final Map<EventEnum, Feedback> feedbacks;
+		protected final EventEnum eventEnum;
+		protected final Map<EventEnum, Feedback<T>> feedbacks;
 
-		protected SessionEvent(EventEnum eventEnum, Map<EventEnum, Feedback> feedbacks) {
+		protected SessionEvent(EventEnum eventEnum, Map<EventEnum, Feedback<T>> feedbacks) {
 			this.eventEnum = eventEnum;
 			this.feedbacks = feedbacks;
 		}
@@ -54,7 +55,7 @@ public class CommonEvent {
 		@Override
 		protected void run(final CrawlSession crawlSession, final T currentCrawl, final Map<String, ?> attributes)
 				throws Exception {
-			feedbacks.computeIfAbsent(eventEnum, f -> new Feedback()).inform(attributes);
+			feedbacks.computeIfAbsent(eventEnum, f -> new Feedback<>()).inform(attributes);
 			Assert.assertNotNull(crawlSession);
 			LOGGER.info(eventEnum.name());
 		}
@@ -63,16 +64,21 @@ public class CommonEvent {
 	public static class CrawlEvent<T extends CurrentCrawl> extends SessionEvent<T> {
 
 		private final Class<T> currentClassClass;
+		private final Function<T, String> currentIdProvider;
 
-		protected CrawlEvent(EventEnum eventEnum, Map<EventEnum, Feedback> feedbacks, Class<T> currentClassClass) {
+		protected CrawlEvent(EventEnum eventEnum, Map<EventEnum, Feedback<T>> feedbacks, Class<T> currentClassClass,
+				Function<T, String> currentIdProvider) {
 			super(eventEnum, feedbacks);
 			this.currentClassClass = currentClassClass;
+			this.currentIdProvider = currentIdProvider;
 		}
 
 		@Override
 		protected void run(final CrawlSession crawlSession, final T currentCrawl, final Map<String, ?> attributes)
 				throws Exception {
 			super.run(crawlSession, currentCrawl, attributes);
+			feedbacks.computeIfAbsent(eventEnum, f -> new Feedback<>())
+					.current(currentCrawl, currentIdProvider.apply(currentCrawl));
 			Assert.assertNotNull(currentCrawl);
 			Assert.assertEquals(currentClassClass, currentCrawl.getClass());
 			Assert.assertEquals(null, currentCrawl.getError());
@@ -80,20 +86,27 @@ public class CommonEvent {
 
 	}
 
-	public static class Feedback {
+	public static class Feedback<T extends CurrentCrawl> {
 
 		public final AtomicInteger counters;
 		public final Map<String, Object> runAttributes;
+		public final Map<String, T> currentCrawls;
 
 		Feedback() {
 			counters = new AtomicInteger();
 			runAttributes = new HashMap<>();
+			currentCrawls = new HashMap<>();
 		}
 
-		public void inform(Map<String, ?> attributes) {
+		void inform(Map<String, ?> attributes) {
 			counters.incrementAndGet();
 			if (attributes != null)
 				runAttributes.putAll(attributes);
+		}
+
+		void current(T currentCrawl, String currentId) {
+			if (currentCrawl != null)
+				currentCrawls.put(currentId, currentCrawl);
 		}
 
 		public int count() {
@@ -102,6 +115,10 @@ public class CommonEvent {
 
 		public Object attribute(String key) {
 			return runAttributes.get(key);
+		}
+
+		public Integer crawlDepth(String id) {
+			return currentCrawls.get(id).getDepth();
 		}
 	}
 

@@ -25,12 +25,12 @@ import java.util.Map;
 
 public class FileEvents {
 
-	public final static Map<EventEnum, CommonEvent.Feedback> feedbacks = new HashMap<>();
+	public final static Map<EventEnum, CommonEvent.Feedback<CurrentPath>> feedbacks = new HashMap<>();
 
 	public static class BeforeCrawl extends CommonEvent.CrawlEvent<CurrentPath> {
 
 		public BeforeCrawl() {
-			super(EventEnum.before_crawl, feedbacks, CurrentPath.class);
+			super(EventEnum.before_crawl, FileEvents.feedbacks, CurrentPath.class, CurrentPath::getPathString);
 		}
 
 		@Override
@@ -46,22 +46,22 @@ public class FileEvents {
 	public static class AfterCrawl extends CommonEvent.CrawlEvent<CurrentPath> {
 
 		public AfterCrawl() {
-			super(EventEnum.after_crawl, feedbacks, CurrentPath.class);
+			super(EventEnum.after_crawl, FileEvents.feedbacks, CurrentPath.class, CurrentPath::getPathString);
 		}
 	}
 
-	public static class BeforeSession extends CommonEvent.SessionEvent {
+	public static class BeforeSession extends CommonEvent.SessionEvent<CurrentPath> {
 
 		public BeforeSession() {
-			super(EventEnum.before_session, feedbacks);
+			super(EventEnum.before_session, FileEvents.feedbacks);
 		}
 
 	}
 
-	public static class AfterSession extends CommonEvent.SessionEvent {
+	public static class AfterSession extends CommonEvent.SessionEvent<CurrentPath> {
 
 		public AfterSession() {
-			super(EventEnum.after_session, feedbacks);
+			super(EventEnum.after_session, FileEvents.feedbacks);
 		}
 	}
 }
