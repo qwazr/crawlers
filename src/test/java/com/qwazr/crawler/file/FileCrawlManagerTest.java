@@ -15,7 +15,7 @@
  */
 package com.qwazr.crawler.file;
 
-import com.qwazr.crawler.common.CrawlStatus;
+import com.qwazr.utils.RandomUtils;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -27,12 +27,12 @@ import java.util.concurrent.Executors;
 public class FileCrawlManagerTest {
 
 	private static ExecutorService executorService;
-	private static FileCrawlerManager fileCrawlerManager;
+	private static FileCrawlerManager crawlerManager;
 
 	@BeforeClass
 	public static void setup() {
 		executorService = Executors.newCachedThreadPool();
-		fileCrawlerManager = new FileCrawlerManager(null, executorService);
+		crawlerManager = new FileCrawlerManager(null, executorService);
 	}
 
 	@AfterClass
@@ -41,23 +41,43 @@ public class FileCrawlManagerTest {
 			executorService.shutdown();
 	}
 
-	@Test
-	public void crawlFullTest() throws InterruptedException {
-		CrawlStatus crawlStatus = fileCrawlerManager.runSession("myFileCrawlSession", FileCrawlDefinition.of()
+	FileCrawlDefinition.Builder getFileCrawlDefinition() {
+		return FileCrawlDefinition.of()
 				.entryPath("src/test/file_crawl")
 				.addInclusionPattern("*/")
 				.addInclusionPattern("*.txt")
 				.addExclusionPattern("*/ignore.*")
-				.addExclusionPattern("*/ignore/")
-				.build());
+				.addExclusionPattern("*/ignore/");
+	}
+
+	void crawlTest(FileCrawlDefinition.Builder fileCrawlDefinitionBuilder, int expectedCrawled, int expectedIgnored,
+			int expectedError) throws InterruptedException {
+		final String crawlSession = RandomUtils.alphanumeric(5);
+		FileCrawlStatus crawlStatus = crawlerManager.runSession(crawlSession, fileCrawlDefinitionBuilder.build());
 		Assert.assertNotNull(crawlStatus);
 		while (crawlStatus.endTime == null) {
-			crawlStatus = fileCrawlerManager.getSession("myFileCrawlSession");
+			crawlStatus = crawlerManager.getSession(crawlSession);
 			Thread.sleep(500);
 		}
-		Assert.assertEquals(7, crawlStatus.crawled);
-		Assert.assertEquals(2, crawlStatus.ignored);
-		Assert.assertEquals(0, crawlStatus.error);
-		Assert.assertNull(crawlStatus.lastError);
+		Assert.assertEquals(expectedCrawled, crawlStatus.crawled);
+		Assert.assertEquals(expectedIgnored, crawlStatus.ignored);
+		Assert.assertEquals(expectedError, crawlStatus.error);
+		if (expectedError == 0)
+			Assert.assertNull(crawlStatus.lastError);
+		else
+			Assert.assertNotNull(crawlStatus.lastError);
+
+	}
+
+	@Test
+	public void crawlFullTest() throws InterruptedException {
+		crawlTest(getFileCrawlDefinition(), 7, 2, 0);
+	}
+
+	@Test
+	public void crawlDepth() throws InterruptedException {
+		crawlTest(getFileCrawlDefinition().maxDepth(1), 4, 1, 0);
+		crawlTest(getFileCrawlDefinition().maxDepth(2), 6, 2, 0);
+		crawlTest(getFileCrawlDefinition().maxDepth(0), 1, 0, 0);
 	}
 }
