@@ -41,7 +41,7 @@ public class WebCrawlerManager extends CrawlManager<WebCrawlThread, WebCrawlDefi
 
 	public WebCrawlerManager(ClusterManager clusterManager, ScriptManager scriptManager,
 			ExecutorService executorService) {
-		this(clusterManager.getServiceBuilder().local().getStatus().me, scriptManager, executorService);
+		this(clusterManager.getService().getStatus().me, scriptManager, executorService);
 	}
 
 	public WebCrawlerServiceInterface getService() {

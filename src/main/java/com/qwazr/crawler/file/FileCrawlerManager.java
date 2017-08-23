@@ -39,7 +39,7 @@ public class FileCrawlerManager extends CrawlManager<FileCrawlThread, FileCrawlD
 
 	public FileCrawlerManager(ClusterManager clusterManager, ScriptManager scriptManager,
 			ExecutorService executorService) {
-		this(clusterManager.getServiceBuilder().local().getStatus().me, scriptManager, executorService);
+		this(clusterManager.getService().getStatus().me, scriptManager, executorService);
 	}
 
 	public FileCrawlerManager(ScriptManager scriptManager, ExecutorService executorService) {
