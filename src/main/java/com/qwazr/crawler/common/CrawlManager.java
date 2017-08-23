@@ -16,6 +16,7 @@
 package com.qwazr.crawler.common;
 
 import com.qwazr.scripts.ScriptManager;
+import com.qwazr.scripts.ScriptServiceInterface;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.CollectionsUtils;
 
@@ -35,13 +36,13 @@ public abstract class CrawlManager<T extends CrawlThread<D, S, ?>, D extends Cra
 	private final ExecutorService executorService;
 	private final Logger logger;
 	protected final String myAddress;
-	protected final ScriptManager scriptManager;
+	protected final ScriptServiceInterface scriptService;
 
 	protected CrawlManager(final String myAddress, final ScriptManager scriptManager,
 			final ExecutorService executorService, final Logger logger) {
 		this.crawlSessionMap = new ConcurrentHashMap<>();
 		this.statusHistory = Collections.synchronizedMap(new CollectionsUtils.EldestFixedSizeMap<>(250));
-		this.scriptManager = scriptManager;
+		this.scriptService = scriptManager.getService();
 		this.myAddress = myAddress;
 		this.executorService = executorService;
 		this.logger = logger;

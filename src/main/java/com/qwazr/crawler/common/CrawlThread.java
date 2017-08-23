@@ -84,7 +84,7 @@ public abstract class CrawlThread<D extends CrawlDefinition, S extends CrawlStat
 				attributes.putAll(script.variables);
 			final ScriptRunThread scriptRunThread;
 			try {
-				scriptRunThread = manager.scriptManager.runSync(script.name, attributes);
+				scriptRunThread = manager.scriptService.runSync(script.name, attributes);
 			} catch (IOException | ClassNotFoundException e) {
 				throw new ServerException(e);
 			}
