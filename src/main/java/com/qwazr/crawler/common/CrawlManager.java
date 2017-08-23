@@ -42,16 +42,12 @@ public abstract class CrawlManager<T extends CrawlThread<D, S, ?>, D extends Cra
 			final ExecutorService executorService, final Logger logger) {
 		this.crawlSessionMap = new ConcurrentHashMap<>();
 		this.statusHistory = Collections.synchronizedMap(new CollectionsUtils.EldestFixedSizeMap<>(250));
-		this.scriptService = scriptManager.getService();
+		this.scriptService = scriptManager == null ? null : scriptManager.getService();
 		this.myAddress = myAddress;
 		this.executorService = executorService;
 		this.logger = logger;
 	}
-
-	public String getMyAddress() {
-		return myAddress;
-	}
-
+	
 	public void forEachSession(BiConsumer<String, S> consumer) {
 		crawlSessionMap.forEach((key, crawl) -> consumer.accept(key, crawl.getStatus()));
 	}
