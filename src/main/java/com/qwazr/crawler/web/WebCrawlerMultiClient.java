@@ -27,6 +27,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
 import java.util.TreeMap;
+import java.util.concurrent.ExecutorService;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -34,8 +35,8 @@ public class WebCrawlerMultiClient extends MultiClient<WebCrawlerSingleClient> i
 
 	private static final Logger logger = LoggerUtils.getLogger(WebCrawlerMultiClient.class);
 
-	public WebCrawlerMultiClient(final RemoteService... remotes) {
-		super(getClients(remotes));
+	public WebCrawlerMultiClient(final ExecutorService executorService, final RemoteService... remotes) {
+		super(getClients(remotes), executorService);
 	}
 
 	private static WebCrawlerSingleClient[] getClients(final RemoteService... remotes) {
