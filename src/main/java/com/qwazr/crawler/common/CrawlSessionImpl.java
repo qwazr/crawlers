@@ -15,8 +15,8 @@
  **/
 package com.qwazr.crawler.common;
 
-import com.qwazr.utils.ExceptionUtils;
 import com.qwazr.utils.TimeTracker;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

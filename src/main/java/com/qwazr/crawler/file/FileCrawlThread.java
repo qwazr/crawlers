@@ -18,7 +18,7 @@ package com.qwazr.crawler.file;
 import com.qwazr.crawler.common.CrawlSessionImpl;
 import com.qwazr.crawler.common.CrawlThread;
 import com.qwazr.crawler.common.EventEnum;
-import com.qwazr.utils.ExceptionUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.IOException;
 import java.nio.file.FileVisitResult;

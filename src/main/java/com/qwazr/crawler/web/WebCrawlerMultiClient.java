@@ -18,9 +18,7 @@ package com.qwazr.crawler.web;
 import com.qwazr.server.RemoteService;
 import com.qwazr.server.ServerException;
 import com.qwazr.server.client.MultiClient;
-import com.qwazr.utils.ExceptionUtils;
 import com.qwazr.utils.LoggerUtils;
-import com.qwazr.utils.http.HttpResponseEntityException;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
@@ -76,7 +74,7 @@ public class WebCrawlerMultiClient extends MultiClient<WebCrawlerSingleClient> i
 					throw e;
 			}
 		}
-		throw new ServerException(Status.NOT_FOUND, "Session " + sessionName + " not found").getJsonException();
+		throw new ServerException(Status.NOT_FOUND, "Session " + sessionName + " not found").getJsonException(false);
 	}
 
 	@Override
@@ -97,22 +95,9 @@ public class WebCrawlerMultiClient extends MultiClient<WebCrawlerSingleClient> i
 	}
 
 	@Override
-	public WebCrawlStatus runSession(final String session_name, final WebCrawlDefinition crawlDefinition) {
-		final ExceptionUtils.Holder exceptionHolder = new ExceptionUtils.Holder(logger);
-		for (WebCrawlerSingleClient client : this) {
-			try {
-				return client.runSession(session_name, crawlDefinition);
-			} catch (WebApplicationException e) {
-				exceptionHolder.switchAndWarn(e);
-			}
-		}
-		final WebApplicationException e = exceptionHolder.getException();
-		if (e == null)
-			return null;
-		final HttpResponseEntityException hree = HttpResponseEntityException.findFirstCause(e);
-		if (hree != null)
-			throw ServerException.getServerException(hree).getJsonException();
-		throw e;
+	public WebCrawlStatus runSession(final String sessionName, final WebCrawlDefinition crawlDefinition) {
+		return firstRandomSuccess(c -> c.runSession(sessionName, crawlDefinition), logger);
+
 	}
 
 	@Override

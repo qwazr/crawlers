@@ -18,14 +18,18 @@ package com.qwazr.crawler.common;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.qwazr.server.RemoteService;
 import com.qwazr.server.client.JsonClientAbstract;
+import com.qwazr.utils.LoggerUtils;
 import com.qwazr.utils.UBuilder;
 import com.qwazr.utils.http.HttpRequest;
 
 import javax.ws.rs.core.Response;
 import java.util.TreeMap;
+import java.util.logging.Logger;
 
 abstract public class CrawlerSingleClient<D extends CrawlDefinition, S extends CrawlStatus<D>>
 		extends JsonClientAbstract implements CrawlerServiceInterface<D, S> {
+
+	private final static Logger LOGGER = LoggerUtils.getLogger(JsonClientAbstract.class);
 
 	private final String pathPrefix;
 	private final Class<S> crawlStatusClass;
@@ -33,7 +37,7 @@ abstract public class CrawlerSingleClient<D extends CrawlDefinition, S extends C
 
 	protected CrawlerSingleClient(final RemoteService remote, final String pathPrefix, Class<S> crawlStatusClass,
 			TypeReference<TreeMap<String, S>> mapStatusType) {
-		super(remote);
+		super(remote, LOGGER);
 		this.pathPrefix = pathPrefix;
 		this.crawlStatusClass = crawlStatusClass;
 		this.mapStatusType = mapStatusType;

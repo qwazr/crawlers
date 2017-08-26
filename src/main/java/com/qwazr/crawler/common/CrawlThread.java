@@ -86,10 +86,10 @@ public abstract class CrawlThread<D extends CrawlDefinition, S extends CrawlStat
 			try {
 				scriptRunThread = manager.scriptService.runSync(script.name, attributes);
 			} catch (IOException | ClassNotFoundException e) {
-				throw new ServerException(e);
+				throw ServerException.of(e);
 			}
 			if (scriptRunThread.getException() != null)
-				throw new ServerException(scriptRunThread.getException());
+				throw ServerException.of(scriptRunThread.getException());
 		} finally {
 			timeTracker.next("Event: " + event.name());
 		}
