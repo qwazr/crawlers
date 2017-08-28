@@ -30,14 +30,14 @@ public class CrawlSessionImpl<D extends CrawlDefinition, S extends CrawlStatus<D
 	private final TimeTracker timeTracker;
 	private final ConcurrentHashMap<String, Object> variables;
 
-	private volatile S crawlStatus;
+	private volatile S crawlStatusNoDefinition;
+	private volatile S crawlStatusWithDefinition;
 	private final CrawlStatus.AbstractBuilder<D, S> crawlStatusBuilder;
 
 	public CrawlSessionImpl(String sessionName, TimeTracker timeTracker, D crawlDefinition,
 			CrawlStatus.AbstractBuilder<D, S> crawlStatusBuilder) {
 		this.timeTracker = timeTracker;
 		this.crawlStatusBuilder = crawlStatusBuilder;
-		this.crawlStatus = crawlStatusBuilder.build();
 		this.crawlDefinition = crawlDefinition;
 		this.name = sessionName;
 		abort = new AtomicBoolean(false);
@@ -48,11 +48,17 @@ public class CrawlSessionImpl<D extends CrawlDefinition, S extends CrawlStatus<D
 					this.variables.put(key, value);
 			});
 		}
+		buildStatus();
+	}
+
+	private void buildStatus() {
+		crawlStatusWithDefinition = crawlStatusBuilder.build(true);
+		crawlStatusNoDefinition = crawlStatusBuilder.build(false);
 	}
 
 	@Override
-	public S getCrawlStatus() {
-		return crawlStatus;
+	public S getCrawlStatus(boolean withDefinition) {
+		return withDefinition ? crawlStatusWithDefinition : crawlStatusNoDefinition;
 	}
 
 	public Map<String, Object> getVariables() {
@@ -94,7 +100,8 @@ public class CrawlSessionImpl<D extends CrawlDefinition, S extends CrawlStatus<D
 	public void abort(String reason) {
 		if (abort.getAndSet(true))
 			return;
-		crawlStatus = crawlStatusBuilder.abort(reason).build();
+		crawlStatusBuilder.abort(reason);
+		buildStatus();
 	}
 
 	@Override
@@ -103,19 +110,24 @@ public class CrawlSessionImpl<D extends CrawlDefinition, S extends CrawlStatus<D
 	}
 
 	public void incIgnoredCount() {
-		crawlStatus = crawlStatusBuilder.incIgnored().build();
+		crawlStatusBuilder.incIgnored();
+		buildStatus();
 	}
 
 	public int incCrawledCount() {
-		return (crawlStatus = crawlStatusBuilder.incCrawled().build()).crawled;
+		crawlStatusBuilder.incCrawled();
+		buildStatus();
+		return crawlStatusNoDefinition.crawled;
 	}
 
 	public void incErrorCount(String errorMessage) {
-		crawlStatus = crawlStatusBuilder.lastError(errorMessage).incError().build();
+		crawlStatusBuilder.lastError(errorMessage).incError();
+		buildStatus();
 	}
 
 	public void error(Exception e) {
-		crawlStatus = crawlStatusBuilder.lastError(ExceptionUtils.getRootCauseMessage(e)).build();
+		crawlStatusBuilder.lastError(ExceptionUtils.getRootCauseMessage(e));
+		buildStatus();
 	}
 
 	@Override
@@ -124,7 +136,8 @@ public class CrawlSessionImpl<D extends CrawlDefinition, S extends CrawlStatus<D
 	}
 
 	public void setCurrentCrawl(String currentCrawl, Integer currentDepth) {
-		crawlStatus = crawlStatusBuilder.crawl(currentCrawl, currentDepth).build();
+		crawlStatusBuilder.crawl(currentCrawl, currentDepth);
+		buildStatus();
 	}
 
 	public D getCrawlDefinition() {
@@ -136,6 +149,7 @@ public class CrawlSessionImpl<D extends CrawlDefinition, S extends CrawlStatus<D
 	}
 
 	public void done() {
-		crawlStatus = crawlStatusBuilder.done().build();
+		crawlStatusBuilder.done();
+		buildStatus();
 	}
 }

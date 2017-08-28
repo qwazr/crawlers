@@ -47,14 +47,14 @@ public abstract class CrawlManager<T extends CrawlThread<D, S, ?>, D extends Cra
 		this.executorService = executorService;
 		this.logger = logger;
 	}
-	
+
 	public void forEachSession(BiConsumer<String, S> consumer) {
-		crawlSessionMap.forEach((key, crawl) -> consumer.accept(key, crawl.getStatus()));
+		crawlSessionMap.forEach((key, crawl) -> consumer.accept(key, crawl.getStatus(false)));
 	}
 
 	public S getSession(final String sessionName) {
 		final T crawlThread = crawlSessionMap.get(sessionName);
-		return crawlThread == null ? statusHistory.get(sessionName) : crawlThread.getStatus();
+		return crawlThread == null ? statusHistory.get(sessionName) : crawlThread.getStatus(true);
 	}
 
 	public void abortSession(final String sessionName, final String abortingReason) throws ServerException {
@@ -80,13 +80,13 @@ public abstract class CrawlManager<T extends CrawlThread<D, S, ?>, D extends Cra
 		if (!newThread.get())
 			throw new ServerException(Response.Status.CONFLICT, "The session already exists: " + sessionName);
 		executorService.execute(crawlThread);
-		return crawlThread.getStatus();
+		return crawlThread.getStatus(true);
 	}
 
 	void removeSession(final CrawlThread<D, S, ?> crawlThread) {
 		final String sessionName = crawlThread.getSessionName();
 		logger.info(() -> "Remove session: " + sessionName);
-		final S lastCrawlStatus = crawlThread.getStatus();
+		final S lastCrawlStatus = crawlThread.getStatus(false);
 		statusHistory.put(sessionName, lastCrawlStatus);
 		crawlSessionMap.remove(sessionName, crawlThread);
 	}

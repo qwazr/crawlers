@@ -48,7 +48,7 @@ public class CrawlStatusTest {
 				.incIgnored()
 				.incIgnored()
 				.done()
-				.build();
+				.build(true);
 
 		Assert.assertEquals(crawlDefinition, status.getCrawlDefinition());
 		Assert.assertEquals(nodeAddress, status.getNodeAddress());

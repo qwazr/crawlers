@@ -140,8 +140,8 @@ public abstract class CrawlThread<D extends CrawlDefinition, S extends CrawlStat
 		}
 	}
 
-	final public S getStatus() {
-		return session.getCrawlStatus();
+	final public S getStatus(boolean withDefinition) {
+		return session.getCrawlStatus(withDefinition);
 	}
 
 	public void abort(final String abortingReason) {

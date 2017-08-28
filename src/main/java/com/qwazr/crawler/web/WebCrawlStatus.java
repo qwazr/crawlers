@@ -34,8 +34,8 @@ public class WebCrawlStatus extends CrawlStatus<WebCrawlDefinition> {
 				endTime, currentDepth, crawlDefinition);
 	}
 
-	private WebCrawlStatus(Builder builder) {
-		super(builder);
+	private WebCrawlStatus(Builder builder, boolean withDefinition) {
+		super(builder, withDefinition);
 	}
 
 	public static Builder of(String nodeAddress, TimeTracker timeTracker, WebCrawlDefinition crawlDefinition) {
@@ -49,8 +49,8 @@ public class WebCrawlStatus extends CrawlStatus<WebCrawlDefinition> {
 		}
 
 		@Override
-		public WebCrawlStatus build() {
-			return new WebCrawlStatus(this);
+		public WebCrawlStatus build(boolean withDefinition) {
+			return new WebCrawlStatus(this, withDefinition);
 		}
 	}
 

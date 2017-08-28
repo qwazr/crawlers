@@ -24,7 +24,7 @@ public interface CrawlSession {
 	/**
 	 * @return the current crawl status
 	 */
-	CrawlStatus getCrawlStatus();
+	CrawlStatus getCrawlStatus(boolean withDefinition);
 
 	Map<String, Object> getVariables();
 

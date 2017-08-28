@@ -34,8 +34,8 @@ public class FileCrawlStatus extends CrawlStatus<FileCrawlDefinition> {
 				endTime, currentDepth, crawlDefinition);
 	}
 
-	private FileCrawlStatus(Builder builder) {
-		super(builder);
+	private FileCrawlStatus(Builder builder, boolean withCrawlDefinition) {
+		super(builder, withCrawlDefinition);
 	}
 
 	public static Builder of(String nodeAddress, TimeTracker timeTracker, FileCrawlDefinition crawlDefinition) {
@@ -49,8 +49,8 @@ public class FileCrawlStatus extends CrawlStatus<FileCrawlDefinition> {
 		}
 
 		@Override
-		public FileCrawlStatus build() {
-			return new FileCrawlStatus(this);
+		public FileCrawlStatus build(boolean withCrawlDefinition) {
+			return new FileCrawlStatus(this, withCrawlDefinition);
 		}
 	}
 

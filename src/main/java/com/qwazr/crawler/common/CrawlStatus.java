@@ -111,7 +111,7 @@ public abstract class CrawlStatus<T extends CrawlDefinition> {
 		this.crawlDefinition = crawlDefinition;
 	}
 
-	public CrawlStatus(AbstractBuilder<T, ?> builder) {
+	public CrawlStatus(AbstractBuilder<T, ?> builder, boolean withCrawlDefinition) {
 		this.nodeAddress = builder.nodeAddress;
 		this.timer = builder.timeTracker == null ? null : builder.timeTracker.getStatus();
 		this.aborting = builder.aborting;
@@ -124,7 +124,7 @@ public abstract class CrawlStatus<T extends CrawlDefinition> {
 		this.currentDepth = builder.currentDepth;
 		this.startTime = builder.startTime;
 		this.endTime = builder.endTime;
-		this.crawlDefinition = builder.crawlDefinition;
+		this.crawlDefinition = withCrawlDefinition ? builder.crawlDefinition : null;
 	}
 
 	/**
@@ -287,7 +287,7 @@ public abstract class CrawlStatus<T extends CrawlDefinition> {
 			return this;
 		}
 
-		public abstract S build();
+		public abstract S build(boolean withCrawlDefinition);
 	}
 
 }
