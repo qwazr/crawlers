@@ -15,11 +15,9 @@
  */
 package com.qwazr.crawler.common;
 
-import com.qwazr.crawler.web.WebCrawlStatus;
 import com.qwazr.server.AbstractServiceImpl;
 import com.qwazr.server.ServerException;
 
-import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import java.util.TreeMap;
 import java.util.logging.Logger;
@@ -55,18 +53,18 @@ public abstract class CrawlerServiceImpl<M extends CrawlManager<?, D, S>, D exte
 	}
 
 	@Override
-	public Response abortSession(final String sessionName, final String reason) {
+	public boolean abortSession(final String sessionName, final String reason) {
 		try {
 			crawlManager.abortSession(sessionName, reason);
-			return Response.accepted().build();
+			return true;
 		} catch (ServerException e) {
 			throw ServerException.getTextException(logger, e);
 		}
 	}
 
-	public S runSession(final String session_name, final D crawlDefinition) {
+	public S runSession(final String sessionName, final D crawlDefinition) {
 		try {
-			return crawlManager.runSession(session_name, crawlDefinition);
+			return crawlManager.runSession(sessionName, crawlDefinition);
 		} catch (ServerException e) {
 			throw ServerException.getJsonException(logger, e);
 		}

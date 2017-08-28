@@ -15,20 +15,21 @@
  */
 package com.qwazr.crawler.file;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.qwazr.crawler.common.CrawlerServiceInterface;
 
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.Path;
-import java.util.TreeMap;
+import javax.ws.rs.core.GenericType;
+import java.util.SortedMap;
 
 @RolesAllowed(FileCrawlerServiceInterface.SERVICE_NAME)
-@Path("/crawler/file")
+@Path(FileCrawlerServiceInterface.SERVICE_PATH)
 public interface FileCrawlerServiceInterface extends CrawlerServiceInterface<FileCrawlDefinition, FileCrawlStatus> {
 
+	String SERVICE_PATH = "/crawler/file";
 	String SERVICE_NAME = "filecrawler";
 
-	TypeReference<TreeMap<String, FileCrawlStatus>> TreeMapStringCrawlTypeRef =
-			new TypeReference<TreeMap<String, FileCrawlStatus>>() {
+	GenericType<SortedMap<String, FileCrawlStatus>> sortedMapStringCrawlType =
+			new GenericType<SortedMap<String, FileCrawlStatus>>() {
 			};
 }

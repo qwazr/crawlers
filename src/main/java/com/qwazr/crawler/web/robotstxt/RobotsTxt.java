@@ -17,7 +17,6 @@ package com.qwazr.crawler.web.robotstxt;
 
 import com.qwazr.crawler.web.ProxyDefinition;
 import com.qwazr.crawler.web.driver.BrowserDriver;
-import com.qwazr.utils.CharsetUtils;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.LinkUtils;
 import com.qwazr.utils.LoggerUtils;
@@ -36,6 +35,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -150,7 +150,7 @@ public class RobotsTxt {
 					final ContentType contentType = ContentType.getOrDefault(entity);
 					final Charset charset = contentType.getCharset();
 					try (final InputStream is = entity.getContent()) {
-						return new RobotsTxt(is, charset == null ? CharsetUtils.CharsetUTF8 : charset);
+						return new RobotsTxt(is, charset == null ? StandardCharsets.UTF_8 : charset);
 					}
 				} finally {
 					IOUtils.close((CloseableHttpResponse) response);

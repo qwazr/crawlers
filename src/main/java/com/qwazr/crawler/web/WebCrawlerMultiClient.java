@@ -15,18 +15,18 @@
  **/
 package com.qwazr.crawler.web;
 
+import com.qwazr.crawler.common.CrawlerSingleClient;
 import com.qwazr.server.RemoteService;
-import com.qwazr.server.ServerException;
 import com.qwazr.server.client.MultiClient;
+import com.qwazr.server.client.MultiWebApplicationException;
 import com.qwazr.utils.LoggerUtils;
 
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
+import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.ExecutorService;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class WebCrawlerMultiClient extends MultiClient<WebCrawlerSingleClient> implements WebCrawlerServiceInterface {
@@ -46,52 +46,30 @@ public class WebCrawlerMultiClient extends MultiClient<WebCrawlerSingleClient> i
 	}
 
 	@Override
-	public TreeMap<String, WebCrawlStatus> getSessions() {
+	public SortedMap<String, WebCrawlStatus> getSessions() {
 
-		// We merge the result of all the nodes
-		final TreeMap<String, WebCrawlStatus> globalSessions = new TreeMap<>();
-		for (WebCrawlerSingleClient client : this) {
-			try {
-				final TreeMap<String, WebCrawlStatus> localSessions = client.getSessions();
-				if (localSessions == null)
-					continue;
-				globalSessions.putAll(localSessions);
-			} catch (WebApplicationException e) {
-				logger.log(Level.WARNING, e, e::getMessage);
-			}
+		final MultiWebApplicationException.Builder exceptions = MultiWebApplicationException.of(logger);
+		final List<SortedMap<String, WebCrawlStatus>> results =
+				forEachParallel(CrawlerSingleClient::getSessions, exceptions::add);
+		if (results != null && !results.isEmpty()) {
+			// We merge the result of all the nodes
+			final TreeMap<String, WebCrawlStatus> result = new TreeMap<>();
+			results.forEach(result::putAll);
+			return result;
 		}
-		return globalSessions;
+		if (!exceptions.isEmpty())
+			throw exceptions.build();
+		return Collections.emptySortedMap();
 	}
 
 	@Override
 	public WebCrawlStatus getSession(String sessionName) {
-
-		for (WebCrawlerSingleClient client : this) {
-			try {
-				return client.getSession(sessionName);
-			} catch (WebApplicationException e) {
-				if (e.getResponse().getStatus() != 404)
-					throw e;
-			}
-		}
-		throw new ServerException(Status.NOT_FOUND, "Session " + sessionName + " not found").getJsonException(false);
+		return firstRandomSuccess(c -> c.getSession(sessionName), logger);
 	}
 
 	@Override
-	public Response abortSession(String sessionName, String reason) {
-
-		boolean aborted = false;
-		for (WebCrawlerSingleClient client : this) {
-			try {
-				int code = client.abortSession(sessionName, reason).getStatus();
-				if (code == 200 || code == 202)
-					aborted = true;
-			} catch (WebApplicationException e) {
-				if (e.getResponse().getStatus() != 404)
-					throw e;
-			}
-		}
-		return Response.status(aborted ? Status.ACCEPTED : Status.NOT_FOUND).build();
+	public boolean abortSession(String sessionName, String reason) {
+		return firstRandomSuccess(c -> c.abortSession(sessionName, reason), logger);
 	}
 
 	@Override

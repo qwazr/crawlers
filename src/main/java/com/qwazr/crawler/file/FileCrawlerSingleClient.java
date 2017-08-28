@@ -24,12 +24,13 @@ public class FileCrawlerSingleClient extends CrawlerSingleClient<FileCrawlDefini
 		implements FileCrawlerServiceInterface {
 
 	public FileCrawlerSingleClient(final RemoteService remote) {
-		super(remote, "/crawler/file/", FileCrawlStatus.class, FileCrawlerServiceInterface.TreeMapStringCrawlTypeRef);
+		super(remote, FileCrawlerServiceInterface.SERVICE_PATH, FileCrawlStatus.class,
+				FileCrawlerServiceInterface.sortedMapStringCrawlType);
 	}
 
 	@Override
-	public FileCrawlStatus runSession(final String session_name, final String jsonCrawlDefinition) throws IOException {
-		return runSession(session_name, FileCrawlDefinition.newInstance(jsonCrawlDefinition));
+	public FileCrawlStatus runSession(final String sessionSame, final String jsonCrawlDefinition) throws IOException {
+		return runSession(sessionSame, FileCrawlDefinition.newInstance(jsonCrawlDefinition));
 	}
 
 }

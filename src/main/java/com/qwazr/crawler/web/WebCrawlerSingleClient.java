@@ -24,7 +24,8 @@ public class WebCrawlerSingleClient extends CrawlerSingleClient<WebCrawlDefiniti
 		implements WebCrawlerServiceInterface {
 
 	public WebCrawlerSingleClient(final RemoteService remote) {
-		super(remote, "/crawler/web/", WebCrawlStatus.class, WebCrawlerServiceInterface.TreeMapStringCrawlTypeRef);
+		super(remote, WebCrawlerServiceInterface.SERVICE_PATH, WebCrawlStatus.class,
+				WebCrawlerServiceInterface.sortedMapStringCrawlType);
 	}
 
 	@Override

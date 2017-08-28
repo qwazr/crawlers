@@ -19,47 +19,35 @@ import com.qwazr.crawler.CrawlerServer;
 import com.qwazr.crawler.common.CommonEvent;
 import com.qwazr.crawler.common.EventEnum;
 import com.qwazr.crawler.common.ScriptDefinition;
-import com.qwazr.server.RemoteService;
 import com.qwazr.utils.RandomUtils;
 import org.junit.AfterClass;
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
-import java.util.TreeMap;
+import java.util.SortedMap;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class WebCrawlerTest {
+public abstract class WebCrawlerTestAbstract {
 
-	private static WebCrawlerServiceInterface local;
-	private static WebCrawlerServiceInterface remote;
+	static WebCrawlerServiceInterface service;
 
-	@BeforeClass
-	public static void before() throws Exception {
+	public static void setup() throws Exception {
 		if (CrawlerServer.getInstance() == null)
 			CrawlerServer.main();
 		WebAppTestServer.start();
 	}
 
 	@AfterClass
-	public static void after() throws InterruptedException {
+	public static void cleanup() throws InterruptedException {
 		WebAppTestServer.stop();
 		CrawlerServer.shutdown();
 	}
 
 	@Test
-	public void test100startServer() throws Exception {
-		local = CrawlerServer.getInstance().getWebServiceBuilder().local();
-		Assert.assertNotNull(local);
-		remote = new WebCrawlerServiceBuilder(null, null).remote(RemoteService.of("http://localhost:9091").build());
-		Assert.assertNotNull(remote);
-	}
-
-	@Test
 	public void test200emptySessions() {
-		TreeMap<String, WebCrawlStatus> sessions = remote.getSessions();
+		SortedMap<String, WebCrawlStatus> sessions = service.getSessions();
 		Assert.assertNotNull(sessions);
 		Assert.assertTrue(sessions.isEmpty());
 	}
@@ -80,8 +68,8 @@ public class WebCrawlerTest {
 	@Test
 	public void test300SimpleCrawl() throws InterruptedException {
 		final String sessionName = RandomUtils.alphanumeric(10);
-		remote.runSession(sessionName, getNewWebCrawl().build());
-		CommonEvent.crawlWait(sessionName, remote);
+		service.runSession(sessionName, getNewWebCrawl().build());
+		CommonEvent.crawlWait(sessionName, service);
 	}
 
 	@Test
@@ -103,8 +91,8 @@ public class WebCrawlerTest {
 		webCrawl.script(EventEnum.after_session, ScriptDefinition.of(WebEvents.AfterSession.class)
 				.variable(variableName, variableValue + EventEnum.after_session.name())
 				.build());
-		remote.runSession(sessionName, webCrawl.build());
-		CommonEvent.crawlWait(sessionName, remote);
+		service.runSession(sessionName, webCrawl.build());
+		CommonEvent.crawlWait(sessionName, service);
 		Assert.assertEquals(1, WebEvents.feedbacks.get(EventEnum.before_session).count());
 		Assert.assertEquals(5, WebEvents.feedbacks.get(EventEnum.before_crawl).count());
 		Assert.assertEquals(4, WebEvents.feedbacks.get(EventEnum.after_crawl).count());

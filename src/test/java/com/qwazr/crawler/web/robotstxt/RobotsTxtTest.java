@@ -15,7 +15,6 @@
  */
 package com.qwazr.crawler.web.robotstxt;
 
-import com.qwazr.utils.CharsetUtils;
 import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
 import org.junit.Test;
@@ -23,6 +22,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 
 public class RobotsTxtTest {
 
@@ -71,7 +71,7 @@ public class RobotsTxtTest {
 			throws IOException, URISyntaxException {
 		Assert.assertEquals(status, new RobotsTxt(
 				IOUtils.toInputStream("user-agent: *\nAllow: " + allow + "\nDisallow: " + disallow,
-						CharsetUtils.CharsetUTF8), CharsetUtils.CharsetUTF8).getStatus(URI.create(url), "ua"));
+						StandardCharsets.UTF_8), StandardCharsets.UTF_8).getStatus(URI.create(url), "ua"));
 	}
 
 	@Test

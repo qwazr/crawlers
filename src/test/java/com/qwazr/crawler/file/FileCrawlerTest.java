@@ -29,7 +29,7 @@ import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
-import java.util.TreeMap;
+import java.util.SortedMap;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class FileCrawlerTest {
@@ -58,7 +58,7 @@ public class FileCrawlerTest {
 
 	@Test
 	public void test200emptySessions() {
-		TreeMap<String, FileCrawlStatus> sessions = remote.getSessions();
+		SortedMap<String, FileCrawlStatus> sessions = remote.getSessions();
 		Assert.assertNotNull(sessions);
 		Assert.assertTrue(sessions.isEmpty());
 	}

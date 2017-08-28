@@ -15,63 +15,54 @@
  **/
 package com.qwazr.crawler.common;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.qwazr.server.RemoteService;
-import com.qwazr.server.client.JsonClientAbstract;
-import com.qwazr.utils.LoggerUtils;
-import com.qwazr.utils.UBuilder;
-import com.qwazr.utils.http.HttpRequest;
+import com.qwazr.server.client.JsonClient;
 
-import javax.ws.rs.core.Response;
-import java.util.TreeMap;
-import java.util.logging.Logger;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.MediaType;
+import java.util.SortedMap;
 
-abstract public class CrawlerSingleClient<D extends CrawlDefinition, S extends CrawlStatus<D>>
-		extends JsonClientAbstract implements CrawlerServiceInterface<D, S> {
+abstract public class CrawlerSingleClient<D extends CrawlDefinition, S extends CrawlStatus<D>> extends JsonClient
+		implements CrawlerServiceInterface<D, S> {
 
-	private final static Logger LOGGER = LoggerUtils.getLogger(JsonClientAbstract.class);
-
-	private final String pathPrefix;
 	private final Class<S> crawlStatusClass;
-	private final TypeReference<TreeMap<String, S>> mapStatusType;
+	private final GenericType<SortedMap<String, S>> mapStatusType;
+	private final WebTarget sessionsTarget;
 
 	protected CrawlerSingleClient(final RemoteService remote, final String pathPrefix, Class<S> crawlStatusClass,
-			TypeReference<TreeMap<String, S>> mapStatusType) {
-		super(remote, LOGGER);
-		this.pathPrefix = pathPrefix;
+			GenericType<SortedMap<String, S>> mapStatusType) {
+		super(remote);
+		this.sessionsTarget = client.target(remote.serviceAddress).path(pathPrefix).path("sessions");
 		this.crawlStatusClass = crawlStatusClass;
 		this.mapStatusType = mapStatusType;
 
 	}
 
 	@Override
-	public TreeMap<String, S> getSessions() {
-		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, pathPrefix + "sessions");
-		HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
-		return executeJson(request, null, null, mapStatusType, valid200Json);
+	public SortedMap<String, S> getSessions() {
+		return sessionsTarget.request(MediaType.APPLICATION_JSON).get(mapStatusType);
 	}
 
 	@Override
 	public S getSession(final String sessionName) {
-		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, pathPrefix + "sessions/", sessionName);
-		HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
-		return executeJson(request, null, null, crawlStatusClass, valid200Json);
+		return sessionsTarget.path(sessionName).request(MediaType.APPLICATION_JSON).get(crawlStatusClass);
 	}
 
 	@Override
-	public Response abortSession(final String sessionName, final String reason) {
-		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, pathPrefix + "sessions/", sessionName)
-				.setParameter("reason", reason);
-		final HttpRequest request = HttpRequest.Delete(uriBuilder.buildNoEx());
-		final Integer statusCode = executeStatusCode(request, null, null, valid200202);
-		return Response.status(statusCode).build();
+	public boolean abortSession(final String sessionName, final String reason) {
+		WebTarget target = sessionsTarget.path(sessionName);
+		if (reason != null)
+			target.queryParam("reason", reason);
+		return target.request(MediaType.TEXT_PLAIN).delete(boolean.class);
 	}
 
 	@Override
 	public S runSession(final String sessionName, final D crawlDefinition) {
-		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, pathPrefix + "sessions/", sessionName);
-		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
-		return executeJson(request, crawlDefinition, null, crawlStatusClass, valid200202Json);
+		return sessionsTarget.path(sessionName)
+				.request(MediaType.APPLICATION_JSON)
+				.post(Entity.json(crawlDefinition), crawlStatusClass);
 	}
 
 }

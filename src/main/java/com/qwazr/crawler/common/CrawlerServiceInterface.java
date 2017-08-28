@@ -25,16 +25,16 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Response;
+import javax.ws.rs.core.MediaType;
 import java.io.IOException;
-import java.util.TreeMap;
+import java.util.SortedMap;
 
 public interface CrawlerServiceInterface<D extends CrawlDefinition, T extends CrawlStatus<D>> extends ServiceInterface {
 
 	@GET
 	@Path("/sessions")
 	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
-	TreeMap<String, T> getSessions();
+	SortedMap<String, T> getSessions();
 
 	@GET
 	@Path("/sessions/{session_name}")
@@ -43,7 +43,8 @@ public interface CrawlerServiceInterface<D extends CrawlDefinition, T extends Cr
 
 	@DELETE
 	@Path("/sessions/{session_name}")
-	Response abortSession(@PathParam("session_name") String sessionName, @QueryParam("reason") String abortingReason);
+	@Produces({ ServiceInterface.APPLICATION_JSON_UTF8, MediaType.TEXT_PLAIN })
+	boolean abortSession(@PathParam("session_name") String sessionName, @QueryParam("reason") String abortingReason);
 
 	@POST
 	@Path("/sessions/{session_name}")
