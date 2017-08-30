@@ -122,10 +122,14 @@ public abstract class CrawlDefinition {
 		protected LinkedHashSet<String> inclusionPatterns;
 		protected LinkedHashSet<String> exclusionPatterns;
 
-		protected AbstractBuilder() {
+		private final Class<B> builderClass;
+
+		protected AbstractBuilder(final Class<B> builderClass) {
+			this.builderClass = builderClass;
 		}
 
-		protected AbstractBuilder(D src) {
+		protected AbstractBuilder(final Class<B> builderClass, D src) {
+			this(builderClass);
 			variables = src.variables == null ? null : new LinkedHashMap<>(src.variables);
 			scripts = src.scripts == null ? null : new LinkedHashMap<>(src.scripts);
 			inclusionPatterns = src.inclusionPatterns == null || src.inclusionPatterns.isEmpty() ?
@@ -140,72 +144,72 @@ public abstract class CrawlDefinition {
 			if (variables == null)
 				variables = new LinkedHashMap<>();
 			variables.put(name, value);
-			return (B) this;
+			return builderClass.cast(this);
 		}
 
 		public B script(final EventEnum event, final ScriptDefinition script) {
 			if (scripts == null)
 				scripts = new LinkedHashMap<>();
 			scripts.put(event, script);
-			return (B) this;
+			return builderClass.cast(this);
 		}
 
 		public B setInclusionPatterns(final Collection<String> inclusionPatterns) {
 			this.inclusionPatterns = inclusionPatterns == null || inclusionPatterns.isEmpty() ?
 					null :
 					new LinkedHashSet<>(inclusionPatterns);
-			return (B) this;
+			return builderClass.cast(this);
 		}
 
 		public B setInclusionPatterns(final String inclusionPatternText) throws IOException {
 			if (StringUtils.isBlank(inclusionPatternText)) {
 				inclusionPatterns = null;
-				return (B) this;
+				return builderClass.cast(this);
 			}
 			if (inclusionPatterns != null)
 				inclusionPatterns.clear();
 			else
 				inclusionPatterns = new LinkedHashSet<>();
 			StringUtils.linesCollector(inclusionPatternText, false, inclusionPatterns);
-			return (B) this;
+			return builderClass.cast(this);
 		}
 
 		public B addInclusionPattern(final String inclusionPattern) {
 			if (StringUtils.isBlank(inclusionPattern))
-				return (B) this;
+				return builderClass.cast(this);
 			if (inclusionPatterns == null)
 				inclusionPatterns = new LinkedHashSet<>();
 			inclusionPatterns.add(inclusionPattern);
-			return (B) this;
+			return builderClass.cast(this);
 		}
 
 		public B setExclusionPatterns(final Collection<String> exclusionPatterns) {
 			this.exclusionPatterns = exclusionPatterns == null || exclusionPatterns.isEmpty() ?
 					null :
 					new LinkedHashSet<>(exclusionPatterns);
-			return (B) this;
+			return builderClass.cast(this);
 		}
 
 		public B setExclusionPatterns(final String exclusionPatternText) throws IOException {
 			if (StringUtils.isBlank(exclusionPatternText)) {
 				exclusionPatterns = null;
-				return (B) this;
+				return builderClass.cast(this);
 			}
 			if (exclusionPatterns != null)
 				exclusionPatterns.clear();
 			else
 				exclusionPatterns = new LinkedHashSet<>();
 			StringUtils.linesCollector(exclusionPatternText, false, exclusionPatterns);
-			return (B) this;
+			return builderClass.cast(this);
 		}
 
 		public B addExclusionPattern(final String exclusionPattern) {
 			if (StringUtils.isBlank(exclusionPattern))
-				return (B) this;
+				return builderClass.cast(this);
 			if (exclusionPatterns == null)
 				exclusionPatterns = new LinkedHashSet<>();
 			exclusionPatterns.add(exclusionPattern);
-			return (B) this;
+			return builderClass.cast(this);
 		}
 
 		public abstract D build();

@@ -26,7 +26,6 @@ import com.qwazr.server.ServerException;
 import com.qwazr.utils.LoggerUtils;
 import com.qwazr.utils.RegExpUtils;
 import com.qwazr.utils.TimeTracker;
-import com.qwazr.utils.UBuilder;
 import org.apache.commons.lang3.StringUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Cookie;
@@ -117,7 +116,7 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 	 * @return
 	 */
 	private URI checkLink(final URI uri) {
-		UBuilder uriBuilder = new UBuilder(uri);
+		final UBuilder uriBuilder = new UBuilder(uri);
 		if (crawlDefinition.removeFragments != null && crawlDefinition.removeFragments)
 			uriBuilder.setFragment(null);
 		if (parametersMatcherList != null && !parametersMatcherList.isEmpty())

@@ -114,10 +114,11 @@ public class FileCrawlDefinition extends CrawlDefinition {
 		private Integer crawlWaitMs;
 
 		protected Builder() {
+			super(Builder.class);
 		}
 
 		protected Builder(FileCrawlDefinition crawlDefinition) {
-			super(crawlDefinition);
+			super(Builder.class, crawlDefinition);
 			entryPath = crawlDefinition.entryPath;
 			maxDepth = crawlDefinition.maxDepth;
 			crawlWaitMs = crawlDefinition.crawlWaitMs;

@@ -456,10 +456,11 @@ public class WebCrawlDefinition extends CrawlDefinition {
 		private Integer pageLoadTimeout;
 
 		protected Builder() {
+			super(Builder.class);
 		}
 
 		protected Builder(WebCrawlDefinition src) {
-			super(src);
+			super(Builder.class, src);
 			this.preUrl = src.preUrl;
 			this.entryUrl = src.entryUrl;
 			this.entryRequest = src.entryRequest;
