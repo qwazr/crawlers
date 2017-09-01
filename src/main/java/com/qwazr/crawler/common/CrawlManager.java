@@ -33,7 +33,7 @@ public abstract class CrawlManager<T extends CrawlThread<D, S, ?>, D extends Cra
 
 	private final Map<String, S> statusHistory;
 	private final ConcurrentHashMap<String, T> crawlSessionMap;
-	private final ExecutorService executorService;
+	protected final ExecutorService executorService;
 	private final Logger logger;
 	protected final String myAddress;
 	protected final ScriptServiceInterface scriptService;

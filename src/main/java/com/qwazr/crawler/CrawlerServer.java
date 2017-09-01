@@ -60,8 +60,7 @@ public class CrawlerServer implements BaseServer {
 				singletons(new WelcomeShutdownService());
 
 		final ClusterManager clusterManager =
-				new ClusterManager(executorService, configuration).registerHttpClientMonitoringThread(builder)
-						.registerProtocolListener(builder, services)
+				new ClusterManager(executorService, configuration).registerProtocolListener(builder, services)
 						.registerContextAttribute(builder)
 						.registerWebService(webServices);
 
@@ -74,7 +73,8 @@ public class CrawlerServer implements BaseServer {
 
 		final WebCrawlerManager webCrawlerManager =
 				new WebCrawlerManager(clusterManager, scriptManager, executorService).registerContextAttribute(builder)
-						.registerWebService(webServices);
+						.registerWebService(webServices)
+						.registerHttpClientMonitoringThread(builder);
 
 		final FileCrawlerManager fileCrawlerManager =
 				new FileCrawlerManager(clusterManager, scriptManager, executorService).registerContextAttribute(builder)
