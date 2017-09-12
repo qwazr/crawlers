@@ -20,7 +20,7 @@ import com.qwazr.crawler.common.CrawlManager;
 import com.qwazr.crawler.common.CrawlSessionImpl;
 import com.qwazr.scripts.ScriptManager;
 import com.qwazr.server.ApplicationBuilder;
-import com.qwazr.server.GenericServer;
+import com.qwazr.server.GenericServerBuilder;
 import com.qwazr.utils.LoggerUtils;
 import com.qwazr.utils.TimeTracker;
 
@@ -50,7 +50,7 @@ public class FileCrawlerManager extends CrawlManager<FileCrawlThread, FileCrawlD
 		return service;
 	}
 
-	public FileCrawlerManager registerContextAttribute(final GenericServer.Builder builder) {
+	public FileCrawlerManager registerContextAttribute(final GenericServerBuilder builder) {
 		builder.contextAttribute(this);
 		return this;
 	}

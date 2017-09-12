@@ -20,7 +20,7 @@ import com.qwazr.crawler.common.CrawlManager;
 import com.qwazr.crawler.common.CrawlSessionImpl;
 import com.qwazr.scripts.ScriptManager;
 import com.qwazr.server.ApplicationBuilder;
-import com.qwazr.server.GenericServer;
+import com.qwazr.server.GenericServerBuilder;
 import com.qwazr.utils.LoggerUtils;
 import com.qwazr.utils.TimeTracker;
 import com.qwazr.utils.http.HttpClients;
@@ -45,7 +45,7 @@ public class WebCrawlerManager extends CrawlManager<WebCrawlThread, WebCrawlDefi
 		this(clusterManager.getService().getStatus().me, scriptManager, executorService);
 	}
 
-	public WebCrawlerManager registerHttpClientMonitoringThread(final GenericServer.Builder builder) {
+	public WebCrawlerManager registerHttpClientMonitoringThread(final GenericServerBuilder builder) {
 		final HttpClients.IdleConnectionMonitorThread monitorThread =
 				HttpClients.getNewMonitorThread(30 * 1000, 60 * 60 * 1000);
 		builder.shutdownListener(server -> monitorThread.shutdown());
@@ -57,7 +57,7 @@ public class WebCrawlerManager extends CrawlManager<WebCrawlThread, WebCrawlDefi
 		return service;
 	}
 
-	public WebCrawlerManager registerContextAttribute(final GenericServer.Builder builder) {
+	public WebCrawlerManager registerContextAttribute(final GenericServerBuilder builder) {
 		builder.contextAttribute(this);
 		return this;
 	}
