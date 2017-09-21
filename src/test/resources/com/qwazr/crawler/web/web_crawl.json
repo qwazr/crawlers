@@ -5,5 +5,8 @@
   ],
   "exclusion_patterns": [
     "https://www.qwazr.com/search"
+  ],
+  "accepted_content_type": [
+    "text/html"
   ]
 }

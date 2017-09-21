@@ -20,18 +20,19 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.crawler.common.CrawlStatus;
 import com.qwazr.utils.TimeTracker;
 
-public class WebCrawlStatus extends CrawlStatus<WebCrawlDefinition> {
+final public class WebCrawlStatus extends CrawlStatus<WebCrawlDefinition> {
 
 	@JsonCreator
 	WebCrawlStatus(@JsonProperty("node_address") String nodeAddress, @JsonProperty("aborting") Boolean aborting,
 			@JsonProperty("aborting_reason") String abortingReason, @JsonProperty("timer") TimeTracker.Status timer,
 			@JsonProperty("crawled") Integer crawled, @JsonProperty("ignored") Integer ignored,
-			@JsonProperty("error") Integer error, @JsonProperty("last_error") String lastError,
-			@JsonProperty("current_crawl") String currentCrawl, @JsonProperty("start_time") final Long startTime,
-			@JsonProperty("end_time") final Long endTime, @JsonProperty("current_depth") Integer currentDepth,
+			@JsonProperty("redirect") Integer redirect, @JsonProperty("error") Integer error,
+			@JsonProperty("last_error") String lastError, @JsonProperty("current_crawl") String currentCrawl,
+			@JsonProperty("start_time") final Long startTime, @JsonProperty("end_time") final Long endTime,
+			@JsonProperty("current_depth") Integer currentDepth,
 			@JsonProperty("crawl_definition") WebCrawlDefinition crawlDefinition) {
-		super(nodeAddress, aborting, abortingReason, timer, crawled, ignored, error, lastError, currentCrawl, startTime,
-				endTime, currentDepth, crawlDefinition);
+		super(nodeAddress, aborting, abortingReason, timer, crawled, ignored, redirect, error, lastError, currentCrawl,
+				startTime, endTime, currentDepth, crawlDefinition);
 	}
 
 	private WebCrawlStatus(Builder builder, boolean withDefinition) {
@@ -42,10 +43,10 @@ public class WebCrawlStatus extends CrawlStatus<WebCrawlDefinition> {
 		return new Builder(nodeAddress, timeTracker, crawlDefinition);
 	}
 
-	public static class Builder extends AbstractBuilder<WebCrawlDefinition, WebCrawlStatus> {
+	final public static class Builder extends AbstractBuilder<WebCrawlDefinition, WebCrawlStatus, Builder> {
 
 		private Builder(String nodeAddress, TimeTracker timeTracker, WebCrawlDefinition crawlDefinition) {
-			super(nodeAddress, timeTracker, crawlDefinition);
+			super(Builder.class, nodeAddress, timeTracker, crawlDefinition);
 		}
 
 		@Override

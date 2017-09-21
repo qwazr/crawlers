@@ -15,7 +15,6 @@
  */
 package com.qwazr.crawler.web;
 
-import com.google.common.net.InternetDomainName;
 import com.qwazr.crawler.common.CrawlSessionImpl;
 import com.qwazr.crawler.common.CrawlThread;
 import com.qwazr.crawler.common.EventEnum;
@@ -57,13 +56,14 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 	private static final Logger LOGGER = LoggerUtils.getLogger(WebCrawlThread.class);
 
 	private final WebCrawlDefinition crawlDefinition;
-	private final InternetDomainName internetDomainName;
 
 	private final List<Matcher> parametersMatcherList;
 	private final List<Matcher> pathCleanerMatcherList;
 
 	private final Map<URI, RobotsTxt> robotsTxtMap;
 	private final String userAgent;
+
+	private final Set<String> acceptedContentType;
 
 	private final TimeTracker timeTracker;
 
@@ -85,15 +85,21 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 			robotsTxtMap = new HashMap<>();
 		else
 			robotsTxtMap = null;
+
+		if (crawlDefinition.acceptedContentType != null) {
+			acceptedContentType = new HashSet<>();
+			crawlDefinition.acceptedContentType.forEach(ct -> acceptedContentType.add(ct.toLowerCase()));
+		} else
+			acceptedContentType = null;
+
 		userAgent = crawlDefinition.userAgent == null ? "QWAZR_BOT" : crawlDefinition.userAgent;
 		final String u;
 		try {
 			u = crawlDefinition.entryUrl != null ? crawlDefinition.entryUrl : crawlDefinition.entryRequest.url;
-			URI uri = new URI(u);
-			String host = uri.getHost();
+			final URI uri = new URI(u);
+			final String host = uri.getHost();
 			if (host == null)
 				throw new URISyntaxException(u, "No host found.", -1);
-			internetDomainName = InternetDomainName.from(host);
 		} catch (URISyntaxException e) {
 			throw new ServerException(Status.NOT_ACCEPTABLE, e.getMessage());
 		} finally {
@@ -132,10 +138,22 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 			final String redirectLocation = head.getRedirectLocation();
 			if (!StringUtils.isBlank(redirectLocation)) {
 				final URI redirectUri = new URI(redirectLocation);
+				session.incRedirectCount();
 				currentBuilder.redirect(redirectUri);
-				currentBuilder.link(redirectUri);
-				return head;
+				return null;
 			}
+			if (!head.isSuccessful()) {
+				final String msg = "Wrong HTTP code: " + head.getResponseCode();
+				session.incErrorCount("Error on " + uriString + ": " + msg);
+				currentBuilder.error(msg);
+				return null;
+			}
+
+			if (!checkPassContentType(head.getContentType(), currentBuilder)) {
+				session.incIgnoredCount();
+				return null;
+			}
+
 			return head;
 		} catch (Exception e) {
 			session.incErrorCount("Error on " + uriString + ": " + e.getMessage());
@@ -178,10 +196,12 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 
 		// Check the robotsTxt status
 		try {
-			final RobotsTxt.Status robotsTxtStatus = checkRobotsTxt(driver, currentBuilder);
+			final RobotsTxt.Status robotsTxtStatus = checkRobotsTxt(driver, currentBuilder.uri);
 			if (robotsTxtStatus != null && !robotsTxtStatus.isCrawlable) {
 				currentBuilder.ignored(true);
 				currentBuilder.robotsTxtDisallow(true);
+				session.incIgnoredCount();
+				return;
 			}
 		} catch (Exception e) {
 			session.incErrorCount("Error during robots.txt extraction: " + e.getMessage());
@@ -190,26 +210,25 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 		}
 
 		// First make an head
-		final DriverInterface.Head head = doHttp(uriString, currentBuilder, (u) -> driver.head(u));
+		final DriverInterface.Head head = doHttp(uriString, currentBuilder, driver::head);
 		if (head == null)
 			return; // Any error already handled by doHttp
 
-		//TODO: check content-type, content-length
-
 		// Second make an head
-		final DriverInterface.Get get = doHttp(uriString, currentBuilder, (u) -> driver.get(u));
+		final DriverInterface.Get get = doHttp(uriString, currentBuilder, driver::get);
 		if (get == null)
 			return; // Any error already handled by doHttp
-
-		// Handle url number limit
-		final int crawledCount = session.incCrawledCount();
-		currentBuilder.crawled(true);
-		if (crawlDefinition.maxUrlNumber != null && crawledCount >= crawlDefinition.maxUrlNumber)
-			abort("Max URL number reached: " + crawlDefinition.maxUrlNumber);
 
 		final DriverInterface.Content content = get.getContent();
 		if (content == null)
 			return; // No content ? We're done
+
+		if (!checkPassContentType(head.getContentType(), currentBuilder)) {
+			session.incIgnoredCount();
+			return;
+		}
+
+		currentBuilder.crawled(true);
 
 		// If it is not HTML we're done
 		if (!"text/html".equals(content.getContentType()))
@@ -253,20 +272,26 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 		timeTracker.next("Links extraction");
 	}
 
-	private RobotsTxt.Status checkRobotsTxt(final DriverInterface driver, final CurrentURIImpl.Builder currentBuilder)
+	private boolean checkPassContentType(String contentType, final CurrentURIImpl.Builder currentBuilder) {
+		final boolean accepted = acceptedContentType == null || acceptedContentType.contains(contentType);
+		currentBuilder.contentType(contentType, !accepted);
+		return accepted;
+	}
+
+	private RobotsTxt.Status checkRobotsTxt(final DriverInterface driver, final URI uri)
 			throws IOException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException,
 			KeyManagementException {
 		if (robotsTxtMap == null)
 			return null;
 		timeTracker.next(null);
 		try {
-			final URI robotsTxtURI = RobotsTxt.getRobotsURI(currentBuilder.uri);
+			final URI robotsTxtURI = RobotsTxt.getRobotsURI(uri);
 			RobotsTxt robotsTxt = robotsTxtMap.get(robotsTxtURI);
 			if (robotsTxt == null) {
 				robotsTxt = RobotsTxt.download(driver, robotsTxtURI);
 				robotsTxtMap.put(robotsTxtURI, robotsTxt);
 			}
-			return robotsTxt.getStatus(currentBuilder.uri, userAgent);
+			return robotsTxt.getStatus(uri, userAgent);
 		} finally {
 			timeTracker.next("Robots.txt check");
 		}
@@ -290,9 +315,22 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 		crawl(driver, currentBuilder);
 		final CurrentURI current = currentBuilder.build();
 
+		// Handle url number limit
+		if (current.isCrawled()) {
+			final int crawledCount = session.incCrawledCount();
+			if (crawlDefinition.maxUrlNumber != null && crawledCount >= crawlDefinition.maxUrlNumber)
+				abort("Max URL number reached: " + crawlDefinition.maxUrlNumber);
+		}
+
 		// Give the hand to the "crawl" event scripts
 		script(EventEnum.crawl, current);
 
+		// Manage any redirection
+		final URI redirectUri = current.getRedirect();
+		if (redirectUri != null) {
+			crawlOne(driver, crawledURIs, redirectUri, nextLevelUris, depth);
+			return;
+		}
 		// Add the next level URIs
 		nextLevelUris.addAll(current.getLinks().keySet());
 

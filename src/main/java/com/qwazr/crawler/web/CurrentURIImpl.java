@@ -29,12 +29,16 @@ final class CurrentURIImpl extends CurrentCrawlImpl implements CurrentURI {
 	private final URI redirect;
 	private final Map<URI, AtomicInteger> links;
 	private final Boolean isRobotsTxtDisallow;
+	private final String contentType;
+	private final Boolean rejectedContentType;
 
 	CurrentURIImpl(Builder builder) {
 		super(builder);
 		this.uri = builder.uri;
 		this.redirect = builder.redirect;
 		this.isRobotsTxtDisallow = builder.isRobotsTxtDisallow;
+		this.contentType = builder.contentType;
+		this.rejectedContentType = builder.rejectedContentType;
 		this.links = builder.links == null ? Collections.emptyMap() : Collections.unmodifiableMap(builder.links);
 	}
 
@@ -46,6 +50,16 @@ final class CurrentURIImpl extends CurrentCrawlImpl implements CurrentURI {
 	@Override
 	public URI getRedirect() {
 		return redirect;
+	}
+
+	@Override
+	public String getContentType() {
+		return contentType;
+	}
+
+	@Override
+	public Boolean isRejectedContentType() {
+		return rejectedContentType;
 	}
 
 	@Override
@@ -64,6 +78,8 @@ final class CurrentURIImpl extends CurrentCrawlImpl implements CurrentURI {
 		final String uriString;
 		private URI redirect;
 		private Boolean isRobotsTxtDisallow;
+		private String contentType;
+		private Boolean rejectedContentType;
 		private LinkedHashMap<URI, AtomicInteger> links;
 
 		protected Builder(URI uri, int depth) {
@@ -79,6 +95,12 @@ final class CurrentURIImpl extends CurrentCrawlImpl implements CurrentURI {
 
 		public Builder robotsTxtDisallow(Boolean isRobotsTxtDisallow) {
 			this.isRobotsTxtDisallow = isRobotsTxtDisallow;
+			return this;
+		}
+
+		public Builder contentType(String contentType, boolean rejected) {
+			this.contentType = contentType;
+			this.rejectedContentType = rejected;
 			return this;
 		}
 

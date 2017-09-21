@@ -114,6 +114,17 @@ public class QwazrDriver implements DriverInterface {
 	public void close() throws IOException {
 	}
 
+	static Long buildContentLength(String header) {
+		return header == null ? null : Long.parseLong(header);
+	}
+
+	static String buildContentType(String header) {
+		if (StringUtils.isBlank(header))
+			return null;
+		final MediaType mediaType = MediaType.parse(header);
+		return mediaType == null ? null : mediaType.type() + '/' + mediaType.subtype();
+	}
+
 	class HeadImpl implements Head {
 
 		final String url;
@@ -121,6 +132,10 @@ public class QwazrDriver implements DriverInterface {
 		final Headers headers;
 		final ContentImpl content;
 		final String redirectLocation;
+		final String contentType;
+		final Long contentLength;
+		final String contentEncoding;
+		final boolean isSuccessful;
 
 		HeadImpl(final String url) throws IOException {
 			this.url = url;
@@ -132,7 +147,19 @@ public class QwazrDriver implements DriverInterface {
 				responseCode = response.code();
 				headers = response.headers();
 				content = response(response);
-				redirectLocation = response.isRedirect() && headers != null ? headers.get(HttpHeaders.LOCATION) : null;
+				isSuccessful = response.isSuccessful();
+				if (headers != null) {
+					redirectLocation = response.isRedirect() ? headers.get(HttpHeaders.LOCATION) : null;
+					contentType = buildContentType(headers.get(HttpHeaders.CONTENT_TYPE));
+					contentLength = buildContentLength(headers.get(HttpHeaders.CONTENT_LENGTH));
+					contentEncoding = headers.get(HttpHeaders.CONTENT_ENCODING);
+				} else {
+					redirectLocation = null;
+					contentType = null;
+					contentLength = null;
+					contentEncoding = null;
+				}
+
 			}
 		}
 
@@ -155,33 +182,37 @@ public class QwazrDriver implements DriverInterface {
 		}
 
 		@Override
-		public Long getContentLength() {
-			final String ct = headers == null ? null : headers.get(HttpHeaders.CONTENT_LENGTH);
-			return ct == null ? null : Long.parseLong(ct);
+		final public boolean isSuccessful() {
+			return isSuccessful;
 		}
 
 		@Override
-		public String getContentType() {
-			return headers == null ? null : headers.get(HttpHeaders.CONTENT_TYPE);
+		final public Long getContentLength() {
+			return contentLength;
 		}
 
 		@Override
-		public String getContentEncoding() {
-			return headers == null ? null : headers.get(HttpHeaders.CONTENT_ENCODING);
+		final public String getContentType() {
+			return contentType;
 		}
 
 		@Override
-		public List<String> getHeaders(String name) {
+		final public String getContentEncoding() {
+			return contentEncoding;
+		}
+
+		@Override
+		final public List<String> getHeaders(String name) {
 			return headers == null ? null : headers.values(name);
 		}
 
 		@Override
-		public String getFirstHeader(String name) {
+		final public String getFirstHeader(String name) {
 			return headers == null ? null : headers.get(name);
 		}
 
 		@Override
-		public String getRedirectLocation() {
+		final public String getRedirectLocation() {
 			return redirectLocation;
 		}
 	}

@@ -43,6 +43,20 @@ public interface CurrentURI extends CurrentCrawl {
 	URI getRedirect();
 
 	/**
+	 * The content-type of the crawled URI
+	 *
+	 * @return a content-type
+	 */
+	String getContentType();
+
+	/**
+	 * Tells if the content-type has been rejected (not present in the accepted_content_type list)
+	 *
+	 * @return
+	 */
+	Boolean isRejectedContentType();
+
+	/**
 	 * Get next level links
 	 *
 	 * @return a collection of links

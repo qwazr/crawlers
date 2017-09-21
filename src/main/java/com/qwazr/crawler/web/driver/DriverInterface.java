@@ -47,6 +47,8 @@ public interface DriverInterface extends Closeable {
 		String getFirstHeader(String name);
 
 		String getRedirectLocation();
+
+		boolean isSuccessful();
 	}
 
 	interface Get extends Head, Closeable {

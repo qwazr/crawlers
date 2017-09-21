@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -70,6 +71,9 @@ public class WebCrawlDefinition extends CrawlDefinition {
 	 */
 	@JsonProperty("max_url_number")
 	final public Integer maxUrlNumber;
+
+	@JsonProperty("accepted_content_type")
+	final public List<String> acceptedContentType;
 
 	/**
 	 * A list of regular expression patterns. Any parameters which matches is
@@ -129,6 +133,7 @@ public class WebCrawlDefinition extends CrawlDefinition {
 		urls = null;
 		maxDepth = null;
 		maxUrlNumber = null;
+		acceptedContentType = null;
 		parametersPatterns = null;
 		pathCleanerPatterns = null;
 		removeFragments = null;
@@ -148,6 +153,9 @@ public class WebCrawlDefinition extends CrawlDefinition {
 		urls = builder.urls == null ? null : Collections.unmodifiableMap(new LinkedHashMap<>(builder.urls));
 		maxDepth = builder.maxDepth;
 		maxUrlNumber = builder.maxUrlNumber;
+		acceptedContentType = builder.acceptedContentType == null ?
+				null :
+				Collections.unmodifiableList(new ArrayList<>(builder.acceptedContentType));
 		parametersPatterns = builder.parametersPatterns == null ?
 				null :
 				Collections.unmodifiableList(new ArrayList<>(builder.parametersPatterns));
@@ -299,8 +307,9 @@ public class WebCrawlDefinition extends CrawlDefinition {
 		private LinkedHashMap<String, Integer> urls;
 		private Integer maxDepth;
 		private Integer maxUrlNumber;
-		private List<String> parametersPatterns;
-		private List<String> pathCleanerPatterns;
+		private LinkedHashSet<String> acceptedContentType;
+		private LinkedHashSet<String> parametersPatterns;
+		private LinkedHashSet<String> pathCleanerPatterns;
 		private Boolean removeFragments;
 		private LinkedHashMap<String, String> cookies;
 		private List<ProxyDefinition> proxies;
@@ -321,9 +330,12 @@ public class WebCrawlDefinition extends CrawlDefinition {
 			this.urls = src.urls == null ? null : new LinkedHashMap<>(src.urls);
 			this.maxDepth = src.maxDepth;
 			this.maxUrlNumber = src.maxUrlNumber;
-			this.parametersPatterns = src.parametersPatterns == null ? null : new ArrayList<>(src.parametersPatterns);
+			this.acceptedContentType =
+					src.acceptedContentType == null ? null : new LinkedHashSet<>(src.acceptedContentType);
+			this.parametersPatterns =
+					src.parametersPatterns == null ? null : new LinkedHashSet<>(src.parametersPatterns);
 			this.pathCleanerPatterns =
-					src.pathCleanerPatterns == null ? null : new ArrayList<>(src.pathCleanerPatterns);
+					src.pathCleanerPatterns == null ? null : new LinkedHashSet<>(src.pathCleanerPatterns);
 			this.removeFragments = src.removeFragments;
 			this.cookies = src.cookies == null ? null : new LinkedHashMap<>(src.cookies);
 			this.proxies = src.proxies == null ? null : new ArrayList<>(src.proxies);
@@ -370,16 +382,23 @@ public class WebCrawlDefinition extends CrawlDefinition {
 			return this;
 		}
 
+		public Builder addAcceptedContentType(final String acceptedContentType) {
+			if (this.acceptedContentType == null)
+				this.acceptedContentType = new LinkedHashSet<>();
+			this.acceptedContentType.add(acceptedContentType);
+			return this;
+		}
+
 		public Builder addParametersPattern(final String parametersPattern) {
 			if (this.parametersPatterns == null)
-				this.parametersPatterns = new ArrayList<>();
+				this.parametersPatterns = new LinkedHashSet<>();
 			this.parametersPatterns.add(parametersPattern);
 			return this;
 		}
 
 		public Builder addPathCleanerPattern(final String pathCleanerPattern) {
 			if (this.pathCleanerPatterns == null)
-				this.pathCleanerPatterns = new ArrayList<>();
+				this.pathCleanerPatterns = new LinkedHashSet<>();
 			this.pathCleanerPatterns.add(pathCleanerPattern);
 			return this;
 		}

@@ -55,6 +55,11 @@ public abstract class CrawlStatus<T extends CrawlDefinition> {
 	final public int ignored;
 
 	/**
+	 * The number of redirect (or alias)
+	 */
+	final public int redirect;
+
+	/**
 	 * The number of erroneous crawls
 	 */
 	final public int error;
@@ -92,16 +97,17 @@ public abstract class CrawlStatus<T extends CrawlDefinition> {
 	protected CrawlStatus(@JsonProperty("node_address") String nodeAddress, @JsonProperty("aborting") Boolean aborting,
 			@JsonProperty("aborting_reason") String abortingReason, @JsonProperty("timer") TimeTracker.Status timer,
 			@JsonProperty("crawled") Integer crawled, @JsonProperty("ignored") Integer ignored,
-			@JsonProperty("error") Integer error, @JsonProperty("last_error") String lastError,
-			@JsonProperty("current_crawl") String currentCrawl, @JsonProperty("start_time") final Long startTime,
-			@JsonProperty("end_time") final Long endTime, @JsonProperty("current_depth") Integer currentDepth,
-			@JsonProperty("crawl_definition") T crawlDefinition) {
+			@JsonProperty("redirect") Integer redirect, @JsonProperty("error") Integer error,
+			@JsonProperty("last_error") String lastError, @JsonProperty("current_crawl") String currentCrawl,
+			@JsonProperty("start_time") final Long startTime, @JsonProperty("end_time") final Long endTime,
+			@JsonProperty("current_depth") Integer currentDepth, @JsonProperty("crawl_definition") T crawlDefinition) {
 		this.nodeAddress = nodeAddress;
 		this.timer = timer;
 		this.aborting = aborting;
 		this.abortingReason = abortingReason;
 		this.crawled = crawled == null ? 0 : crawled;
 		this.ignored = ignored == null ? 0 : ignored;
+		this.redirect = redirect == null ? 0 : redirect;
 		this.error = error == null ? 0 : error;
 		this.lastError = lastError;
 		this.currentCrawl = currentCrawl;
@@ -111,13 +117,14 @@ public abstract class CrawlStatus<T extends CrawlDefinition> {
 		this.crawlDefinition = crawlDefinition;
 	}
 
-	public CrawlStatus(AbstractBuilder<T, ?> builder, boolean withCrawlDefinition) {
+	public CrawlStatus(AbstractBuilder<T, ?, ?> builder, boolean withCrawlDefinition) {
 		this.nodeAddress = builder.nodeAddress;
 		this.timer = builder.timeTracker == null ? null : builder.timeTracker.getStatus();
 		this.aborting = builder.aborting;
 		this.abortingReason = builder.abortingReason;
 		this.crawled = builder.crawled;
 		this.ignored = builder.ignored;
+		this.redirect = builder.redirect;
 		this.error = builder.error;
 		this.lastError = builder.lastError;
 		this.currentCrawl = builder.currentCrawl;
@@ -162,6 +169,13 @@ public abstract class CrawlStatus<T extends CrawlDefinition> {
 	 */
 	public int getIgnored() {
 		return ignored;
+	}
+
+	/**
+	 * @return The number of redirects
+	 */
+	public int getRedirect() {
+		return redirect;
 	}
 
 	/**
@@ -226,8 +240,9 @@ public abstract class CrawlStatus<T extends CrawlDefinition> {
 				Objects.equals(timer, s.timer) && Objects.equals(crawlDefinition, s.crawlDefinition);
 	}
 
-	public abstract static class AbstractBuilder<D extends CrawlDefinition, S extends CrawlStatus<D>> {
+	public abstract static class AbstractBuilder<D extends CrawlDefinition, S extends CrawlStatus<D>, B extends AbstractBuilder<D, S, ?>> {
 
+		private final Class<B> builderClass;
 		private final String nodeAddress;
 		private final long startTime;
 		private final TimeTracker timeTracker;
@@ -237,54 +252,62 @@ public abstract class CrawlStatus<T extends CrawlDefinition> {
 		private String abortingReason;
 		private volatile int crawled;
 		private volatile int ignored;
+		private volatile int redirect;
 		private volatile int error;
 		private String lastError;
 		private String currentCrawl;
 		private Integer currentDepth;
 		private Long endTime;
 
-		protected AbstractBuilder(String nodeAddress, TimeTracker timeTracker, D crawlDefinition) {
+		protected AbstractBuilder(final Class<B> builderClass, final String nodeAddress, final TimeTracker timeTracker,
+				final D crawlDefinition) {
+			this.builderClass = builderClass;
 			this.nodeAddress = nodeAddress;
 			this.startTime = System.currentTimeMillis();
 			this.timeTracker = timeTracker;
 			this.crawlDefinition = crawlDefinition;
 		}
 
-		public AbstractBuilder<D, S> abort(String abortingReason) {
+		public B abort(String abortingReason) {
 			this.aborting = true;
 			this.abortingReason = abortingReason;
-			return this;
+			return builderClass.cast(this);
 		}
 
-		public AbstractBuilder<D, S> incCrawled() {
+		public B incCrawled() {
 			crawled++;
-			return this;
+			return builderClass.cast(this);
 		}
 
-		public AbstractBuilder<D, S> incIgnored() {
+		public B incIgnored() {
 			ignored++;
-			return this;
+			return builderClass.cast(this);
 		}
 
-		public AbstractBuilder<D, S> incError() {
+		public B incRedirect() {
+			redirect++;
+			return builderClass.cast(this);
+		}
+
+		public B incError() {
 			error++;
-			return this;
+			return builderClass.cast(this);
 		}
 
-		public AbstractBuilder<D, S> lastError(String errorMessage) {
+		public B lastError(String errorMessage) {
 			this.lastError = errorMessage;
-			return this;
+			return builderClass.cast(this);
 		}
 
-		public AbstractBuilder<D, S> crawl(String currentCrawl, Integer currentDepth) {
+		public B crawl(String currentCrawl, Integer currentDepth) {
 			this.currentCrawl = currentCrawl;
 			this.currentDepth = currentDepth;
-			return this;
+			return builderClass.cast(this);
 		}
 
-		public AbstractBuilder<D, S> done() {
+		public B done() {
 			this.endTime = System.currentTimeMillis();
-			return this;
+			return builderClass.cast(this);
 		}
 
 		public abstract S build(boolean withCrawlDefinition);

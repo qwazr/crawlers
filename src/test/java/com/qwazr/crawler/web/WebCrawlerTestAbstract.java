@@ -17,6 +17,7 @@ package com.qwazr.crawler.web;
 
 import com.qwazr.crawler.CrawlerServer;
 import com.qwazr.crawler.common.CommonEvent;
+import com.qwazr.crawler.common.CrawlStatus;
 import com.qwazr.crawler.common.EventEnum;
 import com.qwazr.crawler.common.ScriptDefinition;
 import com.qwazr.utils.RandomUtils;
@@ -66,7 +67,10 @@ public abstract class WebCrawlerTestAbstract {
 	public void test300SimpleCrawl() throws InterruptedException {
 		final String sessionName = RandomUtils.alphanumeric(10);
 		service.runSession(sessionName, getNewWebCrawl().build());
-		CommonEvent.crawlWait(sessionName, service);
+		final CrawlStatus status = CommonEvent.crawlWait(sessionName, service);
+		Assert.assertEquals(4, status.crawled);
+		Assert.assertEquals(1, status.ignored);
+		Assert.assertEquals(1, status.error);
 	}
 
 	@Test
@@ -86,7 +90,13 @@ public abstract class WebCrawlerTestAbstract {
 				.variable(variableName, variableValue + EventEnum.after_session.name())
 				.build());
 		service.runSession(sessionName, webCrawl.build());
-		CommonEvent.crawlWait(sessionName, service);
+		final CrawlStatus status = CommonEvent.crawlWait(sessionName, service);
+
+		Assert.assertEquals(2, status.crawled);
+		Assert.assertEquals(1, status.ignored);
+		Assert.assertEquals(1, status.redirect);
+		Assert.assertEquals(1, status.error);
+
 		Assert.assertEquals(1, WebEvents.feedbacks.get(EventEnum.before_session).count());
 		Assert.assertEquals(5, WebEvents.feedbacks.get(EventEnum.crawl).count());
 		Assert.assertEquals(1, WebEvents.feedbacks.get(EventEnum.after_session).count());

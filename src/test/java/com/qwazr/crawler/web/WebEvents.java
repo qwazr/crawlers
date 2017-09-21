@@ -31,7 +31,7 @@ public class WebEvents {
 			super(EventEnum.crawl, WebEvents.feedbacks, CurrentURIImpl.class,
 					currentURI -> currentURI.getUri().toString());
 		}
-
+		
 	}
 
 	public static class BeforeSession extends CommonEvent.SessionEvent {

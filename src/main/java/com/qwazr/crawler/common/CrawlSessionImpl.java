@@ -32,10 +32,10 @@ public class CrawlSessionImpl<D extends CrawlDefinition, S extends CrawlStatus<D
 
 	private volatile S crawlStatusNoDefinition;
 	private volatile S crawlStatusWithDefinition;
-	private final CrawlStatus.AbstractBuilder<D, S> crawlStatusBuilder;
+	private final CrawlStatus.AbstractBuilder<D, S, ?> crawlStatusBuilder;
 
 	public CrawlSessionImpl(String sessionName, TimeTracker timeTracker, D crawlDefinition,
-			CrawlStatus.AbstractBuilder<D, S> crawlStatusBuilder) {
+			CrawlStatus.AbstractBuilder<D, S, ?> crawlStatusBuilder) {
 		this.timeTracker = timeTracker;
 		this.crawlStatusBuilder = crawlStatusBuilder;
 		this.crawlDefinition = crawlDefinition;
@@ -120,6 +120,11 @@ public class CrawlSessionImpl<D extends CrawlDefinition, S extends CrawlStatus<D
 		return crawlStatusNoDefinition.crawled;
 	}
 
+	public void incRedirectCount() {
+		crawlStatusBuilder.incRedirect();
+		buildStatus();
+	}
+
 	public void incErrorCount(String errorMessage) {
 		crawlStatusBuilder.lastError(errorMessage).incError();
 		buildStatus();
@@ -152,5 +157,5 @@ public class CrawlSessionImpl<D extends CrawlDefinition, S extends CrawlStatus<D
 		crawlStatusBuilder.done();
 		buildStatus();
 	}
-	
+
 }
