@@ -73,30 +73,24 @@ public class FileCrawlThread extends CrawlThread<FileCrawlDefinition, FileCrawlS
 	public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
 		if (session.isAborting())
 			return FileVisitResult.TERMINATE;
-		final CurrentPath currentPath = new CurrentPath(dir, attrs, computeDepth(dir));
-		crawl(currentPath);
-		if (currentPath.isIgnored())
+		final CurrentPath.Builder builder = new CurrentPath.Builder(computeDepth(dir)).path(dir).attributes(attrs);
+		final CurrentPath current = crawl(builder);
+		if (current.isIgnored())
 			return FileVisitResult.SKIP_SUBTREE;
 		return FileVisitResult.CONTINUE;
 	}
 
-	private void crawl(final CurrentPath current) {
+	private CurrentPath crawl(final CurrentPath.Builder builder) {
+		checkPassInclusionExclusion(builder, builder.pathString);
+		final CurrentPath current = builder.build();
 		try {
-
-			checkPassInclusionExclusion(current, current.pathString);
-			script(EventEnum.before_crawl, current);
-
-			if (current.isIgnored())
-				session.incIgnoredCount();
-			else {
-				current.setCrawled();
-				session.incCrawledCount();
-			}
-			script(EventEnum.after_crawl, current);
+			script(EventEnum.crawl, current);
+			return current;
 		} catch (Exception e) {
 			final String err = "File crawling error on " + current.pathString;
 			logger.log(Level.WARNING, err, e);
 			session.incErrorCount(err + ": " + ExceptionUtils.getRootCauseMessage(e));
+			return current;
 		}
 	}
 
@@ -106,7 +100,7 @@ public class FileCrawlThread extends CrawlThread<FileCrawlDefinition, FileCrawlS
 			return FileVisitResult.TERMINATE;
 		if (crawlDefinition.crawlWaitMs != null)
 			session.sleep(crawlDefinition.crawlWaitMs);
-		crawl(new CurrentPath(file, attrs, computeDepth(file)));
+		crawl(new CurrentPath.Builder(computeDepth(file)).path(file).attributes(attrs));
 		return FileVisitResult.CONTINUE;
 	}
 

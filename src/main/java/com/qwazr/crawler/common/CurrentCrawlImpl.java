@@ -19,35 +19,30 @@ import org.apache.commons.lang3.StringUtils;
 
 public class CurrentCrawlImpl implements CurrentCrawl {
 
-	final private Integer depth;
+	final private int depth;
+	final private boolean isIgnored;
+	final private boolean isCrawled;
+	final private Boolean isInInclusion;
+	final private Boolean isInExclusion;
+	final private String error;
 
-	private volatile boolean isIgnored = false;
-	private volatile boolean isCrawled = false;
-	private volatile Boolean isInInclusion = null;
-	private volatile Boolean isInExclusion = null;
-
-	private volatile String error = null;
-
-	protected CurrentCrawlImpl(Integer depth) {
-		this.depth = depth;
+	protected CurrentCrawlImpl(BaseBuilder builder) {
+		this.depth = builder.depth;
+		this.isIgnored = builder.isIgnored;
+		this.isCrawled = builder.isCrawled;
+		this.isInInclusion = builder.isInInclusion;
+		this.isInExclusion = builder.isInExclusion;
+		this.error = builder.error;
 	}
 
 	@Override
-	public Integer getDepth() {
+	public int getDepth() {
 		return depth;
-	}
-
-	void setInInclusion(Boolean isInInclusion) {
-		this.isInInclusion = isInInclusion;
 	}
 
 	@Override
 	public Boolean isInInclusion() {
 		return isInInclusion;
-	}
-
-	public void setInExclusion(Boolean isInExclusion) {
-		this.isInExclusion = isInExclusion;
 	}
 
 	@Override
@@ -56,21 +51,8 @@ public class CurrentCrawlImpl implements CurrentCrawl {
 	}
 
 	@Override
-	public void setIgnored() {
-		if (isCrawled || isIgnored)
-			return;
-		isIgnored = true;
-	}
-
-	@Override
 	public boolean isIgnored() {
 		return isIgnored;
-	}
-
-	protected void setCrawled(boolean crawled) {
-		if (isIgnored)
-			isIgnored = false;
-		this.isCrawled = crawled;
 	}
 
 	@Override
@@ -78,24 +60,64 @@ public class CurrentCrawlImpl implements CurrentCrawl {
 		return isCrawled;
 	}
 
-	protected void setError(String error) {
-		this.error = error;
-	}
-
-	protected void setError(Exception e) {
-		if (e == null) {
-			error = null;
-			return;
-		}
-		if (StringUtils.isEmpty(error))
-			error = e.toString();
-		if (StringUtils.isEmpty(error))
-			error = e.getClass().getName();
-	}
-
 	@Override
 	public String getError() {
 		return error;
 	}
 
+	protected static abstract class BaseBuilder<T extends BaseBuilder> {
+
+		private final Class<T> builderClass;
+
+		public final int depth;
+		private boolean isIgnored;
+		private boolean isCrawled;
+		private Boolean isInInclusion;
+		private Boolean isInExclusion;
+		private String error;
+
+		protected BaseBuilder(Class<T> builderClass, int depth) {
+			this.builderClass = builderClass;
+			this.depth = depth;
+		}
+
+		public T ignored(boolean isIgnored) {
+			this.isIgnored = isIgnored;
+			return builderClass.cast(this);
+		}
+
+		public T crawled(boolean isCrawled) {
+			this.isCrawled = isCrawled;
+			return builderClass.cast(this);
+		}
+
+		public T inInclusion(Boolean isInInclusion) {
+			this.isInInclusion = isInInclusion;
+			return builderClass.cast(this);
+		}
+
+		public T inExclusion(Boolean isInExclusion) {
+			this.isInExclusion = isInExclusion;
+			return builderClass.cast(this);
+		}
+
+		public T error(String error) {
+			this.error = error;
+			return builderClass.cast(this);
+		}
+
+		public void error(Exception e) {
+			if (e == null) {
+				error = null;
+				return;
+			}
+			String err = e.getMessage();
+			if (StringUtils.isBlank(err))
+				err = e.toString();
+			if (StringUtils.isBlank(err))
+				err = e.getClass().getName();
+			error(err);
+		}
+
+	}
 }

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,14 +12,16 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- **/
+ */
 
 package com.qwazr.crawler.web;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.gargoylesoftware.htmlunit.HttpMethod;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,28 +39,34 @@ public class WebRequestDefinition {
 
 	public final HttpMethod method;
 
-	public final FormEncodingType form_encoding_type;
+	@JsonProperty("form_encoding_type")
+	public final FormEncodingType formEncodingType;
 
 	public enum FormEncodingType {
 		URL_ENCODED, MULTIPART
 	}
 
-	public WebRequestDefinition() {
-		url = null;
-		charset = null;
-		headers = null;
-		parameters = null;
-		method = null;
-		form_encoding_type = null;
+	public enum HttpMethod {
+		GET, POST, PUT, DELETE, PATCH
+	}
+
+	@JsonCreator
+	public WebRequestDefinition(final String url, final String charset, final Map<String, String> headers,
+			Map<String, List<String>> parameters, final HttpMethod method,
+			@JsonProperty("form_encoding_type") final FormEncodingType formEncodingType) {
+		this.url = url;
+		this.charset = charset;
+		this.headers = headers;
+		this.parameters = parameters;
+		this.method = method;
+		this.formEncodingType = formEncodingType;
 	}
 
 	private WebRequestDefinition(Builder builder) {
-		this.url = builder.url;
-		this.charset = builder.charset;
-		this.headers = builder.headers == null ? null : new LinkedHashMap<>(builder.headers);
-		this.parameters = builder.parameters == null ? null : builder.parameters;
-		this.method = builder.method;
-		this.form_encoding_type = builder.form_encoding_type;
+		this(builder.url, builder.charset,
+				builder.headers == null ? null : Collections.unmodifiableMap(builder.headers),
+				builder.parameters == null ? null : Collections.unmodifiableMap(builder.parameters), builder.method,
+				builder.formEncodingType);
 	}
 
 	public static class Builder {
@@ -67,13 +75,13 @@ public class WebRequestDefinition {
 
 		private String charset;
 
-		private Map<String, String> headers;
+		private LinkedHashMap<String, String> headers;
 
-		private Map<String, List<String>> parameters;
+		private LinkedHashMap<String, List<String>> parameters;
 
 		private HttpMethod method;
 
-		private FormEncodingType form_encoding_type;
+		private FormEncodingType formEncodingType;
 
 		public Builder(final String url) {
 			setUrl(url);
@@ -81,7 +89,7 @@ public class WebRequestDefinition {
 			headers = null;
 			parameters = null;
 			method = HttpMethod.GET;
-			form_encoding_type = form_encoding_type.URL_ENCODED;
+			formEncodingType = FormEncodingType.URL_ENCODED;
 		}
 
 		public Builder setUrl(final String url) {
@@ -104,12 +112,7 @@ public class WebRequestDefinition {
 		public Builder addParameter(final String key, final String value) {
 			if (parameters == null)
 				parameters = new LinkedHashMap<>();
-			List<String> values = parameters.get(key);
-			if (values == null) {
-				values = new ArrayList<>();
-				parameters.put(key, values);
-			}
-			values.add(value);
+			parameters.computeIfAbsent(key, k -> new ArrayList<>()).add(value);
 			return this;
 		}
 
@@ -119,7 +122,7 @@ public class WebRequestDefinition {
 		}
 
 		public Builder setFormEncodingType(final FormEncodingType formEncodingType) {
-			this.form_encoding_type = formEncodingType;
+			this.formEncodingType = formEncodingType;
 			return this;
 		}
 

@@ -16,148 +16,84 @@
 package com.qwazr.crawler.web;
 
 import com.qwazr.crawler.common.CurrentCrawlImpl;
-import com.qwazr.crawler.web.driver.BrowserDriver;
-import com.qwazr.utils.LinkUtils;
-import org.apache.commons.lang3.StringUtils;
 
 import java.net.URI;
-import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
-class CurrentURIImpl extends CurrentCrawlImpl implements CurrentURI {
+final class CurrentURIImpl extends CurrentCrawlImpl implements CurrentURI {
 
-	final private URI initialURI;
-	private volatile URI finalURI;
-	private volatile URI baseURI;
+	private final URI uri;
+	private final URI redirect;
+	private final Map<URI, AtomicInteger> links;
+	private final Boolean isRobotsTxtDisallow;
 
-	private volatile boolean isRedirected = false;
-	private volatile boolean isStartDomain = false;
-	private volatile boolean isStartSubDomain = false;
-	private volatile boolean isRobotsTxtDisallow = false;
-
-	private volatile Collection<URI> sameLevelLinks = null;
-	private volatile Collection<URI> nextLevelLinks = null;
-	private volatile Collection<URI> filteredLinks = null;
-
-	CurrentURIImpl(URI uri, Integer depth) {
-		super(depth);
-		this.initialURI = uri;
-	}
-
-	@Override
-	public URI getInitialURI() {
-		return initialURI;
+	CurrentURIImpl(Builder builder) {
+		super(builder);
+		this.uri = builder.uri;
+		this.redirect = builder.redirect;
+		this.isRobotsTxtDisallow = builder.isRobotsTxtDisallow;
+		this.links = builder.links == null ? Collections.emptyMap() : Collections.unmodifiableMap(builder.links);
 	}
 
 	@Override
 	public URI getUri() {
-		return getURI();
+		return uri;
 	}
 
 	@Override
-	public URI getURI() {
-		return finalURI != null ? finalURI : initialURI;
-	}
-
-	void setBaseURI(URI uri) {
-		baseURI = uri;
-	}
-
-	void setFinalURI(URI uri) {
-		finalURI = uri;
-		if (finalURI != null)
-			isRedirected = !finalURI.equals(initialURI);
-	}
-
-	void setRobotsTxtDisallow(boolean disallow) {
-		this.isRobotsTxtDisallow = disallow;
-	}
-
-	void setCrawled() {
-		super.setCrawled(true);
+	public URI getRedirect() {
+		return redirect;
 	}
 
 	@Override
-	public boolean isRobotsTxtDisallow() {
+	public Boolean isRobotsTxtDisallow() {
 		return isRobotsTxtDisallow;
 	}
 
 	@Override
-	public boolean isRedirected() {
-		return isRedirected;
+	public Map<URI, AtomicInteger> getLinks() {
+		return links;
 	}
 
-	void setError(BrowserDriver driver, Exception e) {
-		if (e == null) {
-			setError((String) null);
-			return;
+	final static class Builder extends BaseBuilder<Builder> {
+
+		final URI uri;
+		final String uriString;
+		private URI redirect;
+		private Boolean isRobotsTxtDisallow;
+		private LinkedHashMap<URI, AtomicInteger> links;
+
+		protected Builder(URI uri, int depth) {
+			super(Builder.class, depth);
+			this.uri = uri;
+			this.uriString = uri.toString();
 		}
-		String err = driver == null ? e.getMessage() : driver.getErrorMessage(e);
-		if (StringUtils.isBlank(err))
-			err = e.toString();
-		if (StringUtils.isBlank(err))
-			err = e.getClass().getName();
-		setError(err);
-	}
 
-	@Override
-	public void setSameLevelLinks(Collection<URI> links) {
-		this.sameLevelLinks = links;
-	}
-
-	@Override
-	public Collection<URI> getSameLevelLinks() {
-		return sameLevelLinks;
-	}
-
-	@Override
-	public void setLinks(Collection<URI> links) {
-		this.nextLevelLinks = links;
-	}
-
-	@Override
-	public Collection<URI> getLinks() {
-		return nextLevelLinks;
-	}
-
-	@Override
-	public void setFilteredLinks(Collection<URI> filteredLinks) {
-		this.filteredLinks = filteredLinks;
-	}
-
-	@Override
-	public Collection<URI> getFilteredLinks() {
-		return filteredLinks;
-	}
-
-	void setStartDomain(boolean isStartDomain) {
-		this.isStartDomain = isStartDomain;
-	}
-
-	@Override
-	public boolean isStartDomain() {
-		return isStartDomain;
-	}
-
-	void setStartSubDomain(boolean isStartSubDomain) {
-		this.isStartSubDomain = isStartSubDomain;
-	}
-
-	@Override
-	public boolean isStartSubDomain() {
-		return isStartSubDomain;
-	}
-
-	@Override
-	public void hrefToURICollection(Collection<String> hrefCollection, Collection<URI> uriCollection) {
-		if (hrefCollection == null)
-			return;
-		URI uri = baseURI != null ? baseURI : getURI();
-		for (String href : hrefCollection) {
-			href = StringUtils.replace(href, " ", "%20");
-			URI resolvedURI = LinkUtils.resolveQuietly(uri, href);
-			if (resolvedURI != null)
-				uriCollection.add(resolvedURI);
+		public Builder redirect(URI redirect) {
+			this.redirect = redirect;
+			return this;
 		}
-	}
 
+		public Builder robotsTxtDisallow(Boolean isRobotsTxtDisallow) {
+			this.isRobotsTxtDisallow = isRobotsTxtDisallow;
+			return this;
+		}
+
+		public Builder link(URI uri) {
+			if (uri == null)
+				return this;
+			if (links == null)
+				links = new LinkedHashMap<>();
+			links.computeIfAbsent(uri, u -> new AtomicInteger()).incrementAndGet();
+			return this;
+		}
+
+		CurrentURIImpl build() {
+			return new CurrentURIImpl(this);
+		}
+
+	}
 }

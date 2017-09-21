@@ -20,7 +20,7 @@ public interface CurrentCrawl {
 	/**
 	 * @return the depth of the current URL
 	 */
-	Integer getDepth();
+	int getDepth();
 
 	/**
 	 * @return true if the item matches an inclusion item
@@ -31,11 +31,6 @@ public interface CurrentCrawl {
 	 * @return true if the item matches an exclusion item
 	 */
 	Boolean isInExclusion();
-
-	/**
-	 * Set the ignored flag
-	 */
-	void setIgnored();
 
 	/**
 	 * Check if the URL is ignored. An ignored URL is not crawled

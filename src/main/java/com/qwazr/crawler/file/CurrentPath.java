@@ -22,18 +22,17 @@ import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 
-public class CurrentPath extends CurrentCrawlImpl {
+final public class CurrentPath extends CurrentCrawlImpl {
 
 	final Path path;
 	final BasicFileAttributes attributes;
 	final String pathString;
 
-	CurrentPath(Path path, BasicFileAttributes attributes, Integer depth) {
-		super(depth);
-		this.path = path;
-		this.attributes = attributes;
-		this.pathString =
-				attributes.isDirectory() ? StringUtils.ensureSuffix(path.toString(), File.separator) : path.toString();
+	CurrentPath(Builder builder) {
+		super(builder);
+		this.path = builder.path;
+		this.attributes = builder.attributes;
+		this.pathString = builder.pathString;
 	}
 
 	/**
@@ -46,10 +45,6 @@ public class CurrentPath extends CurrentCrawlImpl {
 	public String getPathString() {
 		return pathString;
 	}
-	
-	void setCrawled() {
-		super.setCrawled(true);
-	}
 
 	/**
 	 * @return the attributes of the current path
@@ -58,4 +53,31 @@ public class CurrentPath extends CurrentCrawlImpl {
 		return attributes;
 	}
 
+	final static class Builder extends BaseBuilder<Builder> {
+
+		Path path;
+		String pathString;
+		BasicFileAttributes attributes;
+
+		Builder(int depth) {
+			super(Builder.class, depth);
+		}
+
+		Builder path(Path path) {
+			this.path = path;
+			this.pathString = attributes.isDirectory() ?
+					StringUtils.ensureSuffix(path.toString(), File.separator) :
+					path.toString();
+			return this;
+		}
+
+		Builder attributes(BasicFileAttributes attributes) {
+			this.attributes = attributes;
+			return this;
+		}
+
+		CurrentPath build() {
+			return new CurrentPath(this);
+		}
+	}
 }

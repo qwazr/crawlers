@@ -28,13 +28,8 @@ public enum EventEnum {
 	after_session,
 
 	/**
-	 * Executed before an URL is crawled
+	 * Executed for each crawled item
 	 */
-	before_crawl,
+	crawl
 
-	/**
-	 * Executed after an URL has been crawled
-	 */
-	after_crawl
-	
 }

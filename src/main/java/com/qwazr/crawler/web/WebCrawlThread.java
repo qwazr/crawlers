@@ -19,34 +19,31 @@ import com.google.common.net.InternetDomainName;
 import com.qwazr.crawler.common.CrawlSessionImpl;
 import com.qwazr.crawler.common.CrawlThread;
 import com.qwazr.crawler.common.EventEnum;
-import com.qwazr.crawler.web.driver.BrowserDriver;
-import com.qwazr.crawler.web.driver.BrowserDriverBuilder;
+import com.qwazr.crawler.web.driver.DriverInterface;
 import com.qwazr.crawler.web.robotstxt.RobotsTxt;
 import com.qwazr.server.ServerException;
+import com.qwazr.utils.FunctionUtils;
 import com.qwazr.utils.LoggerUtils;
 import com.qwazr.utils.RegExpUtils;
+import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.TimeTracker;
-import org.apache.commons.lang3.StringUtils;
-import org.openqa.selenium.By;
-import org.openqa.selenium.Cookie;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebDriverException;
-import org.openqa.selenium.WebElement;
+import org.apache.commons.lang3.NotImplementedException;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 
 import javax.script.ScriptException;
 import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -65,10 +62,10 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 	private final List<Matcher> parametersMatcherList;
 	private final List<Matcher> pathCleanerMatcherList;
 
-	private BrowserDriver driver = null;
+	private DriverInterface driver = null;
 
 	private final Map<URI, RobotsTxt> robotsTxtMap;
-	private final String robotsTxtUserAgent;
+	private final String userAgent;
 
 	private final TimeTracker timeTracker;
 
@@ -78,8 +75,6 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 		super(webCrawlerManager, session, LOGGER);
 		this.crawlDefinition = crawlDefinition;
 		this.timeTracker = session.getTimeTracker();
-		if (crawlDefinition.browserType == null)
-			throw new ServerException(Status.NOT_ACCEPTABLE, "The browser_type is missing");
 		if (crawlDefinition.entryUrl == null && crawlDefinition.entryRequest == null)
 			throw new ServerException(Status.NOT_ACCEPTABLE, "Either the entry_url or the entry_request is missing");
 		try {
@@ -92,8 +87,7 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 			robotsTxtMap = new HashMap<>();
 		else
 			robotsTxtMap = null;
-		robotsTxtUserAgent =
-				crawlDefinition.robotsTxtUseragent == null ? "QWAZR_BOT" : crawlDefinition.robotsTxtUseragent;
+		userAgent = crawlDefinition.userAgent == null ? "QWAZR_BOT" : crawlDefinition.userAgent;
 		final String u;
 		try {
 			u = crawlDefinition.entryUrl != null ? crawlDefinition.entryUrl : crawlDefinition.entryRequest.url;
@@ -112,10 +106,10 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 	/**
 	 * Remove the fragment and the query parameters following the configuration
 	 *
-	 * @param uri
-	 * @return
+	 * @param uri the URI to check
+	 * @return the transformed URI
 	 */
-	private URI checkLink(final URI uri) {
+	private URI transformLink(final URI uri) {
 		final UBuilder uriBuilder = new UBuilder(uri);
 		if (crawlDefinition.removeFragments != null && crawlDefinition.removeFragments)
 			uriBuilder.setFragment(null);
@@ -131,247 +125,181 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 		}
 	}
 
-	private Collection<URI> checkLinks(final Collection<URI> uris) {
-		if (uris == null)
+	private <T extends DriverInterface.Head> T doHttp(final String uriString,
+			final CurrentURIImpl.Builder currentBuilder,
+			final FunctionUtils.FunctionEx<String, T, IOException> method) {
+		try {
+			timeTracker.next(null);
+			final T head = method.apply(uriString);
+			final String redirectLocation = head.getRedirectLocation();
+			if (!StringUtils.isBlank(redirectLocation)) {
+				final URI redirectUri = new URI(redirectLocation);
+				currentBuilder.redirect(redirectUri);
+				currentBuilder.link(redirectUri);
+				return head;
+			}
+			return head;
+		} catch (Exception e) {
+			session.incErrorCount("Error on " + uriString + ": " + e.getMessage());
+			currentBuilder.error(e);
 			return null;
-		Map<String, URI> linkMap = new LinkedHashMap<>();
-		for (URI linkURI : uris) {
-			linkURI = checkLink(linkURI);
-			if (linkURI != null)
-				linkMap.put(linkURI.toString(), linkURI);
+		} finally {
+			timeTracker.next("HTTP");
 		}
-		return linkMap.values();
 	}
 
-	private boolean matchesInitialDomain(final URI uri) {
-		final String host = uri.getHost();
-		return !StringUtils.isEmpty(host) && InternetDomainName.isValid(host) &&
-				internetDomainName.equals(InternetDomainName.from(host));
-	}
-
-	private void scriptBeforeCrawl(final CurrentURIImpl currentURI, String uriString) {
-		final URI uri = currentURI.getURI();
-		if (uriString == null)
-			uriString = uri.toString();
-
-		currentURI.setStartDomain(matchesInitialDomain(uri));
-
-		checkPassInclusionExclusion(currentURI, uriString);
-		script(EventEnum.before_crawl, currentURI);
-	}
-
-	private void crawl(final CurrentURIImpl currentURI, final CrawlProvider crawlProvider) {
+	/**
+	 * @param currentBuilder
+	 */
+	private void crawl(final CurrentURIImpl.Builder currentBuilder) throws InterruptedException {
 
 		if (session.isAborting())
 			return;
 
-		URI uri = currentURI.getInitialURI();
-		String uriString = uri.toString();
-		session.setCurrentCrawl(uriString, currentURI.getDepth());
+		final String uriString = currentBuilder.uri.toString();
 
-		// Check if the URL is well formated
-		String scheme = uri.getScheme();
+		session.setCurrentCrawl(uriString, currentBuilder.depth);
+
+		// Check the SCHEME, we only accept http or https
+		final String scheme = currentBuilder.uri.getScheme();
 		if (!"http".equalsIgnoreCase(scheme) && !"https".equalsIgnoreCase(scheme)) {
 			session.incIgnoredCount();
-			currentURI.setIgnored();
-			LOGGER.info(() -> "Ignored (not http) " + currentURI.getInitialURI());
+			currentBuilder.ignored(true);
+			LOGGER.info(() -> "Ignored (not http) " + uriString);
 			return;
 		}
 
-		// Set the optional cookies
-		if (crawlDefinition.cookies != null) {
-			final WebDriver.Options options = driver.manage();
-			crawlDefinition.cookies.forEach((name, value) -> {
-				if (options.getCookieNamed(name) != null)
-					options.deleteCookieNamed(name);
-				options.addCookie(new Cookie(name, value));
-			});
-		}
+		// Check the inclusion/exclusion rules
+		if (checkPassInclusionExclusion(uriString, currentBuilder::inInclusion, currentBuilder::inExclusion))
+			return;
 
-		// Load the URL
-		LOGGER.info(() -> "Crawling " + currentURI.getInitialURI() + " (" + currentURI.getDepth() + ")");
+		if (crawlDefinition.crawlWaitMs != null)
+			Thread.sleep(crawlDefinition.crawlWaitMs);
+
+		// Check the robotsTxt status
 		try {
-			timeTracker.next(null);
-			crawlProvider.apply();
-			//if (mainWindow != null && !mainWindow.equals(driver.getWindowHandle()))
-			//	driver.switchTo().window(mainWindow);
+			final RobotsTxt.Status robotsTxtStatus = checkRobotsTxt(currentBuilder);
+			if (robotsTxtStatus != null && !robotsTxtStatus.isCrawlable) {
+				currentBuilder.ignored(true);
+				currentBuilder.robotsTxtDisallow(true);
+			}
 		} catch (Exception e) {
-			session.incErrorCount("Error on " + uriString + ": " + e.getMessage());
-			currentURI.setError(driver, e);
-			return;
-		} finally {
-			timeTracker.next("Driver.getURL");
-		}
-
-		try {
-			uriString = driver.getCurrentUrl();
-			uri = new URI(uriString);
-			currentURI.setFinalURI(uri);
-		} catch (URISyntaxException e) {
-			session.incErrorCount("Error on " + uriString + ": " + e.getMessage());
-			currentURI.setError(driver, e);
+			session.incErrorCount("Error during robots.txt extraction: " + e.getMessage());
+			currentBuilder.error(e);
 			return;
 		}
 
-		// Check again with exclusion/inclusion list
-		// in case of redirection
-		if (currentURI.isRedirected()) {
-			LOGGER.info(() -> "Redirected " + currentURI.getInitialURI() + " to " + currentURI.getUri());
-			try {
-				scriptBeforeCrawl(currentURI, uriString);
-			} catch (Exception e) {
-				session.incErrorCount("Error on " + uriString + ": " + e.getMessage());
-				currentURI.setError(driver, e);
-				return;
-			}
-			if (currentURI.isIgnored()) {
-				session.incIgnoredCount();
-				return;
-			}
-		}
+		// First make an head
+		final DriverInterface.Head head = doHttp(uriString, currentBuilder, (u) -> driver.head(u));
+		if (head == null)
+			return; // Any error already handled by doHttp
 
-		// Support of the base/href element
-		boolean searchBaseHref = true;
-		try {
-			searchBaseHref = "text/html".equals(driver.getContentType());
-		} catch (WebDriverException e) {
-			// OK that's not really an error
-		}
+		//TODO: check content-type, content-length
 
-		if (searchBaseHref) {
-			try {
-				WebElement baseElement = driver.findElement(By.tagName("base"));
-				if (baseElement != null) {
-					String href = baseElement.getAttribute("href");
-					try {
-						currentURI.setBaseURI(new URI(href));
-					} catch (URISyntaxException e) {
-						LOGGER.warning(() -> "Invalid URI in base HREF: " + href + " in " + currentURI.getUri());
-					}
-				}
-			} catch (org.openqa.selenium.NoSuchElementException e) {
-				// OK that's not an error
-			} catch (Exception e) {
-				LOGGER.warning(() -> "Cannot locate base href for " + currentURI.getUri() + " " + e.getMessage());
-			}
-		}
+		// Second make an head
+		final DriverInterface.Get get = doHttp(uriString, currentBuilder, (u) -> driver.get(u));
+		if (get == null)
+			return; // Any error already handled by doHttp
 
+		// Handle url number limit
 		final int crawledCount = session.incCrawledCount();
-		currentURI.setCrawled();
+		currentBuilder.crawled(true);
 		if (crawlDefinition.maxUrlNumber != null && crawledCount >= crawlDefinition.maxUrlNumber)
 			abort("Max URL number reached: " + crawlDefinition.maxUrlNumber);
 
-		// Let's look for the a tags
-		final Set<String> hrefSet = new LinkedHashSet<>();
-		try {
-			timeTracker.next(null);
-			driver.findLinks(driver, hrefSet);
-		} catch (Exception e) {
-			LOGGER.log(Level.WARNING, e, () -> "Cannot extract links from " + currentURI.getUri());
-		} finally {
-			timeTracker.next("Find links");
-		}
-		if (hrefSet.isEmpty())
-			return;
-		final ArrayList<URI> uris = new ArrayList<>(hrefSet.size());
-		currentURI.hrefToURICollection(hrefSet, uris);
-		currentURI.setLinks(uris);
-		LOGGER.info(() -> "Link founds " + currentURI.getUri() + " : " + uris.size());
+		final DriverInterface.Content content = get.getContent();
+		if (content == null)
+			return; // No content ? We're done
 
-		final ArrayList<URI> filteredURIs = new ArrayList<>();
-		for (URI u : uris) {
-			u = checkLink(u);
-			if (u == null)
-				continue;
-			final String us = u.toString();
-			if (checkPassInclusionExclusion(us, null, null))
-				filteredURIs.add(u);
+		// If it is not HTML we're done
+		if (!"text/html".equals(content.getContentType()))
+			return;
+
+		// Let's parse the HTML
+		final Document document;
+		try {
+			try (final InputStream input = content.getInput()) {
+				document = Jsoup.parse(input, content.getCharsetName(), uriString);
+			}
+		} catch (IOException e) {
+			session.incErrorCount("Error during robots.txt extraction: " + e.getMessage());
+			currentBuilder.error(e);
+			return;
 		}
-		currentURI.setFilteredLinks(filteredURIs);
+
+		final Element body = document.body();
+		if (body == null)
+			return; // No body ? we are done
+
+		timeTracker.next(null);
+		for (final Element element : body.select("a[href]")) {
+			final String href = element.attr("href");
+			if (com.qwazr.utils.StringUtils.isBlank(href))
+				continue;
+			final String absHref = element.attr("abs:href");
+			if (com.qwazr.utils.StringUtils.isBlank(absHref))
+				continue;
+			final URI newUri;
+			try {
+				newUri = new URI(absHref);
+			} catch (Exception e) {
+				LOGGER.log(Level.WARNING, e, () -> "Cannot build URI from " + absHref + ": " + e.getMessage());
+				continue;
+			}
+			if (newUri.getHost() == null || newUri.getScheme() == null)
+				continue;
+			currentBuilder.link(transformLink(newUri));
+		}
+		timeTracker.next("Links extraction");
 	}
 
-	private RobotsTxt.Status checkRobotsTxt(CurrentURI currentURI)
+	private RobotsTxt.Status checkRobotsTxt(CurrentURIImpl.Builder currentBuilder)
 			throws IOException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException,
 			KeyManagementException {
 		if (robotsTxtMap == null)
 			return null;
 		timeTracker.next(null);
 		try {
-			final URI uri = currentURI.getURI();
-			final URI robotsTxtURI = RobotsTxt.getRobotsURI(uri);
+			final URI robotsTxtURI = RobotsTxt.getRobotsURI(currentBuilder.uri);
 			RobotsTxt robotsTxt = robotsTxtMap.get(robotsTxtURI);
 			if (robotsTxt == null) {
-				robotsTxt = RobotsTxt.download(driver.getProxy(), robotsTxtUserAgent, robotsTxtURI);
+				robotsTxt = RobotsTxt.download(driver, robotsTxtURI);
 				robotsTxtMap.put(robotsTxtURI, robotsTxt);
 			}
-			return robotsTxt.getStatus(uri, robotsTxtUserAgent);
+			return robotsTxt.getStatus(currentBuilder.uri, userAgent);
 		} finally {
 			timeTracker.next("Robots.txt check");
 		}
 	}
 
-	private void crawlOne(final Set<URI> crawledURIs, final CrawlProvider crawlProvider, final Set<URI> nextLevelURIs,
-			final int depth) throws IOException, InterruptedException {
+	private void crawlOne(final Set<URI> crawledURIs, final URI uri, final Collection<URI> nextLevelUris,
+			final int depth) throws InterruptedException {
 
 		if (session.isAborting())
 			return;
 
 		// Check if it has been already crawled
 		if (crawledURIs != null) {
-			if (crawledURIs.contains(crawlProvider.uri))
+			if (crawledURIs.contains(uri))
 				return;
-			crawledURIs.add(crawlProvider.uri);
+			crawledURIs.add(uri);
 		}
 
-		final CurrentURIImpl currentURI = new CurrentURIImpl(crawlProvider.uri, depth);
+		// Do the crawl
+		final CurrentURIImpl.Builder currentBuilder = new CurrentURIImpl.Builder(uri, depth);
+		crawl(currentBuilder);
+		final CurrentURI current = currentBuilder.build();
 
-		// Give the hand to the "before_crawl" scripts
-		scriptBeforeCrawl(currentURI, null);
+		// Give the hand to the "crawl" event scripts
+		script(EventEnum.crawl, current);
 
-		if (!currentURI.isIgnored()) {
-
-			if (crawlDefinition.crawlWaitMs != null)
-				Thread.sleep(crawlDefinition.crawlWaitMs);
-
-			// Check the robotsTxt status
-			try {
-				final RobotsTxt.Status robotsTxtStatus = checkRobotsTxt(currentURI);
-				if (robotsTxtStatus != null && !robotsTxtStatus.isCrawlable) {
-					currentURI.setIgnored();
-					currentURI.setRobotsTxtDisallow(true);
-				}
-			} catch (Exception e) {
-				session.incErrorCount("Error on robots.txt extraction: " + e.getMessage());
-				currentURI.setError(driver, e);
-			}
-
-			if (!currentURI.isIgnored() && currentURI.getError() == null) {
-				crawl(currentURI, crawlProvider);
-
-				// Store the final URI (in case of redirection)
-				if (crawledURIs != null)
-					crawledURIs.add(currentURI.getURI());
-			}
-		}
-
-		// Give the hand to the "after_crawl" scripts
-		script(EventEnum.after_crawl, currentURI);
-
-		Collection<URI> sameLevelLinks = checkLinks(currentURI.getSameLevelLinks());
-		if (sameLevelLinks != null)
-			for (URI sameLevelURI : sameLevelLinks)
-				crawlOne(crawledURIs, new GetProvider(sameLevelURI), nextLevelURIs, depth);
-
-		Collection<URI> newLinks = checkLinks(currentURI.getLinks());
-		currentURI.setLinks(newLinks);
-		if (newLinks != null && nextLevelURIs != null)
-			nextLevelURIs.addAll(newLinks);
+		// Add the next level URIs
+		nextLevelUris.addAll(current.getLinks().keySet());
 
 	}
 
 	private void crawlSubLevel(final Set<URI> crawledURIs, final Collection<URI> levelURIs, final int depth)
-			throws ServerException, IOException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException,
-			KeyManagementException, ClassNotFoundException, InterruptedException {
+			throws InterruptedException {
 
 		if (crawlDefinition.maxDepth == null || depth > crawlDefinition.maxDepth)
 			return;
@@ -386,30 +314,29 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 
 		// Crawl all URLs from the level
 		for (URI uri : levelURIs)
-			crawlOne(crawledURIs, new GetProvider(uri), nextLevelURIs, depth);
+			crawlOne(crawledURIs, uri, nextLevelURIs, depth);
 
 		// Let's crawl the next level if any
 		crawlSubLevel(crawledURIs, nextLevelURIs, depth + 1);
 	}
 
-	private void crawlStart(final Set<URI> crawledURIs, final CrawlProvider crawlProvider)
-			throws NoSuchAlgorithmException, IOException, KeyManagementException, KeyStoreException, URISyntaxException,
-			ClassNotFoundException, InterruptedException {
+	private void crawlStart(final Set<URI> crawledURIs, final String startUriString)
+			throws URISyntaxException, InterruptedException {
+		final URI startURI = new URI(startUriString);
 		final Set<URI> nextLevelURIs = new HashSet<>();
-		crawlOne(crawledURIs, crawlProvider, nextLevelURIs, 0);
+		crawlOne(crawledURIs, startURI, nextLevelURIs, 0);
 		crawlSubLevel(crawledURIs, nextLevelURIs, 1);
 	}
 
 	private void crawlUrlMap(Set<URI> crawledURIs, Map<String, Integer> urlMap) {
-		urlMap.forEach((uri, depth) -> {
+		urlMap.forEach((uriString, depth) -> {
 			try {
-				crawlOne(crawledURIs, new GetProvider(uri), null, depth == null ? 0 : depth);
+				final URI uri = new URI(uriString);
+				crawlOne(crawledURIs, uri, null, depth == null ? 0 : depth);
 			} catch (URISyntaxException e) {
-				LOGGER.warning(() -> "Malformed URI: " + uri);
+				LOGGER.warning(() -> "Malformed URI: " + uriString);
 			} catch (InterruptedException e) {
-				LOGGER.log(Level.WARNING, e, () -> "Interruption on " + uri);
-			} catch (IOException e) {
-				LOGGER.log(Level.WARNING, e, () -> "IO Exception on " + uri);
+				LOGGER.log(Level.WARNING, e, () -> "Interruption on " + uriString);
 			}
 		});
 	}
@@ -417,8 +344,7 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 	protected void runner()
 			throws URISyntaxException, IOException, ScriptException, ServerException, ReflectiveOperationException,
 			NoSuchAlgorithmException, KeyStoreException, KeyManagementException, InterruptedException {
-		try {
-			driver = new BrowserDriverBuilder(crawlDefinition).build();
+		try (final DriverInterface driver = DriverInterface.of(crawlDefinition)) {
 			registerScriptGlobalObject("driver", driver);
 			script(EventEnum.before_session, null);
 			if (crawlDefinition.preUrl != null && !crawlDefinition.preUrl.isEmpty())
@@ -428,64 +354,13 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 				crawlUrlMap(crawledURIs, crawlDefinition.urls);
 			else {
 				if (crawlDefinition.entryUrl != null)
-					crawlStart(crawledURIs, new GetProvider(crawlDefinition.entryUrl));
+					crawlStart(crawledURIs, crawlDefinition.entryUrl);
 				else if (crawlDefinition.entryRequest != null)
-					crawlStart(crawledURIs, new RequestProvider(crawlDefinition.entryRequest));
+					throw new NotImplementedException("EntryRequest are not yet implemented");
 			}
 		} finally {
-			try {
-				if (driver != null)
-					driver.quit();
-			} catch (Exception e) {
-				LOGGER.log(Level.WARNING, e, e::getMessage);
-			}
 			script(EventEnum.after_session, null);
 		}
 	}
 
-	private abstract class CrawlProvider {
-
-		protected final URI uri;
-
-		protected CrawlProvider(String uriString) throws URISyntaxException {
-			this.uri = new URI(uriString);
-		}
-
-		protected CrawlProvider(URI uri) {
-			this.uri = uri;
-		}
-
-		protected abstract void apply();
-	}
-
-	private class GetProvider extends CrawlProvider {
-
-		private GetProvider(URI uri) {
-			super(uri);
-		}
-
-		private GetProvider(String uriString) throws URISyntaxException {
-			super(uriString);
-		}
-
-		@Override
-		protected void apply() {
-			driver.get(uri.toString());
-		}
-	}
-
-	private class RequestProvider extends CrawlProvider {
-
-		private final WebRequestDefinition request;
-
-		private RequestProvider(WebRequestDefinition request) throws URISyntaxException {
-			super(request.url);
-			this.request = request;
-		}
-
-		@Override
-		protected void apply() {
-			driver.request(request);
-		}
-	}
 }

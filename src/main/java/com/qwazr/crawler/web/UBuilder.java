@@ -24,13 +24,13 @@ import java.util.Collection;
 import java.util.List;
 import java.util.regex.Matcher;
 
-public class UBuilder extends URIBuilder {
+class UBuilder extends URIBuilder {
 
-	public UBuilder(URI uri) {
+	UBuilder(URI uri) {
 		super(uri);
 	}
 
-	final public void removeMatchingParameters(final Collection<Matcher> matcherList) {
+	final void removeMatchingParameters(final Collection<Matcher> matcherList) {
 		if (matcherList == null || matcherList.isEmpty())
 			return;
 		final List<NameValuePair> oldParams = getQueryParams();
@@ -42,7 +42,7 @@ public class UBuilder extends URIBuilder {
 				addParameter(param.getName(), param.getValue());
 	}
 
-	final public void cleanPath(final Collection<Matcher> matcherList) {
+	final void cleanPath(final Collection<Matcher> matcherList) {
 		if (matcherList == null || matcherList.isEmpty())
 			return;
 		String path = getPath();

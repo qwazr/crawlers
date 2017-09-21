@@ -54,10 +54,7 @@ public abstract class WebCrawlerTestAbstract {
 
 	private WebCrawlDefinition.Builder getNewWebCrawl() {
 		final WebCrawlDefinition.Builder webCrawl = WebCrawlDefinition.of();
-		webCrawl.setBrowserType("html_unit");
-		webCrawl.setJavascriptEnabled(false);
-		webCrawl.setImplicitlyWait(0);
-		webCrawl.setDownloadImages(false);
+		webCrawl.setTimeOutSecs(60);
 		webCrawl.setMaxUrlNumber(10);
 		webCrawl.setRobotsTxtEnabled(true);
 		webCrawl.setMaxDepth(2);
@@ -79,11 +76,8 @@ public abstract class WebCrawlerTestAbstract {
 		final WebCrawlDefinition.Builder webCrawl = getNewWebCrawl();
 		final String variableName = RandomUtils.alphanumeric(5);
 		final String variableValue = RandomUtils.alphanumeric(6);
-		webCrawl.script(EventEnum.before_crawl, ScriptDefinition.of(WebEvents.BeforeCrawl.class)
-				.variable(variableName, variableValue + EventEnum.before_crawl.name())
-				.build());
-		webCrawl.script(EventEnum.after_crawl, ScriptDefinition.of(WebEvents.AfterCrawl.class)
-				.variable(variableName, variableValue + EventEnum.after_crawl.name())
+		webCrawl.script(EventEnum.crawl, ScriptDefinition.of(WebEvents.Crawl.class)
+				.variable(variableName, variableValue + EventEnum.crawl.name())
 				.build());
 		webCrawl.script(EventEnum.before_session, ScriptDefinition.of(WebEvents.BeforeSession.class)
 				.variable(variableName, variableValue + EventEnum.before_session.name())
@@ -94,8 +88,7 @@ public abstract class WebCrawlerTestAbstract {
 		service.runSession(sessionName, webCrawl.build());
 		CommonEvent.crawlWait(sessionName, service);
 		Assert.assertEquals(1, WebEvents.feedbacks.get(EventEnum.before_session).count());
-		Assert.assertEquals(5, WebEvents.feedbacks.get(EventEnum.before_crawl).count());
-		Assert.assertEquals(4, WebEvents.feedbacks.get(EventEnum.after_crawl).count());
+		Assert.assertEquals(5, WebEvents.feedbacks.get(EventEnum.crawl).count());
 		Assert.assertEquals(1, WebEvents.feedbacks.get(EventEnum.after_session).count());
 		for (EventEnum eventEnum : EventEnum.values())
 			Assert.assertEquals(variableValue + eventEnum.name(),

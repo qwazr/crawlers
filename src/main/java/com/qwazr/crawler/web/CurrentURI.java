@@ -18,14 +18,10 @@ package com.qwazr.crawler.web;
 import com.qwazr.crawler.common.CurrentCrawl;
 
 import java.net.URI;
-import java.util.Collection;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public interface CurrentURI extends CurrentCrawl {
-
-	/**
-	 * @return the initial URI
-	 */
-	URI getInitialURI();
 
 	/**
 	 * The initial URI and the final URI may be different if any redirection was followed
@@ -35,64 +31,22 @@ public interface CurrentURI extends CurrentCrawl {
 	URI getUri();
 
 	/**
-	 * @return the current URI
-	 */
-	URI getURI();
-
-	/**
 	 * @return true if the Robots.txt disallow the current URI
 	 */
-	boolean isRobotsTxtDisallow();
+	Boolean isRobotsTxtDisallow();
 
 	/**
 	 * Check if the URL has been redirected
 	 *
-	 * @return true if the URL has been redirected
+	 * @return the redirect URL
 	 */
-	boolean isRedirected();
-
-	void setSameLevelLinks(Collection<URI> links);
-
-	Collection<URI> getSameLevelLinks();
-
-	/**
-	 * Replace the next level links
-	 *
-	 * @param links the new collection
-	 */
-	void setLinks(Collection<URI> links);
+	URI getRedirect();
 
 	/**
 	 * Get next level links
 	 *
 	 * @return a collection of links
 	 */
-	Collection<URI> getLinks();
-
-	void setFilteredLinks(Collection<URI> filteredLinks);
-
-	Collection<URI> getFilteredLinks();
-
-	/**
-	 * Check if the domain of the current URL is equals to the domain of the start URL
-	 *
-	 * @return true if both domains matches
-	 */
-	boolean isStartDomain();
-
-	/**
-	 * Check if the sub-domain of the current URL is equals to the sub-domain of the start URL
-	 *
-	 * @return true if both sub-domains matches
-	 */
-	boolean isStartSubDomain();
-
-	/**
-	 * Build a collection of URL using a collection of HREF
-	 *
-	 * @param hrefCollection the HREF collection
-	 * @param uriCollection  the URL collection
-	 */
-	void hrefToURICollection(Collection<String> hrefCollection, Collection<URI> uriCollection);
+	Map<URI, AtomicInteger> getLinks();
 
 }

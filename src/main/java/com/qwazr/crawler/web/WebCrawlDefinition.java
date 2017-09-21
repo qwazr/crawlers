@@ -21,7 +21,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.crawler.common.CrawlDefinition;
-import com.qwazr.crawler.web.driver.BrowserDriverEnum;
 import com.qwazr.utils.CollectionsUtils;
 import com.qwazr.utils.ObjectMappers;
 
@@ -92,48 +91,6 @@ public class WebCrawlDefinition extends CrawlDefinition {
 	final public Boolean removeFragments;
 
 	/**
-	 * The initial browser type.
-	 */
-	@JsonProperty("browser_type")
-	final public BrowserDriverEnum browserType;
-
-	/**
-	 * The language used by the browser
-	 */
-	@JsonProperty("browser_language")
-	final public String browserLanguage;
-
-	/**
-	 * The version of the browser
-	 */
-	@JsonProperty("browser_version")
-	final public String browserVersion;
-
-	/**
-	 * The name of the browser
-	 */
-	@JsonProperty("browser_name")
-	final public String browserName;
-
-	/**
-	 * Enable or disable javascript
-	 */
-	@JsonProperty("javascript_enabled")
-	final public Boolean javascriptEnabled;
-
-	/**
-	 * Download images
-	 */
-	@JsonProperty("download_images")
-	final public Boolean downloadImages;
-
-	/**
-	 * Enable Web security (default is true)
-	 */
-	@JsonProperty("web_security")
-	final public Boolean webSecurity;
-
-	/**
 	 * Cookies
 	 */
 	final public Map<String, String> cookies;
@@ -141,8 +98,6 @@ public class WebCrawlDefinition extends CrawlDefinition {
 	/**
 	 * The proxy definition(s)
 	 */
-	final public ProxyDefinition proxy;
-
 	final public List<ProxyDefinition> proxies;
 
 	/**
@@ -151,11 +106,11 @@ public class WebCrawlDefinition extends CrawlDefinition {
 	@JsonProperty("robots_txt_enabled")
 	final public Boolean robotsTxtEnabled;
 
-	@JsonProperty("robots_txt_useragent")
-	final public String robotsTxtUseragent;
+	@JsonProperty("user_agent")
+	final public String userAgent;
 
 	/**
-	 * Time wait on successfull crawl
+	 * Time to wait after a crawl
 	 */
 	@JsonProperty("crawl_wait_ms")
 	final public Integer crawlWaitMs;
@@ -163,14 +118,8 @@ public class WebCrawlDefinition extends CrawlDefinition {
 	/**
 	 *
 	 */
-	@JsonProperty("implicitly_wait")
-	final public Integer implicitlyWait;
-
-	@JsonProperty("script_timeout")
-	final public Integer scriptTimeout;
-
-	@JsonProperty("page_load_timeout")
-	final public Integer pageLoadTimeout;
+	@JsonProperty("time_out_sec")
+	final public Integer timeOutSecs;
 
 	@JsonCreator
 	protected WebCrawlDefinition() {
@@ -183,22 +132,12 @@ public class WebCrawlDefinition extends CrawlDefinition {
 		parametersPatterns = null;
 		pathCleanerPatterns = null;
 		removeFragments = null;
-		browserName = null;
-		browserLanguage = null;
-		browserVersion = null;
-		browserType = null;
-		javascriptEnabled = null;
-		downloadImages = null;
-		webSecurity = null;
 		robotsTxtEnabled = null;
-		robotsTxtUseragent = null;
+		userAgent = null;
 		cookies = null;
-		proxy = null;
 		proxies = null;
-		implicitlyWait = null;
-		scriptTimeout = null;
-		pageLoadTimeout = null;
 		crawlWaitMs = null;
+		timeOutSecs = null;
 	}
 
 	protected WebCrawlDefinition(Builder builder) {
@@ -216,22 +155,12 @@ public class WebCrawlDefinition extends CrawlDefinition {
 				null :
 				Collections.unmodifiableList(new ArrayList<>(builder.pathCleanerPatterns));
 		removeFragments = builder.removeFragments;
-		browserName = builder.browserName;
-		browserLanguage = builder.browserLanguage;
-		browserVersion = builder.browserVersion;
-		browserType = builder.browserType;
-		javascriptEnabled = builder.javascriptEnabled;
-		downloadImages = builder.downloadImages;
-		webSecurity = builder.webSecurity;
 		robotsTxtEnabled = builder.robotsTxtEnabled;
-		robotsTxtUseragent = builder.robotsTxtUseragent;
+		userAgent = builder.userAgent;
 		cookies = builder.cookies == null ? null : Collections.unmodifiableMap(new LinkedHashMap<>(builder.cookies));
-		proxy = builder.proxy;
 		proxies = builder.proxies == null ? null : Collections.unmodifiableList(new ArrayList<>(builder.proxies));
-		implicitlyWait = builder.implicitlyWait;
-		scriptTimeout = builder.scriptTimeout;
-		pageLoadTimeout = builder.pageLoadTimeout;
 		crawlWaitMs = builder.crawlWaitMs;
+		timeOutSecs = builder.timeOutSecs;
 	}
 
 	@JsonIgnore
@@ -279,48 +208,13 @@ public class WebCrawlDefinition extends CrawlDefinition {
 	}
 
 	@JsonIgnore
-	public Boolean getJavascriptEnabled() {
-		return javascriptEnabled;
-	}
-
-	@JsonIgnore
-	public Boolean getDownloadImages() {
-		return downloadImages;
-	}
-
-	@JsonIgnore
-	public Boolean getWebSecurity() {
-		return webSecurity;
-	}
-
-	@JsonIgnore
 	public Boolean getRobotsTxtEnabled() {
 		return robotsTxtEnabled;
 	}
 
 	@JsonIgnore
-	public String getRobotsTxtUserAgent() {
-		return robotsTxtUseragent;
-	}
-
-	@JsonIgnore
-	public BrowserDriverEnum getBrowserType() {
-		return browserType;
-	}
-
-	@JsonIgnore
-	public String getBrowserName() {
-		return browserName;
-	}
-
-	@JsonIgnore
-	public String getBrowserVersion() {
-		return browserVersion;
-	}
-
-	@JsonIgnore
-	public String getBrowserLanguage() {
-		return browserLanguage;
+	public String getUserAgent() {
+		return userAgent;
 	}
 
 	public Collection<ProxyDefinition> getProxies() {
@@ -329,16 +223,6 @@ public class WebCrawlDefinition extends CrawlDefinition {
 
 	public Map<String, String> getVariables() {
 		return variables;
-	}
-
-	@JsonIgnore
-	public Integer getImplicitlyWait() {
-		return implicitlyWait;
-	}
-
-	@JsonIgnore
-	public Integer getScriptTimeout() {
-		return scriptTimeout;
 	}
 
 	public Map<String, String> getCookies() {
@@ -351,8 +235,8 @@ public class WebCrawlDefinition extends CrawlDefinition {
 	}
 
 	@JsonIgnore
-	public Integer getPageLoadTimeout() {
-		return pageLoadTimeout;
+	public Integer getTimeOutSecs() {
+		return timeOutSecs;
 	}
 
 	@Override
@@ -380,37 +264,17 @@ public class WebCrawlDefinition extends CrawlDefinition {
 			return false;
 		if (!Objects.equals(removeFragments, w.removeFragments))
 			return false;
-		if (!Objects.equals(browserName, w.browserName))
-			return false;
-		if (!Objects.equals(browserLanguage, w.browserLanguage))
-			return false;
-		if (!Objects.equals(browserVersion, w.browserVersion))
-			return false;
-		if (!Objects.equals(browserType, w.browserType))
-			return false;
-		if (!Objects.equals(javascriptEnabled, w.javascriptEnabled))
-			return false;
-		if (!Objects.equals(downloadImages, w.downloadImages))
-			return false;
-		if (!Objects.equals(webSecurity, w.webSecurity))
-			return false;
 		if (!Objects.equals(robotsTxtEnabled, w.robotsTxtEnabled))
 			return false;
-		if (!Objects.equals(robotsTxtUseragent, w.robotsTxtUseragent))
+		if (!Objects.equals(userAgent, w.userAgent))
 			return false;
 		if (!CollectionsUtils.equals(cookies, w.cookies))
 			return false;
-		if (!Objects.equals(proxy, w.proxy))
-			return false;
 		if (!CollectionsUtils.equals(proxies, w.proxies))
 			return false;
-		if (!Objects.equals(implicitlyWait, w.implicitlyWait))
-			return false;
-		if (!Objects.equals(scriptTimeout, w.scriptTimeout))
-			return false;
-		if (!Objects.equals(pageLoadTimeout, w.pageLoadTimeout))
-			return false;
 		if (!Objects.equals(crawlWaitMs, w.crawlWaitMs))
+			return false;
+		if (!Objects.equals(timeOutSecs, w.timeOutSecs))
 			return false;
 		return true;
 	}
@@ -438,22 +302,12 @@ public class WebCrawlDefinition extends CrawlDefinition {
 		private List<String> parametersPatterns;
 		private List<String> pathCleanerPatterns;
 		private Boolean removeFragments;
-		private BrowserDriverEnum browserType;
-		private String browserLanguage;
-		private String browserVersion;
-		private String browserName;
-		private Boolean javascriptEnabled;
-		private Boolean downloadImages;
-		private Boolean webSecurity;
 		private LinkedHashMap<String, String> cookies;
-		private ProxyDefinition proxy;
 		private List<ProxyDefinition> proxies;
 		private Boolean robotsTxtEnabled;
-		private String robotsTxtUseragent;
+		private String userAgent;
 		private Integer crawlWaitMs;
-		private Integer implicitlyWait;
-		private Integer scriptTimeout;
-		private Integer pageLoadTimeout;
+		private Integer timeOutSecs;
 
 		protected Builder() {
 			super(Builder.class);
@@ -471,22 +325,12 @@ public class WebCrawlDefinition extends CrawlDefinition {
 			this.pathCleanerPatterns =
 					src.pathCleanerPatterns == null ? null : new ArrayList<>(src.pathCleanerPatterns);
 			this.removeFragments = src.removeFragments;
-			this.browserType = src.browserType;
-			this.browserLanguage = src.browserLanguage;
-			this.browserVersion = src.browserVersion;
-			this.browserName = src.browserName;
-			this.javascriptEnabled = src.javascriptEnabled;
-			this.downloadImages = src.downloadImages;
-			this.webSecurity = src.webSecurity;
 			this.cookies = src.cookies == null ? null : new LinkedHashMap<>(src.cookies);
-			this.proxy = src.proxy;
 			this.proxies = src.proxies == null ? null : new ArrayList<>(src.proxies);
 			this.robotsTxtEnabled = src.robotsTxtEnabled;
-			this.robotsTxtUseragent = src.robotsTxtUseragent;
+			this.userAgent = src.userAgent;
 			this.crawlWaitMs = src.crawlWaitMs;
-			this.implicitlyWait = src.implicitlyWait;
-			this.scriptTimeout = src.scriptTimeout;
-			this.pageLoadTimeout = src.pageLoadTimeout;
+			this.timeOutSecs = src.timeOutSecs;
 		}
 
 		public Builder setUrls(final LinkedHashMap<String, Integer> urls) {
@@ -545,48 +389,8 @@ public class WebCrawlDefinition extends CrawlDefinition {
 			return this;
 		}
 
-		public Builder setJavascriptEnabled(final Boolean javascriptEnabled) {
-			this.javascriptEnabled = javascriptEnabled;
-			return this;
-		}
-
-		public Builder setDownloadImages(final Boolean downloadImages) {
-			this.downloadImages = downloadImages;
-			return this;
-		}
-
-		public Builder setWebSecurity(final Boolean webSecurity) {
-			this.webSecurity = webSecurity;
-			return this;
-		}
-
 		public Builder setRobotsTxtEnabled(final Boolean robotsTxtEnabled) {
 			this.robotsTxtEnabled = robotsTxtEnabled;
-			return this;
-		}
-
-		public Builder setRobotsTxtUserAgent(final String robotsTxtUserAgent) {
-			this.robotsTxtUseragent = robotsTxtUserAgent;
-			return this;
-		}
-
-		public Builder setBrowserType(final String browserType) {
-			this.browserType = BrowserDriverEnum.valueOf(browserType);
-			return this;
-		}
-
-		public Builder setBrowserName(final String browserName) {
-			this.browserName = browserName;
-			return this;
-		}
-
-		public Builder setBrowserVersion(final String browserVersion) {
-			this.browserVersion = browserVersion;
-			return this;
-		}
-
-		public Builder setBrowserLanguage(final String browserLanguage) {
-			this.browserLanguage = browserLanguage;
 			return this;
 		}
 
@@ -616,23 +420,13 @@ public class WebCrawlDefinition extends CrawlDefinition {
 			return this;
 		}
 
-		public Builder setImplicitlyWait(final Integer wait) {
-			this.implicitlyWait = wait;
-			return this;
-		}
-
-		public Builder setScriptTimeout(final Integer timeout) {
-			this.scriptTimeout = timeout;
-			return this;
-		}
-
 		public Builder setCrawlWaitMs(Integer crawlWaitMs) {
 			this.crawlWaitMs = crawlWaitMs;
 			return this;
 		}
 
-		public Builder setPageLoadTimeout(Integer timeout) {
-			this.pageLoadTimeout = timeout;
+		public Builder setTimeOutSecs(Integer timeOutSecs) {
+			this.timeOutSecs = timeOutSecs;
 			return this;
 		}
 

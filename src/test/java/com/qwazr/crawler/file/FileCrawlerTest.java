@@ -92,11 +92,8 @@ public class FileCrawlerTest {
 		final FileCrawlDefinition.Builder crawl = getNewCrawl();
 		final String variableName = RandomUtils.alphanumeric(5);
 		final String variableValue = RandomUtils.alphanumeric(6);
-		crawl.script(EventEnum.before_crawl, ScriptDefinition.of(FileEvents.BeforeCrawl.class)
-				.variable(variableName, variableValue + EventEnum.before_crawl.name())
-				.build());
-		crawl.script(EventEnum.after_crawl, ScriptDefinition.of(FileEvents.AfterCrawl.class)
-				.variable(variableName, variableValue + EventEnum.after_crawl.name())
+		crawl.script(EventEnum.crawl, ScriptDefinition.of(FileEvents.Crawl.class)
+				.variable(variableName, variableValue + EventEnum.crawl.name())
 				.build());
 		crawl.script(EventEnum.before_session, ScriptDefinition.of(FileEvents.BeforeSession.class)
 				.variable(variableName, variableValue + EventEnum.before_session.name())
@@ -106,15 +103,14 @@ public class FileCrawlerTest {
 				.build());
 		remote.runSession(sessionName, crawl.build());
 		CommonEvent.crawlWait(sessionName, remote);
-		Assert.assertEquals(9, FileEvents.feedbacks.get(EventEnum.before_crawl).count());
-		Assert.assertEquals(9, FileEvents.feedbacks.get(EventEnum.after_crawl).count());
+		Assert.assertEquals(9, FileEvents.feedbacks.get(EventEnum.crawl).count());
 		Assert.assertEquals(1, FileEvents.feedbacks.get(EventEnum.before_session).count());
 		Assert.assertEquals(1, FileEvents.feedbacks.get(EventEnum.after_session).count());
 		for (EventEnum eventEnum : EventEnum.values())
 			Assert.assertEquals(variableValue + eventEnum.name(),
 					FileEvents.feedbacks.get(eventEnum).attribute(variableName));
 
-		CommonEvent.Feedback<CurrentPath> feedback = FileEvents.feedbacks.get(EventEnum.before_crawl);
+		CommonEvent.Feedback<CurrentPath> feedback = FileEvents.feedbacks.get(EventEnum.crawl);
 		Assert.assertEquals(0, feedback.crawlDepth("src/test/file_crawl/"), 0);
 		Assert.assertEquals(1, feedback.crawlDepth("src/test/file_crawl/file0.txt"), 0);
 		Assert.assertEquals(1, feedback.crawlDepth("src/test/file_crawl/dir1/"), 0);

@@ -15,19 +15,9 @@
  */
 package com.qwazr.crawler.web.robotstxt;
 
-import com.qwazr.crawler.web.ProxyDefinition;
-import com.qwazr.crawler.web.driver.BrowserDriver;
-import com.qwazr.utils.IOUtils;
+import com.qwazr.crawler.web.driver.DriverInterface;
 import com.qwazr.utils.LinkUtils;
 import com.qwazr.utils.LoggerUtils;
-import com.qwazr.utils.http.HttpClients;
-import com.qwazr.utils.http.HttpRequest;
-import org.apache.http.HttpEntity;
-import org.apache.http.StatusLine;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpResponseException;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.entity.ContentType;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -61,7 +51,7 @@ public class RobotsTxt {
 	private final RobotsTxtUserAgentMap userAgentMap;
 	private final int httpStatusCode;
 
-	public RobotsTxt(final InputStream input, final Charset charset) throws IOException {
+	RobotsTxt(final InputStream input, final Charset charset) throws IOException {
 		this.userAgentMap = RobotsTxtUserAgentMap.of(input, charset);
 		this.httpStatusCode = 200;
 	}
@@ -132,38 +122,20 @@ public class RobotsTxt {
 		return clauseSet.isAllowed(uri.toURL().getFile()) ? Status.ALLOW : Status.DISALLOW;
 	}
 
-	public static RobotsTxt download(final ProxyDefinition proxy, final String userAgent, final URI uri)
+	public static RobotsTxt download(final DriverInterface driver, final URI uri)
 			throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
-		try {
-			final HttpRequest request =
-					HttpRequest.Get(uri.toString()).addHeader("Connection", "close").addHeader("User-Agent", userAgent);
-			BrowserDriver.applyProxy(proxy, uri, request);
-			logger.info(() -> "Try to download robots.txt " + uri);
-			return HttpClients.UNSECURE_HTTP_CLIENT.execute(request.request, response -> {
-				try {
-					final StatusLine statusLine = response.getStatusLine();
-					if (statusLine.getStatusCode() >= 300)
-						throw new HttpResponseException(statusLine.getStatusCode(), statusLine.getReasonPhrase());
-					final HttpEntity entity = response.getEntity();
-					if (entity == null)
-						throw new ClientProtocolException("Response contains no content");
-					final ContentType contentType = ContentType.getOrDefault(entity);
-					final Charset charset = contentType.getCharset();
-					try (final InputStream is = entity.getContent()) {
-						return new RobotsTxt(is, charset == null ? StandardCharsets.UTF_8 : charset);
-					}
-				} finally {
-					IOUtils.close((CloseableHttpResponse) response);
-				}
-			});
-		} catch (HttpResponseException e) {
-			int sc = e.getStatusCode();
-			if (sc != 404)
-				logger.warning(() -> "Get wrong status (" + sc + " code for: " + uri);
-			else
-				logger.info(() -> "Get wrong status (" + sc + " code for: " + uri);
-			return new RobotsTxt(sc);
+		logger.info(() -> "Try to download robots.txt " + uri);
+		try (final DriverInterface.Get get = driver.get(uri.toString())) {
+			final int sc = get.getResponseCode();
+			if (sc != 200)
+				return new RobotsTxt(sc);
+			final DriverInterface.Content content = get.getContent();
+			if (content == null)
+				return new RobotsTxt(sc);
+			final Charset charset = content.getCharset();
+			try (final InputStream is = content.getInput()) {
+				return new RobotsTxt(is, charset == null ? StandardCharsets.UTF_8 : charset);
+			}
 		}
 	}
-
 }

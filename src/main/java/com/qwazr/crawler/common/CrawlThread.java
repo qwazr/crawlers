@@ -122,9 +122,9 @@ public abstract class CrawlThread<D extends CrawlDefinition, S extends CrawlStat
 		return (inInclusion == null || inInclusion) && (inExclusion == null || !inExclusion);
 	}
 
-	protected void checkPassInclusionExclusion(CurrentCrawlImpl current, String itemText) {
-		if (!checkPassInclusionExclusion(itemText, current::setInInclusion, current::setInExclusion))
-			current.setIgnored();
+	protected void checkPassInclusionExclusion(CurrentCrawlImpl.BaseBuilder current, String itemText) {
+		if (!checkPassInclusionExclusion(itemText, current::inInclusion, current::inExclusion))
+			current.ignored(true);
 	}
 
 	@Override

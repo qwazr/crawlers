@@ -15,10 +15,11 @@
  */
 package com.qwazr.crawler.web;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.qwazr.crawler.web.driver.BrowserDriver;
-import com.qwazr.crawler.web.driver.BrowserDriverBuilder;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qwazr.crawler.web.driver.DriverInterface;
 import com.qwazr.library.AbstractLibrary;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.ObjectMappers;
@@ -28,7 +29,12 @@ import java.io.IOException;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class WebCrawlerTool extends AbstractLibrary {
 
-	final public WebCrawlDefinition config = null;
+	final public WebCrawlDefinition config;
+
+	@JsonCreator
+	WebCrawlerTool(@JsonProperty("config") WebCrawlDefinition config) {
+		this.config = config;
+	}
 
 	@JsonIgnore
 	public WebCrawlDefinition.Builder getNewWebCrawlDefinition() {
@@ -36,16 +42,16 @@ public class WebCrawlerTool extends AbstractLibrary {
 	}
 
 	@JsonIgnore
-	public BrowserDriver getNewWebDriver(final IOUtils.CloseableContext context, final String json)
-			throws ReflectiveOperationException, SecurityException, IOException {
+	public DriverInterface getNewWebDriver(final IOUtils.CloseableContext context, final String json)
+			throws IOException {
 		final WebCrawlDefinition webCrawlDef = ObjectMappers.JSON.readValue(json, WebCrawlDefinition.class);
-		final BrowserDriver browserDriver = new BrowserDriverBuilder(webCrawlDef).build();
-		return context == null ? browserDriver : context.add(browserDriver);
+		final DriverInterface driver = DriverInterface.of(webCrawlDef);
+		return context == null ? driver : context.add(driver);
 	}
 
 	@JsonIgnore
-	public BrowserDriver getNewWebDriver(final IOUtils.CloseableContext context) throws ReflectiveOperationException {
-		final BrowserDriver browserDriver = new BrowserDriverBuilder(config).build();
-		return context == null ? browserDriver : context.add(browserDriver);
+	public DriverInterface getNewWebDriver(final IOUtils.CloseableContext context) throws IOException {
+		final DriverInterface driver = DriverInterface.of(config);
+		return context == null ? driver : context.add(driver);
 	}
 }

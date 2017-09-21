@@ -27,10 +27,10 @@ public class FileEvents {
 
 	public final static Map<EventEnum, CommonEvent.Feedback<CurrentPath>> feedbacks = new HashMap<>();
 
-	public static class BeforeCrawl extends CommonEvent.CrawlEvent<CurrentPath> {
+	public static class Crawl extends CommonEvent.CrawlEvent<CurrentPath> {
 
-		public BeforeCrawl() {
-			super(EventEnum.before_crawl, FileEvents.feedbacks, CurrentPath.class, CurrentPath::getPathString);
+		public Crawl() {
+			super(EventEnum.crawl, FileEvents.feedbacks, CurrentPath.class, CurrentPath::getPathString);
 		}
 
 		@Override
@@ -42,14 +42,7 @@ public class FileEvents {
 		}
 
 	}
-
-	public static class AfterCrawl extends CommonEvent.CrawlEvent<CurrentPath> {
-
-		public AfterCrawl() {
-			super(EventEnum.after_crawl, FileEvents.feedbacks, CurrentPath.class, CurrentPath::getPathString);
-		}
-	}
-
+	
 	public static class BeforeSession extends CommonEvent.SessionEvent<CurrentPath> {
 
 		public BeforeSession() {

@@ -25,21 +25,13 @@ public class WebEvents {
 
 	public final static Map<EventEnum, CommonEvent.Feedback<CurrentURIImpl>> feedbacks = new HashMap<>();
 
-	public static class BeforeCrawl extends CommonEvent.CrawlEvent<CurrentURIImpl> {
+	public static class Crawl extends CommonEvent.CrawlEvent<CurrentURIImpl> {
 
-		public BeforeCrawl() {
-			super(EventEnum.before_crawl, WebEvents.feedbacks, CurrentURIImpl.class,
-					currentURI -> currentURI.getURI().toString());
+		public Crawl() {
+			super(EventEnum.crawl, WebEvents.feedbacks, CurrentURIImpl.class,
+					currentURI -> currentURI.getUri().toString());
 		}
 
-	}
-
-	public static class AfterCrawl extends CommonEvent.CrawlEvent<CurrentURIImpl> {
-
-		public AfterCrawl() {
-			super(EventEnum.after_crawl, WebEvents.feedbacks, CurrentURIImpl.class,
-					currentURI -> currentURI.getURI().toString());
-		}
 	}
 
 	public static class BeforeSession extends CommonEvent.SessionEvent {
