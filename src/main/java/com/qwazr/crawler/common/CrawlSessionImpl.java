@@ -152,4 +152,5 @@ public class CrawlSessionImpl<D extends CrawlDefinition, S extends CrawlStatus<D
 		crawlStatusBuilder.done();
 		buildStatus();
 	}
+	
 }

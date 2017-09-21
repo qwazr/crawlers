@@ -73,7 +73,7 @@ public class FileCrawlThread extends CrawlThread<FileCrawlDefinition, FileCrawlS
 	public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
 		if (session.isAborting())
 			return FileVisitResult.TERMINATE;
-		final CurrentPath.Builder builder = new CurrentPath.Builder(computeDepth(dir)).path(dir).attributes(attrs);
+		final CurrentPath.Builder builder = new CurrentPath.Builder(computeDepth(dir), dir, attrs);
 		final CurrentPath current = crawl(builder);
 		if (current.isIgnored())
 			return FileVisitResult.SKIP_SUBTREE;
@@ -100,7 +100,7 @@ public class FileCrawlThread extends CrawlThread<FileCrawlDefinition, FileCrawlS
 			return FileVisitResult.TERMINATE;
 		if (crawlDefinition.crawlWaitMs != null)
 			session.sleep(crawlDefinition.crawlWaitMs);
-		crawl(new CurrentPath.Builder(computeDepth(file)).path(file).attributes(attrs));
+		crawl(new CurrentPath.Builder(computeDepth(file), file, attrs));
 		return FileVisitResult.CONTINUE;
 	}
 

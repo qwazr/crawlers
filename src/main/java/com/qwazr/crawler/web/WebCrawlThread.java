@@ -62,8 +62,6 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 	private final List<Matcher> parametersMatcherList;
 	private final List<Matcher> pathCleanerMatcherList;
 
-	private DriverInterface driver = null;
-
 	private final Map<URI, RobotsTxt> robotsTxtMap;
 	private final String userAgent;
 
@@ -151,7 +149,9 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 	/**
 	 * @param currentBuilder
 	 */
-	private void crawl(final CurrentURIImpl.Builder currentBuilder) throws InterruptedException {
+
+	private void crawl(final DriverInterface driver, final CurrentURIImpl.Builder currentBuilder)
+			throws InterruptedException {
 
 		if (session.isAborting())
 			return;
@@ -170,7 +170,7 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 		}
 
 		// Check the inclusion/exclusion rules
-		if (checkPassInclusionExclusion(uriString, currentBuilder::inInclusion, currentBuilder::inExclusion))
+		if (!checkPassInclusionExclusion(uriString, currentBuilder::inInclusion, currentBuilder::inExclusion))
 			return;
 
 		if (crawlDefinition.crawlWaitMs != null)
@@ -178,7 +178,7 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 
 		// Check the robotsTxt status
 		try {
-			final RobotsTxt.Status robotsTxtStatus = checkRobotsTxt(currentBuilder);
+			final RobotsTxt.Status robotsTxtStatus = checkRobotsTxt(driver, currentBuilder);
 			if (robotsTxtStatus != null && !robotsTxtStatus.isCrawlable) {
 				currentBuilder.ignored(true);
 				currentBuilder.robotsTxtDisallow(true);
@@ -253,7 +253,7 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 		timeTracker.next("Links extraction");
 	}
 
-	private RobotsTxt.Status checkRobotsTxt(CurrentURIImpl.Builder currentBuilder)
+	private RobotsTxt.Status checkRobotsTxt(final DriverInterface driver, final CurrentURIImpl.Builder currentBuilder)
 			throws IOException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException,
 			KeyManagementException {
 		if (robotsTxtMap == null)
@@ -272,8 +272,8 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 		}
 	}
 
-	private void crawlOne(final Set<URI> crawledURIs, final URI uri, final Collection<URI> nextLevelUris,
-			final int depth) throws InterruptedException {
+	private void crawlOne(final DriverInterface driver, final Set<URI> crawledURIs, final URI uri,
+			final Collection<URI> nextLevelUris, final int depth) throws InterruptedException {
 
 		if (session.isAborting())
 			return;
@@ -287,7 +287,7 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 
 		// Do the crawl
 		final CurrentURIImpl.Builder currentBuilder = new CurrentURIImpl.Builder(uri, depth);
-		crawl(currentBuilder);
+		crawl(driver, currentBuilder);
 		final CurrentURI current = currentBuilder.build();
 
 		// Give the hand to the "crawl" event scripts
@@ -298,8 +298,8 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 
 	}
 
-	private void crawlSubLevel(final Set<URI> crawledURIs, final Collection<URI> levelURIs, final int depth)
-			throws InterruptedException {
+	private void crawlSubLevel(final DriverInterface driver, final Set<URI> crawledURIs,
+			final Collection<URI> levelURIs, final int depth) throws InterruptedException {
 
 		if (crawlDefinition.maxDepth == null || depth > crawlDefinition.maxDepth)
 			return;
@@ -314,25 +314,26 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 
 		// Crawl all URLs from the level
 		for (URI uri : levelURIs)
-			crawlOne(crawledURIs, uri, nextLevelURIs, depth);
+			crawlOne(driver, crawledURIs, uri, nextLevelURIs, depth);
 
 		// Let's crawl the next level if any
-		crawlSubLevel(crawledURIs, nextLevelURIs, depth + 1);
+		crawlSubLevel(driver, crawledURIs, nextLevelURIs, depth + 1);
 	}
 
-	private void crawlStart(final Set<URI> crawledURIs, final String startUriString)
+	private void crawlStart(final DriverInterface driver, final Set<URI> crawledURIs, final String startUriString)
 			throws URISyntaxException, InterruptedException {
 		final URI startURI = new URI(startUriString);
 		final Set<URI> nextLevelURIs = new HashSet<>();
-		crawlOne(crawledURIs, startURI, nextLevelURIs, 0);
-		crawlSubLevel(crawledURIs, nextLevelURIs, 1);
+		crawlOne(driver, crawledURIs, startURI, nextLevelURIs, 0);
+		crawlSubLevel(driver, crawledURIs, nextLevelURIs, 1);
 	}
 
-	private void crawlUrlMap(Set<URI> crawledURIs, Map<String, Integer> urlMap) {
+	private void crawlUrlMap(final DriverInterface driver, final Set<URI> crawledURIs,
+			final Map<String, Integer> urlMap) {
 		urlMap.forEach((uriString, depth) -> {
 			try {
 				final URI uri = new URI(uriString);
-				crawlOne(crawledURIs, uri, null, depth == null ? 0 : depth);
+				crawlOne(driver, crawledURIs, uri, null, depth == null ? 0 : depth);
 			} catch (URISyntaxException e) {
 				LOGGER.warning(() -> "Malformed URI: " + uriString);
 			} catch (InterruptedException e) {
@@ -351,10 +352,10 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 				driver.get(crawlDefinition.preUrl);
 			final Set<URI> crawledURIs = new HashSet<>();
 			if (crawlDefinition.urls != null && !crawlDefinition.urls.isEmpty())
-				crawlUrlMap(crawledURIs, crawlDefinition.urls);
+				crawlUrlMap(driver, crawledURIs, crawlDefinition.urls);
 			else {
 				if (crawlDefinition.entryUrl != null)
-					crawlStart(crawledURIs, crawlDefinition.entryUrl);
+					crawlStart(driver, crawledURIs, crawlDefinition.entryUrl);
 				else if (crawlDefinition.entryRequest != null)
 					throw new NotImplementedException("EntryRequest are not yet implemented");
 			}

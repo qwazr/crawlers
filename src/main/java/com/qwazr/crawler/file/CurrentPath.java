@@ -55,25 +55,17 @@ final public class CurrentPath extends CurrentCrawlImpl {
 
 	final static class Builder extends BaseBuilder<Builder> {
 
-		Path path;
-		String pathString;
-		BasicFileAttributes attributes;
+		final Path path;
+		final String pathString;
+		final BasicFileAttributes attributes;
 
-		Builder(int depth) {
+		Builder(final int depth, final Path path, final BasicFileAttributes attributes) {
 			super(Builder.class, depth);
-		}
-
-		Builder path(Path path) {
 			this.path = path;
+			this.attributes = attributes;
 			this.pathString = attributes.isDirectory() ?
 					StringUtils.ensureSuffix(path.toString(), File.separator) :
 					path.toString();
-			return this;
-		}
-
-		Builder attributes(BasicFileAttributes attributes) {
-			this.attributes = attributes;
-			return this;
 		}
 
 		CurrentPath build() {

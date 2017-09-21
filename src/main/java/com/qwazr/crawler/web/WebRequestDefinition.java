@@ -51,8 +51,10 @@ public class WebRequestDefinition {
 	}
 
 	@JsonCreator
-	public WebRequestDefinition(final String url, final String charset, final Map<String, String> headers,
-			Map<String, List<String>> parameters, final HttpMethod method,
+	public WebRequestDefinition(@JsonProperty("url") final String url, @JsonProperty("charset") final String charset,
+			@JsonProperty("headers") final Map<String, String> headers,
+			@JsonProperty("parameters") Map<String, List<String>> parameters,
+			@JsonProperty("method") final HttpMethod method,
 			@JsonProperty("form_encoding_type") final FormEncodingType formEncodingType) {
 		this.url = url;
 		this.charset = charset;

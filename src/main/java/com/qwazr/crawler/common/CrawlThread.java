@@ -123,8 +123,13 @@ public abstract class CrawlThread<D extends CrawlDefinition, S extends CrawlStat
 	}
 
 	protected void checkPassInclusionExclusion(CurrentCrawlImpl.BaseBuilder current, String itemText) {
-		if (!checkPassInclusionExclusion(itemText, current::inInclusion, current::inExclusion))
+		if (!checkPassInclusionExclusion(itemText, current::inInclusion, current::inExclusion)) {
 			current.ignored(true);
+			session.incIgnoredCount();
+		} else {
+			current.crawled(true);
+			session.incCrawledCount();
+		}
 	}
 
 	@Override
