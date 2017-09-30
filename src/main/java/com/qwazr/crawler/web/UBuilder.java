@@ -15,39 +15,61 @@
  */
 package com.qwazr.crawler.web;
 
+import com.qwazr.utils.LinkUtils;
 import com.qwazr.utils.RegExpUtils;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.utils.URIBuilder;
+import org.glassfish.jersey.uri.internal.JerseyUriBuilder;
 
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.UriBuilder;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.regex.Matcher;
 
-class UBuilder extends URIBuilder {
+class UBuilder {
+
+	private UriBuilder builder;
+	private URI uri;
 
 	UBuilder(URI uri) {
-		super(uri);
+		builder = JerseyUriBuilder.fromUri(uri);
+		this.uri = uri;
 	}
 
-	final void removeMatchingParameters(final Collection<Matcher> matcherList) {
+	final void removeMatchingParameters(final Collection<Matcher> matcherList) throws UnsupportedEncodingException {
 		if (matcherList == null || matcherList.isEmpty())
 			return;
-		final List<NameValuePair> oldParams = getQueryParams();
-		if (oldParams == null || oldParams.isEmpty())
+		final MultivaluedMap<String, String> queryParams = LinkUtils.getQueryParameters(uri.getQuery());
+		if (queryParams == null || queryParams.isEmpty())
 			return;
-		clearParameters();
-		for (NameValuePair param : oldParams)
-			if (!RegExpUtils.anyMatch(param.getName() + "=" + param.getValue(), matcherList))
-				addParameter(param.getName(), param.getValue());
+		builder.replaceQuery(null);
+		queryParams.forEach((key, values) -> {
+			final List<String> newValues = new ArrayList<>();
+			for (String value : values) {
+				if (!RegExpUtils.anyMatch(key + "=" + value, matcherList))
+					newValues.add(value);
+			}
+			builder.replaceQueryParam(key, newValues.toArray());
+		});
+
 	}
 
 	final void cleanPath(final Collection<Matcher> matcherList) {
 		if (matcherList == null || matcherList.isEmpty())
 			return;
-		String path = getPath();
+		final String path = uri.getPath();
 		if (path == null || path.isEmpty())
 			return;
-		setPath(RegExpUtils.removeAllMatches(path, matcherList));
+		builder.path(RegExpUtils.removeAllMatches(path, matcherList));
+	}
+
+	void removeFragment() {
+		builder.fragment(null);
+	}
+
+	URI build() {
+		return builder.build();
 	}
 }

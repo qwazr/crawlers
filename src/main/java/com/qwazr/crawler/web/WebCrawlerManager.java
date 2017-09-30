@@ -23,7 +23,6 @@ import com.qwazr.server.ApplicationBuilder;
 import com.qwazr.server.GenericServerBuilder;
 import com.qwazr.utils.LoggerUtils;
 import com.qwazr.utils.TimeTracker;
-import com.qwazr.utils.http.HttpClients;
 
 import java.util.concurrent.ExecutorService;
 import java.util.logging.Logger;
@@ -43,14 +42,6 @@ public class WebCrawlerManager extends CrawlManager<WebCrawlThread, WebCrawlDefi
 	public WebCrawlerManager(ClusterManager clusterManager, ScriptManager scriptManager,
 			ExecutorService executorService) {
 		this(clusterManager.getService().getStatus().me, scriptManager, executorService);
-	}
-
-	public WebCrawlerManager registerHttpClientMonitoringThread(final GenericServerBuilder builder) {
-		final HttpClients.IdleConnectionMonitorThread monitorThread =
-				HttpClients.getNewMonitorThread(30 * 1000, 60 * 60 * 1000);
-		builder.shutdownListener(server -> monitorThread.shutdown());
-		executorService.submit(monitorThread);
-		return this;
 	}
 
 	public WebCrawlerServiceInterface getService() {

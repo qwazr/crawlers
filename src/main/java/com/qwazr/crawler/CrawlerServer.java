@@ -74,8 +74,7 @@ public class CrawlerServer implements BaseServer {
 
 		final WebCrawlerManager webCrawlerManager =
 				new WebCrawlerManager(clusterManager, scriptManager, executorService).registerContextAttribute(builder)
-						.registerWebService(webServices)
-						.registerHttpClientMonitoringThread(builder);
+						.registerWebService(webServices);
 
 		final FileCrawlerManager fileCrawlerManager =
 				new FileCrawlerManager(clusterManager, scriptManager, executorService).registerContextAttribute(builder)

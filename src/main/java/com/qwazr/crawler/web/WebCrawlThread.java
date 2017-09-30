@@ -35,6 +35,7 @@ import javax.script.ScriptException;
 import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.KeyManagementException;
@@ -114,16 +115,16 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 	 * @return the transformed URI
 	 */
 	private URI transformLink(final URI uri) {
-		final UBuilder uriBuilder = new UBuilder(uri);
-		if (crawlDefinition.removeFragments != null && crawlDefinition.removeFragments)
-			uriBuilder.setFragment(null);
-		if (parametersMatcherList != null && !parametersMatcherList.isEmpty())
-			uriBuilder.removeMatchingParameters(parametersMatcherList);
-		if (pathCleanerMatcherList != null && !pathCleanerMatcherList.isEmpty())
-			uriBuilder.cleanPath(pathCleanerMatcherList);
 		try {
+			final UBuilder uriBuilder = new UBuilder(uri);
+			if (crawlDefinition.removeFragments != null && crawlDefinition.removeFragments)
+				uriBuilder.removeFragment();
+			if (parametersMatcherList != null && !parametersMatcherList.isEmpty())
+				uriBuilder.removeMatchingParameters(parametersMatcherList);
+			if (pathCleanerMatcherList != null && !pathCleanerMatcherList.isEmpty())
+				uriBuilder.cleanPath(pathCleanerMatcherList);
 			return uriBuilder.build();
-		} catch (URISyntaxException e) {
+		} catch (UnsupportedEncodingException e) {
 			LOGGER.log(Level.WARNING, e, () -> "Cannot build the URI from " + uri.toString());
 			return null;
 		}

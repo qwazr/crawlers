@@ -16,7 +16,6 @@
 package com.qwazr.crawler.web.robotstxt;
 
 import com.qwazr.crawler.web.driver.DriverInterface;
-import com.qwazr.utils.LinkUtils;
 import com.qwazr.utils.LoggerUtils;
 
 import java.io.IOException;
@@ -83,7 +82,7 @@ public class RobotsTxt {
 			sb.append(uri.getPort());
 		}
 		sb.append("/robots.txt");
-		return LinkUtils.newEncodedURI(sb.toString());
+		return new URI(sb.toString());
 	}
 
 	/**
