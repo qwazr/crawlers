@@ -16,6 +16,7 @@
 package com.qwazr.crawler.web;
 
 import com.qwazr.crawler.common.CurrentCrawl;
+import com.qwazr.crawler.web.driver.DriverInterface;
 
 import java.net.URI;
 import java.util.Map;
@@ -62,5 +63,10 @@ public interface CurrentURI extends CurrentCrawl {
 	 * @return a collection of links
 	 */
 	Map<URI, AtomicInteger> getLinks();
+
+	/**
+	 * @return the crawled content
+	 */
+	DriverInterface.Content getContent();
 
 }

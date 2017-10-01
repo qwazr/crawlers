@@ -169,11 +169,11 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 	 * @param currentBuilder
 	 */
 
-	private void crawl(final DriverInterface driver, final CurrentURIImpl.Builder currentBuilder)
+	private DriverInterface.Get crawl(final DriverInterface driver, final CurrentURIImpl.Builder currentBuilder)
 			throws InterruptedException {
 
 		if (session.isAborting())
-			return;
+			return null;
 
 		final String uriString = currentBuilder.uri.toString();
 
@@ -185,12 +185,12 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 			session.incIgnoredCount();
 			currentBuilder.ignored(true);
 			LOGGER.info(() -> "Ignored (not http) " + uriString);
-			return;
+			return null;
 		}
 
 		// Check the inclusion/exclusion rules
 		if (!checkPassInclusionExclusion(uriString, currentBuilder::inInclusion, currentBuilder::inExclusion))
-			return;
+			return null;
 
 		if (crawlDefinition.crawlWaitMs != null)
 			Thread.sleep(crawlDefinition.crawlWaitMs);
@@ -202,38 +202,39 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 				currentBuilder.ignored(true);
 				currentBuilder.robotsTxtDisallow(true);
 				session.incIgnoredCount();
-				return;
+				return null;
 			}
 		} catch (Exception e) {
 			session.incErrorCount("Error during robots.txt extraction: " + e.getMessage());
 			currentBuilder.error(e);
-			return;
+			return null;
 		}
 
 		// First make an head
 		final DriverInterface.Head head = doHttp(uriString, currentBuilder, driver::head);
 		if (head == null)
-			return; // Any error already handled by doHttp
+			return null; // Any error already handled by doHttp
 
 		// Second make an head
 		final DriverInterface.Get get = doHttp(uriString, currentBuilder, driver::get);
 		if (get == null)
-			return; // Any error already handled by doHttp
+			return null; // Any error already handled by doHttp
 
 		final DriverInterface.Content content = get.getContent();
 		if (content == null)
-			return; // No content ? We're done
+			return get; // No content ? We're done
 
 		if (!checkPassContentType(head.getContentType(), currentBuilder)) {
 			session.incIgnoredCount();
-			return;
+			return get;
 		}
 
 		currentBuilder.crawled(true);
+		currentBuilder.content(content);
 
 		// If it is not HTML we're done
 		if (!"text/html".equals(content.getContentType()))
-			return;
+			return get;
 
 		// Let's parse the HTML
 		final Document document;
@@ -244,12 +245,12 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 		} catch (IOException e) {
 			session.incErrorCount("Error during robots.txt extraction: " + e.getMessage());
 			currentBuilder.error(e);
-			return;
+			return get;
 		}
 
 		final Element body = document.body();
 		if (body == null)
-			return; // No body ? we are done
+			return get; // No body ? we are done
 
 		timeTracker.next(null);
 		for (final Element element : body.select("a[href]")) {
@@ -271,6 +272,7 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 			currentBuilder.link(transformLink(newUri));
 		}
 		timeTracker.next("Links extraction");
+		return get;
 	}
 
 	private boolean checkPassContentType(String contentType, final CurrentURIImpl.Builder currentBuilder) {
@@ -313,18 +315,23 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 
 		// Do the crawl
 		final CurrentURIImpl.Builder currentBuilder = new CurrentURIImpl.Builder(uri, depth);
-		crawl(driver, currentBuilder);
-		final CurrentURI current = currentBuilder.build();
+		final CurrentURI current;
+		try (final DriverInterface.Get get = crawl(driver, currentBuilder)) {
+			current = currentBuilder.build();
 
-		// Handle url number limit
-		if (current.isCrawled()) {
-			final int crawledCount = session.incCrawledCount();
-			if (crawlDefinition.maxUrlNumber != null && crawledCount >= crawlDefinition.maxUrlNumber)
-				abort("Max URL number reached: " + crawlDefinition.maxUrlNumber);
+			// Handle url number limit
+			if (current.isCrawled()) {
+				final int crawledCount = session.incCrawledCount();
+				if (crawlDefinition.maxUrlNumber != null && crawledCount >= crawlDefinition.maxUrlNumber)
+					abort("Max URL number reached: " + crawlDefinition.maxUrlNumber);
+			}
+
+			// Give the hand to the "crawl" event scripts
+			script(EventEnum.crawl, current);
+		} catch (IOException e) {
+			LOGGER.log(Level.WARNING, e, e::getMessage);
+			return;
 		}
-
-		// Give the hand to the "crawl" event scripts
-		script(EventEnum.crawl, current);
 
 		// Manage any redirection
 		final URI redirectUri = current.getRedirect();

@@ -67,6 +67,8 @@ public interface DriverInterface extends Closeable {
 		String getCharsetName();
 
 		Long getContentLength();
+
+		boolean isClosed();
 	}
 
 	static DriverInterface of(WebCrawlDefinition webCrawlDef) throws IOException {

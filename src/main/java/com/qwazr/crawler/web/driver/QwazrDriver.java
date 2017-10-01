@@ -42,6 +42,7 @@ import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -248,13 +249,15 @@ public class QwazrDriver implements DriverInterface {
 
 	class ContentImpl implements Content, Closeable {
 
-		final File contentCache;
+		final Path contentCache;
+		final File contentCacheFile;
 		final String contentType;
 		final Charset charset;
 		final Long contentLength;
 
 		ContentImpl(Response response) throws IOException {
-			contentCache = Files.createTempFile("QwazrDriver", "cache").toFile();
+			contentCache = Files.createTempFile("QwazrDriver", "cache");
+			contentCacheFile = contentCache.toFile();
 			try (ResponseBody responseBody = response.body()) {
 				if (responseBody != null) {
 					contentLength = responseBody.contentLength();
@@ -267,7 +270,7 @@ public class QwazrDriver implements DriverInterface {
 						charset = null;
 					}
 					try (final InputStream input = responseBody.byteStream()) {
-						IOUtils.copy(input, contentCache);
+						IOUtils.copy(input, contentCacheFile);
 					}
 				} else {
 					contentLength = null;
@@ -279,12 +282,17 @@ public class QwazrDriver implements DriverInterface {
 
 		@Override
 		public void close() throws IOException {
-			Files.deleteIfExists(contentCache.toPath());
+			Files.deleteIfExists(contentCache);
+		}
+
+		@Override
+		public boolean isClosed() {
+			return !Files.exists(contentCache);
 		}
 
 		@Override
 		public InputStream getInput() throws FileNotFoundException {
-			return new BufferedInputStream(new FileInputStream(contentCache));
+			return new BufferedInputStream(new FileInputStream(contentCacheFile));
 		}
 
 		@Override

@@ -20,6 +20,7 @@ import com.qwazr.crawler.common.CommonEvent;
 import com.qwazr.crawler.common.CrawlStatus;
 import com.qwazr.crawler.common.EventEnum;
 import com.qwazr.crawler.common.ScriptDefinition;
+import com.qwazr.crawler.web.driver.DriverInterface;
 import com.qwazr.utils.RandomUtils;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -103,6 +104,17 @@ public abstract class WebCrawlerTestAbstract {
 		for (EventEnum eventEnum : EventEnum.values())
 			Assert.assertEquals(variableValue + eventEnum.name(),
 					WebEvents.feedbacks.get(eventEnum).attribute(variableName));
+		WebEvents.feedbacks.get(EventEnum.crawl).currentCrawls.forEach((id, current) -> {
+			final DriverInterface.Content content = current.getContent();
+			if (current.isCrawled()) {
+				Assert.assertNotNull(content);
+				Assert.assertNotNull(current.getContentType());
+				Assert.assertNotNull(content.getContentType());
+				Assert.assertEquals(current.getContentType(), content.getContentType());
+				Assert.assertNotNull(current.getContent().getContentLength());
+				Assert.assertTrue(current.getContent().isClosed());
+			}
+		});
 	}
 
 }

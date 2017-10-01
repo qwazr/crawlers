@@ -16,6 +16,7 @@
 package com.qwazr.crawler.web;
 
 import com.qwazr.crawler.common.CurrentCrawlImpl;
+import com.qwazr.crawler.web.driver.DriverInterface;
 
 import java.net.URI;
 import java.util.Collections;
@@ -31,6 +32,7 @@ final class CurrentURIImpl extends CurrentCrawlImpl implements CurrentURI {
 	private final Boolean isRobotsTxtDisallow;
 	private final String contentType;
 	private final Boolean rejectedContentType;
+	private final DriverInterface.Content content;
 
 	CurrentURIImpl(Builder builder) {
 		super(builder);
@@ -40,6 +42,7 @@ final class CurrentURIImpl extends CurrentCrawlImpl implements CurrentURI {
 		this.contentType = builder.contentType;
 		this.rejectedContentType = builder.rejectedContentType;
 		this.links = builder.links == null ? Collections.emptyMap() : Collections.unmodifiableMap(builder.links);
+		this.content = builder.content;
 	}
 
 	@Override
@@ -72,6 +75,11 @@ final class CurrentURIImpl extends CurrentCrawlImpl implements CurrentURI {
 		return links;
 	}
 
+	@Override
+	public DriverInterface.Content getContent() {
+		return content;
+	}
+
 	final static class Builder extends BaseBuilder<Builder> {
 
 		final URI uri;
@@ -81,6 +89,7 @@ final class CurrentURIImpl extends CurrentCrawlImpl implements CurrentURI {
 		private String contentType;
 		private Boolean rejectedContentType;
 		private LinkedHashMap<URI, AtomicInteger> links;
+		private DriverInterface.Content content;
 
 		protected Builder(URI uri, int depth) {
 			super(Builder.class, depth);
@@ -110,6 +119,11 @@ final class CurrentURIImpl extends CurrentCrawlImpl implements CurrentURI {
 			if (links == null)
 				links = new LinkedHashMap<>();
 			links.computeIfAbsent(uri, u -> new AtomicInteger()).incrementAndGet();
+			return this;
+		}
+
+		public Builder content(DriverInterface.Content content) {
+			this.content = content;
 			return this;
 		}
 
