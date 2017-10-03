@@ -345,9 +345,11 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 		}
 
 		// Add the next level URIs
-		final Map<URI, AtomicInteger> links = current.getLinks();
-		if (links != null)
-			nextLevelUris.addAll(links.keySet());
+		if (nextLevelUris != null) {
+			final Map<URI, AtomicInteger> links = current.getLinks();
+			if (links != null)
+				nextLevelUris.addAll(links.keySet());
+		}
 	}
 
 	private void crawlSubLevel(final DriverInterface driver, final Set<URI> crawledURIs,
