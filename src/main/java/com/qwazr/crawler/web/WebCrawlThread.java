@@ -47,6 +47,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -138,7 +139,7 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 
 			final T head = method.apply(uriString);
 			currentBuilder.statusCode(head.getResponseCode());
-			
+
 			final String redirectLocation = head.getRedirectLocation();
 			if (!StringUtils.isBlank(redirectLocation)) {
 				final URI redirectUri = new URI(redirectLocation);
@@ -342,9 +343,11 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 			crawlOne(driver, crawledURIs, redirectUri, nextLevelUris, depth);
 			return;
 		}
-		// Add the next level URIs
-		nextLevelUris.addAll(current.getLinks().keySet());
 
+		// Add the next level URIs
+		final Map<URI, AtomicInteger> links = current.getLinks();
+		if (links != null)
+			nextLevelUris.addAll(links.keySet());
 	}
 
 	private void crawlSubLevel(final DriverInterface driver, final Set<URI> crawledURIs,
