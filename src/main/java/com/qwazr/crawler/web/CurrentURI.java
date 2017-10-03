@@ -44,6 +44,13 @@ public interface CurrentURI extends CurrentCrawl {
 	URI getRedirect();
 
 	/**
+	 * The HTTP status code of the crawled URI
+	 *
+	 * @return a status code
+	 */
+	Integer getStatusCode();
+
+	/**
 	 * The content-type of the crawled URI
 	 *
 	 * @return a content-type

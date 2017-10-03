@@ -135,7 +135,10 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 			final FunctionUtils.FunctionEx<String, T, IOException> method) {
 		try {
 			timeTracker.next(null);
+
 			final T head = method.apply(uriString);
+			currentBuilder.statusCode(head.getResponseCode());
+			
 			final String redirectLocation = head.getRedirectLocation();
 			if (!StringUtils.isBlank(redirectLocation)) {
 				final URI redirectUri = new URI(redirectLocation);

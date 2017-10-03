@@ -30,6 +30,7 @@ final class CurrentURIImpl extends CurrentCrawlImpl implements CurrentURI {
 	private final URI redirect;
 	private final Map<URI, AtomicInteger> links;
 	private final Boolean isRobotsTxtDisallow;
+	private final Integer statusCode;
 	private final String contentType;
 	private final Boolean rejectedContentType;
 	private final DriverInterface.Content content;
@@ -39,6 +40,7 @@ final class CurrentURIImpl extends CurrentCrawlImpl implements CurrentURI {
 		this.uri = builder.uri;
 		this.redirect = builder.redirect;
 		this.isRobotsTxtDisallow = builder.isRobotsTxtDisallow;
+		this.statusCode = builder.statusCode;
 		this.contentType = builder.contentType;
 		this.rejectedContentType = builder.rejectedContentType;
 		this.links = builder.links == null ? Collections.emptyMap() : Collections.unmodifiableMap(builder.links);
@@ -53,6 +55,11 @@ final class CurrentURIImpl extends CurrentCrawlImpl implements CurrentURI {
 	@Override
 	public URI getRedirect() {
 		return redirect;
+	}
+
+	@Override
+	public Integer getStatusCode() {
+		return statusCode;
 	}
 
 	@Override
@@ -86,6 +93,7 @@ final class CurrentURIImpl extends CurrentCrawlImpl implements CurrentURI {
 		final String uriString;
 		private URI redirect;
 		private Boolean isRobotsTxtDisallow;
+		private Integer statusCode;
 		private String contentType;
 		private Boolean rejectedContentType;
 		private LinkedHashMap<URI, AtomicInteger> links;
@@ -104,6 +112,11 @@ final class CurrentURIImpl extends CurrentCrawlImpl implements CurrentURI {
 
 		public Builder robotsTxtDisallow(Boolean isRobotsTxtDisallow) {
 			this.isRobotsTxtDisallow = isRobotsTxtDisallow;
+			return this;
+		}
+
+		public Builder statusCode(Integer statusCode) {
+			this.statusCode = statusCode;
 			return this;
 		}
 

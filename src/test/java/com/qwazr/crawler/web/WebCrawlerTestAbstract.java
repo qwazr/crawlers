@@ -109,11 +109,22 @@ public abstract class WebCrawlerTestAbstract {
 			final DriverInterface.Content content = current.getContent();
 			if (current.isCrawled()) {
 				Assert.assertNotNull(content);
+				Assert.assertEquals(Integer.valueOf(200), current.getStatusCode());
 				Assert.assertNotNull(current.getContentType());
 				Assert.assertNotNull(content.getContentType());
 				Assert.assertEquals(current.getContentType(), content.getContentType());
 				Assert.assertNotNull(current.getContent().getContentLength());
 				Assert.assertTrue(current.getContent().isClosed());
+			}
+			if (current.getRedirect() != null) {
+				Assert.assertEquals(Integer.valueOf(302), current.getStatusCode());
+			}
+			if (current.getError() != null) {
+				Assert.assertEquals(Integer.valueOf(404), current.getStatusCode());
+			}
+			if (current.isIgnored()) {
+				Assert.assertNull(current.getStatusCode());
+				Assert.assertNull(current.getContentType());
 			}
 		});
 	}
