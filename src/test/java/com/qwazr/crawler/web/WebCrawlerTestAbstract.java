@@ -90,6 +90,7 @@ public abstract class WebCrawlerTestAbstract {
 		webCrawl.script(EventEnum.after_session, ScriptDefinition.of(WebEvents.AfterSession.class)
 				.variable(variableName, variableValue + EventEnum.after_session.name())
 				.build());
+		webCrawl.userAgent("QWAZR_BOT");
 		service.runSession(sessionName, webCrawl.build());
 		final CrawlStatus status = CommonEvent.crawlWait(sessionName, service);
 

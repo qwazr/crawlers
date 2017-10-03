@@ -449,6 +449,11 @@ public class WebCrawlDefinition extends CrawlDefinition {
 			return this;
 		}
 
+		public Builder userAgent(String userAgent) {
+			this.userAgent = userAgent;
+			return this;
+		}
+
 		@Override
 		public WebCrawlDefinition build() {
 			return new WebCrawlDefinition(this);
