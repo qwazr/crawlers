@@ -106,7 +106,7 @@ final class CurrentURIImpl extends CurrentCrawlImpl implements CurrentURI {
 		}
 
 		public Builder redirect(URI redirect) {
-			this.redirect = redirect;
+			this.redirect = redirect == null ? null : uri.resolve(redirect);
 			return this;
 		}
 
