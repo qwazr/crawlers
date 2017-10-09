@@ -124,7 +124,7 @@ public class RobotsTxt {
 	public static RobotsTxt download(final DriverInterface driver, final URI uri)
 			throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
 		logger.info(() -> "Try to download robots.txt " + uri);
-		try (final DriverInterface.Get get = driver.get(uri.toString())) {
+		try (final DriverInterface.Body get = driver.get(uri.toString())) {
 			final int sc = get.getResponseCode();
 			if (sc != 200)
 				return new RobotsTxt(sc);

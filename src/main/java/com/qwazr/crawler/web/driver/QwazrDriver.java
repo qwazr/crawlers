@@ -23,6 +23,7 @@ import com.qwazr.utils.RandomUtils;
 import com.qwazr.utils.StringUtils;
 import okhttp3.Cookie;
 import okhttp3.CookieJar;
+import okhttp3.FormBody;
 import okhttp3.Headers;
 import okhttp3.HttpUrl;
 import okhttp3.MediaType;
@@ -107,8 +108,13 @@ public class QwazrDriver implements DriverInterface {
 	}
 
 	@Override
-	public Get get(String url) throws IOException {
+	public Body get(String url) throws IOException {
 		return new GetImpl(url);
+	}
+
+	@Override
+	public Body post(String url, Map<String, List<String>> parameters) throws IOException {
+		return new PostImpl(url, parameters);
 	}
 
 	@Override
@@ -218,15 +224,10 @@ public class QwazrDriver implements DriverInterface {
 		}
 	}
 
-	class GetImpl extends HeadImpl implements Get {
+	abstract class BodyImpl extends HeadImpl implements Body {
 
-		GetImpl(final String url) throws IOException {
+		BodyImpl(String url) throws IOException {
 			super(url);
-		}
-
-		@Override
-		void request(Request.Builder builder) {
-			builder.get();
 		}
 
 		@Override
@@ -241,8 +242,41 @@ public class QwazrDriver implements DriverInterface {
 
 		@Override
 		public void close() throws IOException {
-			if (content != null)
+			if (content != null && !content.isClosed())
 				content.close();
+		}
+	}
+
+	final class GetImpl extends BodyImpl {
+
+		GetImpl(final String url) throws IOException {
+			super(url);
+		}
+
+		@Override
+		void request(Request.Builder builder) {
+			builder.get();
+		}
+	}
+
+	final class PostImpl extends BodyImpl {
+
+		final Map<String, List<String>> parameters;
+
+		PostImpl(final String url, Map<String, List<String>> parameters) throws IOException {
+			super(url);
+			this.parameters = parameters;
+		}
+
+		@Override
+		void request(Request.Builder builder) {
+			final FormBody.Builder formBodyBuilder = new FormBody.Builder();
+			if (parameters != null)
+				parameters.forEach((name, values) -> {
+					if (values != null)
+						values.forEach(value -> formBodyBuilder.add(name, value));
+				});
+			builder.post(formBodyBuilder.build());
 		}
 
 	}

@@ -60,25 +60,44 @@ public abstract class WebCrawlerTestAbstract {
 		webCrawl.setMaxUrlNumber(10);
 		webCrawl.setRobotsTxtEnabled(true);
 		webCrawl.setMaxDepth(2);
-		webCrawl.setEntryUrl(WebAppTestServer.URL);
 		return webCrawl;
+	}
+
+	private CrawlStatus crawlTest(WebCrawlDefinition webCrawl, int crawled, int ignored, int error)
+			throws InterruptedException {
+		final String sessionName = RandomUtils.alphanumeric(10);
+		service.runSession(sessionName, webCrawl);
+		final CrawlStatus status = CommonEvent.crawlWait(sessionName, service);
+		Assert.assertEquals(crawled, status.crawled);
+		Assert.assertEquals(ignored, status.ignored);
+		Assert.assertEquals(error, status.error);
+		return status;
 	}
 
 	@Test
 	public void test300SimpleCrawl() throws InterruptedException {
-		final String sessionName = RandomUtils.alphanumeric(10);
-		service.runSession(sessionName, getNewWebCrawl().build());
-		final CrawlStatus status = CommonEvent.crawlWait(sessionName, service);
-		Assert.assertEquals(4, status.crawled);
-		Assert.assertEquals(1, status.ignored);
-		Assert.assertEquals(1, status.error);
+		crawlTest(getNewWebCrawl().setEntryUrl(WebAppTestServer.URL).build(), 4, 1, 1);
+	}
+
+	@Test
+	public void test350CrawlGetWebRequest() throws InterruptedException {
+		crawlTest(getNewWebCrawl().setEntryRequest(
+				WebRequestDefinition.of(WebAppTestServer.URL).httpMethod(WebRequestDefinition.HttpMethod.GET).build())
+				.build(), 4, 1, 1);
+	}
+
+	@Test
+	public void test360CrawlPostWebRequest() throws InterruptedException {
+		crawlTest(getNewWebCrawl().setEntryRequest(
+				WebRequestDefinition.of(WebAppTestServer.URL).httpMethod(WebRequestDefinition.HttpMethod.POST).build())
+				.build(), 0, 0, 1);
 	}
 
 	@Test
 	public void test400CrawlEvent() throws InterruptedException {
 		WebEvents.feedbacks.clear();
 		final String sessionName = RandomUtils.alphanumeric(10);
-		final WebCrawlDefinition.Builder webCrawl = getNewWebCrawl();
+		final WebCrawlDefinition.Builder webCrawl = getNewWebCrawl().setEntryUrl(WebAppTestServer.URL);
 		final String variableName = RandomUtils.alphanumeric(5);
 		final String variableValue = RandomUtils.alphanumeric(6);
 		webCrawl.script(EventEnum.crawl, ScriptDefinition.of(WebEvents.Crawl.class)

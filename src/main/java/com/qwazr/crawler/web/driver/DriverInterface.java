@@ -23,12 +23,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.List;
+import java.util.Map;
 
 public interface DriverInterface extends Closeable {
 
 	Head head(String url) throws IOException;
 
-	Get get(String url) throws IOException;
+	Body get(String url) throws IOException;
+
+	Body post(String url, Map<String, List<String>> parameters) throws IOException;
 
 	interface Head {
 
@@ -51,7 +54,7 @@ public interface DriverInterface extends Closeable {
 		boolean isSuccessful();
 	}
 
-	interface Get extends Head, Closeable {
+	interface Body extends Head, Closeable {
 
 		Content getContent();
 	}

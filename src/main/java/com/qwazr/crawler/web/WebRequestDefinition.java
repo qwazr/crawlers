@@ -71,6 +71,10 @@ public class WebRequestDefinition {
 				builder.formEncodingType);
 	}
 
+	public static WebRequestDefinition.Builder of(String url) {
+		return new Builder().url(url);
+	}
+
 	public static class Builder {
 
 		private String url;
@@ -85,8 +89,8 @@ public class WebRequestDefinition {
 
 		private FormEncodingType formEncodingType;
 
-		public Builder(final String url) {
-			setUrl(url);
+		Builder() {
+			url = null;
 			charset = null;
 			headers = null;
 			parameters = null;
@@ -94,36 +98,36 @@ public class WebRequestDefinition {
 			formEncodingType = FormEncodingType.URL_ENCODED;
 		}
 
-		public Builder setUrl(final String url) {
+		public Builder url(final String url) {
 			this.url = url;
 			return this;
 		}
 
-		public Builder setCharset(final String charset) {
+		public Builder charset(final String charset) {
 			this.charset = charset;
 			return this;
 		}
 
-		public Builder addHeader(final String key, final String value) {
+		public Builder header(final String key, final String value) {
 			if (headers == null)
 				headers = new LinkedHashMap<>();
 			headers.put(key, value);
 			return this;
 		}
 
-		public Builder addParameter(final String key, final String value) {
+		public Builder parameter(final String key, final String value) {
 			if (parameters == null)
 				parameters = new LinkedHashMap<>();
 			parameters.computeIfAbsent(key, k -> new ArrayList<>()).add(value);
 			return this;
 		}
 
-		public Builder setHttpMethod(final HttpMethod method) {
+		public Builder httpMethod(final HttpMethod method) {
 			this.method = method;
 			return this;
 		}
 
-		public Builder setFormEncodingType(final FormEncodingType formEncodingType) {
+		public Builder formEncodingType(final FormEncodingType formEncodingType) {
 			this.formEncodingType = formEncodingType;
 			return this;
 		}
