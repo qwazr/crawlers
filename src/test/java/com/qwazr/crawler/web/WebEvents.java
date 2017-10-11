@@ -16,6 +16,7 @@
 package com.qwazr.crawler.web;
 
 import com.qwazr.crawler.common.CommonEvent;
+import com.qwazr.crawler.common.CrawlSession;
 import com.qwazr.crawler.common.EventEnum;
 
 import java.util.HashMap;
@@ -31,7 +32,14 @@ public class WebEvents {
 			super(EventEnum.crawl, WebEvents.feedbacks, CurrentURIImpl.class,
 					currentURI -> currentURI.getUri().toString());
 		}
-		
+
+		@Override
+		protected void run(final CrawlSession crawlSession, final CurrentURIImpl currentCrawl,
+				final Map<String, ?> attributes) throws Exception {
+			super.run(crawlSession, currentCrawl, attributes);
+			assert !currentCrawl.isCrawled() || currentCrawl.getBody() != null;
+		}
+
 	}
 
 	public static class BeforeSession extends CommonEvent.SessionEvent {

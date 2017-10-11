@@ -31,6 +31,8 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 
 import java.io.BufferedInputStream;
 import java.io.Closeable;
@@ -226,6 +228,8 @@ public class QwazrDriver implements DriverInterface {
 
 	abstract class BodyImpl extends HeadImpl implements Body {
 
+		private volatile Document document;
+
 		BodyImpl(String url) throws IOException {
 			super(url);
 		}
@@ -244,6 +248,19 @@ public class QwazrDriver implements DriverInterface {
 		public void close() throws IOException {
 			if (content != null && !content.isClosed())
 				content.close();
+		}
+
+		public synchronized Document getHtmlDocument() throws IOException {
+			if (document != null)
+				return document;
+			if (content == null)
+				return null;
+			if (!"text/html".equals(content.getContentType()))
+				return null;
+			try (final InputStream input = content.getInput()) {
+				document = Jsoup.parse(input, content.getCharsetName(), getUrl());
+			}
+			return document;
 		}
 	}
 
@@ -369,4 +386,5 @@ public class QwazrDriver implements DriverInterface {
 			return cookieList;
 		}
 	}
+
 }

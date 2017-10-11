@@ -26,14 +26,12 @@ import com.qwazr.utils.RegExpUtils;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.TimeTracker;
 import org.apache.commons.lang3.NotImplementedException;
-import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
 import javax.script.ScriptException;
 import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -190,18 +188,14 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 		}
 
 		crawlUnit.currentBuilder.crawled(true);
-		crawlUnit.currentBuilder.content(content);
+		crawlUnit.currentBuilder.body(body);
 
-		// If it is not HTML we're done
-		if (!"text/html".equals(content.getContentType()))
-			return body;
-
-		// Let's parse the HTML
+		// Let's parse the HTML if any
 		final Document document;
 		try {
-			try (final InputStream input = content.getInput()) {
-				document = Jsoup.parse(input, content.getCharsetName(), uriString);
-			}
+			document = body.getHtmlDocument();
+			if (document == null)
+				return body; // No HTML document ? We're done
 		} catch (IOException e) {
 			session.incErrorCount("Error during robots.txt extraction: " + e.getMessage());
 			crawlUnit.currentBuilder.error(e);

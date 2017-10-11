@@ -16,6 +16,7 @@
 package com.qwazr.crawler.web.driver;
 
 import com.qwazr.crawler.web.WebCrawlDefinition;
+import org.jsoup.nodes.Document;
 
 import java.io.Closeable;
 import java.io.FileNotFoundException;
@@ -57,6 +58,8 @@ public interface DriverInterface extends Closeable {
 	interface Body extends Head, Closeable {
 
 		Content getContent();
+
+		Document getHtmlDocument() throws IOException;
 	}
 
 	interface Content {
@@ -77,4 +80,5 @@ public interface DriverInterface extends Closeable {
 	static DriverInterface of(WebCrawlDefinition webCrawlDef) throws IOException {
 		return new QwazrDriver(webCrawlDef);
 	}
+
 }

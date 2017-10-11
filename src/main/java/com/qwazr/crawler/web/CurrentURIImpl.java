@@ -33,7 +33,7 @@ final class CurrentURIImpl extends CurrentCrawlImpl implements CurrentURI {
 	private final Integer statusCode;
 	private final String contentType;
 	private final Boolean rejectedContentType;
-	private final DriverInterface.Content content;
+	private final DriverInterface.Body body;
 
 	CurrentURIImpl(Builder builder) {
 		super(builder);
@@ -44,7 +44,7 @@ final class CurrentURIImpl extends CurrentCrawlImpl implements CurrentURI {
 		this.contentType = builder.contentType;
 		this.rejectedContentType = builder.rejectedContentType;
 		this.links = builder.links == null ? Collections.emptyMap() : Collections.unmodifiableMap(builder.links);
-		this.content = builder.content;
+		this.body = builder.body;
 	}
 
 	@Override
@@ -83,8 +83,8 @@ final class CurrentURIImpl extends CurrentCrawlImpl implements CurrentURI {
 	}
 
 	@Override
-	public DriverInterface.Content getContent() {
-		return content;
+	public DriverInterface.Body getBody() {
+		return body;
 	}
 
 	final static class Builder extends BaseBuilder<Builder> {
@@ -97,7 +97,7 @@ final class CurrentURIImpl extends CurrentCrawlImpl implements CurrentURI {
 		private String contentType;
 		private Boolean rejectedContentType;
 		private LinkedHashMap<URI, AtomicInteger> links;
-		private DriverInterface.Content content;
+		private DriverInterface.Body body;
 
 		protected Builder(URI uri, int depth) {
 			super(Builder.class, depth);
@@ -135,8 +135,8 @@ final class CurrentURIImpl extends CurrentCrawlImpl implements CurrentURI {
 			return this;
 		}
 
-		public Builder content(DriverInterface.Content content) {
-			this.content = content;
+		public Builder body(DriverInterface.Body body) {
+			this.body = body;
 			return this;
 		}
 

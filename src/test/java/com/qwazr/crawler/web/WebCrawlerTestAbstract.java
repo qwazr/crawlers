@@ -125,15 +125,16 @@ public abstract class WebCrawlerTestAbstract {
 			Assert.assertEquals(variableValue + eventEnum.name(),
 					WebEvents.feedbacks.get(eventEnum).attribute(variableName));
 		WebEvents.feedbacks.get(EventEnum.crawl).currentCrawls.forEach((id, current) -> {
-			final DriverInterface.Content content = current.getContent();
+			final DriverInterface.Body body = current.getBody();
 			if (current.isCrawled()) {
-				Assert.assertNotNull(content);
+				Assert.assertNotNull(body);
 				Assert.assertEquals(Integer.valueOf(200), current.getStatusCode());
 				Assert.assertNotNull(current.getContentType());
-				Assert.assertNotNull(content.getContentType());
-				Assert.assertEquals(current.getContentType(), content.getContentType());
-				Assert.assertNotNull(current.getContent().getContentLength());
-				Assert.assertTrue(current.getContent().isClosed());
+				Assert.assertNotNull(body.getContentType());
+				Assert.assertEquals(current.getContentType(), body.getContentType());
+				Assert.assertEquals(current.getContentType(), body.getContent().getContentType());
+				Assert.assertNotNull(body.getContent().getContentLength());
+				Assert.assertTrue(body.getContent().isClosed());
 			}
 			if (current.getRedirect() != null) {
 				Assert.assertEquals(Integer.valueOf(302), current.getStatusCode());

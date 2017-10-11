@@ -72,8 +72,8 @@ public interface CurrentURI extends CurrentCrawl {
 	Map<URI, AtomicInteger> getLinks();
 
 	/**
-	 * @return the crawled content
+	 * @return the crawled body
 	 */
-	DriverInterface.Content getContent();
+	DriverInterface.Body getBody();
 
 }
