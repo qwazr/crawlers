@@ -432,7 +432,9 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 
 				return methodResult;
 			} catch (Exception e) {
-				session.incErrorCount("Error on " + currentBuilder.uriString + ": " + e.getMessage());
+				final String msg = "Error on " + currentBuilder.uriString + ": " + e.getMessage();
+				LOGGER.log(Level.WARNING, msg, e);
+				session.incErrorCount(msg);
 				currentBuilder.error(e);
 				return null;
 			} finally {
