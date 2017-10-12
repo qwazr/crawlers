@@ -15,6 +15,7 @@
  */
 package com.qwazr.crawler.web.robotstxt;
 
+import com.qwazr.crawler.web.WebRequestDefinition;
 import com.qwazr.crawler.web.driver.DriverInterface;
 import com.qwazr.utils.LoggerUtils;
 
@@ -124,7 +125,7 @@ public class RobotsTxt {
 	public static RobotsTxt download(final DriverInterface driver, final URI uri)
 			throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
 		logger.info(() -> "Try to download robots.txt " + uri);
-		try (final DriverInterface.Body get = driver.get(uri.toString())) {
+		try (final DriverInterface.Body get = driver.body(WebRequestDefinition.of(uri.toString()).build())) {
 			final int sc = get.getResponseCode();
 			if (sc != 200)
 				return new RobotsTxt(sc);

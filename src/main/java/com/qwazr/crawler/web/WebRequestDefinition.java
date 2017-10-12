@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -47,7 +48,7 @@ public class WebRequestDefinition {
 	}
 
 	public enum HttpMethod {
-		GET, POST, PUT, DELETE, PATCH
+		HEAD, GET, POST, PUT, DELETE, PATCH
 	}
 
 	@JsonCreator
@@ -66,13 +67,23 @@ public class WebRequestDefinition {
 
 	private WebRequestDefinition(Builder builder) {
 		this(builder.url, builder.charset,
-				builder.headers == null ? null : Collections.unmodifiableMap(builder.headers),
-				builder.parameters == null ? null : Collections.unmodifiableMap(builder.parameters), builder.method,
+				builder.headers == null ? null : Collections.unmodifiableMap(new LinkedHashMap<>(builder.headers)),
+				builder.parameters == null ?
+						null :
+						Collections.unmodifiableMap(new LinkedHashMap<>(builder.parameters)), builder.method,
 				builder.formEncodingType);
 	}
 
 	public static WebRequestDefinition.Builder of(String url) {
 		return new Builder().url(url);
+	}
+
+	public static WebRequestDefinition.Builder of(WebRequestDefinition request) {
+		return of(request.url).charset(request.charset)
+				.headers(request.headers)
+				.parameters(request.parameters)
+				.httpMethod(request.method)
+				.formEncodingType(request.formEncodingType);
 	}
 
 	public static class Builder {
@@ -103,6 +114,11 @@ public class WebRequestDefinition {
 			return this;
 		}
 
+		public Builder url(final URI uri) {
+			this.url = uri == null ? null : uri.toString();
+			return this;
+		}
+
 		public Builder charset(final String charset) {
 			this.charset = charset;
 			return this;
@@ -115,10 +131,22 @@ public class WebRequestDefinition {
 			return this;
 		}
 
+		public Builder headers(final Map<String, String> headers) {
+			if (headers != null)
+				headers.forEach(this::header);
+			return this;
+		}
+
 		public Builder parameter(final String key, final String value) {
 			if (parameters == null)
 				parameters = new LinkedHashMap<>();
 			parameters.computeIfAbsent(key, k -> new ArrayList<>()).add(value);
+			return this;
+		}
+
+		public Builder parameters(Map<String, List<String>> parameters) {
+			if (parameters != null)
+				parameters.forEach((key, values) -> values.forEach(value -> parameter(key, value)));
 			return this;
 		}
 
@@ -135,5 +163,6 @@ public class WebRequestDefinition {
 		public WebRequestDefinition build() {
 			return new WebRequestDefinition(this);
 		}
+
 	}
 }

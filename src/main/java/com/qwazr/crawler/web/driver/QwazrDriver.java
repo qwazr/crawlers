@@ -18,6 +18,7 @@ package com.qwazr.crawler.web.driver;
 import com.google.common.net.HttpHeaders;
 import com.qwazr.crawler.web.ProxyDefinition;
 import com.qwazr.crawler.web.WebCrawlDefinition;
+import com.qwazr.crawler.web.WebRequestDefinition;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.RandomUtils;
 import com.qwazr.utils.StringUtils;
@@ -31,6 +32,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
+import org.apache.commons.lang3.NotImplementedException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
@@ -105,18 +107,22 @@ public class QwazrDriver implements DriverInterface {
 	}
 
 	@Override
-	public Head head(String url) throws IOException {
-		return new HeadImpl(url);
+	public Head head(WebRequestDefinition request) throws IOException {
+		return new HeadImpl(request);
 	}
 
 	@Override
-	public Body get(String url) throws IOException {
-		return new GetImpl(url);
-	}
-
-	@Override
-	public Body post(String url, Map<String, List<String>> parameters) throws IOException {
-		return new PostImpl(url, parameters);
+	public Body body(WebRequestDefinition request) throws IOException {
+		final WebRequestDefinition.HttpMethod method =
+				request.method == null ? WebRequestDefinition.HttpMethod.GET : request.method;
+		switch (method) {
+		case GET:
+			return new GetImpl(request);
+		case POST:
+			return new PostImpl(request);
+		default:
+			throw new NotImplementedException("Method not supported: " + method);
+		}
 	}
 
 	@Override
@@ -136,7 +142,7 @@ public class QwazrDriver implements DriverInterface {
 
 	class HeadImpl implements Head {
 
-		final String url;
+		final WebRequestDefinition request;
 		final int responseCode;
 		final Headers headers;
 		final ContentImpl content;
@@ -146,11 +152,13 @@ public class QwazrDriver implements DriverInterface {
 		final String contentEncoding;
 		final boolean isSuccessful;
 
-		HeadImpl(final String url) throws IOException {
-			this.url = url;
-			final Request.Builder builder = new Request.Builder().url(url);
+		HeadImpl(final WebRequestDefinition request) throws IOException {
+			this.request = request;
+			final Request.Builder builder = new Request.Builder().url(request.url);
 			if (userAgent != null)
 				builder.header(HttpHeaders.USER_AGENT, userAgent);
+			if (request.headers != null)
+				request.headers.forEach(builder::header);
 			request(builder);
 			try (final Response response = client.newCall(builder.build()).execute()) {
 				responseCode = response.code();
@@ -182,7 +190,7 @@ public class QwazrDriver implements DriverInterface {
 
 		@Override
 		final public String getUrl() {
-			return url;
+			return request.url;
 		}
 
 		@Override
@@ -230,8 +238,8 @@ public class QwazrDriver implements DriverInterface {
 
 		private volatile Document document;
 
-		BodyImpl(String url) throws IOException {
-			super(url);
+		BodyImpl(WebRequestDefinition request) throws IOException {
+			super(request);
 		}
 
 		@Override
@@ -266,8 +274,8 @@ public class QwazrDriver implements DriverInterface {
 
 	final class GetImpl extends BodyImpl {
 
-		GetImpl(final String url) throws IOException {
-			super(url);
+		GetImpl(final WebRequestDefinition request) throws IOException {
+			super(request);
 		}
 
 		@Override
@@ -278,18 +286,15 @@ public class QwazrDriver implements DriverInterface {
 
 	final class PostImpl extends BodyImpl {
 
-		final Map<String, List<String>> parameters;
-
-		PostImpl(final String url, Map<String, List<String>> parameters) throws IOException {
-			super(url);
-			this.parameters = parameters;
+		PostImpl(final WebRequestDefinition request) throws IOException {
+			super(request);
 		}
 
 		@Override
 		void request(Request.Builder builder) {
 			final FormBody.Builder formBodyBuilder = new FormBody.Builder();
-			if (parameters != null)
-				parameters.forEach((name, values) -> {
+			if (request.parameters != null)
+				request.parameters.forEach((name, values) -> {
 					if (values != null)
 						values.forEach(value -> formBodyBuilder.add(name, value));
 				});

@@ -16,6 +16,7 @@
 package com.qwazr.crawler.web.driver;
 
 import com.qwazr.crawler.web.WebCrawlDefinition;
+import com.qwazr.crawler.web.WebRequestDefinition;
 import org.jsoup.nodes.Document;
 
 import java.io.Closeable;
@@ -24,15 +25,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.List;
-import java.util.Map;
 
 public interface DriverInterface extends Closeable {
 
-	Head head(String url) throws IOException;
+	Head head(WebRequestDefinition request) throws IOException;
 
-	Body get(String url) throws IOException;
-
-	Body post(String url, Map<String, List<String>> parameters) throws IOException;
+	Body body(WebRequestDefinition request) throws IOException;
 
 	interface Head {
 

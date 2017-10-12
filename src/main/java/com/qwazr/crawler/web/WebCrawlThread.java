@@ -255,7 +255,7 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 	}
 
 	private void crawlOne(final CrawlUnit crawlUnit, final Set<URI> crawledURIs, final Collection<URI> nextLevelUris)
-			throws InterruptedException {
+			throws InterruptedException, URISyntaxException {
 
 		if (session.isAborting())
 			return;
@@ -302,7 +302,7 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 	}
 
 	private void crawlSubLevel(final CrawlUnit crawlUnit, final Set<URI> crawledURIs, final Collection<URI> levelURIs,
-			final int depth) throws InterruptedException {
+			final int depth) throws InterruptedException, URISyntaxException {
 
 		if (crawlDefinition.maxDepth == null || depth > crawlDefinition.maxDepth)
 			return;
@@ -334,8 +334,8 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 			final Map<String, Integer> urlMap) {
 		urlMap.forEach((uriString, depth) -> {
 			try {
-				final URI uri = new URI(uriString);
-				crawlOne(new Get(driver, uri, depth == null ? 0 : depth), crawledURIs, null);
+				crawlOne(new Get(driver, WebRequestDefinition.of(uriString).build(), depth == null ? 0 : depth),
+						crawledURIs, null);
 			} catch (URISyntaxException e) {
 				LOGGER.warning(() -> "Malformed URI: " + uriString);
 			} catch (InterruptedException e) {
@@ -351,13 +351,14 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 			registerScriptGlobalObject("driver", driver);
 			script(EventEnum.before_session, null);
 			if (crawlDefinition.preUrl != null && !crawlDefinition.preUrl.isEmpty())
-				driver.get(crawlDefinition.preUrl);
+				driver.body(WebRequestDefinition.of(crawlDefinition.preUrl).build());
 			final Set<URI> crawledURIs = new HashSet<>();
 			if (crawlDefinition.urls != null && !crawlDefinition.urls.isEmpty())
 				crawlUrlMap(driver, crawledURIs, crawlDefinition.urls);
 			else {
 				if (crawlDefinition.entryUrl != null)
-					crawlStart(new Get(driver, crawlDefinition.entryUrl, 0), crawledURIs);
+					crawlStart(new Get(driver, WebRequestDefinition.of(crawlDefinition.entryUrl).build(), 0),
+							crawledURIs);
 				else if (crawlDefinition.entryRequest != null)
 					crawlStart(crawlUnit(driver, crawlDefinition.entryRequest), crawledURIs);
 			}
@@ -370,11 +371,12 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 		Objects.requireNonNull(webRequest.url, "WebRequest failure: The URL is missing");
 		switch (Objects.requireNonNull(webRequest.method, "WebRequest failure: The method is missing")) {
 		case GET:
-			return new Get(driver, webRequest.url, 0);
+			return new Get(driver, webRequest, 0);
+		case PUT:
 		case POST:
-			return new PostAndGet(driver, webRequest.url, 0, webRequest.parameters, webRequest.formEncodingType);
+			return new RequestAndGet(driver, webRequest, 0);
 		default:
-			throw new NotImplementedException("WebRequest failure: Method not implemented: " + webRequest.method);
+			throw new NotImplementedException("WebRequest failure: Method not supported: " + webRequest.method);
 		}
 	}
 
@@ -387,15 +389,18 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 
 		final CurrentURIImpl.Builder currentBuilder;
 		final DriverInterface driver;
+		final WebRequestDefinition request;
 
-		CrawlUnit(final DriverInterface driver, final URI uri, final int depth) {
+		CrawlUnit(final DriverInterface driver, final WebRequestDefinition request, final int depth)
+				throws URISyntaxException {
 			this.driver = driver;
-			currentBuilder = new CurrentURIImpl.Builder(uri, depth);
+			this.currentBuilder = new CurrentURIImpl.Builder(new URI(request.url), depth);
+			this.request = request;
 		}
 
-		abstract CrawlUnit redirect(final URI uri);
+		abstract CrawlUnit redirect(final URI uri) throws URISyntaxException;
 
-		abstract CrawlUnit next(final URI uri, int depth);
+		abstract CrawlUnit next(final URI uri, int depth) throws URISyntaxException;
 
 		abstract DriverInterface.Body crawl();
 
@@ -436,67 +441,52 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 		}
 	}
 
-	final class Get extends CrawlUnit {
+	class Get extends CrawlUnit {
 
-		Get(final DriverInterface driver, final URI uri, final int depth) {
-			super(driver, uri, depth);
+		Get(final DriverInterface driver, final WebRequestDefinition request, final int depth)
+				throws URISyntaxException {
+			super(driver, request, depth);
 		}
 
-		Get(final DriverInterface driver, final String uriString, final int depth) throws URISyntaxException {
-			this(driver, new URI(uriString), depth);
+		@Override
+		CrawlUnit redirect(final URI redirectUri) throws URISyntaxException {
+			return new Get(driver, WebRequestDefinition.of(request).url(redirectUri).build(), currentBuilder.depth);
 		}
 
-		CrawlUnit redirect(final URI redirectUri) {
-			return new Get(driver, redirectUri, currentBuilder.depth);
-		}
-
-		CrawlUnit next(final URI nextURI, int depth) {
-			return new Get(driver, nextURI, depth);
+		@Override
+		final CrawlUnit next(final URI nextURI, int depth) throws URISyntaxException {
+			return new Get(driver, WebRequestDefinition.of(request).url(nextURI).build(), depth);
 		}
 
 		@Override
 		DriverInterface.Body crawl() {
 			// First make an head
-			final DriverInterface.Head head = checkHttp(() -> driver.head(currentBuilder.uriString));
+			final DriverInterface.Head head = checkHttp(() -> driver.head(
+					WebRequestDefinition.of(request).httpMethod(WebRequestDefinition.HttpMethod.HEAD).build()));
 			if (head == null)
 				return null; // Any error already handled by doHttp
 
 			// Second make an head
-			return checkHttp(() -> driver.get(currentBuilder.uriString));
+			return checkHttp(() -> driver.body(request));
 		}
 	}
 
-	final class PostAndGet extends CrawlUnit {
+	final class RequestAndGet extends Get {
 
-		final Map<String, List<String>> parameters;
-		final WebRequestDefinition.FormEncodingType formEncodingType;
-
-		PostAndGet(final DriverInterface driver, URI uri, final int depth, final Map<String, List<String>> parameters,
-				final WebRequestDefinition.FormEncodingType formEncodingType) {
-			super(driver, uri, depth);
-			this.parameters = parameters;
-			this.formEncodingType = formEncodingType;
-		}
-
-		PostAndGet(final DriverInterface driver, final String uriString, final int depth,
-				final Map<String, List<String>> parameters,
-				final WebRequestDefinition.FormEncodingType formEncodingType) throws URISyntaxException {
-			this(driver, new URI(uriString), depth, parameters, formEncodingType);
+		RequestAndGet(final DriverInterface driver, final WebRequestDefinition request, final int depth)
+				throws URISyntaxException {
+			super(driver, request, depth);
 		}
 
 		@Override
-		CrawlUnit redirect(URI redirectUri) {
-			return new PostAndGet(driver, redirectUri, currentBuilder.depth, parameters, formEncodingType);
-		}
-
-		@Override
-		CrawlUnit next(URI nextUri, int depth) {
-			return new Get(driver, nextUri, depth);
+		CrawlUnit redirect(URI redirectUri) throws URISyntaxException {
+			return new RequestAndGet(driver, WebRequestDefinition.of(request).url(redirectUri).build(),
+					currentBuilder.depth);
 		}
 
 		@Override
 		DriverInterface.Body crawl() {
-			return checkHttp(() -> driver.post(currentBuilder.uriString, parameters));
+			return checkHttp(() -> driver.body(request));
 		}
 	}
 
