@@ -462,13 +462,6 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 
 		@Override
 		DriverInterface.Body crawl() {
-			// First make an head
-			final DriverInterface.Head head = checkHttp(() -> driver.head(
-					WebRequestDefinition.of(request).httpMethod(WebRequestDefinition.HttpMethod.HEAD).build()));
-			if (head == null)
-				return null; // Any error already handled by doHttp
-
-			// Second make an head
 			return checkHttp(() -> driver.body(request));
 		}
 	}

@@ -176,7 +176,6 @@ public class QwazrDriver implements DriverInterface {
 					contentLength = null;
 					contentEncoding = null;
 				}
-
 			}
 		}
 
