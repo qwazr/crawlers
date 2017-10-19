@@ -58,6 +58,8 @@ public abstract class WebCrawlerTestAbstract {
 		final WebCrawlDefinition.Builder webCrawl = WebCrawlDefinition.of();
 		webCrawl.setTimeOutSecs(60);
 		webCrawl.setMaxUrlNumber(10);
+		webCrawl.addAcceptedContentType("text/html");
+		webCrawl.addAcceptedContentType("image/vnd.microsoft.icon");
 		webCrawl.setRobotsTxtEnabled(true);
 		webCrawl.setMaxDepth(2);
 		return webCrawl;

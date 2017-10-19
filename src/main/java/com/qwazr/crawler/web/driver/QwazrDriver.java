@@ -20,8 +20,10 @@ import com.qwazr.crawler.web.ProxyDefinition;
 import com.qwazr.crawler.web.WebCrawlDefinition;
 import com.qwazr.crawler.web.WebRequestDefinition;
 import com.qwazr.utils.IOUtils;
+import com.qwazr.utils.LoggerUtils;
 import com.qwazr.utils.RandomUtils;
 import com.qwazr.utils.StringUtils;
+import okhttp3.Call;
 import okhttp3.Cookie;
 import okhttp3.CookieJar;
 import okhttp3.FormBody;
@@ -52,9 +54,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 public class QwazrDriver implements DriverInterface {
+
+	private final static Logger LOGGER = LoggerUtils.getLogger(QwazrDriver.class);
 
 	private final OkHttpClient client;
 
@@ -65,9 +70,8 @@ public class QwazrDriver implements DriverInterface {
 				new OkHttpClient.Builder().followRedirects(false).followSslRedirects(false);
 
 		if (definition.timeOutSecs != null)
-			builder.connectTimeout(definition.timeOutSecs, TimeUnit.SECONDS);
-		if (definition.timeOutSecs != null)
-			builder.readTimeout(definition.timeOutSecs, TimeUnit.SECONDS);
+			builder.connectTimeout(definition.timeOutSecs, TimeUnit.SECONDS).
+					readTimeout(definition.timeOutSecs, TimeUnit.SECONDS);
 
 		if (definition.proxies != null && !definition.proxies.isEmpty()) {
 			final List<ProxyDefinition> proxyList = definition.proxies.stream()
@@ -104,6 +108,11 @@ public class QwazrDriver implements DriverInterface {
 					"Bad syntax in proxy definition Expected \"host:port\" but got: " + hostPort, e);
 		}
 		return new Proxy(type, InetSocketAddress.createUnresolved(host, port));
+	}
+
+	private void cancel(Call call, String reason) {
+		LOGGER.warning(() -> "Call cancelled: " + reason);
+		call.cancel();
 	}
 
 	@Override
