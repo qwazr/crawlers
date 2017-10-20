@@ -46,6 +46,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -132,7 +133,6 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 	/**
 	 * @param crawlUnit
 	 */
-
 	private DriverInterface.Body crawl(final CrawlUnit crawlUnit) throws InterruptedException {
 
 		if (session.isAborting())
@@ -140,21 +140,24 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 
 		final String uriString = crawlUnit.currentBuilder.uri.toString();
 
+		final Function<String, DriverInterface.Body> ignore = msg -> {
+			session.incIgnoredCount();
+			crawlUnit.currentBuilder.ignored(true);
+			LOGGER.info(() -> "Ignored (" + msg + "): " + uriString);
+			return null;
+		};
+
 		session.setCurrentCrawl(uriString, crawlUnit.currentBuilder.depth);
 
 		// Check the SCHEME, we only accept http or https
 		final String scheme = crawlUnit.currentBuilder.uri.getScheme();
-		if (!"http".equalsIgnoreCase(scheme) && !"https".equalsIgnoreCase(scheme)) {
-			session.incIgnoredCount();
-			crawlUnit.currentBuilder.ignored(true);
-			LOGGER.info(() -> "Ignored (not http) " + uriString);
-			return null;
-		}
+		if (!"http".equalsIgnoreCase(scheme) && !"https".equalsIgnoreCase(scheme))
+			return ignore.apply("not http");
 
 		// Check the inclusion/exclusion rules
 		if (!checkPassInclusionExclusion(uriString, crawlUnit.currentBuilder::inInclusion,
 				crawlUnit.currentBuilder::inExclusion))
-			return null;
+			return ignore.apply("inclusion/exclusion");
 
 		if (crawlDefinition.crawlWaitMs != null)
 			Thread.sleep(crawlDefinition.crawlWaitMs);
@@ -163,13 +166,13 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 		try {
 			final RobotsTxt.Status robotsTxtStatus = checkRobotsTxt(crawlUnit.driver, crawlUnit.currentBuilder.uri);
 			if (robotsTxtStatus != null && !robotsTxtStatus.isCrawlable) {
-				crawlUnit.currentBuilder.ignored(true);
 				crawlUnit.currentBuilder.robotsTxtDisallow(true);
-				session.incIgnoredCount();
-				return null;
+				return ignore.apply("robotstxt");
 			}
 		} catch (Exception e) {
-			session.incErrorCount("Error during robots.txt extraction: " + e.getMessage());
+			final String msg = "Error during robots.txt extraction: " + e.getMessage();
+			LOGGER.log(Level.WARNING, msg, e);
+			session.incErrorCount(msg);
 			crawlUnit.currentBuilder.error(e);
 			return null;
 		}
@@ -184,7 +187,7 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 
 		if (!checkPassContentType(body.getContentType(), crawlUnit.currentBuilder)) {
 			session.incIgnoredCount();
-			return body;
+			return ignore.apply("rejected content-type: " + body.getContentType());
 		}
 
 		crawlUnit.currentBuilder.crawled(true);
