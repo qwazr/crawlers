@@ -354,7 +354,7 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 			registerScriptGlobalObject("driver", driver);
 			script(EventEnum.before_session, null);
 			if (crawlDefinition.preUrl != null && !crawlDefinition.preUrl.isEmpty())
-				driver.body(WebRequestDefinition.of(crawlDefinition.preUrl).build());
+				driver.body(WebRequestDefinition.of(crawlDefinition.preUrl).build()).close();
 			final Set<URI> crawledURIs = new HashSet<>();
 			if (crawlDefinition.urls != null && !crawlDefinition.urls.isEmpty())
 				crawlUrlMap(driver, crawledURIs, crawlDefinition.urls);

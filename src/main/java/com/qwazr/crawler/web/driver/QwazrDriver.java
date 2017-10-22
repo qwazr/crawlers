@@ -53,6 +53,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -64,6 +65,8 @@ public class QwazrDriver implements DriverInterface {
 	private final OkHttpClient client;
 
 	private final String userAgent;
+
+	private final ConcurrentHashMap.KeySetView<Body, Boolean> bodies;
 
 	QwazrDriver(final WebCrawlDefinition definition) throws IOException {
 		final OkHttpClient.Builder builder =
@@ -91,6 +94,7 @@ public class QwazrDriver implements DriverInterface {
 			builder.cookieJar(new Cookies(definition.cookies));
 
 		userAgent = StringUtils.isBlank(definition.userAgent) ? null : definition.userAgent;
+		bodies = ConcurrentHashMap.newKeySet();
 		client = builder.build();
 	}
 
@@ -124,18 +128,27 @@ public class QwazrDriver implements DriverInterface {
 	public Body body(WebRequestDefinition request) throws IOException {
 		final WebRequestDefinition.HttpMethod method =
 				request.method == null ? WebRequestDefinition.HttpMethod.GET : request.method;
+		final Body body;
 		switch (method) {
 		case GET:
-			return new GetImpl(request);
+			body = new GetImpl(request);
+			break;
 		case POST:
-			return new PostImpl(request);
+			body = new PostImpl(request);
+			break;
 		default:
 			throw new NotImplementedException("Method not supported: " + method);
 		}
+		bodies.add(body);
+		return body;
 	}
 
 	@Override
 	public void close() throws IOException {
+		final List<Body> toClose = new ArrayList<>(bodies);
+		for (Body body : toClose)
+			body.close();
+		assert bodies.isEmpty();
 	}
 
 	static Long buildContentLength(String header) {
@@ -264,6 +277,7 @@ public class QwazrDriver implements DriverInterface {
 		public void close() throws IOException {
 			if (content != null && !content.isClosed())
 				content.close();
+			bodies.remove(this);
 		}
 
 		public synchronized Document getHtmlDocument() throws IOException {
@@ -351,7 +365,7 @@ public class QwazrDriver implements DriverInterface {
 
 		@Override
 		public boolean isClosed() {
-			return !Files.exists(contentCache);
+			return contentCache == null || !Files.exists(contentCache);
 		}
 
 		@Override
