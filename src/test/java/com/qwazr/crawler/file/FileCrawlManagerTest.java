@@ -62,6 +62,8 @@ public class FileCrawlManagerTest {
 		Assert.assertEquals(expectedCrawled, crawlStatus.crawled);
 		Assert.assertEquals(expectedIgnored, crawlStatus.ignored);
 		Assert.assertEquals(expectedError, crawlStatus.error);
+		Assert.assertNotNull(crawlStatus.threadDone);
+
 		if (expectedError == 0)
 			Assert.assertNull(crawlStatus.lastError);
 		else

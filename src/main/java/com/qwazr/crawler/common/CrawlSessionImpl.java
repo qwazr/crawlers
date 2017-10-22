@@ -20,6 +20,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class CrawlSessionImpl<D extends CrawlDefinition, S extends CrawlStatus<D>> implements CrawlSession {
@@ -153,9 +154,13 @@ public class CrawlSessionImpl<D extends CrawlDefinition, S extends CrawlStatus<D
 		return timeTracker;
 	}
 
-	public void done() {
+	void done() {
 		crawlStatusBuilder.done();
 		buildStatus();
 	}
 
+	void setFuture(Future<?> future) {
+		crawlStatusBuilder.future(future);
+		buildStatus();
+	}
 }

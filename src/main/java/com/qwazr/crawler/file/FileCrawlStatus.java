@@ -20,6 +20,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.crawler.common.CrawlStatus;
 import com.qwazr.utils.TimeTracker;
 
+import java.util.concurrent.Future;
+
 final public class FileCrawlStatus extends CrawlStatus<FileCrawlDefinition> {
 
 	@JsonCreator
@@ -30,9 +32,11 @@ final public class FileCrawlStatus extends CrawlStatus<FileCrawlDefinition> {
 			@JsonProperty("last_error") String lastError, @JsonProperty("current_crawl") String currentCrawl,
 			@JsonProperty("start_time") final Long startTime, @JsonProperty("end_time") final Long endTime,
 			@JsonProperty("current_depth") Integer currentDepth,
-			@JsonProperty("crawl_definition") FileCrawlDefinition crawlDefinition) {
+			@JsonProperty("crawl_definition") FileCrawlDefinition crawlDefinition,
+			@JsonProperty("thread_cancelled") Boolean threadCancelled,
+			@JsonProperty("thread_done") Boolean threadDone) {
 		super(nodeAddress, aborting, abortingReason, timer, crawled, ignored, redirect, error, lastError, currentCrawl,
-				startTime, endTime, currentDepth, crawlDefinition);
+				startTime, endTime, currentDepth, crawlDefinition, threadCancelled, threadDone);
 	}
 
 	private FileCrawlStatus(Builder builder, boolean withCrawlDefinition) {

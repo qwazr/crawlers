@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Future;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -145,11 +146,15 @@ public abstract class CrawlThread<D extends CrawlDefinition, S extends CrawlStat
 		}
 	}
 
-	final public S getStatus(boolean withDefinition) {
+	protected final S getStatus(boolean withDefinition) {
 		return session.getCrawlStatus(withDefinition);
 	}
 
-	public void abort(final String abortingReason) {
+	protected void start() {
+		session.setFuture(manager.executorService.submit(this));
+	}
+
+	protected void abort(final String abortingReason) {
 		session.abort(abortingReason);
 	}
 

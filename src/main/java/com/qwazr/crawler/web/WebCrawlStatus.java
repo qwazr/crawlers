@@ -30,9 +30,11 @@ final public class WebCrawlStatus extends CrawlStatus<WebCrawlDefinition> {
 			@JsonProperty("last_error") String lastError, @JsonProperty("current_crawl") String currentCrawl,
 			@JsonProperty("start_time") final Long startTime, @JsonProperty("end_time") final Long endTime,
 			@JsonProperty("current_depth") Integer currentDepth,
-			@JsonProperty("crawl_definition") WebCrawlDefinition crawlDefinition) {
+			@JsonProperty("crawl_definition") WebCrawlDefinition crawlDefinition,
+			@JsonProperty("thread_cancelled") Boolean threadCancelled,
+			@JsonProperty("thread_done") Boolean threadDone) {
 		super(nodeAddress, aborting, abortingReason, timer, crawled, ignored, redirect, error, lastError, currentCrawl,
-				startTime, endTime, currentDepth, crawlDefinition);
+				startTime, endTime, currentDepth, crawlDefinition, threadCancelled, threadDone);
 	}
 
 	private WebCrawlStatus(Builder builder, boolean withDefinition) {

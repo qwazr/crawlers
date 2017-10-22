@@ -73,6 +73,7 @@ public abstract class WebCrawlerTestAbstract {
 		Assert.assertEquals(crawled, status.crawled);
 		Assert.assertEquals(ignored, status.ignored);
 		Assert.assertEquals(error, status.error);
+		Assert.assertNotNull(status.threadDone);
 		return status;
 	}
 

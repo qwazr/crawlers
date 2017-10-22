@@ -23,6 +23,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.utils.TimeTracker;
 
 import java.util.Objects;
+import java.util.concurrent.Future;
 
 @JsonInclude(Include.NON_NULL)
 public abstract class CrawlStatus<T extends CrawlDefinition> {
@@ -85,6 +86,12 @@ public abstract class CrawlStatus<T extends CrawlDefinition> {
 	@JsonProperty("end_time")
 	final public Long endTime;
 
+	@JsonProperty("thread_cancelled")
+	final public Boolean threadCancelled;
+
+	@JsonProperty("thread_done")
+	final public Boolean threadDone;
+
 	final public TimeTracker.Status timer;
 
 	/**
@@ -100,7 +107,9 @@ public abstract class CrawlStatus<T extends CrawlDefinition> {
 			@JsonProperty("redirect") Integer redirect, @JsonProperty("error") Integer error,
 			@JsonProperty("last_error") String lastError, @JsonProperty("current_crawl") String currentCrawl,
 			@JsonProperty("start_time") final Long startTime, @JsonProperty("end_time") final Long endTime,
-			@JsonProperty("current_depth") Integer currentDepth, @JsonProperty("crawl_definition") T crawlDefinition) {
+			@JsonProperty("current_depth") Integer currentDepth, @JsonProperty("crawl_definition") T crawlDefinition,
+			@JsonProperty("thread_cancelled") Boolean threadCancelled,
+			@JsonProperty("thread_done") Boolean threadDone) {
 		this.nodeAddress = nodeAddress;
 		this.timer = timer;
 		this.aborting = aborting;
@@ -115,9 +124,11 @@ public abstract class CrawlStatus<T extends CrawlDefinition> {
 		this.startTime = startTime;
 		this.endTime = endTime;
 		this.crawlDefinition = crawlDefinition;
+		this.threadCancelled = threadCancelled;
+		this.threadDone = threadDone;
 	}
 
-	public CrawlStatus(AbstractBuilder<T, ?, ?> builder, boolean withCrawlDefinition) {
+	protected CrawlStatus(AbstractBuilder<T, ?, ?> builder, boolean withCrawlDefinition) {
 		this.nodeAddress = builder.nodeAddress;
 		this.timer = builder.timeTracker == null ? null : builder.timeTracker.getStatus();
 		this.aborting = builder.aborting;
@@ -132,6 +143,13 @@ public abstract class CrawlStatus<T extends CrawlDefinition> {
 		this.startTime = builder.startTime;
 		this.endTime = builder.endTime;
 		this.crawlDefinition = withCrawlDefinition ? builder.crawlDefinition : null;
+		if (builder.future == null) {
+			this.threadDone = null;
+			this.threadCancelled = null;
+		} else {
+			this.threadDone = builder.future.isDone();
+			this.threadCancelled = builder.future.isCancelled();
+		}
 	}
 
 	/**
@@ -225,6 +243,16 @@ public abstract class CrawlStatus<T extends CrawlDefinition> {
 		return crawlDefinition;
 	}
 
+	@JsonIgnore
+	public Boolean getThreadCancelled() {
+		return threadCancelled;
+	}
+
+	@JsonIgnore
+	public Boolean getThreadDone() {
+		return threadDone;
+	}
+
 	@Override
 	public boolean equals(final Object o) {
 		if (o == null || !(o instanceof CrawlStatus))
@@ -237,7 +265,8 @@ public abstract class CrawlStatus<T extends CrawlDefinition> {
 				crawled == s.crawled && ignored == s.ignored && error == s.error &&
 				Objects.equals(lastError, s.lastError) && Objects.equals(currentCrawl, s.currentCrawl) &&
 				Objects.equals(currentDepth, s.currentDepth) && Objects.equals(endTime, s.endTime) &&
-				Objects.equals(timer, s.timer) && Objects.equals(crawlDefinition, s.crawlDefinition);
+				Objects.equals(timer, s.timer) && Objects.equals(crawlDefinition, s.crawlDefinition) &&
+				Objects.equals(threadCancelled, s.threadCancelled) && Objects.equals(threadDone, s.threadDone);
 	}
 
 	public abstract static class AbstractBuilder<D extends CrawlDefinition, S extends CrawlStatus<D>, B extends AbstractBuilder<D, S, ?>> {
@@ -258,6 +287,7 @@ public abstract class CrawlStatus<T extends CrawlDefinition> {
 		private String currentCrawl;
 		private Integer currentDepth;
 		private Long endTime;
+		private volatile Future future;
 
 		protected AbstractBuilder(final Class<B> builderClass, final String nodeAddress, final TimeTracker timeTracker,
 				final D crawlDefinition) {
@@ -307,6 +337,11 @@ public abstract class CrawlStatus<T extends CrawlDefinition> {
 
 		public B done() {
 			this.endTime = System.currentTimeMillis();
+			return builderClass.cast(this);
+		}
+
+		B future(Future future) {
+			this.future = future;
 			return builderClass.cast(this);
 		}
 

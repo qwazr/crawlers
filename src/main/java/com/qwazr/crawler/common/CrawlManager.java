@@ -79,7 +79,8 @@ public abstract class CrawlManager<T extends CrawlThread<D, S, ?>, D extends Cra
 		statusHistory.remove(sessionName);
 		if (!newThread.get())
 			throw new ServerException(Response.Status.CONFLICT, "The session already exists: " + sessionName);
-		executorService.execute(crawlThread);
+
+		crawlThread.start();
 		return crawlThread.getStatus(true);
 	}
 
