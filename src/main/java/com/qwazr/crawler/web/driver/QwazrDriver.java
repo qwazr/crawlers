@@ -69,12 +69,15 @@ public class QwazrDriver implements DriverInterface {
 	private final ConcurrentHashMap.KeySetView<Body, Boolean> bodies;
 
 	QwazrDriver(final WebCrawlDefinition definition) throws IOException {
-		final OkHttpClient.Builder builder =
-				new OkHttpClient.Builder().followRedirects(false).followSslRedirects(false);
+		final OkHttpClient.Builder builder = new OkHttpClient.Builder().followRedirects(false)
+				.followSslRedirects(false)
+				.retryOnConnectionFailure(true);
 
 		if (definition.timeOutSecs != null)
-			builder.connectTimeout(definition.timeOutSecs, TimeUnit.SECONDS).
-					readTimeout(definition.timeOutSecs, TimeUnit.SECONDS);
+			builder.connectTimeout(definition.timeOutSecs, TimeUnit.SECONDS)
+					.
+							readTimeout(definition.timeOutSecs, TimeUnit.SECONDS)
+					.writeTimeout(definition.timeOutSecs, TimeUnit.SECONDS);
 
 		if (definition.proxies != null && !definition.proxies.isEmpty()) {
 			final List<ProxyDefinition> proxyList = definition.proxies.stream()
