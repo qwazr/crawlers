@@ -73,11 +73,10 @@ public class QwazrDriver implements DriverInterface {
 				.followSslRedirects(false)
 				.retryOnConnectionFailure(true);
 
-		if (definition.timeOutSecs != null)
-			builder.connectTimeout(definition.timeOutSecs, TimeUnit.SECONDS)
-					.
-							readTimeout(definition.timeOutSecs, TimeUnit.SECONDS)
-					.writeTimeout(definition.timeOutSecs, TimeUnit.SECONDS);
+		final int timeOutSecs = definition.timeOutSecs == null ? 120 : definition.timeOutSecs;
+		builder.connectTimeout(timeOutSecs, TimeUnit.SECONDS)
+				.readTimeout(timeOutSecs, TimeUnit.SECONDS)
+				.writeTimeout(timeOutSecs, TimeUnit.SECONDS);
 
 		if (definition.proxies != null && !definition.proxies.isEmpty()) {
 			final List<ProxyDefinition> proxyList = definition.proxies.stream()
