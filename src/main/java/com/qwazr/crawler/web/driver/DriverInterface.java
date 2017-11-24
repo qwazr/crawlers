@@ -62,7 +62,7 @@ public interface DriverInterface extends Closeable {
 
 	interface Content {
 
-		InputStream getInput() throws FileNotFoundException;
+		InputStream getInput() throws IOException;
 
 		String getContentType();
 

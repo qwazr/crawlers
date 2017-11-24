@@ -40,9 +40,6 @@ import org.jsoup.nodes.Document;
 
 import java.io.BufferedInputStream;
 import java.io.Closeable;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetSocketAddress;
@@ -330,14 +327,12 @@ public class QwazrDriver implements DriverInterface {
 	class ContentImpl implements Content, Closeable {
 
 		final Path contentCache;
-		final File contentCacheFile;
 		final String contentType;
 		final Charset charset;
 		final Long contentLength;
 
 		ContentImpl(Response response) throws IOException {
 			contentCache = Files.createTempFile("QwazrDriver", "cache");
-			contentCacheFile = contentCache.toFile();
 			try (ResponseBody responseBody = response.body()) {
 				if (responseBody != null) {
 					contentLength = responseBody.contentLength();
@@ -350,7 +345,7 @@ public class QwazrDriver implements DriverInterface {
 						charset = null;
 					}
 					try (final InputStream input = responseBody.byteStream()) {
-						IOUtils.copy(input, contentCacheFile);
+						IOUtils.copy(input, contentCache);
 					}
 				} else {
 					contentLength = null;
@@ -371,8 +366,8 @@ public class QwazrDriver implements DriverInterface {
 		}
 
 		@Override
-		public InputStream getInput() throws FileNotFoundException {
-			return new BufferedInputStream(new FileInputStream(contentCacheFile));
+		public InputStream getInput() throws IOException {
+			return new BufferedInputStream(Files.newInputStream(contentCache));
 		}
 
 		@Override
