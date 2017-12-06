@@ -28,6 +28,8 @@ public class DriverInterfaceTest {
 	public void test() throws IOException {
 		final DriverInterface driver = DriverInterface.of(WebCrawlDefinition.of().build());
 		final WebRequestDefinition request = WebRequestDefinition.of("http://www.opensearchserver.com/").build();
-		Assert.assertNotNull(driver.body(request));
+		try (final DriverInterface.Body body = driver.body(request)) {
+			Assert.assertNotNull(body);
+		}
 	}
 }

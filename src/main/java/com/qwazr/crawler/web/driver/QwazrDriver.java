@@ -332,7 +332,7 @@ public class QwazrDriver implements DriverInterface {
 		final Long contentLength;
 
 		ContentImpl(Response response) throws IOException {
-			contentCache = Files.createTempFile("QwazrDriver", "cache");
+			contentCache = Files.createTempFile("QwazrDriver", ".cache");
 			try (ResponseBody responseBody = response.body()) {
 				if (responseBody != null) {
 					contentLength = responseBody.contentLength();
@@ -352,6 +352,9 @@ public class QwazrDriver implements DriverInterface {
 					contentType = null;
 					charset = null;
 				}
+			} catch (IOException e) {
+				Files.deleteIfExists(contentCache);
+				throw e;
 			}
 		}
 
