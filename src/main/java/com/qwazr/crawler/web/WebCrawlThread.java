@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2018 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,6 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
-import javax.script.ScriptException;
 import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -270,9 +269,13 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 			crawledURIs.add(crawlUnit.currentBuilder.uri);
 		}
 
-		// Do the crawl
-		final CurrentURI current;
+		// Call the before_crawl process:
+		CurrentURI current = crawlUnit.currentBuilder.build();
+		if (!script(EventEnum.before_crawl, current))
+			return;
+
 		try (final DriverInterface.Body body = crawl(crawlUnit)) {
+
 			current = crawlUnit.currentBuilder.build();
 
 			// Handle url number limit
@@ -283,7 +286,7 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 			}
 
 			// Give the hand to the "crawl" event scripts
-			script(EventEnum.crawl, current);
+			script(EventEnum.after_crawl, current);
 		} catch (IOException e) {
 			LOGGER.log(Level.WARNING, e, e::getMessage);
 			return;
@@ -347,9 +350,7 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 		});
 	}
 
-	protected void runner()
-			throws URISyntaxException, IOException, ScriptException, ServerException, ReflectiveOperationException,
-			NoSuchAlgorithmException, KeyStoreException, KeyManagementException, InterruptedException {
+	protected void runner() throws URISyntaxException, IOException, ServerException, InterruptedException {
 		try (final DriverInterface driver = DriverInterface.of(crawlDefinition)) {
 			registerScriptGlobalObject("driver", driver);
 			script(EventEnum.before_session, null);

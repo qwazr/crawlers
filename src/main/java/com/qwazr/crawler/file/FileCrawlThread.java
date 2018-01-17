@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Emmanuel Keller / QWAZR
+ * Copyright 2017-2018 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ public class FileCrawlThread extends CrawlThread<FileCrawlDefinition, FileCrawlS
 	private final FileCrawlDefinition crawlDefinition;
 	private final Path startPath;
 
-	public FileCrawlThread(FileCrawlerManager manager, CrawlSessionImpl<FileCrawlDefinition, FileCrawlStatus> session,
+	FileCrawlThread(FileCrawlerManager manager, CrawlSessionImpl<FileCrawlDefinition, FileCrawlStatus> session,
 			Logger logger) {
 		super(manager, session, logger);
 		this.crawlDefinition = session.getCrawlDefinition();
@@ -81,10 +81,15 @@ public class FileCrawlThread extends CrawlThread<FileCrawlDefinition, FileCrawlS
 	}
 
 	private CurrentPath crawl(final CurrentPath.Builder builder) {
+		CurrentPath current = builder.build();
+		if (!script(EventEnum.before_crawl, current))
+			return current;
 		checkPassInclusionExclusion(builder, builder.pathString);
-		final CurrentPath current = builder.build();
+		current = builder.build();
+		if (current.isIgnored())
+			return current;
 		try {
-			script(EventEnum.crawl, current);
+			script(EventEnum.after_crawl, current);
 			return current;
 		} catch (Exception e) {
 			final String err = "File crawling error on " + current.pathString;

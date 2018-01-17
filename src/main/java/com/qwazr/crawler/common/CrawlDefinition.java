@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2018 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package com.qwazr.crawler.common;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -30,8 +31,14 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Objects;
 
 @JsonInclude(Include.NON_EMPTY)
+@JsonAutoDetect(setterVisibility = JsonAutoDetect.Visibility.NONE,
+		getterVisibility = JsonAutoDetect.Visibility.NONE,
+		creatorVisibility = JsonAutoDetect.Visibility.NONE,
+		isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+		fieldVisibility = JsonAutoDetect.Visibility.PROTECTED_AND_PUBLIC)
 public abstract class CrawlDefinition {
 
 	/**
@@ -58,28 +65,37 @@ public abstract class CrawlDefinition {
 	@JsonProperty("exclusion_patterns")
 	final public Collection<String> exclusionPatterns;
 
-	protected CrawlDefinition() {
-		variables = null;
-		scripts = null;
-		inclusionPatterns = null;
-		exclusionPatterns = null;
-	}
+	/**
+	 * The maximum number of directory levels to visit.
+	 */
+	@JsonProperty("max_depth")
+	final public Integer maxDepth;
+
+	/**
+	 * Time wait on successfull crawl
+	 */
+	@JsonProperty("crawl_wait_ms")
+	final public Integer crawlWaitMs;
 
 	@JsonCreator
 	protected CrawlDefinition(@JsonProperty("variables") LinkedHashMap<String, String> variables,
 			@JsonProperty("scripts") Map<EventEnum, ScriptDefinition> scripts,
 			@JsonProperty("inclusion_patterns") Collection<String> inclusionPatterns,
-			@JsonProperty("exclusion_patterns") Collection<String> exclusionPatterns) {
+			@JsonProperty("exclusion_patterns") Collection<String> exclusionPatterns,
+			@JsonProperty("max_depth") Integer maxDepth, @JsonProperty("crawl_wait_ms") Integer crawlWaitMs) {
 		this.variables = variables == null ? null : Collections.unmodifiableMap(variables);
 		this.scripts = scripts == null ? null : Collections.unmodifiableMap(scripts);
 		this.inclusionPatterns =
 				inclusionPatterns == null ? null : Collections.unmodifiableList(new ArrayList<>(inclusionPatterns));
 		this.exclusionPatterns =
 				exclusionPatterns == null ? null : Collections.unmodifiableList(new ArrayList<>(exclusionPatterns));
+		this.maxDepth = maxDepth;
+		this.crawlWaitMs = crawlWaitMs;
 	}
 
 	protected CrawlDefinition(AbstractBuilder<? extends CrawlDefinition, ?> builder) {
-		this(builder.variables, builder.scripts, builder.inclusionPatterns, builder.exclusionPatterns);
+		this(builder.variables, builder.scripts, builder.inclusionPatterns, builder.exclusionPatterns, builder.maxDepth,
+				builder.crawlWaitMs);
 
 	}
 
@@ -110,7 +126,8 @@ public abstract class CrawlDefinition {
 		final CrawlDefinition c = (CrawlDefinition) o;
 		return CollectionsUtils.equals(variables, c.variables) && CollectionsUtils.equals(scripts, c.scripts) &&
 				CollectionsUtils.equals(inclusionPatterns, c.inclusionPatterns) &&
-				CollectionsUtils.equals(exclusionPatterns, c.exclusionPatterns);
+				CollectionsUtils.equals(exclusionPatterns, c.exclusionPatterns) &&
+				Objects.equals(maxDepth, c.maxDepth) && Objects.equals(crawlWaitMs, c.crawlWaitMs);
 	}
 
 	public static abstract class AbstractBuilder<D extends CrawlDefinition, B extends AbstractBuilder<D, B>> {
@@ -121,6 +138,10 @@ public abstract class CrawlDefinition {
 
 		protected LinkedHashSet<String> inclusionPatterns;
 		protected LinkedHashSet<String> exclusionPatterns;
+
+		protected Integer maxDepth;
+
+		protected Integer crawlWaitMs;
 
 		private final Class<B> builderClass;
 
@@ -209,6 +230,17 @@ public abstract class CrawlDefinition {
 			if (exclusionPatterns == null)
 				exclusionPatterns = new LinkedHashSet<>();
 			exclusionPatterns.add(exclusionPattern);
+			return builderClass.cast(this);
+		}
+
+		public B setMaxDepth(final Integer maxDepth) {
+			this.maxDepth = maxDepth;
+			return builderClass.cast(this);
+		}
+
+		@JsonIgnore
+		public B setCrawlWaitMs(Integer crawlWaitMs) {
+			this.crawlWaitMs = crawlWaitMs;
 			return builderClass.cast(this);
 		}
 

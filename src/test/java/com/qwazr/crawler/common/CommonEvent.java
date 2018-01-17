@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Emmanuel Keller / QWAZR
+ * Copyright 2017-2018 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import org.junit.Assert;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -53,11 +54,12 @@ public class CommonEvent {
 		}
 
 		@Override
-		protected void run(final CrawlSession crawlSession, final T currentCrawl, final Map<String, ?> attributes)
+		protected boolean run(final CrawlSession crawlSession, final T currentCrawl, final Map<String, ?> attributes)
 				throws Exception {
 			feedbacks.computeIfAbsent(eventEnum, f -> new Feedback<>()).inform(attributes);
 			Assert.assertNotNull(crawlSession);
 			LOGGER.info(eventEnum.name());
+			return true;
 		}
 	}
 
@@ -74,7 +76,7 @@ public class CommonEvent {
 		}
 
 		@Override
-		protected void run(final CrawlSession crawlSession, final T currentCrawl, final Map<String, ?> attributes)
+		protected boolean run(final CrawlSession crawlSession, final T currentCrawl, final Map<String, ?> attributes)
 				throws Exception {
 			super.run(crawlSession, currentCrawl, attributes);
 			feedbacks.computeIfAbsent(eventEnum, f -> new Feedback<>())
@@ -82,6 +84,7 @@ public class CommonEvent {
 			Assert.assertNotNull(currentCrawl);
 			Assert.assertEquals(currentClassClass, currentCrawl.getClass());
 			Assert.assertEquals(null, currentCrawl.getError());
+			return true;
 		}
 
 	}
@@ -118,7 +121,7 @@ public class CommonEvent {
 		}
 
 		public Integer crawlDepth(String id) {
-			return currentCrawls.get(id).getDepth();
+			return Objects.requireNonNull(currentCrawls.get(id), "Crawl not found: " + id).getDepth();
 		}
 	}
 

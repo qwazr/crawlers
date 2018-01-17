@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Emmanuel Keller / QWAZR
+ * Copyright 2017-2018 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
  **/
 package com.qwazr.crawler.file;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -31,6 +33,11 @@ import java.util.Map;
 import java.util.Objects;
 
 @JsonInclude(Include.NON_EMPTY)
+@JsonAutoDetect(setterVisibility = JsonAutoDetect.Visibility.NONE,
+		getterVisibility = JsonAutoDetect.Visibility.NONE,
+		creatorVisibility = JsonAutoDetect.Visibility.NONE,
+		isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+		fieldVisibility = JsonAutoDetect.Visibility.PUBLIC_ONLY)
 public class FileCrawlDefinition extends CrawlDefinition {
 
 	/**
@@ -39,18 +46,7 @@ public class FileCrawlDefinition extends CrawlDefinition {
 	@JsonProperty("entry_path")
 	final public String entryPath;
 
-	/**
-	 * The maximum number of directory levels to visit.
-	 */
-	@JsonProperty("max_depth")
-	final public Integer maxDepth;
-
-	/**
-	 * Time wait on successfull crawl
-	 */
-	@JsonProperty("crawl_wait_ms")
-	final public Integer crawlWaitMs;
-
+	@JsonCreator
 	protected FileCrawlDefinition(@JsonProperty("entry_path") String entryPath,
 			@JsonProperty("max_depth") Integer maxDepth,
 			@JsonProperty("inclusion_patterns") Collection<String> inclusionPatterns,
@@ -58,10 +54,8 @@ public class FileCrawlDefinition extends CrawlDefinition {
 			@JsonProperty("crawl_wait_ms") Integer crawlWaitMs,
 			@JsonProperty("variables") LinkedHashMap<String, String> variables,
 			@JsonProperty("scripts") Map<EventEnum, ScriptDefinition> scripts) {
-		super(variables, scripts, inclusionPatterns, exclusionPatterns);
+		super(variables, scripts, inclusionPatterns, exclusionPatterns, maxDepth, crawlWaitMs);
 		this.entryPath = entryPath;
-		this.maxDepth = maxDepth;
-		this.crawlWaitMs = crawlWaitMs;
 	}
 
 	@Override
@@ -74,10 +68,6 @@ public class FileCrawlDefinition extends CrawlDefinition {
 			return true;
 		final FileCrawlDefinition f = (FileCrawlDefinition) o;
 		if (!Objects.equals(entryPath, f.entryPath))
-			return false;
-		if (!Objects.equals(maxDepth, f.maxDepth))
-			return false;
-		if (!Objects.equals(crawlWaitMs, f.crawlWaitMs))
 			return false;
 		return true;
 	}
@@ -109,10 +99,6 @@ public class FileCrawlDefinition extends CrawlDefinition {
 
 		private String entryPath;
 
-		private Integer maxDepth;
-
-		private Integer crawlWaitMs;
-
 		protected Builder() {
 			super(Builder.class);
 		}
@@ -126,17 +112,6 @@ public class FileCrawlDefinition extends CrawlDefinition {
 
 		public Builder entryPath(final String entryPath) {
 			this.entryPath = entryPath;
-			return this;
-		}
-
-		public Builder maxDepth(final Integer maxDepth) {
-			this.maxDepth = maxDepth;
-			return this;
-		}
-
-		@JsonIgnore
-		public Builder setCrawlWaitMs(Integer crawlWaitMs) {
-			this.crawlWaitMs = crawlWaitMs;
 			return this;
 		}
 

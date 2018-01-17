@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Emmanuel Keller / QWAZR
+ * Copyright 2017-2018 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -78,8 +78,8 @@ public class FileCrawlManagerTest {
 
 	@Test
 	public void crawlDepth() throws InterruptedException {
-		crawlTest(getFileCrawlDefinition().maxDepth(1), 4, 1, 0);
-		crawlTest(getFileCrawlDefinition().maxDepth(2), 6, 2, 0);
-		crawlTest(getFileCrawlDefinition().maxDepth(0), 1, 0, 0);
+		crawlTest(getFileCrawlDefinition().setMaxDepth(1), 4, 1, 0);
+		crawlTest(getFileCrawlDefinition().setMaxDepth(2), 6, 2, 0);
+		crawlTest(getFileCrawlDefinition().setMaxDepth(0), 1, 0, 0);
 	}
 }

@@ -15,12 +15,15 @@
  */
 package com.qwazr.crawler.web;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.crawler.common.CrawlDefinition;
+import com.qwazr.crawler.common.EventEnum;
+import com.qwazr.crawler.common.ScriptDefinition;
 import com.qwazr.utils.CollectionsUtils;
 import com.qwazr.utils.ObjectMappers;
 
@@ -35,6 +38,11 @@ import java.util.Map;
 import java.util.Objects;
 
 @JsonInclude(Include.NON_EMPTY)
+@JsonAutoDetect(setterVisibility = JsonAutoDetect.Visibility.NONE,
+		getterVisibility = JsonAutoDetect.Visibility.NONE,
+		creatorVisibility = JsonAutoDetect.Visibility.NONE,
+		isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+		fieldVisibility = JsonAutoDetect.Visibility.PROTECTED_AND_PUBLIC)
 public class WebCrawlDefinition extends CrawlDefinition {
 
 	/**
@@ -58,13 +66,8 @@ public class WebCrawlDefinition extends CrawlDefinition {
 	/**
 	 * A map of URL to crawl with the depth
 	 */
+	@JsonProperty("urls")
 	final public Map<String, Integer> urls;
-
-	/**
-	 * The maximum depth of the crawl.
-	 */
-	@JsonProperty("max_depth")
-	final public Integer maxDepth;
 
 	/**
 	 * The maximum number of URLs
@@ -97,11 +100,13 @@ public class WebCrawlDefinition extends CrawlDefinition {
 	/**
 	 * Cookies
 	 */
+	@JsonProperty("cookie")
 	final public Map<String, String> cookies;
 
 	/**
 	 * The proxy definition(s)
 	 */
+	@JsonProperty("proxies")
 	final public List<ProxyDefinition> proxies;
 
 	/**
@@ -110,39 +115,50 @@ public class WebCrawlDefinition extends CrawlDefinition {
 	@JsonProperty("robots_txt_enabled")
 	final public Boolean robotsTxtEnabled;
 
+	/**
+	 * Set the user agent to use for HTTP connection
+	 */
 	@JsonProperty("user_agent")
 	final public String userAgent;
 
 	/**
-	 * Time to wait after a crawl
-	 */
-	@JsonProperty("crawl_wait_ms")
-	final public Integer crawlWaitMs;
-
-	/**
-	 *
+	 * Set the time out for HTTP connections
 	 */
 	@JsonProperty("time_out_sec")
 	final public Integer timeOutSecs;
 
 	@JsonCreator
-	protected WebCrawlDefinition() {
-		preUrl = null;
-		entryUrl = null;
-		entryRequest = null;
-		urls = null;
-		maxDepth = null;
-		maxUrlNumber = null;
-		acceptedContentType = null;
-		parametersPatterns = null;
-		pathCleanerPatterns = null;
-		removeFragments = null;
-		robotsTxtEnabled = null;
-		userAgent = null;
-		cookies = null;
-		proxies = null;
-		crawlWaitMs = null;
-		timeOutSecs = null;
+	protected WebCrawlDefinition(@JsonProperty("max_depth") Integer maxDepth,
+			@JsonProperty("inclusion_patterns") Collection<String> inclusionPatterns,
+			@JsonProperty("exclusion_patterns") Collection<String> exclusionPatterns,
+			@JsonProperty("crawl_wait_ms") Integer crawlWaitMs,
+			@JsonProperty("variables") LinkedHashMap<String, String> variables,
+			@JsonProperty("scripts") Map<EventEnum, ScriptDefinition> scripts, @JsonProperty("pre_url") String preUrl,
+			@JsonProperty("entry_url") String entryUrl,
+			@JsonProperty("entry_request") WebRequestDefinition entryRequest,
+			@JsonProperty("urls") Map<String, Integer> urls, @JsonProperty("max_url_number") Integer maxUrlNumber,
+			@JsonProperty("accepted_content_type") List<String> acceptedContentType,
+			@JsonProperty("parameters_patterns") List<String> parametersPatterns,
+			@JsonProperty("path_cleaner_patterns") List<String> pathCleanerPatterns,
+			@JsonProperty("remove_fragments") Boolean removeFragments,
+			@JsonProperty("cookie") Map<String, String> cookies, @JsonProperty("proxies") List<ProxyDefinition> proxies,
+			@JsonProperty("robots_txt_enabled") Boolean robotsTxtEnabled, @JsonProperty("user_agent") String userAgent,
+			@JsonProperty("time_out_sec") Integer timeOutSecs) {
+		super(variables, scripts, inclusionPatterns, exclusionPatterns, maxDepth, crawlWaitMs);
+		this.preUrl = preUrl;
+		this.entryUrl = entryUrl;
+		this.entryRequest = entryRequest;
+		this.urls = urls;
+		this.maxUrlNumber = maxUrlNumber;
+		this.acceptedContentType = acceptedContentType;
+		this.parametersPatterns = parametersPatterns;
+		this.pathCleanerPatterns = pathCleanerPatterns;
+		this.removeFragments = removeFragments;
+		this.robotsTxtEnabled = robotsTxtEnabled;
+		this.userAgent = userAgent;
+		this.cookies = cookies;
+		this.proxies = proxies;
+		this.timeOutSecs = timeOutSecs;
 	}
 
 	protected WebCrawlDefinition(Builder builder) {
@@ -151,7 +167,6 @@ public class WebCrawlDefinition extends CrawlDefinition {
 		entryUrl = builder.entryUrl;
 		entryRequest = builder.entryRequest;
 		urls = builder.urls == null ? null : Collections.unmodifiableMap(new LinkedHashMap<>(builder.urls));
-		maxDepth = builder.maxDepth;
 		maxUrlNumber = builder.maxUrlNumber;
 		acceptedContentType = builder.acceptedContentType == null ?
 				null :
@@ -167,7 +182,6 @@ public class WebCrawlDefinition extends CrawlDefinition {
 		userAgent = builder.userAgent;
 		cookies = builder.cookies == null ? null : Collections.unmodifiableMap(new LinkedHashMap<>(builder.cookies));
 		proxies = builder.proxies == null ? null : Collections.unmodifiableList(new ArrayList<>(builder.proxies));
-		crawlWaitMs = builder.crawlWaitMs;
 		timeOutSecs = builder.timeOutSecs;
 	}
 
@@ -256,35 +270,16 @@ public class WebCrawlDefinition extends CrawlDefinition {
 		if (o == this)
 			return true;
 		final WebCrawlDefinition w = (WebCrawlDefinition) o;
-		if (!Objects.equals(entryUrl, w.entryUrl))
-			return false;
-		if (!Objects.equals(entryRequest, w.entryRequest))
-			return false;
-		if (!CollectionsUtils.equals(urls, w.urls))
-			return false;
-		if (!Objects.equals(maxDepth, w.maxDepth))
-			return false;
-		if (!Objects.equals(maxUrlNumber, w.maxUrlNumber))
-			return false;
-		if (!CollectionsUtils.equals(parametersPatterns, w.parametersPatterns))
-			return false;
-		if (!CollectionsUtils.equals(pathCleanerPatterns, w.pathCleanerPatterns))
-			return false;
-		if (!Objects.equals(removeFragments, w.removeFragments))
-			return false;
-		if (!Objects.equals(robotsTxtEnabled, w.robotsTxtEnabled))
-			return false;
-		if (!Objects.equals(userAgent, w.userAgent))
-			return false;
-		if (!CollectionsUtils.equals(cookies, w.cookies))
-			return false;
-		if (!CollectionsUtils.equals(proxies, w.proxies))
-			return false;
-		if (!Objects.equals(crawlWaitMs, w.crawlWaitMs))
-			return false;
-		if (!Objects.equals(timeOutSecs, w.timeOutSecs))
-			return false;
-		return true;
+		return Objects.equals(preUrl, w.preUrl) && Objects.equals(entryUrl, w.entryUrl) &&
+				Objects.equals(entryRequest, w.entryRequest) && CollectionsUtils.equals(urls, w.urls) &&
+				Objects.equals(maxUrlNumber, w.maxUrlNumber) &&
+				CollectionsUtils.equals(acceptedContentType, w.acceptedContentType) &&
+				CollectionsUtils.equals(parametersPatterns, w.parametersPatterns) &&
+				CollectionsUtils.equals(pathCleanerPatterns, w.pathCleanerPatterns) &&
+				Objects.equals(removeFragments, w.removeFragments) &&
+				Objects.equals(robotsTxtEnabled, w.robotsTxtEnabled) && Objects.equals(userAgent, w.userAgent) &&
+				CollectionsUtils.equals(cookies, w.cookies) && CollectionsUtils.equals(proxies, w.proxies) &&
+				Objects.equals(timeOutSecs, w.timeOutSecs);
 	}
 
 	public static WebCrawlDefinition newInstance(final String json) throws IOException {
@@ -305,7 +300,6 @@ public class WebCrawlDefinition extends CrawlDefinition {
 		private String entryUrl;
 		private WebRequestDefinition entryRequest;
 		private LinkedHashMap<String, Integer> urls;
-		private Integer maxDepth;
 		private Integer maxUrlNumber;
 		private LinkedHashSet<String> acceptedContentType;
 		private LinkedHashSet<String> parametersPatterns;
@@ -315,7 +309,6 @@ public class WebCrawlDefinition extends CrawlDefinition {
 		private List<ProxyDefinition> proxies;
 		private Boolean robotsTxtEnabled;
 		private String userAgent;
-		private Integer crawlWaitMs;
 		private Integer timeOutSecs;
 
 		protected Builder() {
@@ -369,11 +362,6 @@ public class WebCrawlDefinition extends CrawlDefinition {
 			if (urls == null)
 				urls = new LinkedHashMap<>();
 			urls.put(url, depth);
-			return this;
-		}
-
-		public Builder setMaxDepth(final Integer maxDepth) {
-			this.maxDepth = maxDepth;
 			return this;
 		}
 
@@ -436,11 +424,6 @@ public class WebCrawlDefinition extends CrawlDefinition {
 				this.cookies = new LinkedHashMap<>();
 			if (cookies != null)
 				this.cookies.putAll(cookies);
-			return this;
-		}
-
-		public Builder setCrawlWaitMs(Integer crawlWaitMs) {
-			this.crawlWaitMs = crawlWaitMs;
 			return this;
 		}
 

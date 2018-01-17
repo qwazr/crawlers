@@ -13,60 +13,48 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.qwazr.crawler.file;
+package com.qwazr.crawler.ftp;
 
 import com.qwazr.cluster.ClusterManager;
 import com.qwazr.crawler.common.CrawlManager;
 import com.qwazr.crawler.common.CrawlSessionImpl;
+import com.qwazr.crawler.file.FileCrawlerManager;
 import com.qwazr.scripts.ScriptManager;
-import com.qwazr.server.ApplicationBuilder;
-import com.qwazr.server.GenericServerBuilder;
 import com.qwazr.utils.LoggerUtils;
 import com.qwazr.utils.TimeTracker;
 
 import java.util.concurrent.ExecutorService;
 import java.util.logging.Logger;
 
-public class FileCrawlerManager extends CrawlManager<FileCrawlThread, FileCrawlDefinition, FileCrawlStatus> {
+public class FtpCrawlerManager extends CrawlManager<FtpCrawlThread, FtpCrawlDefinition, FtpCrawlStatus> {
 
 	private static final Logger LOGGER = LoggerUtils.getLogger(FileCrawlerManager.class);
-	private final FileCrawlerServiceInterface service;
+	private final FtpCrawlerServiceInterface service;
 
-	public FileCrawlerManager(String myAddress, ScriptManager scriptManager, ExecutorService executorService) {
+	public FtpCrawlerManager(String myAddress, ScriptManager scriptManager, ExecutorService executorService) {
 		super(myAddress, scriptManager, executorService, LOGGER);
-		service = new FileCrawlerServiceImpl(this);
+		service = new FtpCrawlerServiceImpl(this);
 	}
 
-	public FileCrawlerManager(ClusterManager clusterManager, ScriptManager scriptManager,
+	public FtpCrawlerManager(ClusterManager clusterManager, ScriptManager scriptManager,
 			ExecutorService executorService) {
 		this(clusterManager.getService().getStatus().me, scriptManager, executorService);
 	}
 
-	public FileCrawlerManager(ScriptManager scriptManager, ExecutorService executorService) {
+	public FtpCrawlerManager(ScriptManager scriptManager, ExecutorService executorService) {
 		this((String) null, scriptManager, executorService);
 	}
 
-	public FileCrawlerServiceInterface getService() {
+	public FtpCrawlerServiceInterface getService() {
 		return service;
 	}
 
-	public FileCrawlerManager registerContextAttribute(final GenericServerBuilder builder) {
-		builder.contextAttribute(this);
-		return this;
-	}
-
-	public FileCrawlerManager registerWebService(final ApplicationBuilder builder) {
-		builder.singletons(service);
-		return this;
-	}
-
 	@Override
-	protected FileCrawlThread newCrawlThread(String sessionName, FileCrawlDefinition crawlDefinition) {
+	protected FtpCrawlThread newCrawlThread(String sessionName, FtpCrawlDefinition crawlDefinition) {
 		final TimeTracker timeTracker = new TimeTracker();
-		final FileCrawlStatus.Builder crawlStatusBuilder = FileCrawlStatus.of(myAddress, timeTracker, crawlDefinition);
-		final CrawlSessionImpl<FileCrawlDefinition, FileCrawlStatus> session =
+		final FtpCrawlStatus.Builder crawlStatusBuilder = FtpCrawlStatus.of(myAddress, timeTracker, crawlDefinition);
+		final CrawlSessionImpl<FtpCrawlDefinition, FtpCrawlStatus> session =
 				new CrawlSessionImpl<>(sessionName, timeTracker, crawlDefinition, crawlStatusBuilder);
-		return new FileCrawlThread(this, session, LOGGER);
+		return new FtpCrawlThread(this, session, LOGGER);
 	}
-
 }

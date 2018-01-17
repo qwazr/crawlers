@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2018 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,10 +21,10 @@ import java.util.Map;
 
 public abstract class CrawlScriptEvents<T extends CurrentCrawl> implements ScriptInterface {
 
-	protected abstract void run(CrawlSession session, T crawl, Map<String, ?> attributes) throws Exception;
+	protected abstract boolean run(CrawlSession session, T crawl, Map<String, ?> attributes) throws Exception;
 
 	@Override
-	public void run(Map<String, ?> attributes) throws Exception {
-		run((CrawlSession) attributes.get("session"), (T) attributes.get("current"), attributes);
+	public boolean run(Map<String, ?> attributes) throws Exception {
+		return run((CrawlSession) attributes.get("session"), (T) attributes.get("current"), attributes);
 	}
 }

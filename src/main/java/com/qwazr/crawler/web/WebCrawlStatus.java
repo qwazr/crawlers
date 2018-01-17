@@ -15,12 +15,18 @@
  */
 package com.qwazr.crawler.web;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.crawler.common.CrawlStatus;
 import com.qwazr.utils.TimeTracker;
 
-final public class WebCrawlStatus extends CrawlStatus<WebCrawlDefinition> {
+@JsonAutoDetect(setterVisibility = JsonAutoDetect.Visibility.NONE,
+		getterVisibility = JsonAutoDetect.Visibility.NONE,
+		creatorVisibility = JsonAutoDetect.Visibility.NONE,
+		isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+		fieldVisibility = JsonAutoDetect.Visibility.PROTECTED_AND_PUBLIC)
+public class WebCrawlStatus extends CrawlStatus<WebCrawlDefinition> {
 
 	@JsonCreator
 	WebCrawlStatus(@JsonProperty("node_address") String nodeAddress, @JsonProperty("aborting") Boolean aborting,
@@ -45,7 +51,7 @@ final public class WebCrawlStatus extends CrawlStatus<WebCrawlDefinition> {
 		return new Builder(nodeAddress, timeTracker, crawlDefinition);
 	}
 
-	final public static class Builder extends AbstractBuilder<WebCrawlDefinition, WebCrawlStatus, Builder> {
+	public static class Builder extends AbstractBuilder<WebCrawlDefinition, WebCrawlStatus, Builder> {
 
 		private Builder(String nodeAddress, TimeTracker timeTracker, WebCrawlDefinition crawlDefinition) {
 			super(Builder.class, nodeAddress, timeTracker, crawlDefinition);

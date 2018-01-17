@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Emmanuel Keller / QWAZR
+ * Copyright 2017-2018 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,18 +26,28 @@ public class WebEvents {
 
 	public final static Map<EventEnum, CommonEvent.Feedback<CurrentURIImpl>> feedbacks = new HashMap<>();
 
-	public static class Crawl extends CommonEvent.CrawlEvent<CurrentURIImpl> {
+	public static class AfterCrawl extends CommonEvent.CrawlEvent<CurrentURIImpl> {
 
-		public Crawl() {
-			super(EventEnum.crawl, WebEvents.feedbacks, CurrentURIImpl.class,
+		public AfterCrawl() {
+			super(EventEnum.after_crawl, WebEvents.feedbacks, CurrentURIImpl.class,
 					currentURI -> currentURI.getUri().toString());
 		}
 
 		@Override
-		protected void run(final CrawlSession crawlSession, final CurrentURIImpl currentCrawl,
+		protected boolean run(final CrawlSession crawlSession, final CurrentURIImpl currentCrawl,
 				final Map<String, ?> attributes) throws Exception {
 			super.run(crawlSession, currentCrawl, attributes);
 			assert !currentCrawl.isCrawled() || currentCrawl.getBody() != null;
+			return true;
+		}
+
+	}
+
+	public static class BeforeCrawl extends CommonEvent.CrawlEvent<CurrentURIImpl> {
+
+		public BeforeCrawl() {
+			super(EventEnum.before_crawl, WebEvents.feedbacks, CurrentURIImpl.class,
+					currentURI -> currentURI.getUri().toString());
 		}
 
 	}

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Emmanuel Keller / QWAZR
+ * Copyright 2016-2018 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -103,8 +103,12 @@ public abstract class WebCrawlerTestAbstract {
 		final WebCrawlDefinition.Builder webCrawl = getNewWebCrawl().setEntryUrl(WebAppTestServer.URL);
 		final String variableName = RandomUtils.alphanumeric(5);
 		final String variableValue = RandomUtils.alphanumeric(6);
-		webCrawl.script(EventEnum.crawl, ScriptDefinition.of(WebEvents.Crawl.class)
-				.variable(variableName, variableValue + EventEnum.crawl.name())
+
+		webCrawl.script(EventEnum.before_crawl, ScriptDefinition.of(WebEvents.BeforeCrawl.class)
+				.variable(variableName, variableValue + EventEnum.before_crawl.name())
+				.build());
+		webCrawl.script(EventEnum.after_crawl, ScriptDefinition.of(WebEvents.AfterCrawl.class)
+				.variable(variableName, variableValue + EventEnum.after_crawl.name())
 				.build());
 		webCrawl.script(EventEnum.before_session, ScriptDefinition.of(WebEvents.BeforeSession.class)
 				.variable(variableName, variableValue + EventEnum.before_session.name())
@@ -122,12 +126,13 @@ public abstract class WebCrawlerTestAbstract {
 		Assert.assertEquals(1, status.error);
 
 		Assert.assertEquals(1, WebEvents.feedbacks.get(EventEnum.before_session).count());
-		Assert.assertEquals(5, WebEvents.feedbacks.get(EventEnum.crawl).count());
+		Assert.assertEquals(5, WebEvents.feedbacks.get(EventEnum.before_crawl).count());
+		Assert.assertEquals(5, WebEvents.feedbacks.get(EventEnum.after_crawl).count());
 		Assert.assertEquals(1, WebEvents.feedbacks.get(EventEnum.after_session).count());
 		for (EventEnum eventEnum : EventEnum.values())
 			Assert.assertEquals(variableValue + eventEnum.name(),
 					WebEvents.feedbacks.get(eventEnum).attribute(variableName));
-		WebEvents.feedbacks.get(EventEnum.crawl).currentCrawls.forEach((id, current) -> {
+		WebEvents.feedbacks.get(EventEnum.after_crawl).currentCrawls.forEach((id, current) -> {
 			final DriverInterface.Body body = current.getBody();
 			if (current.isCrawled()) {
 				Assert.assertNotNull(body);

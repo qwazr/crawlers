@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Emmanuel Keller / QWAZR
+ * Copyright 2017-2018 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,22 +27,31 @@ public class FileEvents {
 
 	public final static Map<EventEnum, CommonEvent.Feedback<CurrentPath>> feedbacks = new HashMap<>();
 
-	public static class Crawl extends CommonEvent.CrawlEvent<CurrentPath> {
+	public static class AfterCrawl extends CommonEvent.CrawlEvent<CurrentPath> {
 
-		public Crawl() {
-			super(EventEnum.crawl, FileEvents.feedbacks, CurrentPath.class, CurrentPath::getPathString);
+		public AfterCrawl() {
+			super(EventEnum.after_crawl, FileEvents.feedbacks, CurrentPath.class, CurrentPath::getPathString);
 		}
 
 		@Override
-		protected void run(final CrawlSession crawlSession, final CurrentPath currentCrawl,
+		protected boolean run(final CrawlSession crawlSession, final CurrentPath currentCrawl,
 				final Map<String, ?> attributes) throws Exception {
 			super.run(crawlSession, currentCrawl, attributes);
 			Assert.assertNotNull(currentCrawl.path);
 			Assert.assertNotNull(currentCrawl.attributes);
+			return true;
 		}
 
 	}
-	
+
+	public static class BeforeCrawl extends CommonEvent.CrawlEvent<CurrentPath> {
+
+		public BeforeCrawl() {
+			super(EventEnum.before_crawl, FileEvents.feedbacks, CurrentPath.class, CurrentPath::getPathString);
+		}
+
+	}
+
 	public static class BeforeSession extends CommonEvent.SessionEvent<CurrentPath> {
 
 		public BeforeSession() {

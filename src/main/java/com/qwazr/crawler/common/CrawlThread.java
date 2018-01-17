@@ -24,7 +24,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Future;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -69,12 +69,12 @@ public abstract class CrawlThread<D extends CrawlDefinition, S extends CrawlStat
 	 * @param currentCrawl the current crawl item
 	 * @throws ServerException if the execution of the scripts failed
 	 */
-	protected void script(final EventEnum event, final CurrentCrawl currentCrawl) {
+	protected boolean script(final EventEnum event, final CurrentCrawl currentCrawl) {
 		if (crawlDefinition.scripts == null)
-			return;
+			return true;
 		final ScriptDefinition script = crawlDefinition.scripts.get(event);
 		if (script == null)
-			return;
+			return true;
 		timeTracker.next(null);
 		try {
 			final Map<String, Object> attributes = new HashMap<>(scriptGlobalObjects);
@@ -91,6 +91,7 @@ public abstract class CrawlThread<D extends CrawlDefinition, S extends CrawlStat
 			}
 			if (scriptRunThread.getException() != null)
 				throw ServerException.of(scriptRunThread.getException());
+			return Optional.ofNullable(scriptRunThread.getResult()).orElse(true);
 		} finally {
 			timeTracker.next("Event: " + event.name());
 		}
