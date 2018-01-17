@@ -50,6 +50,8 @@ public class FtpCrawlThread extends CrawlThread<FtpCrawlDefinition, FtpCrawlStat
 			ftp = new FTPSClient();
 		else
 			ftp = new FTPClient();
+		ftp.setConnectTimeout(60000);
+		ftp.setDataTimeout(60000);
 	}
 
 	@Override
@@ -71,8 +73,10 @@ public class FtpCrawlThread extends CrawlThread<FtpCrawlDefinition, FtpCrawlStat
 					(code, msg) -> "FTP server refused connection (" + code + "): " + msg);
 
 			// Login
-			ftp.login(StringUtils.isBlank(crawlDefinition.username) ? "guest" : crawlDefinition.username,
-					crawlDefinition.password);
+			checkPositiveReply(() -> ftp.login(
+					StringUtils.isBlank(crawlDefinition.username) ? "anonymous" : crawlDefinition.username,
+					StringUtils.isBlank(crawlDefinition.password) ? "guest" : crawlDefinition.password),
+					(code, msg) -> "Cannot login as " + crawlDefinition.username + " - " + msg + " (" + code + ')');
 
 			// Change directory if an entry path is given
 			final String[] currentPath;
@@ -108,6 +112,9 @@ public class FtpCrawlThread extends CrawlThread<FtpCrawlDefinition, FtpCrawlStat
 			return;
 
 		final CurrentFtpCrawl.Builder currentBuilder = new CurrentFtpCrawl.Builder(currentPath, depth);
+		checkPassInclusionExclusion(currentBuilder, StringUtils.join(currentBuilder.parentPath, '/'));
+		if (currentBuilder.build().isIgnored())
+			return;
 
 		// First pass we only want files
 		for (FTPFile ftpFile : ftpFiles)
@@ -117,6 +124,8 @@ public class FtpCrawlThread extends CrawlThread<FtpCrawlDefinition, FtpCrawlStat
 		// Second pass, we manage the directories
 		final int nextDepth = depth + 1;
 		for (FTPFile ftpFile : ftpFiles) {
+			if (".".equals(ftpFile.getName()) || "..".equals(ftpFile.getName()))
+				continue;
 			if (ftpFile.isDirectory()) {
 				final String directoryName = ftpFile.getName();
 				checkPositiveReply(() -> ftp.changeWorkingDirectory(directoryName),
@@ -140,6 +149,8 @@ public class FtpCrawlThread extends CrawlThread<FtpCrawlDefinition, FtpCrawlStat
 			return;
 
 		checkPassInclusionExclusion(builder, currentFtpCrawl.getPath());
+		if (builder.build().isIgnored())
+			return;
 
 		// Do we switch to passive mode ?
 		if (crawlDefinition.isPassive != null && crawlDefinition.isPassive)

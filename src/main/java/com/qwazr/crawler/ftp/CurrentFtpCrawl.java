@@ -48,7 +48,7 @@ public class CurrentFtpCrawl extends CurrentCrawlImpl {
 
 	static class Builder extends BaseBuilder<Builder> {
 
-		private final String[] parentPath;
+		final String[] parentPath;
 
 		private volatile FTPFile ftpFile;
 
