@@ -43,16 +43,16 @@ public class CurrentFtpCrawl extends CurrentCrawlImpl {
 	}
 
 	public String getPath() {
-		return ftpFile == null ? null : parentPath + '/' + ftpFile.getName();
+		return ftpFile == null ? null : StringUtils.joinWithSeparator('/', parentPath, ftpFile.getName());
 	}
 
 	static class Builder extends BaseBuilder<Builder> {
 
-		final String[] parentPath;
+		private final String parentPath;
 
 		private volatile FTPFile ftpFile;
 
-		protected Builder(final String[] parentPath, final int depth) {
+		protected Builder(final String parentPath, final int depth) {
 			super(Builder.class, depth);
 			this.parentPath = parentPath;
 		}

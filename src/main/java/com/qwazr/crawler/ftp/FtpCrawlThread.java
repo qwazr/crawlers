@@ -18,7 +18,6 @@ package com.qwazr.crawler.ftp;
 import com.qwazr.crawler.common.CrawlSessionImpl;
 import com.qwazr.crawler.common.CrawlThread;
 import com.qwazr.crawler.common.EventEnum;
-import com.qwazr.utils.ArrayUtils;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.concurrent.RunnableEx;
 import com.qwazr.utils.concurrent.SupplierEx;
@@ -78,18 +77,8 @@ public class FtpCrawlThread extends CrawlThread<FtpCrawlDefinition, FtpCrawlStat
 					StringUtils.isBlank(crawlDefinition.password) ? "guest" : crawlDefinition.password),
 					(code, msg) -> "Cannot login as " + crawlDefinition.username + " - " + msg + " (" + code + ')');
 
-			// Change directory if an entry path is given
-			final String[] currentPath;
-			if (!StringUtils.isBlank(crawlDefinition.entryPath)) {
-				checkPositiveReply(() -> ftp.changeWorkingDirectory(crawlDefinition.entryPath),
-						(code, msg) -> "Cannot change the directory to " + crawlDefinition.entryPath + " - : " + msg +
-								" (" + code + ')');
-				currentPath = StringUtils.split(crawlDefinition.entryPath, '/');
-			} else
-				currentPath = ArrayUtils.EMPTY_STRING_ARRAY;
-
 			// Let crawl the current directory
-			listCurrentDirectory(currentPath, 0);
+			listCurrentDirectory(crawlDefinition.entryPath, 0);
 
 			// Finished, we logout
 			ftp.logout();
@@ -104,15 +93,32 @@ public class FtpCrawlThread extends CrawlThread<FtpCrawlDefinition, FtpCrawlStat
 		}
 	}
 
-	private void listCurrentDirectory(final String[] currentPath, int depth) throws IOException {
+	private void checkTransferMode() throws IOException {
+		// Do we switch to passive mode ?
+		if (crawlDefinition.isPassive != null && crawlDefinition.isPassive)
+			checkPositiveReply(ftp::enterLocalPassiveMode,
+					(code, msg) -> "Passive mode failed: " + msg + " (" + code + ')');
+		else
+			checkPositiveReply(ftp::enterLocalActiveMode,
+					(code, msg) -> "Passive mode failed: " + msg + " (" + code + ')');
+	}
+
+	private void listCurrentDirectory(final String currentPath, int depth) throws IOException {
 		if (session.isAborting())
 			return;
+
+		// Change directory
+		checkTransferMode();
+		if (!StringUtils.isBlank(currentPath))
+			checkPositiveReply(() -> ftp.changeWorkingDirectory(currentPath),
+					(code, msg) -> "Cannot change the directory to " + currentPath + " - : " + msg + " (" + code + ')');
+
 		final FTPFile[] ftpFiles = ftp.listFiles();
 		if (ftpFiles == null || ftpFiles.length == 0)
 			return;
 
 		final CurrentFtpCrawl.Builder currentBuilder = new CurrentFtpCrawl.Builder(currentPath, depth);
-		checkPassInclusionExclusion(currentBuilder, StringUtils.join(currentBuilder.parentPath, '/'));
+		checkPassInclusionExclusion(currentBuilder, currentPath);
 		if (currentBuilder.build().isIgnored())
 			return;
 
@@ -131,7 +137,7 @@ public class FtpCrawlThread extends CrawlThread<FtpCrawlDefinition, FtpCrawlStat
 				checkPositiveReply(() -> ftp.changeWorkingDirectory(directoryName),
 						(code, msg) -> "Cannot change the directory to " + directoryName + " - : " + msg + " (" + code +
 								')');
-				listCurrentDirectory(ArrayUtils.add(currentPath, directoryName), nextDepth);
+				listCurrentDirectory(currentPath + '/' + directoryName, nextDepth);
 				ftp.changeToParentDirectory();
 			}
 		}
@@ -152,10 +158,8 @@ public class FtpCrawlThread extends CrawlThread<FtpCrawlDefinition, FtpCrawlStat
 		if (builder.build().isIgnored())
 			return;
 
-		// Do we switch to passive mode ?
-		if (crawlDefinition.isPassive != null && crawlDefinition.isPassive)
-			checkPositiveReply(ftp::enterRemotePassiveMode,
-					(code, msg) -> "Passive mode failed: " + msg + " (" + code + ')');
+		checkTransferMode();
+
 		final Path tmpFile = Files.createTempFile("ftpCrawler-", ftpFile.getName());
 		try {
 			try (final OutputStream output = new BufferedOutputStream(Files.newOutputStream(tmpFile))) {

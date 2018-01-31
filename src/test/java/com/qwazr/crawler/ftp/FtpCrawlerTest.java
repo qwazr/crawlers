@@ -7,7 +7,7 @@ import com.qwazr.crawler.common.ScriptDefinition;
 import com.qwazr.scripts.ScriptManager;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
+import org.junit.Test;
 
 import java.nio.file.Paths;
 import java.util.Map;
@@ -28,21 +28,21 @@ public class FtpCrawlerTest {
 		ftpCrawler = ftpCrawlerManager.getService();
 	}
 
-	@Ignore
+	@Test
 	public void test() {
 		FtpCrawlDefinition ftpCrawlDefinition = FtpCrawlDefinition.of()
-				.hostname("echanges.dila.gouv.fr")
-				.entryPath("/BOAMP/")
+				.hostname("ftp.mirrorservice.org")
+				.entryPath("/sites/ftp.apache.org/commons/")
 				.passive(true)
 				.username("anonymous")
 				.password("contact@qwazr.com")
-				.addInclusionPattern("BOAMP")
-				.addInclusionPattern("BOAMP/2018/*")
-				.addInclusionPattern("BOAMP/2017/*")
-				.addInclusionPattern("*.taz")
+				.addInclusionPattern("/sites/ftp.apache.org/commons")
+				.addInclusionPattern("/sites/ftp.apache.org/commons/*")
+				.addInclusionPattern("/sites/ftp.apache.org/commons/*/binaries/*")
+				.addInclusionPattern("/sites/ftp.apache.org/commons/*/binaries/*/*.zip")
 				.script(EventEnum.after_crawl, ScriptDefinition.of(FtpCrawl.class).build())
 				.build();
-		ftpCrawler.runSession("boamp", ftpCrawlDefinition);
+		ftpCrawler.runSession("apache", ftpCrawlDefinition);
 	}
 
 	@After
