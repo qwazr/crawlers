@@ -20,6 +20,7 @@ import com.qwazr.crawler.web.driver.DriverInterface;
 
 import java.net.URI;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public interface CurrentURI extends CurrentCrawl {
@@ -70,6 +71,13 @@ public interface CurrentURI extends CurrentCrawl {
 	 * @return a collection of links
 	 */
 	Map<URI, AtomicInteger> getLinks();
+
+	/**
+	 * Get the links who match the inclusion and exclusion patterns
+	 *
+	 * @return a filtered collection of links
+	 */
+	Set<URI> getFilteredLinks();
 
 	/**
 	 * @return the crawled body

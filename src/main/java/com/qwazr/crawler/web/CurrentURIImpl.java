@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2016 Emmanuel Keller / QWAZR
+ * Copyright 2014-2018 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,9 @@ import com.qwazr.crawler.web.driver.DriverInterface;
 import java.net.URI;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 final class CurrentURIImpl extends CurrentCrawlImpl implements CurrentURI {
@@ -29,6 +31,7 @@ final class CurrentURIImpl extends CurrentCrawlImpl implements CurrentURI {
 	private final URI uri;
 	private final URI redirect;
 	private final Map<URI, AtomicInteger> links;
+	private final Set<URI> filteredLinks;
 	private final Boolean isRobotsTxtDisallow;
 	private final Integer statusCode;
 	private final String contentType;
@@ -44,6 +47,9 @@ final class CurrentURIImpl extends CurrentCrawlImpl implements CurrentURI {
 		this.contentType = builder.contentType;
 		this.rejectedContentType = builder.rejectedContentType;
 		this.links = builder.links == null ? Collections.emptyMap() : Collections.unmodifiableMap(builder.links);
+		this.filteredLinks = builder.filteredLinks == null ?
+				Collections.emptySet() :
+				Collections.unmodifiableSet(builder.filteredLinks);
 		this.body = builder.body;
 	}
 
@@ -83,6 +89,11 @@ final class CurrentURIImpl extends CurrentCrawlImpl implements CurrentURI {
 	}
 
 	@Override
+	public Set<URI> getFilteredLinks() {
+		return filteredLinks;
+	}
+
+	@Override
 	public DriverInterface.Body getBody() {
 		return body;
 	}
@@ -97,6 +108,7 @@ final class CurrentURIImpl extends CurrentCrawlImpl implements CurrentURI {
 		private String contentType;
 		private Boolean rejectedContentType;
 		private LinkedHashMap<URI, AtomicInteger> links;
+		private LinkedHashSet<URI> filteredLinks;
 		private DriverInterface.Body body;
 
 		protected Builder(URI uri, int depth) {
@@ -132,6 +144,15 @@ final class CurrentURIImpl extends CurrentCrawlImpl implements CurrentURI {
 			if (links == null)
 				links = new LinkedHashMap<>();
 			links.computeIfAbsent(uri, u -> new AtomicInteger()).incrementAndGet();
+			return this;
+		}
+
+		public Builder filteredLink(URI uri) {
+			if (uri == null)
+				return this;
+			if (filteredLinks == null)
+				filteredLinks = new LinkedHashSet<>();
+			filteredLinks.add(uri);
 			return this;
 		}
 

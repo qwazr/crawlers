@@ -225,7 +225,12 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 			}
 			if (newUri.getHost() == null || newUri.getScheme() == null)
 				continue;
-			crawlUnit.currentBuilder.link(transformLink(newUri));
+			final URI linkUri = transformLink(newUri);
+			if (linkUri != null) {
+				crawlUnit.currentBuilder.link(linkUri);
+				if (checkPassInclusionExclusion(linkUri.toString(), null, null))
+					crawlUnit.currentBuilder.filteredLink(linkUri);
+			}
 		}
 		timeTracker.next("Links extraction");
 		return body;
