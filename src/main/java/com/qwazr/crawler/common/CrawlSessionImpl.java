@@ -18,18 +18,17 @@ package com.qwazr.crawler.common;
 import com.qwazr.utils.TimeTracker;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class CrawlSessionImpl<D extends CrawlDefinition, S extends CrawlStatus<D>> implements CrawlSession {
+public class CrawlSessionImpl<D extends CrawlDefinition, S extends CrawlStatus<D>> implements CrawlSession<D, S> {
 
 	private final D crawlDefinition;
 	private final String name;
 	private final AtomicBoolean abort;
 	private final TimeTracker timeTracker;
-	private final ConcurrentHashMap<String, Object> variables;
+	private final ConcurrentHashMap<String, Object> attributes;
 
 	private volatile S crawlStatusNoDefinition;
 	private volatile S crawlStatusWithDefinition;
@@ -42,13 +41,7 @@ public class CrawlSessionImpl<D extends CrawlDefinition, S extends CrawlStatus<D
 		this.crawlDefinition = crawlDefinition;
 		this.name = sessionName;
 		abort = new AtomicBoolean(false);
-		this.variables = new ConcurrentHashMap<>();
-		if (crawlDefinition.variables != null) {
-			crawlDefinition.variables.forEach((key, value) -> {
-				if (key != null && value != null)
-					this.variables.put(key, value);
-			});
-		}
+		this.attributes = new ConcurrentHashMap<>();
 		buildStatus();
 	}
 
@@ -62,28 +55,32 @@ public class CrawlSessionImpl<D extends CrawlDefinition, S extends CrawlStatus<D
 		return withDefinition ? crawlStatusWithDefinition : crawlStatusNoDefinition;
 	}
 
-	public Map<String, Object> getVariables() {
-		return variables;
+	@Override
+	public <V> V getVariable(final String name, final Class<? extends V> variableClass) {
+		return crawlDefinition != null && crawlDefinition.variables != null ?
+				variableClass.cast(crawlDefinition.variables.get(name)) :
+				null;
 	}
 
 	@Override
-	public Object getVariable(String name) {
-		return variables.get(name);
+	public <A> A getAttribute(final String name, final Class<? extends A> attributeClass) {
+		return attributeClass.cast(attributes.get(name));
 	}
 
 	/**
 	 * @param name the name of the variable
 	 * @return the value of the variable
 	 */
-	public Object setVariable(String name, Object value) {
-		if (value == null)
-			return removeVariable(name);
-		return variables.put(name, value);
+	@Override
+	public <A> A setAttribute(final String name, final A attribute, final Class<? extends A> attributeClass) {
+		if (attribute == null)
+			return removeAttribute(name, attributeClass);
+		return attributeClass.cast(attributes.put(name, attribute));
 	}
 
 	@Override
-	public Object removeVariable(String name) {
-		return variables.remove(name);
+	public <A> A removeAttribute(final String name, final Class<? extends A> attributeClass) {
+		return attributeClass.cast(attributes.remove(name));
 	}
 
 	@Override

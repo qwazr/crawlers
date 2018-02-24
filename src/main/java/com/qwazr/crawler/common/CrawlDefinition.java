@@ -38,13 +38,13 @@ import java.util.Objects;
 		getterVisibility = JsonAutoDetect.Visibility.NONE,
 		creatorVisibility = JsonAutoDetect.Visibility.NONE,
 		isGetterVisibility = JsonAutoDetect.Visibility.NONE,
-		fieldVisibility = JsonAutoDetect.Visibility.PROTECTED_AND_PUBLIC)
+		fieldVisibility = JsonAutoDetect.Visibility.PUBLIC_ONLY)
 public abstract class CrawlDefinition {
 
 	/**
-	 * The global variables shared by all the scripts.
+	 * The users variables shared by all the scripts.
 	 */
-	final public Map<String, String> variables;
+	final public Map<String, Object> variables;
 
 	/**
 	 * A list of scripts paths mapped with the events which fire the scripts.
@@ -78,7 +78,7 @@ public abstract class CrawlDefinition {
 	final public Integer crawlWaitMs;
 
 	@JsonCreator
-	protected CrawlDefinition(@JsonProperty("variables") LinkedHashMap<String, String> variables,
+	protected CrawlDefinition(@JsonProperty("variables") LinkedHashMap<String, Object> variables,
 			@JsonProperty("scripts") Map<EventEnum, ScriptDefinition> scripts,
 			@JsonProperty("inclusion_patterns") Collection<String> inclusionPatterns,
 			@JsonProperty("exclusion_patterns") Collection<String> exclusionPatterns,
@@ -99,7 +99,7 @@ public abstract class CrawlDefinition {
 
 	}
 
-	public Map<String, String> getVariables() {
+	public Map<String, Object> getVariables() {
 		return variables;
 	}
 
@@ -107,17 +107,14 @@ public abstract class CrawlDefinition {
 		return scripts;
 	}
 
-	@JsonIgnore
 	public Collection<String> getInclusionPatterns() {
 		return inclusionPatterns;
 	}
 
-	@JsonIgnore
 	public Collection<String> getExclusionPatterns() {
 		return exclusionPatterns;
 	}
 
-	@Override
 	public boolean equals(final Object o) {
 		if (o == null || !(o instanceof CrawlDefinition))
 			return false;
@@ -132,7 +129,7 @@ public abstract class CrawlDefinition {
 
 	public static abstract class AbstractBuilder<D extends CrawlDefinition, B extends AbstractBuilder<D, B>> {
 
-		protected LinkedHashMap<String, String> variables;
+		protected LinkedHashMap<String, Object> variables;
 
 		protected Map<EventEnum, ScriptDefinition> scripts;
 

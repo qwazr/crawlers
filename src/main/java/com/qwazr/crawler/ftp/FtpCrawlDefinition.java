@@ -81,7 +81,7 @@ public class FtpCrawlDefinition extends CrawlDefinition {
 			@JsonProperty("inclusion_patterns") Collection<String> inclusionPatterns,
 			@JsonProperty("exclusion_patterns") Collection<String> exclusionPatterns,
 			@JsonProperty("crawl_wait_ms") Integer crawlWaitMs,
-			@JsonProperty("variables") LinkedHashMap<String, String> variables,
+			@JsonProperty("variables") LinkedHashMap<String, Object> variables,
 			@JsonProperty("scripts") Map<EventEnum, ScriptDefinition> scripts,
 			@JsonProperty("hostname") String hostname, @JsonProperty("entry_path") String entryPath,
 			@JsonProperty("username") String username, @JsonProperty("password") String password,

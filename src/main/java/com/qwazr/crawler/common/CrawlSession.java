@@ -17,35 +17,47 @@ package com.qwazr.crawler.common;
 
 import com.qwazr.utils.TimeTracker;
 
-import java.util.Map;
-
-public interface CrawlSession {
+public interface CrawlSession<D extends CrawlDefinition, S extends CrawlStatus<D>> {
 
 	/**
 	 * @return the current crawl status
 	 */
-	CrawlStatus getCrawlStatus(boolean withDefinition);
+	S getCrawlStatus(boolean withDefinition);
 
-	Map<String, Object> getVariables();
+	/**
+	 * @return the crawl definition
+	 */
+	D getCrawlDefinition();
 
 	/**
 	 * @param name the name of the variable
+	 * @param <V>  the type of the variable
 	 * @return the value of the variable
 	 */
-	Object getVariable(String name);
+	<V> V getVariable(String name, Class<? extends V> variableClass);
 
 	/**
 	 * @param name  the name of the variable to set
-	 * @param value the value to set
-	 * @return the previous value if any
+	 * @param value the attribute to set
+	 * @param <A>   the type of the attribute
+	 * @return the previous attribute if any
 	 */
-	Object setVariable(String name, Object value);
+	<A> A setAttribute(String name, A value, Class<? extends A> attributeClass);
 
 	/**
-	 * @param name the name of the variable to remove
-	 * @return the value of the variable if any
+	 * @param name           the name of the attribute
+	 * @param attributeClass the class of the attribute
+	 * @param <A>            the type of the attribute
+	 * @return the attribute if any
 	 */
-	Object removeVariable(String name);
+	<A> A getAttribute(String name, Class<? extends A> attributeClass);
+
+	/**
+	 * @param name the name of the attribute to remove
+	 * @param <A>  the type of the attribute
+	 * @return the removed attribute if any
+	 */
+	<A> A removeAttribute(String name, Class<? extends A> attributeClass);
 
 	/**
 	 * Causes the currently executing thread to sleep

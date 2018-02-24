@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2018 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,7 +42,7 @@ import java.util.Objects;
 		getterVisibility = JsonAutoDetect.Visibility.NONE,
 		creatorVisibility = JsonAutoDetect.Visibility.NONE,
 		isGetterVisibility = JsonAutoDetect.Visibility.NONE,
-		fieldVisibility = JsonAutoDetect.Visibility.PROTECTED_AND_PUBLIC)
+		fieldVisibility = JsonAutoDetect.Visibility.PUBLIC_ONLY)
 public class WebCrawlDefinition extends CrawlDefinition {
 
 	/**
@@ -132,7 +132,7 @@ public class WebCrawlDefinition extends CrawlDefinition {
 			@JsonProperty("inclusion_patterns") Collection<String> inclusionPatterns,
 			@JsonProperty("exclusion_patterns") Collection<String> exclusionPatterns,
 			@JsonProperty("crawl_wait_ms") Integer crawlWaitMs,
-			@JsonProperty("variables") LinkedHashMap<String, String> variables,
+			@JsonProperty("variables") LinkedHashMap<String, Object> variables,
 			@JsonProperty("scripts") Map<EventEnum, ScriptDefinition> scripts, @JsonProperty("pre_url") String preUrl,
 			@JsonProperty("entry_url") String entryUrl,
 			@JsonProperty("entry_request") WebRequestDefinition entryRequest,
@@ -243,7 +243,7 @@ public class WebCrawlDefinition extends CrawlDefinition {
 		return proxies;
 	}
 
-	public Map<String, String> getVariables() {
+	public Map<String, Object> getVariables() {
 		return variables;
 	}
 
