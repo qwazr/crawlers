@@ -1,7 +1,5 @@
 package com.qwazr.crawler.ftp;
 
-import com.qwazr.crawler.common.CrawlScriptEvents;
-import com.qwazr.crawler.common.CrawlSession;
 import com.qwazr.crawler.common.EventEnum;
 import com.qwazr.crawler.common.ScriptDefinition;
 import com.qwazr.scripts.ScriptManager;
@@ -54,10 +52,11 @@ public class FtpCrawlerTest {
 		}
 	}
 
-	public static class FtpCrawl extends CrawlScriptEvents<CurrentFtpCrawl> {
+	public static class FtpCrawl extends FtpCrawlScriptEvent {
 
 		@Override
-		protected boolean run(CrawlSession session, CurrentFtpCrawl crawl, Map<String, ?> attributes) throws Exception {
+		protected boolean run(final FtpCrawlSession session, final FtpCurrentCrawl crawl,
+				final Map<String, ?> attributes) throws Exception {
 			System.out.println(crawl.getPath());
 			return true;
 		}

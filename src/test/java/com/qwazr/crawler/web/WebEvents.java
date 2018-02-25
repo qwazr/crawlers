@@ -16,7 +16,6 @@
 package com.qwazr.crawler.web;
 
 import com.qwazr.crawler.common.CommonEvent;
-import com.qwazr.crawler.common.CrawlSession;
 import com.qwazr.crawler.common.EventEnum;
 
 import java.util.HashMap;
@@ -24,46 +23,75 @@ import java.util.Map;
 
 public class WebEvents {
 
-	public final static Map<EventEnum, CommonEvent.Feedback<CurrentURIImpl>> feedbacks = new HashMap<>();
+	public final static Map<EventEnum, CommonEvent.Feedback<WebCrawlDefinition, WebCurrentCrawl>> feedbacks =
+			new HashMap<>();
 
-	public static class AfterCrawl extends CommonEvent.CrawlEvent<CurrentURIImpl> {
+	public static class AfterCrawl extends WebCrawlScriptEvent {
+
+		private final CommonEvent.CrawlCollector<WebCrawlDefinition, WebCrawlSession, WebCurrentCrawl> collector;
 
 		public AfterCrawl() {
-			super(EventEnum.after_crawl, WebEvents.feedbacks, CurrentURIImpl.class,
+			collector = new CommonEvent.CrawlCollector<>(EventEnum.after_crawl, feedbacks,
 					currentURI -> currentURI.getUri().toString());
 		}
 
 		@Override
-		protected boolean run(final CrawlSession crawlSession, final CurrentURIImpl currentCrawl,
-				final Map<String, ?> attributes) throws Exception {
-			super.run(crawlSession, currentCrawl, attributes);
+		protected boolean run(final WebCrawlSession crawlSession, final WebCurrentCrawl currentCrawl,
+				final Map<String, ?> attributes) {
+			collector.collect(crawlSession, currentCrawl, attributes);
 			assert !currentCrawl.isCrawled() || currentCrawl.getBody() != null;
+			return true;
+		}
+	}
+
+	public static class BeforeCrawl extends WebCrawlScriptEvent {
+
+		private final CommonEvent.CrawlCollector<WebCrawlDefinition, WebCrawlSession, WebCurrentCrawl> collector;
+
+		public BeforeCrawl() {
+			collector = new CommonEvent.CrawlCollector<>(EventEnum.before_crawl, feedbacks,
+					currentURI -> currentURI.getUri().toString());
+		}
+
+		@Override
+		protected boolean run(final WebCrawlSession crawlSession, final WebCurrentCrawl currentCrawl,
+				final Map<String, ?> attributes) {
+			collector.collect(crawlSession, currentCrawl, attributes);
+			assert !currentCrawl.isCrawled() || currentCrawl.getBody() != null;
+			return true;
+		}
+	}
+
+	public static class BeforeSession extends WebCrawlScriptEvent {
+
+		private final CommonEvent.SessionCollector<WebCrawlDefinition, WebCrawlSession, WebCurrentCrawl> collector;
+
+		public BeforeSession() {
+			collector = new CommonEvent.SessionCollector<>(EventEnum.before_session, feedbacks);
+		}
+
+		@Override
+		protected boolean run(final WebCrawlSession crawlSession, final WebCurrentCrawl currentCrawl,
+				final Map<String, ?> attributes) {
+			collector.collect(crawlSession, currentCrawl, attributes);
 			return true;
 		}
 
 	}
 
-	public static class BeforeCrawl extends CommonEvent.CrawlEvent<CurrentURIImpl> {
+	public static class AfterSession extends WebCrawlScriptEvent {
 
-		public BeforeCrawl() {
-			super(EventEnum.before_crawl, WebEvents.feedbacks, CurrentURIImpl.class,
-					currentURI -> currentURI.getUri().toString());
-		}
-
-	}
-
-	public static class BeforeSession extends CommonEvent.SessionEvent {
-
-		public BeforeSession() {
-			super(EventEnum.before_session, WebEvents.feedbacks);
-		}
-
-	}
-
-	public static class AfterSession extends CommonEvent.SessionEvent {
+		private final CommonEvent.SessionCollector<WebCrawlDefinition, WebCrawlSession, WebCurrentCrawl> collector;
 
 		public AfterSession() {
-			super(EventEnum.after_session, WebEvents.feedbacks);
+			collector = new CommonEvent.SessionCollector<>(EventEnum.after_session, feedbacks);
+		}
+
+		@Override
+		protected boolean run(final WebCrawlSession crawlSession, final WebCurrentCrawl currentCrawl,
+				final Map<String, ?> attributes) {
+			collector.collect(crawlSession, currentCrawl, attributes);
+			return true;
 		}
 	}
 }

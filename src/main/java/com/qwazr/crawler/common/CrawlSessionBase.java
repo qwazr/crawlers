@@ -22,7 +22,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class CrawlSessionImpl<D extends CrawlDefinition, S extends CrawlStatus<D>> implements CrawlSession<D, S> {
+public abstract class CrawlSessionBase<D extends CrawlDefinition, S extends CrawlStatus<D>>
+		implements CrawlSession<D, S> {
 
 	private final D crawlDefinition;
 	private final String name;
@@ -34,8 +35,8 @@ public class CrawlSessionImpl<D extends CrawlDefinition, S extends CrawlStatus<D
 	private volatile S crawlStatusWithDefinition;
 	private final CrawlStatus.AbstractBuilder<D, S, ?> crawlStatusBuilder;
 
-	public CrawlSessionImpl(String sessionName, TimeTracker timeTracker, D crawlDefinition,
-			CrawlStatus.AbstractBuilder<D, S, ?> crawlStatusBuilder) {
+	protected CrawlSessionBase(final String sessionName, final TimeTracker timeTracker, final D crawlDefinition,
+			final CrawlStatus.AbstractBuilder<D, S, ?> crawlStatusBuilder) {
 		this.timeTracker = timeTracker;
 		this.crawlStatusBuilder = crawlStatusBuilder;
 		this.crawlDefinition = crawlDefinition;
@@ -51,7 +52,7 @@ public class CrawlSessionImpl<D extends CrawlDefinition, S extends CrawlStatus<D
 	}
 
 	@Override
-	public S getCrawlStatus(boolean withDefinition) {
+	public S getCrawlStatus(final boolean withDefinition) {
 		return withDefinition ? crawlStatusWithDefinition : crawlStatusNoDefinition;
 	}
 

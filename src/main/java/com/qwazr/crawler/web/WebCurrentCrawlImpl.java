@@ -26,7 +26,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
-final class CurrentURIImpl extends CurrentCrawlImpl implements CurrentURI {
+final class WebCurrentCrawlImpl extends CurrentCrawlImpl implements WebCurrentCrawl {
 
 	private final URI uri;
 	private final URI redirect;
@@ -38,7 +38,7 @@ final class CurrentURIImpl extends CurrentCrawlImpl implements CurrentURI {
 	private final Boolean rejectedContentType;
 	private final DriverInterface.Body body;
 
-	CurrentURIImpl(Builder builder) {
+	WebCurrentCrawlImpl(Builder builder) {
 		super(builder);
 		this.uri = builder.uri;
 		this.redirect = builder.redirect;
@@ -161,8 +161,8 @@ final class CurrentURIImpl extends CurrentCrawlImpl implements CurrentURI {
 			return this;
 		}
 
-		CurrentURIImpl build() {
-			return new CurrentURIImpl(this);
+		WebCurrentCrawl build() {
+			return new WebCurrentCrawlImpl(this);
 		}
 
 	}

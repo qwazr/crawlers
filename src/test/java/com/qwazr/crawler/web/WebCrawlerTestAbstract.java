@@ -131,7 +131,7 @@ public abstract class WebCrawlerTestAbstract {
 		Assert.assertEquals(1, WebEvents.feedbacks.get(EventEnum.after_session).count());
 		for (EventEnum eventEnum : EventEnum.values())
 			Assert.assertEquals(variableValue + eventEnum.name(),
-					WebEvents.feedbacks.get(eventEnum).attribute(variableName));
+					WebEvents.feedbacks.get(eventEnum).variable(variableName));
 		WebEvents.feedbacks.get(EventEnum.after_crawl).currentCrawls.forEach((id, current) -> {
 			final DriverInterface.Body body = current.getBody();
 			if (current.isCrawled()) {

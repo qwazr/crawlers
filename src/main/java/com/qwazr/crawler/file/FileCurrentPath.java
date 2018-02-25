@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2018 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,13 +22,13 @@ import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 
-final public class CurrentPath extends CurrentCrawlImpl {
+final public class FileCurrentPath extends CurrentCrawlImpl {
 
 	final Path path;
 	final BasicFileAttributes attributes;
 	final String pathString;
 
-	CurrentPath(Builder builder) {
+	FileCurrentPath(Builder builder) {
 		super(builder);
 		this.path = builder.path;
 		this.attributes = builder.attributes;
@@ -68,8 +68,8 @@ final public class CurrentPath extends CurrentCrawlImpl {
 					path.toString();
 		}
 
-		CurrentPath build() {
-			return new CurrentPath(this);
+		FileCurrentPath build() {
+			return new FileCurrentPath(this);
 		}
 	}
 }

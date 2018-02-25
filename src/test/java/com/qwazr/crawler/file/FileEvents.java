@@ -16,7 +16,6 @@
 package com.qwazr.crawler.file;
 
 import com.qwazr.crawler.common.CommonEvent;
-import com.qwazr.crawler.common.CrawlSession;
 import com.qwazr.crawler.common.EventEnum;
 import org.junit.Assert;
 
@@ -25,18 +24,22 @@ import java.util.Map;
 
 public class FileEvents {
 
-	public final static Map<EventEnum, CommonEvent.Feedback<CurrentPath>> feedbacks = new HashMap<>();
+	public final static Map<EventEnum, CommonEvent.Feedback<FileCrawlDefinition, FileCurrentPath>> feedbacks =
+			new HashMap<>();
 
-	public static class AfterCrawl extends CommonEvent.CrawlEvent<CurrentPath> {
+	public static class AfterCrawl extends FileCrawlScriptEvent {
+
+		private final CommonEvent.CrawlCollector<FileCrawlDefinition, FileCrawlSession, FileCurrentPath> collector;
 
 		public AfterCrawl() {
-			super(EventEnum.after_crawl, FileEvents.feedbacks, CurrentPath.class, CurrentPath::getPathString);
+			collector =
+					new CommonEvent.CrawlCollector<>(EventEnum.after_crawl, feedbacks, FileCurrentPath::getPathString);
 		}
 
 		@Override
-		protected boolean run(final CrawlSession crawlSession, final CurrentPath currentCrawl,
-				final Map<String, ?> attributes) throws Exception {
-			super.run(crawlSession, currentCrawl, attributes);
+		protected boolean run(final FileCrawlSession crawlSession, final FileCurrentPath currentCrawl,
+				final Map<String, ?> attributes) {
+			collector.collect(crawlSession, currentCrawl, attributes);
 			Assert.assertNotNull(currentCrawl.path);
 			Assert.assertNotNull(currentCrawl.attributes);
 			return true;
@@ -44,26 +47,53 @@ public class FileEvents {
 
 	}
 
-	public static class BeforeCrawl extends CommonEvent.CrawlEvent<CurrentPath> {
+	public static class BeforeCrawl extends FileCrawlScriptEvent {
+
+		private final CommonEvent.CrawlCollector<FileCrawlDefinition, FileCrawlSession, FileCurrentPath> collector;
 
 		public BeforeCrawl() {
-			super(EventEnum.before_crawl, FileEvents.feedbacks, CurrentPath.class, CurrentPath::getPathString);
+			collector =
+					new CommonEvent.CrawlCollector<>(EventEnum.before_crawl, feedbacks, FileCurrentPath::getPathString);
+		}
+
+		@Override
+		protected boolean run(final FileCrawlSession crawlSession, final FileCurrentPath currentCrawl,
+				final Map<String, ?> attributes) {
+			collector.collect(crawlSession, currentCrawl, attributes);
+			Assert.assertNotNull(currentCrawl.path);
+			Assert.assertNotNull(currentCrawl.attributes);
+			return true;
 		}
 
 	}
 
-	public static class BeforeSession extends CommonEvent.SessionEvent<CurrentPath> {
+	public static class BeforeSession extends FileCrawlScriptEvent {
+
+		private final CommonEvent.SessionCollector<FileCrawlDefinition, FileCrawlSession, FileCurrentPath> collector;
 
 		public BeforeSession() {
-			super(EventEnum.before_session, FileEvents.feedbacks);
+			collector = new CommonEvent.SessionCollector<>(EventEnum.before_session, feedbacks);
 		}
 
+		@Override
+		protected boolean run(FileCrawlSession session, FileCurrentPath crawl, final Map<String, ?> attributes) {
+			collector.collect(session, crawl, attributes);
+			return true;
+		}
 	}
 
-	public static class AfterSession extends CommonEvent.SessionEvent<CurrentPath> {
+	public static class AfterSession extends FileCrawlScriptEvent {
+
+		private final CommonEvent.SessionCollector<FileCrawlDefinition, FileCrawlSession, FileCurrentPath> collector;
 
 		public AfterSession() {
-			super(EventEnum.after_session, FileEvents.feedbacks);
+			collector = new CommonEvent.SessionCollector<>(EventEnum.after_session, feedbacks);
+		}
+
+		@Override
+		protected boolean run(FileCrawlSession session, FileCurrentPath crawl, final Map<String, ?> attributes) {
+			collector.collect(session, crawl, attributes);
+			return true;
 		}
 	}
 }

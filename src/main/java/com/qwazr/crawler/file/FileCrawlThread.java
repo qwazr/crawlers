@@ -15,7 +15,6 @@
  */
 package com.qwazr.crawler.file;
 
-import com.qwazr.crawler.common.CrawlSessionImpl;
 import com.qwazr.crawler.common.CrawlThread;
 import com.qwazr.crawler.common.EventEnum;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -37,8 +36,7 @@ public class FileCrawlThread extends CrawlThread<FileCrawlDefinition, FileCrawlS
 	private final FileCrawlDefinition crawlDefinition;
 	private final Path startPath;
 
-	FileCrawlThread(FileCrawlerManager manager, CrawlSessionImpl<FileCrawlDefinition, FileCrawlStatus> session,
-			Logger logger) {
+	FileCrawlThread(FileCrawlerManager manager, FileCrawlSession session, Logger logger) {
 		super(manager, session, logger);
 		this.crawlDefinition = session.getCrawlDefinition();
 		this.startPath = Paths.get(crawlDefinition.getEntryPath());
@@ -73,15 +71,15 @@ public class FileCrawlThread extends CrawlThread<FileCrawlDefinition, FileCrawlS
 	public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
 		if (session.isAborting())
 			return FileVisitResult.TERMINATE;
-		final CurrentPath.Builder builder = new CurrentPath.Builder(computeDepth(dir), dir, attrs);
-		final CurrentPath current = crawl(builder);
+		final FileCurrentPath.Builder builder = new FileCurrentPath.Builder(computeDepth(dir), dir, attrs);
+		final FileCurrentPath current = crawl(builder);
 		if (current.isIgnored())
 			return FileVisitResult.SKIP_SUBTREE;
 		return FileVisitResult.CONTINUE;
 	}
 
-	private CurrentPath crawl(final CurrentPath.Builder builder) {
-		CurrentPath current = builder.build();
+	private FileCurrentPath crawl(final FileCurrentPath.Builder builder) {
+		FileCurrentPath current = builder.build();
 		if (!script(EventEnum.before_crawl, current))
 			return current;
 		checkPassInclusionExclusion(builder, builder.pathString);
@@ -105,7 +103,7 @@ public class FileCrawlThread extends CrawlThread<FileCrawlDefinition, FileCrawlS
 			return FileVisitResult.TERMINATE;
 		if (crawlDefinition.crawlWaitMs != null)
 			session.sleep(crawlDefinition.crawlWaitMs);
-		crawl(new CurrentPath.Builder(computeDepth(file), file, attrs));
+		crawl(new FileCurrentPath.Builder(computeDepth(file), file, attrs));
 		return FileVisitResult.CONTINUE;
 	}
 

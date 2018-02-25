@@ -19,12 +19,25 @@ import com.qwazr.scripts.ScriptInterface;
 
 import java.util.Map;
 
-public abstract class CrawlScriptEvents<T extends CurrentCrawl> implements ScriptInterface {
+public abstract class CrawlScriptEvents<D extends CrawlDefinition, S extends CrawlSession<D, ?>, C extends CurrentCrawl>
+		implements ScriptInterface {
 
-	protected abstract boolean run(CrawlSession session, T crawl, Map<String, ?> attributes) throws Exception;
+	final static String SESSION_ATTRIBUTE = "session";
+	final static String CURRENT_ATTRIBUTE = "current";
+
+	protected final Class<S> crawlSessionClass;
+	protected final Class<C> currentCrawlClass;
+
+	protected CrawlScriptEvents(final Class<S> crawlSessionClass, final Class<C> currentCrawlClass) {
+		this.crawlSessionClass = crawlSessionClass;
+		this.currentCrawlClass = currentCrawlClass;
+	}
+
+	protected abstract boolean run(S session, C crawl, Map<String, ?> variables) throws Exception;
 
 	@Override
 	public boolean run(Map<String, ?> attributes) throws Exception {
-		return run((CrawlSession) attributes.get("session"), (T) attributes.get("current"), attributes);
+		return run(crawlSessionClass.cast(attributes.get(SESSION_ATTRIBUTE)),
+				currentCrawlClass.cast(attributes.get(CURRENT_ATTRIBUTE)), attributes);
 	}
 }

@@ -132,7 +132,7 @@ public class WebCrawlDefinition extends CrawlDefinition {
 			@JsonProperty("inclusion_patterns") Collection<String> inclusionPatterns,
 			@JsonProperty("exclusion_patterns") Collection<String> exclusionPatterns,
 			@JsonProperty("crawl_wait_ms") Integer crawlWaitMs,
-			@JsonProperty("variables") LinkedHashMap<String, Object> variables,
+			@JsonProperty("variables") LinkedHashMap<String, String> variables,
 			@JsonProperty("scripts") Map<EventEnum, ScriptDefinition> scripts, @JsonProperty("pre_url") String preUrl,
 			@JsonProperty("entry_url") String entryUrl,
 			@JsonProperty("entry_request") WebRequestDefinition entryRequest,
@@ -205,11 +205,6 @@ public class WebCrawlDefinition extends CrawlDefinition {
 	}
 
 	@JsonIgnore
-	public Integer getMaxDepth() {
-		return maxDepth;
-	}
-
-	@JsonIgnore
 	public Integer getMaxUrlNumber() {
 		return maxUrlNumber;
 	}
@@ -243,17 +238,8 @@ public class WebCrawlDefinition extends CrawlDefinition {
 		return proxies;
 	}
 
-	public Map<String, Object> getVariables() {
-		return variables;
-	}
-
 	public Map<String, String> getCookies() {
 		return cookies;
-	}
-
-	@JsonIgnore
-	public Integer getCrawlWaitMs() {
-		return crawlWaitMs;
 	}
 
 	@JsonIgnore

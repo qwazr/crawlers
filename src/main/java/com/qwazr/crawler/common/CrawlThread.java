@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Emmanuel Keller / QWAZR
+ * Copyright 2017-2018 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import com.qwazr.utils.TimeTracker;
 import com.qwazr.utils.WildcardMatcher;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,13 +36,13 @@ public abstract class CrawlThread<D extends CrawlDefinition, S extends CrawlStat
 	private final CrawlDefinition crawlDefinition;
 	private final TimeTracker timeTracker;
 	protected final M manager;
-	protected final CrawlSessionImpl<D, S> session;
+	protected final CrawlSessionBase<D, S> session;
 	protected final Logger logger;
 	private final List<WildcardMatcher> exclusionMatcherList;
 	private final List<WildcardMatcher> inclusionMatcherList;
 	private final Map<String, Object> scriptGlobalObjects;
 
-	protected CrawlThread(final M manager, final CrawlSessionImpl<D, S> session, final Logger logger) {
+	protected CrawlThread(final M manager, final CrawlSessionBase<D, S> session, final Logger logger) {
 		this.manager = manager;
 		this.session = session;
 		this.crawlDefinition = session.getCrawlDefinition();
@@ -78,14 +79,14 @@ public abstract class CrawlThread<D extends CrawlDefinition, S extends CrawlStat
 		timeTracker.next(null);
 		try {
 			final Map<String, Object> attributes = new HashMap<>(scriptGlobalObjects);
-			attributes.put("session", session);
+			attributes.put(CrawlScriptEvents.SESSION_ATTRIBUTE, session);
 			if (currentCrawl != null)
-				attributes.put("current", currentCrawl);
+				attributes.put(CrawlScriptEvents.CURRENT_ATTRIBUTE, currentCrawl);
 			if (script.variables != null)
 				attributes.putAll(script.variables);
 			final ScriptRunThread scriptRunThread;
 			try {
-				scriptRunThread = manager.scriptService.runSync(script.name, attributes);
+				scriptRunThread = manager.scriptService.runSync(script.name, Collections.unmodifiableMap(attributes));
 			} catch (IOException | ClassNotFoundException e) {
 				throw ServerException.of(e);
 			}

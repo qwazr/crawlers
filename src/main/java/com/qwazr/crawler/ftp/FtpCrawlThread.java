@@ -15,7 +15,6 @@
  */
 package com.qwazr.crawler.ftp;
 
-import com.qwazr.crawler.common.CrawlSessionImpl;
 import com.qwazr.crawler.common.CrawlThread;
 import com.qwazr.crawler.common.EventEnum;
 import com.qwazr.utils.StringUtils;
@@ -41,8 +40,7 @@ public class FtpCrawlThread extends CrawlThread<FtpCrawlDefinition, FtpCrawlStat
 	private final FtpCrawlDefinition crawlDefinition;
 	private final FTPClient ftp;
 
-	FtpCrawlThread(FtpCrawlerManager manager, CrawlSessionImpl<FtpCrawlDefinition, FtpCrawlStatus> session,
-			Logger logger) {
+	FtpCrawlThread(final FtpCrawlerManager manager, final FtpCrawlSession session, final Logger logger) {
 		super(manager, session, logger);
 		this.crawlDefinition = session.getCrawlDefinition();
 		if (crawlDefinition.isSsl != null && crawlDefinition.isSsl)
@@ -117,7 +115,7 @@ public class FtpCrawlThread extends CrawlThread<FtpCrawlDefinition, FtpCrawlStat
 		if (ftpFiles == null || ftpFiles.length == 0)
 			return;
 
-		final CurrentFtpCrawl.Builder currentBuilder = new CurrentFtpCrawl.Builder(currentPath, depth);
+		final FtpCurrentCrawl.Builder currentBuilder = new FtpCurrentCrawl.Builder(currentPath, depth);
 		checkPassInclusionExclusion(currentBuilder, currentPath);
 		if (currentBuilder.build().isIgnored())
 			return;
@@ -143,18 +141,18 @@ public class FtpCrawlThread extends CrawlThread<FtpCrawlDefinition, FtpCrawlStat
 		}
 	}
 
-	private void crawlFile(final FTPFile ftpFile, final CurrentFtpCrawl.Builder builder) throws IOException {
+	private void crawlFile(final FTPFile ftpFile, final FtpCurrentCrawl.Builder builder) throws IOException {
 		if (session.isAborting())
 			return;
 
 		builder.ftpFile(ftpFile);
 
-		final CurrentFtpCrawl currentFtpCrawl = builder.build();
+		final FtpCurrentCrawl currentCrawl = builder.build();
 
-		if (!script(EventEnum.before_crawl, currentFtpCrawl))
+		if (!script(EventEnum.before_crawl, currentCrawl))
 			return;
 
-		checkPassInclusionExclusion(builder, currentFtpCrawl.getPath());
+		checkPassInclusionExclusion(builder, currentCrawl.getPath());
 		if (builder.build().isIgnored())
 			return;
 

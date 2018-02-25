@@ -19,12 +19,12 @@ import com.qwazr.crawler.common.CurrentCrawlImpl;
 import com.qwazr.utils.StringUtils;
 import org.apache.commons.net.ftp.FTPFile;
 
-public class CurrentFtpCrawl extends CurrentCrawlImpl {
+public class FtpCurrentCrawl extends CurrentCrawlImpl {
 
 	private final FTPFile ftpFile;
 	private final String parentPath;
 
-	private CurrentFtpCrawl(Builder builder) {
+	private FtpCurrentCrawl(Builder builder) {
 		super(builder);
 		this.ftpFile = builder.ftpFile;
 		this.parentPath = StringUtils.join(builder.parentPath, '/');
@@ -62,8 +62,8 @@ public class CurrentFtpCrawl extends CurrentCrawlImpl {
 			return this;
 		}
 
-		CurrentFtpCrawl build() {
-			return new CurrentFtpCrawl(this);
+		FtpCurrentCrawl build() {
+			return new FtpCurrentCrawl(this);
 		}
 	}
 }

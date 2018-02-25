@@ -43,71 +43,64 @@ public class CommonEvent {
 
 	private final static Logger LOGGER = Logger.getLogger(CommonEvent.class.getName());
 
-	public static class SessionEvent<T extends CurrentCrawl> extends CrawlScriptEvents<T> {
+	public static class SessionCollector<D extends CrawlDefinition, S extends CrawlSession<D, ?>, C extends CurrentCrawl> {
 
 		protected final EventEnum eventEnum;
-		protected final Map<EventEnum, Feedback<T>> feedbacks;
+		protected final Map<EventEnum, Feedback<D, C>> feedbacks;
 
-		protected SessionEvent(EventEnum eventEnum, Map<EventEnum, Feedback<T>> feedbacks) {
+		public SessionCollector(final EventEnum eventEnum, final Map<EventEnum, Feedback<D, C>> feedbacks) {
 			this.eventEnum = eventEnum;
 			this.feedbacks = feedbacks;
 		}
 
-		@Override
-		protected boolean run(final CrawlSession crawlSession, final T currentCrawl, final Map<String, ?> attributes)
-				throws Exception {
-			feedbacks.computeIfAbsent(eventEnum, f -> new Feedback<>()).inform(attributes);
+		public void collect(final S crawlSession, final C currentCrawl, final Map<String, ?> attributes) {
+			feedbacks.computeIfAbsent(eventEnum, f -> new Feedback<>()).attributes(attributes);
 			Assert.assertNotNull(crawlSession);
 			LOGGER.info(eventEnum.name());
-			return true;
 		}
 	}
 
-	public static class CrawlEvent<T extends CurrentCrawl> extends SessionEvent<T> {
+	public static class CrawlCollector<D extends CrawlDefinition, S extends CrawlSession<D, ?>, C extends CurrentCrawl>
+			extends SessionCollector<D, S, C> {
 
-		private final Class<T> currentClassClass;
-		private final Function<T, String> currentIdProvider;
+		private final Function<C, String> currentIdProvider;
 
-		protected CrawlEvent(EventEnum eventEnum, Map<EventEnum, Feedback<T>> feedbacks, Class<T> currentClassClass,
-				Function<T, String> currentIdProvider) {
+		public CrawlCollector(final EventEnum eventEnum, final Map<EventEnum, Feedback<D, C>> feedbacks,
+				final Function<C, String> currentIdProvider) {
 			super(eventEnum, feedbacks);
-			this.currentClassClass = currentClassClass;
 			this.currentIdProvider = currentIdProvider;
 		}
 
 		@Override
-		protected boolean run(final CrawlSession crawlSession, final T currentCrawl, final Map<String, ?> attributes)
-				throws Exception {
-			super.run(crawlSession, currentCrawl, attributes);
+		public void collect(final S crawlSession, final C currentCrawl, final Map<String, ?> attributes) {
+			super.collect(crawlSession, currentCrawl, attributes);
 			feedbacks.computeIfAbsent(eventEnum, f -> new Feedback<>())
 					.current(currentCrawl, currentIdProvider.apply(currentCrawl));
 			Assert.assertNotNull(currentCrawl);
-			Assert.assertEquals(currentClassClass, currentCrawl.getClass());
 			Assert.assertEquals(null, currentCrawl.getError());
-			return true;
 		}
 
 	}
 
-	public static class Feedback<T extends CurrentCrawl> {
+	public static class Feedback<D extends CrawlDefinition, C extends CurrentCrawl> {
 
 		public final AtomicInteger counters;
-		public final Map<String, Object> runAttributes;
-		public final Map<String, T> currentCrawls;
+		public final Map<String, Object> variables;
+		public final Map<String, C> currentCrawls;
 
 		Feedback() {
 			counters = new AtomicInteger();
-			runAttributes = new HashMap<>();
+			variables = new HashMap<>();
 			currentCrawls = new HashMap<>();
 		}
 
-		void inform(Map<String, ?> attributes) {
+		void attributes(Map<String, ?> attributes) {
 			counters.incrementAndGet();
 			if (attributes != null)
-				runAttributes.putAll(attributes);
+				this.variables.putAll(attributes);
 		}
 
-		void current(T currentCrawl, String currentId) {
+		void current(C currentCrawl, String currentId) {
 			if (currentCrawl != null)
 				currentCrawls.put(currentId, currentCrawl);
 		}
@@ -116,8 +109,8 @@ public class CommonEvent {
 			return counters.get();
 		}
 
-		public Object attribute(String key) {
-			return runAttributes.get(key);
+		public Object variable(String key) {
+			return variables.get(key);
 		}
 
 		public Integer crawlDepth(String id) {

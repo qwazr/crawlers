@@ -112,9 +112,10 @@ public class FileCrawlerTest {
 		Assert.assertEquals(1, FileEvents.feedbacks.get(EventEnum.after_session).count());
 		for (EventEnum eventEnum : EventEnum.values())
 			Assert.assertEquals(variableValue + eventEnum.name(),
-					FileEvents.feedbacks.get(eventEnum).attribute(variableName));
+					FileEvents.feedbacks.get(eventEnum).variable(variableName));
 
-		CommonEvent.Feedback<CurrentPath> afterFeedback = FileEvents.feedbacks.get(EventEnum.after_crawl);
+		CommonEvent.Feedback<FileCrawlDefinition, FileCurrentPath> afterFeedback =
+				FileEvents.feedbacks.get(EventEnum.after_crawl);
 		Assert.assertEquals(0, afterFeedback.crawlDepth("src/test/file_crawl/"), 0);
 		Assert.assertEquals(1, afterFeedback.crawlDepth("src/test/file_crawl/file0.txt"), 0);
 		Assert.assertEquals(1, afterFeedback.crawlDepth("src/test/file_crawl/dir1/"), 0);
@@ -122,7 +123,8 @@ public class FileCrawlerTest {
 		Assert.assertEquals(3, afterFeedback.crawlDepth("src/test/file_crawl/dir1/subdir/file1.txt"), 0);
 		Assert.assertEquals(1, afterFeedback.crawlDepth("src/test/file_crawl/dir2/"), 0);
 		Assert.assertEquals(2, afterFeedback.crawlDepth("src/test/file_crawl/dir2/file2.txt"), 0);
-		CommonEvent.Feedback<CurrentPath> beforeFeedback = FileEvents.feedbacks.get(EventEnum.before_crawl);
+		CommonEvent.Feedback<FileCrawlDefinition, FileCurrentPath> beforeFeedback =
+				FileEvents.feedbacks.get(EventEnum.before_crawl);
 		Assert.assertEquals(2, beforeFeedback.crawlDepth("src/test/file_crawl/dir2/ignore.txt"), 0);
 		Assert.assertEquals(1, beforeFeedback.crawlDepth("src/test/file_crawl/ignore/"), 0);
 	}

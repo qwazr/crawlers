@@ -15,7 +15,7 @@
  */
 package com.qwazr.crawler.web;
 
-import com.qwazr.crawler.common.CrawlSessionImpl;
+import com.qwazr.crawler.common.CrawlSessionBase;
 import com.qwazr.crawler.common.CrawlThread;
 import com.qwazr.crawler.common.EventEnum;
 import com.qwazr.crawler.web.driver.DriverInterface;
@@ -67,9 +67,8 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 
 	private final TimeTracker timeTracker;
 
-	WebCrawlThread(final WebCrawlerManager webCrawlerManager,
-			CrawlSessionImpl<WebCrawlDefinition, WebCrawlStatus> session, final WebCrawlDefinition crawlDefinition)
-			throws ServerException {
+	WebCrawlThread(final WebCrawlerManager webCrawlerManager, final WebCrawlSession session,
+			final WebCrawlDefinition crawlDefinition) throws ServerException {
 		super(webCrawlerManager, session, LOGGER);
 		this.crawlDefinition = crawlDefinition;
 		this.timeTracker = session.getTimeTracker();
@@ -236,7 +235,7 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 		return body;
 	}
 
-	private boolean checkPassContentType(String contentType, final CurrentURIImpl.Builder currentBuilder) {
+	private boolean checkPassContentType(final String contentType, final WebCurrentCrawlImpl.Builder currentBuilder) {
 		final boolean accepted = acceptedContentType == null || acceptedContentType.contains(contentType);
 		currentBuilder.contentType(contentType, !accepted);
 		return accepted;
@@ -275,7 +274,7 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 		}
 
 		// Call the before_crawl process:
-		CurrentURI current = crawlUnit.currentBuilder.build();
+		WebCurrentCrawl current = crawlUnit.currentBuilder.build();
 		if (!script(EventEnum.before_crawl, current))
 			return;
 
@@ -396,14 +395,14 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 
 	abstract class CrawlUnit {
 
-		final CurrentURIImpl.Builder currentBuilder;
+		final WebCurrentCrawlImpl.Builder currentBuilder;
 		final DriverInterface driver;
 		final WebRequestDefinition request;
 
 		CrawlUnit(final DriverInterface driver, final WebRequestDefinition request, final int depth)
 				throws URISyntaxException {
 			this.driver = driver;
-			this.currentBuilder = new CurrentURIImpl.Builder(new URI(request.url), depth);
+			this.currentBuilder = new WebCurrentCrawlImpl.Builder(new URI(request.url), depth);
 			this.request = request;
 		}
 
