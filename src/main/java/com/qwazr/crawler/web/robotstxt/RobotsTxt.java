@@ -26,10 +26,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.security.KeyManagementException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 public class RobotsTxt {
@@ -50,15 +48,22 @@ public class RobotsTxt {
 
 	private final RobotsTxtUserAgentMap userAgentMap;
 	private final int httpStatusCode;
+	private final long downloadTime;
 
 	RobotsTxt(final InputStream input, final Charset charset) throws IOException {
 		this.userAgentMap = RobotsTxtUserAgentMap.of(input, charset);
 		this.httpStatusCode = 200;
+		this.downloadTime = System.currentTimeMillis();
 	}
 
 	RobotsTxt(final int statusCode) {
 		this.userAgentMap = null;
 		this.httpStatusCode = statusCode;
+		this.downloadTime = System.currentTimeMillis();
+	}
+
+	public boolean hasExpired(final TimeUnit unit, final int duration) {
+		return (System.currentTimeMillis() - unit.toMillis(duration)) > downloadTime;
 	}
 
 	public Map<String, RobotsTxtClauseSet> getClausesMap() {
@@ -73,7 +78,7 @@ public class RobotsTxt {
 	 * @throws MalformedURLException if the URL is malformed
 	 * @throws URISyntaxException    if the URI syntax is wrong
 	 */
-	public static URI getRobotsURI(final URI uri) throws MalformedURLException, URISyntaxException {
+	public static URI getRobotsURI(final URI uri) throws URISyntaxException {
 		StringBuilder sb = new StringBuilder();
 		sb.append(uri.getScheme());
 		sb.append("://");
@@ -101,8 +106,7 @@ public class RobotsTxt {
 		return status;
 	}
 
-	private Status getStatusNoLogs(final URI uri, final String userAgent)
-			throws MalformedURLException, URISyntaxException {
+	private Status getStatusNoLogs(final URI uri, final String userAgent) throws MalformedURLException {
 		switch (httpStatusCode) {
 		case 400:
 		case 404:
@@ -122,8 +126,7 @@ public class RobotsTxt {
 		return clauseSet.isAllowed(uri.toURL().getFile()) ? Status.ALLOW : Status.DISALLOW;
 	}
 
-	public static RobotsTxt download(final DriverInterface driver, final URI uri)
-			throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
+	public static RobotsTxt download(final DriverInterface driver, final URI uri) throws IOException {
 		logger.info(() -> "Try to download robots.txt " + uri);
 		try (final DriverInterface.Body get = driver.body(WebRequestDefinition.of(uri.toString()).build())) {
 			final int sc = get.getResponseCode();

@@ -15,7 +15,6 @@
  */
 package com.qwazr.crawler.web;
 
-import com.qwazr.crawler.common.CrawlSessionBase;
 import com.qwazr.crawler.common.CrawlThread;
 import com.qwazr.crawler.common.EventEnum;
 import com.qwazr.crawler.web.driver.DriverInterface;
@@ -34,9 +33,6 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.security.KeyManagementException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -44,8 +40,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -128,6 +124,12 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 		}
 	}
 
+	private final void applyIgnore(final String uriString, final String msg, final CrawlUnit crawlUnit) {
+		session.incIgnoredCount();
+		crawlUnit.currentBuilder.ignored(true);
+		LOGGER.info(() -> "Ignored (" + msg + "): " + uriString);
+	}
+
 	/**
 	 * @param crawlUnit
 	 */
@@ -136,44 +138,8 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 		if (session.isAborting())
 			return null;
 
-		final String uriString = crawlUnit.currentBuilder.uri.toString();
-
-		final Function<String, DriverInterface.Body> ignore = msg -> {
-			session.incIgnoredCount();
-			crawlUnit.currentBuilder.ignored(true);
-			LOGGER.info(() -> "Ignored (" + msg + "): " + uriString);
-			return null;
-		};
-
-		session.setCurrentCrawl(uriString, crawlUnit.currentBuilder.depth);
-
-		// Check the SCHEME, we only accept http or https
-		final String scheme = crawlUnit.currentBuilder.uri.getScheme();
-		if (!"http".equalsIgnoreCase(scheme) && !"https".equalsIgnoreCase(scheme))
-			return ignore.apply("not http");
-
-		// Check the inclusion/exclusion rules
-		if (!checkPassInclusionExclusion(uriString, crawlUnit.currentBuilder::inInclusion,
-				crawlUnit.currentBuilder::inExclusion))
-			return ignore.apply("inclusion/exclusion");
-
 		if (crawlDefinition.crawlWaitMs != null)
 			Thread.sleep(crawlDefinition.crawlWaitMs);
-
-		// Check the robotsTxt status
-		try {
-			final RobotsTxt.Status robotsTxtStatus = checkRobotsTxt(crawlUnit.driver, crawlUnit.currentBuilder.uri);
-			if (robotsTxtStatus != null && !robotsTxtStatus.isCrawlable) {
-				crawlUnit.currentBuilder.robotsTxtDisallow(true);
-				return ignore.apply("robotstxt");
-			}
-		} catch (Exception e) {
-			final String msg = "Error during robots.txt extraction: " + e.getMessage();
-			LOGGER.log(Level.WARNING, msg, e);
-			session.incErrorCount(msg);
-			crawlUnit.currentBuilder.error(e);
-			return null;
-		}
 
 		final DriverInterface.Body body = crawlUnit.crawl();
 		if (body == null)
@@ -185,7 +151,9 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 
 		if (!checkPassContentType(body.getContentType(), crawlUnit.currentBuilder)) {
 			session.incIgnoredCount();
-			return ignore.apply("rejected content-type: " + body.getContentType());
+			applyIgnore(crawlUnit.currentBuilder.uriString, "rejected content-type: " + body.getContentType(),
+					crawlUnit);
+			return null;
 		}
 
 		crawlUnit.currentBuilder.crawled(true);
@@ -198,7 +166,7 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 			if (document == null)
 				return body; // No HTML document ? We're done
 		} catch (IOException e) {
-			session.incErrorCount("Error during robots.txt extraction: " + e.getMessage());
+			session.incErrorCount("Error during body extraction: " + e.getMessage());
 			crawlUnit.currentBuilder.error(e);
 			return body;
 		}
@@ -242,15 +210,14 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 	}
 
 	private RobotsTxt.Status checkRobotsTxt(final DriverInterface driver, final URI uri)
-			throws IOException, URISyntaxException, NoSuchAlgorithmException, KeyStoreException,
-			KeyManagementException {
+			throws IOException, URISyntaxException {
 		if (robotsTxtMap == null)
 			return null;
 		timeTracker.next(null);
 		try {
 			final URI robotsTxtURI = RobotsTxt.getRobotsURI(uri);
 			RobotsTxt robotsTxt = robotsTxtMap.get(robotsTxtURI);
-			if (robotsTxt == null) {
+			if (robotsTxt == null || robotsTxt.hasExpired(TimeUnit.HOURS, 6)) {
 				robotsTxt = RobotsTxt.download(driver, robotsTxtURI);
 				robotsTxtMap.put(robotsTxtURI, robotsTxt);
 			}
@@ -266,6 +233,8 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 		if (session.isAborting())
 			return;
 
+		session.setCurrentCrawl(crawlUnit.currentBuilder.uriString, crawlUnit.currentBuilder.depth);
+
 		// Check if it has been already crawled
 		if (crawledURIs != null) {
 			if (crawledURIs.contains(crawlUnit.currentBuilder.uri))
@@ -273,31 +242,60 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 			crawledURIs.add(crawlUnit.currentBuilder.uri);
 		}
 
+		// Check the SCHEME, we only accept http or https
+		final String scheme = crawlUnit.currentBuilder.uri.getScheme();
+		if (!"http".equalsIgnoreCase(scheme) && !"https".equalsIgnoreCase(scheme))
+			applyIgnore(crawlUnit.currentBuilder.uriString, "Unsupported protocol: " + scheme, crawlUnit);
+
+		// Check the inclusion/exclusion rules
+		if (!checkPassInclusionExclusion(crawlUnit.currentBuilder.uriString, crawlUnit.currentBuilder::inInclusion,
+				crawlUnit.currentBuilder::inExclusion))
+			applyIgnore(crawlUnit.currentBuilder.uriString, "inclusion/exclusion", crawlUnit);
+
+		// Check the robotsTxt status
+		try {
+			final RobotsTxt.Status robotsTxtStatus = checkRobotsTxt(crawlUnit.driver, crawlUnit.currentBuilder.uri);
+			if (robotsTxtStatus != null && !robotsTxtStatus.isCrawlable) {
+				crawlUnit.currentBuilder.robotsTxtDisallow(true);
+				applyIgnore(crawlUnit.currentBuilder.uriString, "robotstxt", crawlUnit);
+			}
+		} catch (Exception e) {
+			final String msg = "Error during robots.txt extraction: " + e.getMessage();
+			LOGGER.log(Level.WARNING, msg, e);
+			session.incErrorCount(msg);
+			crawlUnit.currentBuilder.error(e);
+		}
+
 		// Call the before_crawl process:
-		WebCurrentCrawl current = crawlUnit.currentBuilder.build();
-		if (!script(EventEnum.before_crawl, current))
+		final WebCurrentCrawl beforeCrawlCurrent = crawlUnit.currentBuilder.build();
+		if (!script(EventEnum.before_crawl, beforeCrawlCurrent))
 			return;
+
+		if (beforeCrawlCurrent.isIgnored() || beforeCrawlCurrent.getError() != null)
+			return;
+
+		final WebCurrentCrawl afterCrawlCurrent;
 
 		try (final DriverInterface.Body body = crawl(crawlUnit)) {
 
-			current = crawlUnit.currentBuilder.build();
+			afterCrawlCurrent = crawlUnit.currentBuilder.build();
 
 			// Handle url number limit
-			if (current.isCrawled()) {
+			if (afterCrawlCurrent.isCrawled()) {
 				final int crawledCount = session.incCrawledCount();
 				if (crawlDefinition.maxUrlNumber != null && crawledCount >= crawlDefinition.maxUrlNumber)
 					abort("Max URL number reached: " + crawlDefinition.maxUrlNumber);
 			}
 
 			// Give the hand to the "crawl" event scripts
-			script(EventEnum.after_crawl, current);
+			script(EventEnum.after_crawl, afterCrawlCurrent);
 		} catch (IOException e) {
 			LOGGER.log(Level.WARNING, e, e::getMessage);
 			return;
 		}
 
 		// Manage any redirection
-		final URI redirectUri = current.getRedirect();
+		final URI redirectUri = afterCrawlCurrent.getRedirect();
 		if (redirectUri != null) {
 			crawlOne(crawlUnit.redirect(redirectUri), crawledURIs, nextLevelUris);
 			return;
@@ -305,7 +303,7 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 
 		// Add the next level URIs
 		if (nextLevelUris != null) {
-			final Map<URI, AtomicInteger> links = current.getLinks();
+			final Map<URI, AtomicInteger> links = afterCrawlCurrent.getLinks();
 			if (links != null)
 				nextLevelUris.addAll(links.keySet());
 		}

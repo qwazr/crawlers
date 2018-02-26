@@ -127,7 +127,7 @@ public abstract class WebCrawlerTestAbstract {
 
 		Assert.assertEquals(1, WebEvents.feedbacks.get(EventEnum.before_session).count());
 		Assert.assertEquals(5, WebEvents.feedbacks.get(EventEnum.before_crawl).count());
-		Assert.assertEquals(5, WebEvents.feedbacks.get(EventEnum.after_crawl).count());
+		Assert.assertEquals(4, WebEvents.feedbacks.get(EventEnum.after_crawl).count());
 		Assert.assertEquals(1, WebEvents.feedbacks.get(EventEnum.after_session).count());
 		for (EventEnum eventEnum : EventEnum.values())
 			Assert.assertEquals(variableValue + eventEnum.name(),
