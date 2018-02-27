@@ -18,10 +18,12 @@ package com.qwazr.crawler;
 import com.qwazr.cluster.ClusterManager;
 import com.qwazr.cluster.ClusterServiceInterface;
 import com.qwazr.crawler.file.FileCrawlerManager;
+import com.qwazr.crawler.file.FileCrawlerServiceBuilder;
 import com.qwazr.crawler.file.FileCrawlerServiceInterface;
 import com.qwazr.crawler.ftp.FtpCrawlerManager;
-import com.qwazr.crawler.ftp.FtpCrawlerServiceInterface;
+import com.qwazr.crawler.ftp.FtpCrawlerServiceBuilder;
 import com.qwazr.crawler.web.WebCrawlerManager;
+import com.qwazr.crawler.web.WebCrawlerServiceBuilder;
 import com.qwazr.crawler.web.WebCrawlerServiceInterface;
 import com.qwazr.library.LibraryManager;
 import com.qwazr.library.LibraryServiceInterface;
@@ -43,14 +45,13 @@ import java.util.concurrent.Executors;
 
 public class CrawlerServer implements BaseServer {
 
-	private final ExecutorService executorService;
 	private final GenericServer server;
-	private final WebCrawlerServiceInterface webCrawlerService;
-	private final FileCrawlerServiceInterface fileCrawlerService;
-	private final FtpCrawlerServiceInterface ftpCrawlerService;
+	private final WebCrawlerServiceBuilder webCrawlerServiceBuilder;
+	private final FileCrawlerServiceBuilder fileCrawlerServiceBuilder;
+	private final FtpCrawlerServiceBuilder ftpCrawlerServiceBuilder;
 
 	private CrawlerServer(final ServerConfiguration configuration) throws IOException, URISyntaxException {
-		executorService = Executors.newCachedThreadPool();
+		final ExecutorService executorService = Executors.newCachedThreadPool();
 		final GenericServerBuilder builder = GenericServer.of(configuration, executorService);
 
 		final Set<String> services = new HashSet<>();
@@ -78,35 +79,34 @@ public class CrawlerServer implements BaseServer {
 
 		final WebCrawlerManager webCrawlerManager =
 				new WebCrawlerManager(clusterManager, scriptManager, executorService);
-		webServices.singletons(webCrawlerService = webCrawlerManager.getService());
+		webServices.singletons(webCrawlerManager.getService());
+		webCrawlerServiceBuilder = new WebCrawlerServiceBuilder(executorService, clusterManager, webCrawlerManager);
 
 		final FileCrawlerManager fileCrawlerManager =
 				new FileCrawlerManager(clusterManager, scriptManager, executorService);
-		webServices.singletons(fileCrawlerService = fileCrawlerManager.getService());
+		webServices.singletons(fileCrawlerManager.getService());
+		fileCrawlerServiceBuilder = new FileCrawlerServiceBuilder(clusterManager, fileCrawlerManager);
 
 		final FtpCrawlerManager ftpCrawlerManager =
 				new FtpCrawlerManager(clusterManager, scriptManager, executorService);
-		webServices.singletons(ftpCrawlerService = ftpCrawlerManager.getService());
+		webServices.singletons(ftpCrawlerManager.getService());
+		ftpCrawlerServiceBuilder = new FtpCrawlerServiceBuilder(clusterManager, ftpCrawlerManager);
 
 		builder.getWebServiceContext().jaxrs(webServices);
 
 		server = builder.build();
 	}
 
-	public WebCrawlerServiceInterface getWebCrawlerService() {
-		return webCrawlerService;
+	public WebCrawlerServiceBuilder getWebCrawlerServiceBuilder() {
+		return webCrawlerServiceBuilder;
 	}
 
-	public FileCrawlerServiceInterface getFileCrawlerService() {
-		return fileCrawlerService;
+	public FileCrawlerServiceBuilder getFileCrawlerServiceBuilder() {
+		return fileCrawlerServiceBuilder;
 	}
 
-	public FtpCrawlerServiceInterface getFtpCrawlerService() {
-		return ftpCrawlerService;
-	}
-
-	public ExecutorService getExecutorService() {
-		return executorService;
+	public FtpCrawlerServiceBuilder getFtpCrawlerServiceBuilder() {
+		return ftpCrawlerServiceBuilder;
 	}
 
 	@Override

@@ -50,7 +50,7 @@ public class FileCrawlerTest {
 
 	@Test
 	public void test100startServer() throws Exception {
-		local = CrawlerServer.getInstance().getFileCrawlerService();
+		local = CrawlerServer.getInstance().getFileCrawlerServiceBuilder().local();
 		Assert.assertNotNull(local);
 		remote = new FileCrawlerSingleClient(RemoteService.of("http://localhost:9091").build());
 		Assert.assertNotNull(remote);

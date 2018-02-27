@@ -2,6 +2,7 @@ package com.qwazr.crawler.web;
 
 import com.qwazr.crawler.CrawlerServer;
 import com.qwazr.server.RemoteService;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
@@ -17,7 +18,7 @@ public class WebCrawlerTests {
 		@BeforeClass
 		public static void setup() throws Exception {
 			WebCrawlerTestAbstract.setup();
-			service = CrawlerServer.getInstance().getWebCrawlerService();
+			service = CrawlerServer.getInstance().getWebCrawlerServiceBuilder().local();
 		}
 	}
 
@@ -26,7 +27,11 @@ public class WebCrawlerTests {
 		@BeforeClass
 		public static void setup() throws Exception {
 			WebCrawlerTestAbstract.setup();
-			service = new WebCrawlerSingleClient(RemoteService.of(REMOTE_URL).build());
+			service = CrawlerServer.getInstance()
+					.getWebCrawlerServiceBuilder()
+					.remote(RemoteService.of(REMOTE_URL).build());
+			Assert.assertNotNull(service);
+			Assert.assertEquals(WebCrawlerSingleClient.class, service.getClass());
 		}
 	}
 
@@ -35,8 +40,11 @@ public class WebCrawlerTests {
 		@BeforeClass
 		public static void setup() throws Exception {
 			WebCrawlerTestAbstract.setup();
-			service = new WebCrawlerMultiClient(CrawlerServer.getInstance().getExecutorService(),
-					RemoteService.of(REMOTE_URL).build());
+			service = CrawlerServer.getInstance()
+					.getWebCrawlerServiceBuilder()
+					.remotes(RemoteService.of(REMOTE_URL).build());
+			Assert.assertNotNull(service);
+			Assert.assertEquals(WebCrawlerMultiClient.class, service.getClass());
 		}
 	}
 
