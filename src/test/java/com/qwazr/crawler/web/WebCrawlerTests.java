@@ -17,7 +17,7 @@ public class WebCrawlerTests {
 		@BeforeClass
 		public static void setup() throws Exception {
 			WebCrawlerTestAbstract.setup();
-			service = CrawlerServer.getInstance().getWebServiceBuilder().local();
+			service = CrawlerServer.getInstance().getWebCrawlerService();
 		}
 	}
 
@@ -26,7 +26,7 @@ public class WebCrawlerTests {
 		@BeforeClass
 		public static void setup() throws Exception {
 			WebCrawlerTestAbstract.setup();
-			service = CrawlerServer.getInstance().getWebServiceBuilder().remote(RemoteService.of(REMOTE_URL).build());
+			service = new WebCrawlerSingleClient(RemoteService.of(REMOTE_URL).build());
 		}
 	}
 
@@ -35,7 +35,8 @@ public class WebCrawlerTests {
 		@BeforeClass
 		public static void setup() throws Exception {
 			WebCrawlerTestAbstract.setup();
-			service = CrawlerServer.getInstance().getWebServiceBuilder().remotes(RemoteService.of(REMOTE_URL).build());
+			service = new WebCrawlerMultiClient(CrawlerServer.getInstance().getExecutorService(),
+					RemoteService.of(REMOTE_URL).build());
 		}
 	}
 

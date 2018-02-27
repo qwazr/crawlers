@@ -18,8 +18,6 @@ package com.qwazr.crawler.file;
 import com.qwazr.cluster.ClusterManager;
 import com.qwazr.crawler.common.CrawlManager;
 import com.qwazr.scripts.ScriptManager;
-import com.qwazr.server.ApplicationBuilder;
-import com.qwazr.server.GenericServerBuilder;
 import com.qwazr.utils.LoggerUtils;
 import com.qwazr.utils.TimeTracker;
 
@@ -47,16 +45,6 @@ public class FileCrawlerManager extends CrawlManager<FileCrawlThread, FileCrawlD
 
 	public FileCrawlerServiceInterface getService() {
 		return service;
-	}
-
-	public FileCrawlerManager registerContextAttribute(final GenericServerBuilder builder) {
-		builder.contextAttribute(this);
-		return this;
-	}
-
-	public FileCrawlerManager registerWebService(final ApplicationBuilder builder) {
-		builder.singletons(service);
-		return this;
 	}
 
 	@Override

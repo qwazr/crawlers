@@ -44,15 +44,15 @@ public class FileCrawlerTest {
 	}
 
 	@AfterClass
-	public static void after() throws InterruptedException {
+	public static void after() {
 		CrawlerServer.shutdown();
 	}
 
 	@Test
 	public void test100startServer() throws Exception {
-		local = CrawlerServer.getInstance().getFileServiceBuilder().local();
+		local = CrawlerServer.getInstance().getFileCrawlerService();
 		Assert.assertNotNull(local);
-		remote = new FileCrawlerServiceBuilder(null, null).remote(RemoteService.of("http://localhost:9091").build());
+		remote = new FileCrawlerSingleClient(RemoteService.of("http://localhost:9091").build());
 		Assert.assertNotNull(remote);
 	}
 

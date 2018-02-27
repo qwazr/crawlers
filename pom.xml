@@ -68,7 +68,7 @@
                                         <transformer
                                                 implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                             <manifestEntries>
-                                                <Main-Class>com.qwazr.crawler.web.WebCrawlerServer</Main-Class>
+                                                <Main-Class>com.qwazr.crawler.CrawlerServer</Main-Class>
                                                 <Implementation-Version>${project.version}-${buildNumber}
                                                 </Implementation-Version>
                                                 <Specification-Version>${project.version}-${buildNumber}
