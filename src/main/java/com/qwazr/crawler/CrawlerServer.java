@@ -63,16 +63,18 @@ public class CrawlerServer implements BaseServer {
 				singletons(new WelcomeShutdownService());
 
 		final ClusterManager clusterManager =
-				new ClusterManager(executorService, configuration).registerProtocolListener(builder, services)
-						.registerContextAttribute(builder)
-						.registerWebService(webServices);
+				new ClusterManager(executorService, configuration).registerProtocolListener(builder, services);
+		webServices.singletons(clusterManager.getService());
 
 		final LibraryManager libraryManager =
-				new LibraryManager(configuration.dataDirectory, configuration.getEtcFiles()).registerIdentityManager(
-						builder).registerContextAttribute(builder).registerWebService(webServices);
+				new LibraryManager(configuration.dataDirectory, configuration.getEtcFiles());
+		builder.shutdownListener(server -> libraryManager.close());
+		webServices.singletons(libraryManager.getService());
 
-		final ScriptManager scriptManager = new ScriptManager(executorService, clusterManager, libraryManager,
-				configuration.dataDirectory).registerContextAttribute(builder).registerWebService(webServices);
+		final ScriptManager scriptManager =
+				new ScriptManager(executorService, clusterManager, libraryManager.getService(),
+						configuration.dataDirectory);
+		webServices.singletons(scriptManager.getService());
 
 		final WebCrawlerManager webCrawlerManager =
 				new WebCrawlerManager(clusterManager, scriptManager, executorService);
