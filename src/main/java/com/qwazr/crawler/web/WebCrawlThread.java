@@ -195,8 +195,9 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 			final URI linkUri = transformLink(newUri);
 			if (linkUri != null) {
 				crawlUnit.currentBuilder.link(linkUri);
-				if (checkPassInclusionExclusion(linkUri.toString(), null, null))
-					crawlUnit.currentBuilder.filteredLink(linkUri);
+				if (crawlDefinition.maxDepth == null || crawlUnit.currentBuilder.depth < crawlDefinition.maxDepth)
+					if (checkPassInclusionExclusion(linkUri.toString(), null, null))
+						crawlUnit.currentBuilder.filteredLink(linkUri);
 			}
 		}
 		timeTracker.next("Links extraction");
