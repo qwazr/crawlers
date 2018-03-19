@@ -185,7 +185,7 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 				continue;
 			final URI newUri;
 			try {
-				newUri = new URI(absHref);
+				newUri = new URI(absHref.replace(' ', '+'));
 			} catch (Exception e) {
 				LOGGER.log(Level.WARNING, e, () -> "Cannot build URI from " + absHref + ": " + e.getMessage());
 				continue;
