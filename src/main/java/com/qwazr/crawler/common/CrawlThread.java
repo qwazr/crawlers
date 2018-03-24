@@ -25,7 +25,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -92,7 +91,10 @@ public abstract class CrawlThread<D extends CrawlDefinition, S extends CrawlStat
 			}
 			if (scriptRunThread.getException() != null)
 				throw ServerException.of(scriptRunThread.getException());
-			return Optional.ofNullable(scriptRunThread.getResult()).orElse(true);
+			final Object result = scriptRunThread.getResult();
+			return result == null || result instanceof Boolean ?
+					(boolean) result :
+					Boolean.parseBoolean(result.toString());
 		} finally {
 			timeTracker.next("Event: " + event.name());
 		}

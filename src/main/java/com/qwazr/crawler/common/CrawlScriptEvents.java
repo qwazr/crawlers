@@ -20,7 +20,7 @@ import com.qwazr.scripts.ScriptInterface;
 import java.util.Map;
 
 public abstract class CrawlScriptEvents<D extends CrawlDefinition, S extends CrawlSession<D, ?>, C extends CurrentCrawl>
-		implements ScriptInterface {
+		implements ScriptInterface<Boolean> {
 
 	final static String SESSION_ATTRIBUTE = "session";
 	final static String CURRENT_ATTRIBUTE = "current";
@@ -36,7 +36,7 @@ public abstract class CrawlScriptEvents<D extends CrawlDefinition, S extends Cra
 	protected abstract boolean run(S session, C crawl, Map<String, ?> variables) throws Exception;
 
 	@Override
-	public boolean run(Map<String, ?> attributes) throws Exception {
+	public Boolean run(Map<String, ?> attributes) throws Exception {
 		return run(crawlSessionClass.cast(attributes.get(SESSION_ATTRIBUTE)),
 				currentCrawlClass.cast(attributes.get(CURRENT_ATTRIBUTE)), attributes);
 	}
