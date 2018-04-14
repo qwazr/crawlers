@@ -65,7 +65,7 @@ public class QwazrDriver implements DriverInterface {
 
 	private final ConcurrentHashMap.KeySetView<Body, Boolean> bodies;
 
-	QwazrDriver(final WebCrawlDefinition definition) throws IOException {
+	QwazrDriver(final WebCrawlDefinition definition) {
 		final OkHttpClient.Builder builder = new OkHttpClient.Builder().followRedirects(false)
 				.followSslRedirects(false)
 				.retryOnConnectionFailure(true);
