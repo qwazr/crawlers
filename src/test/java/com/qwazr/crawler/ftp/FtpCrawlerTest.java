@@ -15,50 +15,50 @@ import java.util.concurrent.TimeUnit;
 
 public class FtpCrawlerTest {
 
-	private FtpCrawlerServiceInterface ftpCrawler;
-	private ExecutorService executorService;
+    private FtpCrawlerServiceInterface ftpCrawler;
+    private ExecutorService executorService;
 
-	@Before
-	public void setup() {
-		executorService = Executors.newCachedThreadPool();
-		ScriptManager scriptManager = new ScriptManager(executorService, Paths.get(".").toFile());
-		FtpCrawlerManager ftpCrawlerManager = new FtpCrawlerManager(scriptManager, executorService);
-		ftpCrawler = ftpCrawlerManager.getService();
-	}
+    @Before
+    public void setup() {
+        executorService = Executors.newCachedThreadPool();
+        ScriptManager scriptManager = new ScriptManager(executorService, Paths.get("."));
+        FtpCrawlerManager ftpCrawlerManager = new FtpCrawlerManager(scriptManager, executorService);
+        ftpCrawler = ftpCrawlerManager.getService();
+    }
 
-	@Test
-	public void test() {
-		FtpCrawlDefinition ftpCrawlDefinition = FtpCrawlDefinition.of()
-				.hostname("ftp.mirrorservice.org")
-				.entryPath("/sites/ftp.apache.org/commons/")
-				.passive(true)
-				.username("anonymous")
-				.password("contact@qwazr.com")
-				.addInclusionPattern("/sites/ftp.apache.org/commons")
-				.addInclusionPattern("/sites/ftp.apache.org/commons/*")
-				.addInclusionPattern("/sites/ftp.apache.org/commons/*/binaries/*")
-				.addInclusionPattern("/sites/ftp.apache.org/commons/*/binaries/*/*.zip")
-				.script(EventEnum.after_crawl, ScriptDefinition.of(FtpCrawl.class).build())
-				.build();
-		ftpCrawler.runSession("apache", ftpCrawlDefinition);
-	}
+    @Test
+    public void test() {
+        FtpCrawlDefinition ftpCrawlDefinition = FtpCrawlDefinition.of()
+                .hostname("ftp.mirrorservice.org")
+                .entryPath("/sites/ftp.apache.org/commons/")
+                .passive(true)
+                .username("anonymous")
+                .password("contact@qwazr.com")
+                .addInclusionPattern("/sites/ftp.apache.org/commons")
+                .addInclusionPattern("/sites/ftp.apache.org/commons/*")
+                .addInclusionPattern("/sites/ftp.apache.org/commons/*/binaries/*")
+                .addInclusionPattern("/sites/ftp.apache.org/commons/*/binaries/*/*.zip")
+                .script(EventEnum.after_crawl, ScriptDefinition.of(FtpCrawl.class).build())
+                .build();
+        ftpCrawler.runSession("apache", ftpCrawlDefinition);
+    }
 
-	@After
-	public void cleanup() throws InterruptedException {
-		if (executorService != null) {
-			executorService.shutdown();
-			executorService.awaitTermination(5, TimeUnit.MINUTES);
-			executorService = null;
-		}
-	}
+    @After
+    public void cleanup() throws InterruptedException {
+        if (executorService != null) {
+            executorService.shutdown();
+            executorService.awaitTermination(5, TimeUnit.MINUTES);
+            executorService = null;
+        }
+    }
 
-	public static class FtpCrawl extends FtpCrawlScriptEvent {
+    public static class FtpCrawl extends FtpCrawlScriptEvent {
 
-		@Override
-		protected boolean run(final FtpCrawlSession session, final FtpCurrentCrawl crawl,
-				final Map<String, ?> attributes) throws Exception {
-			System.out.println(crawl.getPath());
-			return true;
-		}
-	}
+        @Override
+        protected boolean run(final FtpCrawlSession session, final FtpCurrentCrawl crawl,
+                              final Map<String, ?> attributes) throws Exception {
+            System.out.println(crawl.getPath());
+            return true;
+        }
+    }
 }
