@@ -34,193 +34,198 @@ import java.util.Objects;
 
 @JsonInclude(Include.NON_EMPTY)
 @JsonAutoDetect(setterVisibility = JsonAutoDetect.Visibility.NONE,
-		getterVisibility = JsonAutoDetect.Visibility.NONE,
-		creatorVisibility = JsonAutoDetect.Visibility.NONE,
-		isGetterVisibility = JsonAutoDetect.Visibility.NONE,
-		fieldVisibility = JsonAutoDetect.Visibility.PROTECTED_AND_PUBLIC)
+        getterVisibility = JsonAutoDetect.Visibility.NONE,
+        creatorVisibility = JsonAutoDetect.Visibility.NONE,
+        isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+        fieldVisibility = JsonAutoDetect.Visibility.PROTECTED_AND_PUBLIC)
 public class FtpCrawlDefinition extends CrawlDefinition {
 
-	/**
-	 * The host name of the FTP server.
-	 */
-	@JsonProperty("hostname")
-	final public String hostname;
+    /**
+     * The host name of the FTP server.
+     */
+    @JsonProperty("hostname")
+    final public String hostname;
 
-	/**
-	 * The entry point PATH of the crawl.
-	 */
-	@JsonProperty("entry_path")
-	final public String entryPath;
+    /**
+     * The entry point PATH of the crawl.
+     */
+    @JsonProperty("entry_path")
+    final public String entryPath;
 
-	/**
-	 * The username to use for the FTP connection
-	 */
-	@JsonProperty("username")
-	final public String username;
+    /**
+     * The username to use for the FTP connection
+     */
+    @JsonProperty("username")
+    final public String username;
 
-	/**
-	 * The password to use for the FTP connection
-	 */
-	@JsonProperty("password")
-	final public String password;
+    /**
+     * The password to use for the FTP connection
+     */
+    @JsonProperty("password")
+    final public String password;
 
-	/**
-	 * Enable FTP over SSL
-	 */
-	@JsonProperty("is_ssl")
-	final public Boolean isSsl;
+    /**
+     * Enable FTP over SSL
+     */
+    @JsonProperty("is_ssl")
+    final public Boolean isSsl;
 
-	/**
-	 * Set the data connection mode to passive
-	 */
-	@JsonProperty("is_passive")
-	final public Boolean isPassive;
+    /**
+     * Set the data connection mode to passive
+     */
+    @JsonProperty("is_passive")
+    final public Boolean isPassive;
 
-	@JsonCreator
-	protected FtpCrawlDefinition(@JsonProperty("max_depth") Integer maxDepth,
-			@JsonProperty("inclusion_patterns") Collection<String> inclusionPatterns,
-			@JsonProperty("exclusion_patterns") Collection<String> exclusionPatterns,
-			@JsonProperty("crawl_wait_ms") Integer crawlWaitMs,
-			@JsonProperty("variables") LinkedHashMap<String, String> variables,
-			@JsonProperty("scripts") Map<EventEnum, ScriptDefinition> scripts,
-			@JsonProperty("hostname") String hostname, @JsonProperty("entry_path") String entryPath,
-			@JsonProperty("username") String username, @JsonProperty("password") String password,
-			@JsonProperty("is_ssl") Boolean isSsl, @JsonProperty("is_passive") Boolean isPassive) {
-		super(variables, scripts, inclusionPatterns, exclusionPatterns, maxDepth, crawlWaitMs);
-		this.hostname = hostname;
-		this.entryPath = entryPath;
-		this.username = username;
-		this.password = password;
-		this.isSsl = isSsl;
-		this.isPassive = isPassive;
-	}
+    @JsonCreator
+    protected FtpCrawlDefinition(@JsonProperty("max_depth") Integer maxDepth,
+                                 @JsonProperty("inclusion_patterns") Collection<String> inclusionPatterns,
+                                 @JsonProperty("exclusion_patterns") Collection<String> exclusionPatterns,
+                                 @JsonProperty("crawl_wait_ms") Integer crawlWaitMs,
+                                 @JsonProperty("variables") LinkedHashMap<String, String> variables,
+                                 @JsonProperty("scripts") Map<EventEnum, ScriptDefinition> scripts,
+                                 @JsonProperty("hostname") String hostname, @JsonProperty("entry_path") String entryPath,
+                                 @JsonProperty("username") String username, @JsonProperty("password") String password,
+                                 @JsonProperty("is_ssl") Boolean isSsl, @JsonProperty("is_passive") Boolean isPassive) {
+        super(variables, scripts, inclusionPatterns, exclusionPatterns, maxDepth, crawlWaitMs);
+        this.hostname = hostname;
+        this.entryPath = entryPath;
+        this.username = username;
+        this.password = password;
+        this.isSsl = isSsl;
+        this.isPassive = isPassive;
+    }
 
-	private FtpCrawlDefinition(Builder builder) {
-		super(builder);
-		this.hostname = builder.hostname;
-		this.entryPath = builder.entryPath;
-		this.username = builder.username;
-		this.password = builder.password;
-		this.isSsl = builder.isSsl;
-		this.isPassive = builder.isPassive;
-	}
+    private FtpCrawlDefinition(Builder builder) {
+        super(builder);
+        this.hostname = builder.hostname;
+        this.entryPath = builder.entryPath;
+        this.username = builder.username;
+        this.password = builder.password;
+        this.isSsl = builder.isSsl;
+        this.isPassive = builder.isPassive;
+    }
 
-	@Override
-	public boolean equals(final Object o) {
-		if (!super.equals(o))
-			return false;
-		if (!(o instanceof FtpCrawlDefinition))
-			return false;
-		if (o == this)
-			return true;
-		final FtpCrawlDefinition f = (FtpCrawlDefinition) o;
-		return Objects.equals(hostname, f.hostname) && Objects.equals(entryPath, f.entryPath) &&
-				Objects.equals(username, f.username) && Objects.equals(password, f.password) &&
-				Objects.equals(isSsl, f.isSsl) && Objects.equals(isPassive, f.isPassive);
-	}
+    @Override
+    public int hashCode() {
+        return Objects.hash(hostname, entryPath, super.hashCode());
+    }
 
-	@JsonIgnore
-	public String getHostName() {
-		return this.hostname;
-	}
+    @Override
+    public boolean equals(final Object o) {
+        if (!super.equals(o))
+            return false;
+        if (!(o instanceof FtpCrawlDefinition))
+            return false;
+        if (o == this)
+            return true;
+        final FtpCrawlDefinition f = (FtpCrawlDefinition) o;
+        return Objects.equals(hostname, f.hostname) && Objects.equals(entryPath, f.entryPath) &&
+                Objects.equals(username, f.username) && Objects.equals(password, f.password) &&
+                Objects.equals(isSsl, f.isSsl) && Objects.equals(isPassive, f.isPassive);
+    }
 
-	@JsonIgnore
-	public String getEntryPath() {
-		return this.entryPath;
-	}
+    @JsonIgnore
+    public String getHostName() {
+        return this.hostname;
+    }
 
-	@JsonIgnore
-	public String getUsername() {
-		return username;
-	}
+    @JsonIgnore
+    public String getEntryPath() {
+        return this.entryPath;
+    }
 
-	@JsonIgnore
-	public String getPassword() {
-		return password;
-	}
+    @JsonIgnore
+    public String getUsername() {
+        return username;
+    }
 
-	@JsonIgnore
-	public Boolean isSsl() {
-		return isSsl;
-	}
+    @JsonIgnore
+    public String getPassword() {
+        return password;
+    }
 
-	@JsonIgnore
-	public Boolean isPassive() {
-		return isPassive;
-	}
+    @JsonIgnore
+    public Boolean isSsl() {
+        return isSsl;
+    }
 
-	public static Builder of() {
-		return new Builder();
-	}
+    @JsonIgnore
+    public Boolean isPassive() {
+        return isPassive;
+    }
 
-	public static Builder of(FtpCrawlDefinition crawlDefinition) {
-		return new Builder(crawlDefinition);
-	}
+    public static Builder of() {
+        return new Builder();
+    }
 
-	public static class Builder extends AbstractBuilder<FtpCrawlDefinition, Builder> {
+    public static Builder of(FtpCrawlDefinition crawlDefinition) {
+        return new Builder(crawlDefinition);
+    }
 
-		private String hostname;
+    public static class Builder extends AbstractBuilder<FtpCrawlDefinition, Builder> {
 
-		private String entryPath;
+        private String hostname;
 
-		private String username;
+        private String entryPath;
 
-		private String password;
+        private String username;
 
-		private Boolean isSsl;
+        private String password;
 
-		private Boolean isPassive;
+        private Boolean isSsl;
 
-		protected Builder() {
-			super(Builder.class);
-		}
+        private Boolean isPassive;
 
-		protected Builder(FtpCrawlDefinition crawlDefinition) {
-			super(Builder.class, crawlDefinition);
-			entryPath = crawlDefinition.entryPath;
-			maxDepth = crawlDefinition.maxDepth;
-			crawlWaitMs = crawlDefinition.crawlWaitMs;
-		}
+        protected Builder() {
+            super(Builder.class);
+        }
 
-		public Builder hostname(final String hostname) {
-			this.hostname = hostname;
-			return this;
-		}
+        protected Builder(FtpCrawlDefinition crawlDefinition) {
+            super(Builder.class, crawlDefinition);
+            entryPath = crawlDefinition.entryPath;
+            maxDepth = crawlDefinition.maxDepth;
+            crawlWaitMs = crawlDefinition.crawlWaitMs;
+        }
 
-		public Builder username(final String username) {
-			this.username = username;
-			return this;
-		}
+        public Builder hostname(final String hostname) {
+            this.hostname = hostname;
+            return this;
+        }
 
-		public Builder password(final String password) {
-			this.password = password;
-			return this;
-		}
+        public Builder username(final String username) {
+            this.username = username;
+            return this;
+        }
 
-		public Builder ssl(final Boolean ssl) {
-			this.isSsl = ssl;
-			return this;
-		}
+        public Builder password(final String password) {
+            this.password = password;
+            return this;
+        }
 
-		public Builder passive(final Boolean passive) {
-			this.isPassive = passive;
-			return this;
-		}
+        public Builder ssl(final Boolean ssl) {
+            this.isSsl = ssl;
+            return this;
+        }
 
-		public Builder entryPath(final String entryPath) {
-			this.entryPath = entryPath;
-			return this;
-		}
+        public Builder passive(final Boolean passive) {
+            this.isPassive = passive;
+            return this;
+        }
 
-		@Override
-		public FtpCrawlDefinition build() {
-			return new FtpCrawlDefinition(this);
-		}
-	}
+        public Builder entryPath(final String entryPath) {
+            this.entryPath = entryPath;
+            return this;
+        }
 
-	@JsonIgnore
-	public static FtpCrawlDefinition newInstance(final String json) throws IOException {
-		return ObjectMappers.JSON.readValue(json, FtpCrawlDefinition.class);
-	}
+        @Override
+        public FtpCrawlDefinition build() {
+            return new FtpCrawlDefinition(this);
+        }
+    }
+
+    @JsonIgnore
+    public static FtpCrawlDefinition newInstance(final String json) throws IOException {
+        return ObjectMappers.JSON.readValue(json, FtpCrawlDefinition.class);
+    }
 
 }

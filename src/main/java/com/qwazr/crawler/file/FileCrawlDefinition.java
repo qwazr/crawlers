@@ -34,86 +34,91 @@ import java.util.Objects;
 
 @JsonInclude(Include.NON_EMPTY)
 @JsonAutoDetect(setterVisibility = JsonAutoDetect.Visibility.NONE,
-		getterVisibility = JsonAutoDetect.Visibility.NONE,
-		creatorVisibility = JsonAutoDetect.Visibility.NONE,
-		isGetterVisibility = JsonAutoDetect.Visibility.NONE,
-		fieldVisibility = JsonAutoDetect.Visibility.PUBLIC_ONLY)
+        getterVisibility = JsonAutoDetect.Visibility.NONE,
+        creatorVisibility = JsonAutoDetect.Visibility.NONE,
+        isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+        fieldVisibility = JsonAutoDetect.Visibility.PUBLIC_ONLY)
 public class FileCrawlDefinition extends CrawlDefinition {
 
-	/**
-	 * The entry point PATH of the crawl.
-	 */
-	@JsonProperty("entry_path")
-	final public String entryPath;
+    /**
+     * The entry point PATH of the crawl.
+     */
+    @JsonProperty("entry_path")
+    final public String entryPath;
 
-	@JsonCreator
-	protected FileCrawlDefinition(@JsonProperty("entry_path") String entryPath,
-			@JsonProperty("max_depth") Integer maxDepth,
-			@JsonProperty("inclusion_patterns") Collection<String> inclusionPatterns,
-			@JsonProperty("exclusion_patterns") Collection<String> exclusionPatterns,
-			@JsonProperty("crawl_wait_ms") Integer crawlWaitMs,
-			@JsonProperty("variables") LinkedHashMap<String, String> variables,
-			@JsonProperty("scripts") Map<EventEnum, ScriptDefinition> scripts) {
-		super(variables, scripts, inclusionPatterns, exclusionPatterns, maxDepth, crawlWaitMs);
-		this.entryPath = entryPath;
-	}
+    @JsonCreator
+    protected FileCrawlDefinition(@JsonProperty("entry_path") String entryPath,
+                                  @JsonProperty("max_depth") Integer maxDepth,
+                                  @JsonProperty("inclusion_patterns") Collection<String> inclusionPatterns,
+                                  @JsonProperty("exclusion_patterns") Collection<String> exclusionPatterns,
+                                  @JsonProperty("crawl_wait_ms") Integer crawlWaitMs,
+                                  @JsonProperty("variables") LinkedHashMap<String, String> variables,
+                                  @JsonProperty("scripts") Map<EventEnum, ScriptDefinition> scripts) {
+        super(variables, scripts, inclusionPatterns, exclusionPatterns, maxDepth, crawlWaitMs);
+        this.entryPath = entryPath;
+    }
 
-	@Override
-	public boolean equals(final Object o) {
-		if (!super.equals(o))
-			return false;
-		if (!(o instanceof FileCrawlDefinition))
-			return false;
-		if (o == this)
-			return true;
-		final FileCrawlDefinition f = (FileCrawlDefinition) o;
-		if (!Objects.equals(entryPath, f.entryPath))
-			return false;
-		return true;
-	}
+    @Override
+    public int hashCode() {
+        return Objects.hash(entryPath, super.hashCode());
+    }
 
-	public String getEntryPath() {
-		return this.entryPath;
-	}
+    @Override
+    public boolean equals(final Object o) {
+        if (!super.equals(o))
+            return false;
+        if (!(o instanceof FileCrawlDefinition))
+            return false;
+        if (o == this)
+            return true;
+        final FileCrawlDefinition f = (FileCrawlDefinition) o;
+        if (!Objects.equals(entryPath, f.entryPath))
+            return false;
+        return true;
+    }
 
-	public static Builder of() {
-		return new Builder();
-	}
+    public String getEntryPath() {
+        return this.entryPath;
+    }
 
-	public static Builder of(FileCrawlDefinition crawlDefinition) {
-		return new Builder(crawlDefinition);
-	}
+    public static Builder of() {
+        return new Builder();
+    }
 
-	public static class Builder extends AbstractBuilder<FileCrawlDefinition, Builder> {
+    public static Builder of(FileCrawlDefinition crawlDefinition) {
+        return new Builder(crawlDefinition);
+    }
 
-		private String entryPath;
+    public static class Builder extends AbstractBuilder<FileCrawlDefinition, Builder> {
 
-		protected Builder() {
-			super(Builder.class);
-		}
+        private String entryPath;
 
-		protected Builder(FileCrawlDefinition crawlDefinition) {
-			super(Builder.class, crawlDefinition);
-			entryPath = crawlDefinition.entryPath;
-			maxDepth = crawlDefinition.maxDepth;
-			crawlWaitMs = crawlDefinition.crawlWaitMs;
-		}
+        protected Builder() {
+            super(Builder.class);
+        }
 
-		public Builder entryPath(final String entryPath) {
-			this.entryPath = entryPath;
-			return this;
-		}
+        protected Builder(FileCrawlDefinition crawlDefinition) {
+            super(Builder.class, crawlDefinition);
+            entryPath = crawlDefinition.entryPath;
+            maxDepth = crawlDefinition.maxDepth;
+            crawlWaitMs = crawlDefinition.crawlWaitMs;
+        }
 
-		@Override
-		public FileCrawlDefinition build() {
-			return new FileCrawlDefinition(entryPath, maxDepth, inclusionPatterns, exclusionPatterns, crawlWaitMs,
-					variables, scripts);
-		}
-	}
+        public Builder entryPath(final String entryPath) {
+            this.entryPath = entryPath;
+            return this;
+        }
 
-	@JsonIgnore
-	public static FileCrawlDefinition newInstance(final String json) throws IOException {
-		return ObjectMappers.JSON.readValue(json, FileCrawlDefinition.class);
-	}
+        @Override
+        public FileCrawlDefinition build() {
+            return new FileCrawlDefinition(entryPath, maxDepth, inclusionPatterns, exclusionPatterns, crawlWaitMs,
+                    variables, scripts);
+        }
+    }
+
+    @JsonIgnore
+    public static FileCrawlDefinition newInstance(final String json) throws IOException {
+        return ObjectMappers.JSON.readValue(json, FileCrawlDefinition.class);
+    }
 
 }
