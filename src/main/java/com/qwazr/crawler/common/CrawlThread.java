@@ -20,6 +20,7 @@ import com.qwazr.server.ServerException;
 import com.qwazr.utils.TimeTracker;
 import com.qwazr.utils.WildcardMatcher;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
@@ -109,6 +110,7 @@ public abstract class CrawlThread<D extends CrawlDefinition, S extends CrawlStat
      * @param matchers a list of wildcard patterns
      * @return true if a pattern matched the text
      **/
+    @Nullable
     protected static Boolean matches(String text, List<WildcardMatcher> matchers) {
         if (matchers == null || matchers.isEmpty())
             return null;
