@@ -101,7 +101,7 @@ public class QwazrDriver implements DriverInterface {
 
         userAgent = StringUtils.isBlank(definition.userAgent) ? null : definition.userAgent;
         bodies = ConcurrentHashMap.newKeySet();
-        if (definition.disableSslCheck) {
+        if (definition.disableSslCheck != null && definition.disableSslCheck) {
             builder.sslSocketFactory(sslSocketFactory, (X509TrustManager) trustAllCerts[0])
                     .hostnameVerifier((hostnames, session) -> true);
         }
