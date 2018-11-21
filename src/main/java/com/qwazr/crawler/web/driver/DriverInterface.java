@@ -20,7 +20,6 @@ import com.qwazr.crawler.web.WebRequestDefinition;
 import org.jsoup.nodes.Document;
 
 import java.io.Closeable;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
@@ -28,55 +27,55 @@ import java.util.List;
 
 public interface DriverInterface extends Closeable {
 
-	Head head(WebRequestDefinition request) throws IOException;
+    Head head(WebRequestDefinition request) throws IOException;
 
-	Body body(WebRequestDefinition request) throws IOException;
+    Body body(WebRequestDefinition request) throws IOException;
 
-	interface Head {
+    interface Head {
 
-		String getUrl();
+        String getUrl();
 
-		int getResponseCode();
+        int getResponseCode();
 
-		Long getContentLength();
+        Long getContentLength();
 
-		String getContentType();
+        String getContentType();
 
-		String getContentEncoding();
+        String getContentEncoding();
 
-		List<String> getHeaders(String name);
+        List<String> getHeaders(String name);
 
-		String getFirstHeader(String name);
+        String getFirstHeader(String name);
 
-		String getRedirectLocation();
+        String getRedirectLocation();
 
-		boolean isSuccessful();
-	}
+        boolean isSuccessful();
+    }
 
-	interface Body extends Head, Closeable {
+    interface Body extends Head, Closeable {
 
-		Content getContent();
+        Content getContent();
 
-		Document getHtmlDocument() throws IOException;
-	}
+        Document getHtmlDocument() throws IOException;
+    }
 
-	interface Content {
+    interface Content {
 
-		InputStream getInput() throws IOException;
+        InputStream getInput() throws IOException;
 
-		String getContentType();
+        String getContentType();
 
-		Charset getCharset();
+        Charset getCharset();
 
-		String getCharsetName();
+        String getCharsetName();
 
-		Long getContentLength();
+        Long getContentLength();
 
-		boolean isClosed();
-	}
+        boolean isClosed();
+    }
 
-	static DriverInterface of(WebCrawlDefinition webCrawlDef) throws IOException {
-		return new QwazrDriver(webCrawlDef);
-	}
+    static DriverInterface of(WebCrawlDefinition webCrawlDef) {
+        return new QwazrDriver(webCrawlDef);
+    }
 
 }

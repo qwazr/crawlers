@@ -38,6 +38,10 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 import java.io.BufferedInputStream;
 import java.io.Closeable;
 import java.io.IOException;
@@ -47,6 +51,9 @@ import java.net.Proxy;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -94,7 +101,43 @@ public class QwazrDriver implements DriverInterface {
 
         userAgent = StringUtils.isBlank(definition.userAgent) ? null : definition.userAgent;
         bodies = ConcurrentHashMap.newKeySet();
+        if (definition.disableSslCheck) {
+            builder.sslSocketFactory(sslSocketFactory, (X509TrustManager) trustAllCerts[0])
+                    .hostnameVerifier((hostnames, session) -> true);
+        }
         client = builder.build();
+    }
+
+    // Create a trust manager that does not validate certificate chains
+    private static final TrustManager[] trustAllCerts = new TrustManager[]{
+            new X509TrustManager() {
+                @Override
+                public void checkClientTrusted(java.security.cert.X509Certificate[] chain,
+                                               String authType) {
+                }
+
+                @Override
+                public void checkServerTrusted(java.security.cert.X509Certificate[] chain,
+                                               String authType) {
+                }
+
+                @Override
+                public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                    return new X509Certificate[0];
+                }
+            }
+    };
+
+    private static final SSLSocketFactory sslSocketFactory;
+
+    static {
+        try {
+            final SSLContext sslContext = SSLContext.getInstance("SSL");
+            sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
+            sslSocketFactory = sslContext.getSocketFactory();
+        } catch (KeyManagementException | NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     Proxy getProxyHostPort(Proxy.Type type, String hostPort) {

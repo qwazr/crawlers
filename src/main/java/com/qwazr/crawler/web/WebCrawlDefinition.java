@@ -122,6 +122,12 @@ public class WebCrawlDefinition extends CrawlDefinition {
     final public String userAgent;
 
     /**
+     * Disable the SSL checks
+     */
+    @JsonProperty("disable_ssl_check")
+    final public Boolean disableSslCheck;
+
+    /**
      * Set the time out for HTTP connections
      */
     @JsonProperty("time_out_sec")
@@ -133,16 +139,21 @@ public class WebCrawlDefinition extends CrawlDefinition {
                                  @JsonProperty("exclusion_patterns") Collection<String> exclusionPatterns,
                                  @JsonProperty("crawl_wait_ms") Integer crawlWaitMs,
                                  @JsonProperty("variables") LinkedHashMap<String, String> variables,
-                                 @JsonProperty("scripts") Map<EventEnum, ScriptDefinition> scripts, @JsonProperty("pre_url") String preUrl,
+                                 @JsonProperty("scripts") Map<EventEnum, ScriptDefinition> scripts,
+                                 @JsonProperty("pre_url") String preUrl,
                                  @JsonProperty("entry_url") String entryUrl,
                                  @JsonProperty("entry_request") WebRequestDefinition entryRequest,
-                                 @JsonProperty("urls") Map<String, Integer> urls, @JsonProperty("max_url_number") Integer maxUrlNumber,
+                                 @JsonProperty("urls") Map<String, Integer> urls,
+                                 @JsonProperty("max_url_number") Integer maxUrlNumber,
                                  @JsonProperty("accepted_content_type") List<String> acceptedContentType,
                                  @JsonProperty("parameters_patterns") List<String> parametersPatterns,
                                  @JsonProperty("path_cleaner_patterns") List<String> pathCleanerPatterns,
                                  @JsonProperty("remove_fragments") Boolean removeFragments,
-                                 @JsonProperty("cookie") Map<String, String> cookies, @JsonProperty("proxies") List<ProxyDefinition> proxies,
-                                 @JsonProperty("robots_txt_enabled") Boolean robotsTxtEnabled, @JsonProperty("user_agent") String userAgent,
+                                 @JsonProperty("cookie") Map<String, String> cookies,
+                                 @JsonProperty("proxies") List<ProxyDefinition> proxies,
+                                 @JsonProperty("robots_txt_enabled") Boolean robotsTxtEnabled,
+                                 @JsonProperty("user_agent") String userAgent,
+                                 @JsonProperty("disable_ssl_check") Boolean disableSslCheck,
                                  @JsonProperty("time_out_sec") Integer timeOutSecs) {
         super(variables, scripts, inclusionPatterns, exclusionPatterns, maxDepth, crawlWaitMs);
         this.preUrl = preUrl;
@@ -158,6 +169,7 @@ public class WebCrawlDefinition extends CrawlDefinition {
         this.userAgent = userAgent;
         this.cookies = cookies;
         this.proxies = proxies;
+        this.disableSslCheck = disableSslCheck;
         this.timeOutSecs = timeOutSecs;
     }
 
@@ -182,6 +194,7 @@ public class WebCrawlDefinition extends CrawlDefinition {
         userAgent = builder.userAgent;
         cookies = builder.cookies == null ? null : Collections.unmodifiableMap(new LinkedHashMap<>(builder.cookies));
         proxies = builder.proxies == null ? null : Collections.unmodifiableList(new ArrayList<>(builder.proxies));
+        disableSslCheck = builder.disableSslCheck;
         timeOutSecs = builder.timeOutSecs;
     }
 
@@ -243,6 +256,11 @@ public class WebCrawlDefinition extends CrawlDefinition {
     }
 
     @JsonIgnore
+    public Boolean getDisableSslCheck() {
+        return disableSslCheck;
+    }
+
+    @JsonIgnore
     public Integer getTimeOutSecs() {
         return timeOutSecs;
     }
@@ -261,15 +279,20 @@ public class WebCrawlDefinition extends CrawlDefinition {
         if (o == this)
             return true;
         final WebCrawlDefinition w = (WebCrawlDefinition) o;
-        return Objects.equals(preUrl, w.preUrl) && Objects.equals(entryUrl, w.entryUrl) &&
-                Objects.equals(entryRequest, w.entryRequest) && CollectionsUtils.equals(urls, w.urls) &&
+        return Objects.equals(preUrl, w.preUrl) &&
+                Objects.equals(entryUrl, w.entryUrl) &&
+                Objects.equals(entryRequest, w.entryRequest) &&
+                CollectionsUtils.equals(urls, w.urls) &&
                 Objects.equals(maxUrlNumber, w.maxUrlNumber) &&
                 CollectionsUtils.equals(acceptedContentType, w.acceptedContentType) &&
                 CollectionsUtils.equals(parametersPatterns, w.parametersPatterns) &&
                 CollectionsUtils.equals(pathCleanerPatterns, w.pathCleanerPatterns) &&
                 Objects.equals(removeFragments, w.removeFragments) &&
-                Objects.equals(robotsTxtEnabled, w.robotsTxtEnabled) && Objects.equals(userAgent, w.userAgent) &&
-                CollectionsUtils.equals(cookies, w.cookies) && CollectionsUtils.equals(proxies, w.proxies) &&
+                Objects.equals(robotsTxtEnabled, w.robotsTxtEnabled) &&
+                Objects.equals(userAgent, w.userAgent) &&
+                CollectionsUtils.equals(cookies, w.cookies) &&
+                CollectionsUtils.equals(proxies, w.proxies) &&
+                Objects.equals(disableSslCheck, w.disableSslCheck) &&
                 Objects.equals(timeOutSecs, w.timeOutSecs);
     }
 
@@ -300,6 +323,7 @@ public class WebCrawlDefinition extends CrawlDefinition {
         private List<ProxyDefinition> proxies;
         private Boolean robotsTxtEnabled;
         private String userAgent;
+        private Boolean disableSslCheck;
         private Integer timeOutSecs;
 
         protected Builder() {
@@ -326,6 +350,7 @@ public class WebCrawlDefinition extends CrawlDefinition {
             this.robotsTxtEnabled = src.robotsTxtEnabled;
             this.userAgent = src.userAgent;
             this.crawlWaitMs = src.crawlWaitMs;
+            this.disableSslCheck = src.disableSslCheck;
             this.timeOutSecs = src.timeOutSecs;
         }
 
@@ -415,6 +440,11 @@ public class WebCrawlDefinition extends CrawlDefinition {
                 this.cookies = new LinkedHashMap<>();
             if (cookies != null)
                 this.cookies.putAll(cookies);
+            return this;
+        }
+
+        public Builder setDisableSslCheck(Boolean disableSslCheck) {
+            this.disableSslCheck = disableSslCheck;
             return this;
         }
 
