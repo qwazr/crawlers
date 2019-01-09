@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2018 Emmanuel Keller / QWAZR
+ * Copyright 2017-2019 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,10 +18,15 @@ package com.qwazr.crawler.file;
 import com.qwazr.crawler.common.CrawlSessionBase;
 import com.qwazr.utils.TimeTracker;
 
+import java.util.Map;
+
 public class FileCrawlSession extends CrawlSessionBase<FileCrawlDefinition, FileCrawlStatus> {
 
-	FileCrawlSession(final String sessionName, final TimeTracker timeTracker, final FileCrawlDefinition crawlDefinition,
-			final FileCrawlStatus.Builder crawlStatusBuilder) {
-		super(sessionName, timeTracker, crawlDefinition, crawlStatusBuilder);
-	}
+    FileCrawlSession(final String sessionName,
+                     final TimeTracker timeTracker,
+                     final FileCrawlDefinition crawlDefinition,
+                     final Map<String, Object> attributes,
+                     final FileCrawlStatus.Builder crawlStatusBuilder) {
+        super(sessionName, timeTracker, crawlDefinition, attributes, crawlStatusBuilder);
+    }
 }

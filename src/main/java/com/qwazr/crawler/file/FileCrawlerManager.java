@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2018 Emmanuel Keller / QWAZR
+ * Copyright 2017-2019 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,34 +26,34 @@ import java.util.logging.Logger;
 
 public class FileCrawlerManager extends CrawlManager<FileCrawlThread, FileCrawlDefinition, FileCrawlStatus> {
 
-	private static final Logger LOGGER = LoggerUtils.getLogger(FileCrawlerManager.class);
-	private final FileCrawlerServiceInterface service;
+    private static final Logger LOGGER = LoggerUtils.getLogger(FileCrawlerManager.class);
+    private final FileCrawlerServiceInterface service;
 
-	public FileCrawlerManager(String myAddress, ScriptManager scriptManager, ExecutorService executorService) {
-		super(myAddress, scriptManager, executorService, LOGGER);
-		service = new FileCrawlerServiceImpl(this);
-	}
+    public FileCrawlerManager(String myAddress, ScriptManager scriptManager, ExecutorService executorService) {
+        super(myAddress, scriptManager, executorService, LOGGER);
+        service = new FileCrawlerServiceImpl(this);
+    }
 
-	public FileCrawlerManager(ClusterManager clusterManager, ScriptManager scriptManager,
-			ExecutorService executorService) {
-		this(clusterManager.getService().getStatus().me, scriptManager, executorService);
-	}
+    public FileCrawlerManager(ClusterManager clusterManager, ScriptManager scriptManager,
+                              ExecutorService executorService) {
+        this(clusterManager.getService().getStatus().me, scriptManager, executorService);
+    }
 
-	public FileCrawlerManager(ScriptManager scriptManager, ExecutorService executorService) {
-		this((String) null, scriptManager, executorService);
-	}
+    public FileCrawlerManager(ScriptManager scriptManager, ExecutorService executorService) {
+        this((String) null, scriptManager, executorService);
+    }
 
-	public FileCrawlerServiceInterface getService() {
-		return service;
-	}
+    public FileCrawlerServiceInterface getService() {
+        return service;
+    }
 
-	@Override
-	protected FileCrawlThread newCrawlThread(final String sessionName, final FileCrawlDefinition crawlDefinition) {
-		final TimeTracker timeTracker = new TimeTracker();
-		final FileCrawlStatus.Builder crawlStatusBuilder = FileCrawlStatus.of(myAddress, timeTracker, crawlDefinition);
-		final FileCrawlSession session =
-				new FileCrawlSession(sessionName, timeTracker, crawlDefinition, crawlStatusBuilder);
-		return new FileCrawlThread(this, session, LOGGER);
-	}
+    @Override
+    protected FileCrawlThread newCrawlThread(final String sessionName, final FileCrawlDefinition crawlDefinition) {
+        final TimeTracker timeTracker = new TimeTracker();
+        final FileCrawlStatus.Builder crawlStatusBuilder = FileCrawlStatus.of(myAddress, timeTracker, crawlDefinition);
+        final FileCrawlSession session =
+                new FileCrawlSession(sessionName, timeTracker, crawlDefinition, attributes, crawlStatusBuilder);
+        return new FileCrawlThread(this, session, LOGGER);
+    }
 
 }

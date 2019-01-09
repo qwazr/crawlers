@@ -18,147 +18,128 @@ package com.qwazr.crawler.common;
 import com.qwazr.utils.TimeTracker;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Map;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public abstract class CrawlSessionBase<D extends CrawlDefinition, S extends CrawlStatus<D>>
-		implements CrawlSession<D, S> {
+        extends AttributesBase implements CrawlSession<D, S> {
 
-	private final D crawlDefinition;
-	private final String name;
-	private final AtomicBoolean abort;
-	private final TimeTracker timeTracker;
-	private final ConcurrentHashMap<String, Object> attributes;
+    private final D crawlDefinition;
+    private final String name;
+    private final AtomicBoolean abort;
+    private final TimeTracker timeTracker;
 
-	private volatile S crawlStatusNoDefinition;
-	private volatile S crawlStatusWithDefinition;
-	private final CrawlStatus.AbstractBuilder<D, S, ?> crawlStatusBuilder;
+    private volatile S crawlStatusNoDefinition;
+    private volatile S crawlStatusWithDefinition;
+    private final CrawlStatus.AbstractBuilder<D, S, ?> crawlStatusBuilder;
 
-	protected CrawlSessionBase(final String sessionName, final TimeTracker timeTracker, final D crawlDefinition,
-			final CrawlStatus.AbstractBuilder<D, S, ?> crawlStatusBuilder) {
-		this.timeTracker = timeTracker;
-		this.crawlStatusBuilder = crawlStatusBuilder;
-		this.crawlDefinition = crawlDefinition;
-		this.name = sessionName;
-		abort = new AtomicBoolean(false);
-		this.attributes = new ConcurrentHashMap<>();
-		buildStatus();
-	}
+    protected CrawlSessionBase(final String sessionName,
+                               final TimeTracker timeTracker,
+                               final D crawlDefinition,
+                               final Map<String, Object> attributes,
+                               final CrawlStatus.AbstractBuilder<D, S, ?> crawlStatusBuilder) {
+        super(attributes);
+        this.timeTracker = timeTracker;
+        this.crawlStatusBuilder = crawlStatusBuilder;
+        this.crawlDefinition = crawlDefinition;
+        this.name = sessionName;
+        abort = new AtomicBoolean(false);
+        buildStatus();
+    }
 
-	private void buildStatus() {
-		crawlStatusWithDefinition = crawlStatusBuilder.build(true);
-		crawlStatusNoDefinition = crawlStatusBuilder.build(false);
-	}
+    private void buildStatus() {
+        crawlStatusWithDefinition = crawlStatusBuilder.build(true);
+        crawlStatusNoDefinition = crawlStatusBuilder.build(false);
+    }
 
-	@Override
-	public S getCrawlStatus(final boolean withDefinition) {
-		return withDefinition ? crawlStatusWithDefinition : crawlStatusNoDefinition;
-	}
+    @Override
+    public S getCrawlStatus(final boolean withDefinition) {
+        return withDefinition ? crawlStatusWithDefinition : crawlStatusNoDefinition;
+    }
 
-	@Override
-	public <V> V getVariable(final String name, final Class<? extends V> variableClass) {
-		return crawlDefinition != null && crawlDefinition.variables != null ?
-				variableClass.cast(crawlDefinition.variables.get(name)) :
-				null;
-	}
+    @Override
+    public <V> V getVariable(final String name, final Class<? extends V> variableClass) {
+        return crawlDefinition != null && crawlDefinition.variables != null ?
+                variableClass.cast(crawlDefinition.variables.get(name)) :
+                null;
+    }
 
-	@Override
-	public <A> A getAttribute(final String name, final Class<? extends A> attributeClass) {
-		return attributeClass.cast(attributes.get(name));
-	}
+    @Override
+    public void sleep(int millis) {
+        try {
+            if (millis == 0)
+                return;
+            Thread.sleep(millis);
+        } catch (InterruptedException e) {
+            abort(e.getMessage());
+        }
+    }
 
-	/**
-	 * @param name the name of the variable
-	 * @return the value of the variable
-	 */
-	@Override
-	public <A> A setAttribute(final String name, final A attribute, final Class<? extends A> attributeClass) {
-		if (attribute == null)
-			return removeAttribute(name, attributeClass);
-		return attributeClass.cast(attributes.put(name, attribute));
-	}
+    @Override
+    public void abort(String reason) {
+        if (abort.getAndSet(true))
+            return;
+        crawlStatusBuilder.abort(reason);
+        buildStatus();
+    }
 
-	@Override
-	public <A> A removeAttribute(final String name, final Class<? extends A> attributeClass) {
-		return attributeClass.cast(attributes.remove(name));
-	}
+    @Override
+    public boolean isAborting() {
+        return abort.get();
+    }
 
-	@Override
-	public void sleep(int millis) {
-		try {
-			if (millis == 0)
-				return;
-			Thread.sleep(millis);
-		} catch (InterruptedException e) {
-			abort(e.getMessage());
-		}
-	}
+    public void incIgnoredCount() {
+        crawlStatusBuilder.incIgnored();
+        buildStatus();
+    }
 
-	@Override
-	public void abort(String reason) {
-		if (abort.getAndSet(true))
-			return;
-		crawlStatusBuilder.abort(reason);
-		buildStatus();
-	}
+    public int incCrawledCount() {
+        crawlStatusBuilder.incCrawled();
+        buildStatus();
+        return crawlStatusNoDefinition.crawled;
+    }
 
-	@Override
-	public boolean isAborting() {
-		return abort.get();
-	}
+    public void incRedirectCount() {
+        crawlStatusBuilder.incRedirect();
+        buildStatus();
+    }
 
-	public void incIgnoredCount() {
-		crawlStatusBuilder.incIgnored();
-		buildStatus();
-	}
+    public void incErrorCount(String errorMessage) {
+        crawlStatusBuilder.lastError(errorMessage).incError();
+        buildStatus();
+    }
 
-	public int incCrawledCount() {
-		crawlStatusBuilder.incCrawled();
-		buildStatus();
-		return crawlStatusNoDefinition.crawled;
-	}
+    public void error(Exception e) {
+        crawlStatusBuilder.lastError(ExceptionUtils.getRootCauseMessage(e));
+        buildStatus();
+    }
 
-	public void incRedirectCount() {
-		crawlStatusBuilder.incRedirect();
-		buildStatus();
-	}
+    @Override
+    public String getName() {
+        return name;
+    }
 
-	public void incErrorCount(String errorMessage) {
-		crawlStatusBuilder.lastError(errorMessage).incError();
-		buildStatus();
-	}
+    public void setCurrentCrawl(String currentCrawl, Integer currentDepth) {
+        crawlStatusBuilder.crawl(currentCrawl, currentDepth);
+        buildStatus();
+    }
 
-	public void error(Exception e) {
-		crawlStatusBuilder.lastError(ExceptionUtils.getRootCauseMessage(e));
-		buildStatus();
-	}
+    public D getCrawlDefinition() {
+        return crawlDefinition;
+    }
 
-	@Override
-	public String getName() {
-		return name;
-	}
+    public TimeTracker getTimeTracker() {
+        return timeTracker;
+    }
 
-	public void setCurrentCrawl(String currentCrawl, Integer currentDepth) {
-		crawlStatusBuilder.crawl(currentCrawl, currentDepth);
-		buildStatus();
-	}
+    void done() {
+        crawlStatusBuilder.done();
+        buildStatus();
+    }
 
-	public D getCrawlDefinition() {
-		return crawlDefinition;
-	}
-
-	public TimeTracker getTimeTracker() {
-		return timeTracker;
-	}
-
-	void done() {
-		crawlStatusBuilder.done();
-		buildStatus();
-	}
-
-	void setFuture(Future<?> future) {
-		crawlStatusBuilder.future(future);
-		buildStatus();
-	}
+    void setFuture(Future<?> future) {
+        crawlStatusBuilder.future(future);
+        buildStatus();
+    }
 }

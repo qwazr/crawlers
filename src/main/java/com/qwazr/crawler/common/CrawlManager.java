@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Emmanuel Keller / QWAZR
+ * Copyright 2017-2019 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,67 +29,69 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 import java.util.logging.Logger;
 
-public abstract class CrawlManager<T extends CrawlThread<D, S, ?>, D extends CrawlDefinition, S extends CrawlStatus<D>> {
+public abstract class CrawlManager<T extends CrawlThread<D, S, ?>, D extends CrawlDefinition, S extends CrawlStatus<D>>
+        extends AttributesBase {
 
-	private final Map<String, S> statusHistory;
-	private final ConcurrentHashMap<String, T> crawlSessionMap;
-	protected final ExecutorService executorService;
-	private final Logger logger;
-	protected final String myAddress;
-	protected final ScriptServiceInterface scriptService;
+    private final Map<String, S> statusHistory;
+    private final ConcurrentHashMap<String, T> crawlSessionMap;
+    protected final ExecutorService executorService;
+    private final Logger logger;
+    protected final String myAddress;
+    protected final ScriptServiceInterface scriptService;
 
-	protected CrawlManager(final String myAddress, final ScriptManager scriptManager,
-			final ExecutorService executorService, final Logger logger) {
-		this.crawlSessionMap = new ConcurrentHashMap<>();
-		this.statusHistory = Collections.synchronizedMap(new CollectionsUtils.EldestFixedSizeMap<>(250));
-		this.scriptService = scriptManager == null ? null : scriptManager.getService();
-		this.myAddress = myAddress;
-		this.executorService = executorService;
-		this.logger = logger;
-	}
+    protected CrawlManager(final String myAddress, final ScriptManager scriptManager,
+                           final ExecutorService executorService, final Logger logger) {
+        this.crawlSessionMap = new ConcurrentHashMap<>();
+        this.statusHistory = Collections.synchronizedMap(new CollectionsUtils.EldestFixedSizeMap<>(250));
+        this.scriptService = scriptManager == null ? null : scriptManager.getService();
+        this.myAddress = myAddress;
+        this.executorService = executorService;
+        this.logger = logger;
+    }
 
-	public void forEachSession(BiConsumer<String, S> consumer) {
-		crawlSessionMap.forEach((key, crawl) -> consumer.accept(key, crawl.getStatus(false)));
-	}
+    public void forEachSession(BiConsumer<String, S> consumer) {
+        crawlSessionMap.forEach((key, crawl) -> consumer.accept(key, crawl.getStatus(false)));
+    }
 
-	public S getSession(final String sessionName) {
-		final T crawlThread = crawlSessionMap.get(sessionName);
-		return crawlThread == null ? statusHistory.get(sessionName) : crawlThread.getStatus(true);
-	}
+    public S getSession(final String sessionName) {
+        final T crawlThread = crawlSessionMap.get(sessionName);
+        return crawlThread == null ? statusHistory.get(sessionName) : crawlThread.getStatus(true);
+    }
 
-	public void abortSession(final String sessionName, final String abortingReason) throws ServerException {
-		final T crawlThread = crawlSessionMap.get(sessionName);
-		if (crawlThread == null)
-			throw new ServerException(Response.Status.NOT_FOUND, "Session not found: " + sessionName);
-		logger.info(() -> "Aborting session: " + sessionName + " - " + abortingReason);
-		crawlThread.abort(abortingReason);
-	}
+    public void abortSession(final String sessionName, final String abortingReason) throws ServerException {
+        final T crawlThread = crawlSessionMap.get(sessionName);
+        if (crawlThread == null)
+            throw new ServerException(Response.Status.NOT_FOUND, "Session not found: " + sessionName);
+        logger.info(() -> "Aborting session: " + sessionName + " - " + abortingReason);
+        crawlThread.abort(abortingReason);
+    }
 
-	protected abstract T newCrawlThread(final String sessionName, final D crawlDefinition);
+    protected abstract T newCrawlThread(final String sessionName,
+                                        final D crawlDefinition);
 
-	public S runSession(final String sessionName, final D crawlDefinition) throws ServerException {
+    public S runSession(final String sessionName, final D crawlDefinition) throws ServerException {
 
-		final AtomicBoolean newThread = new AtomicBoolean(false);
+        final AtomicBoolean newThread = new AtomicBoolean(false);
 
-		final T crawlThread = crawlSessionMap.computeIfAbsent(sessionName, key -> {
-			logger.info(() -> "Create session: " + sessionName);
-			newThread.set(true);
-			return newCrawlThread(sessionName, crawlDefinition);
-		});
-		statusHistory.remove(sessionName);
-		if (!newThread.get())
-			throw new ServerException(Response.Status.CONFLICT, "The session already exists: " + sessionName);
+        final T crawlThread = crawlSessionMap.computeIfAbsent(sessionName, key -> {
+            logger.info(() -> "Create session: " + sessionName);
+            newThread.set(true);
+            return newCrawlThread(sessionName, crawlDefinition);
+        });
+        statusHistory.remove(sessionName);
+        if (!newThread.get())
+            throw new ServerException(Response.Status.CONFLICT, "The session already exists: " + sessionName);
 
-		crawlThread.start();
-		return crawlThread.getStatus(true);
-	}
+        crawlThread.start();
+        return crawlThread.getStatus(true);
+    }
 
-	void removeSession(final CrawlThread<D, S, ?> crawlThread) {
-		final String sessionName = crawlThread.getSessionName();
-		logger.info(() -> "Remove session: " + sessionName);
-		final S lastCrawlStatus = crawlThread.getStatus(false);
-		statusHistory.put(sessionName, lastCrawlStatus);
-		crawlSessionMap.remove(sessionName, crawlThread);
-	}
+    void removeSession(final CrawlThread<D, S, ?> crawlThread) {
+        final String sessionName = crawlThread.getSessionName();
+        logger.info(() -> "Remove session: " + sessionName);
+        final S lastCrawlStatus = crawlThread.getStatus(false);
+        statusHistory.put(sessionName, lastCrawlStatus);
+        crawlSessionMap.remove(sessionName, crawlThread);
+    }
 
 }

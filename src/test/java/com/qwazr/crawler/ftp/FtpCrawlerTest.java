@@ -13,16 +13,21 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.junit.Assert.assertThat;
+
 public class FtpCrawlerTest {
 
     private FtpCrawlerServiceInterface ftpCrawler;
     private ExecutorService executorService;
+    private static final Object attributeTest = new Object();
 
     @Before
     public void setup() {
         executorService = Executors.newCachedThreadPool();
         ScriptManager scriptManager = new ScriptManager(executorService, Paths.get("."));
         FtpCrawlerManager ftpCrawlerManager = new FtpCrawlerManager(scriptManager, executorService);
+        ftpCrawlerManager.setAttribute("attributeTest", attributeTest, Object.class);
         ftpCrawler = ftpCrawlerManager.getService();
     }
 
@@ -56,8 +61,9 @@ public class FtpCrawlerTest {
 
         @Override
         protected boolean run(final FtpCrawlSession session, final FtpCurrentCrawl crawl,
-                              final Map<String, ?> attributes) throws Exception {
+                              final Map<String, ?> attributes) {
             System.out.println(crawl.getPath());
+            assertThat(session.getAttribute("attributeTest", Object.class), equalTo(attributeTest));
             return true;
         }
     }
