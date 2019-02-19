@@ -27,7 +27,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class FileCrawlManagerTest {
-    
+
     private static ExecutorService executorService;
     private static FileCrawlerManager crawlerManager;
 
