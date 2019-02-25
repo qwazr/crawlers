@@ -21,7 +21,6 @@ import com.qwazr.utils.TimeTracker;
 import com.qwazr.utils.WildcardMatcher;
 
 import javax.annotation.Nullable;
-import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -84,12 +83,8 @@ public abstract class CrawlThread<D extends CrawlDefinition, S extends CrawlStat
                 attributes.put(CrawlScriptEvents.CURRENT_ATTRIBUTE, currentCrawl);
             if (script.variables != null)
                 attributes.putAll(script.variables);
-            final ScriptRunThread scriptRunThread;
-            try {
-                scriptRunThread = manager.scriptService.runSync(script.name, Collections.unmodifiableMap(attributes));
-            } catch (IOException | ClassNotFoundException e) {
-                throw ServerException.of(e);
-            }
+            final ScriptRunThread
+                    scriptRunThread = manager.scriptService.runSync(script.name, Collections.unmodifiableMap(attributes));
             if (scriptRunThread.getException() != null)
                 throw ServerException.of(scriptRunThread.getException());
             final Object result = scriptRunThread.getResult();
