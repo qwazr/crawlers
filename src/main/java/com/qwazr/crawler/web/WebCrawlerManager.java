@@ -47,7 +47,7 @@ public class WebCrawlerManager extends CrawlManager<WebCrawlThread, WebCrawlDefi
 
     @Override
     protected WebCrawlThread newCrawlThread(String sessionName, WebCrawlDefinition webCrawlDefinition) {
-        final TimeTracker timeTracker = new TimeTracker();
+        final TimeTracker timeTracker = TimeTracker.withDurations();
         final WebCrawlStatus.Builder crawlStatusBuilder = WebCrawlStatus.of(myAddress, timeTracker, webCrawlDefinition);
         final WebCrawlSession session =
                 new WebCrawlSession(sessionName, timeTracker, webCrawlDefinition, attributes, crawlStatusBuilder);

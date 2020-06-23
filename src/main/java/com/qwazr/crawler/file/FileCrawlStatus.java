@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Emmanuel Keller / QWAZR
+ * Copyright 2017-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,45 +22,45 @@ import com.qwazr.crawler.common.CrawlStatus;
 import com.qwazr.utils.TimeTracker;
 
 @JsonAutoDetect(setterVisibility = JsonAutoDetect.Visibility.NONE,
-		getterVisibility = JsonAutoDetect.Visibility.NONE,
-		creatorVisibility = JsonAutoDetect.Visibility.NONE,
-		isGetterVisibility = JsonAutoDetect.Visibility.NONE,
-		fieldVisibility = JsonAutoDetect.Visibility.PROTECTED_AND_PUBLIC)
-public class FileCrawlStatus extends CrawlStatus<FileCrawlDefinition> {
+        getterVisibility = JsonAutoDetect.Visibility.NONE,
+        creatorVisibility = JsonAutoDetect.Visibility.NONE,
+        isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+        fieldVisibility = JsonAutoDetect.Visibility.PROTECTED_AND_PUBLIC)
+public class FileCrawlStatus extends CrawlStatus<FileCrawlDefinition, FileCrawlStatus> {
 
-	@JsonCreator
-	FileCrawlStatus(@JsonProperty("node_address") String nodeAddress, @JsonProperty("aborting") Boolean aborting,
-			@JsonProperty("aborting_reason") String abortingReason, @JsonProperty("timer") TimeTracker.Status timer,
-			@JsonProperty("crawled") Integer crawled, @JsonProperty("ignored") Integer ignored,
-			@JsonProperty("redirect") Integer redirect, @JsonProperty("error") Integer error,
-			@JsonProperty("last_error") String lastError, @JsonProperty("current_crawl") String currentCrawl,
-			@JsonProperty("start_time") final Long startTime, @JsonProperty("end_time") final Long endTime,
-			@JsonProperty("current_depth") Integer currentDepth,
-			@JsonProperty("crawl_definition") FileCrawlDefinition crawlDefinition,
-			@JsonProperty("thread_cancelled") Boolean threadCancelled,
-			@JsonProperty("thread_done") Boolean threadDone) {
-		super(nodeAddress, aborting, abortingReason, timer, crawled, ignored, redirect, error, lastError, currentCrawl,
-				startTime, endTime, currentDepth, crawlDefinition, threadCancelled, threadDone);
-	}
+    @JsonCreator
+    FileCrawlStatus(@JsonProperty("node_address") String nodeAddress, @JsonProperty("aborting") Boolean aborting,
+                    @JsonProperty("aborting_reason") String abortingReason, @JsonProperty("timer") TimeTracker.Status timer,
+                    @JsonProperty("crawled") Integer crawled, @JsonProperty("ignored") Integer ignored,
+                    @JsonProperty("redirect") Integer redirect, @JsonProperty("error") Integer error,
+                    @JsonProperty("last_error") String lastError, @JsonProperty("current_crawl") String currentCrawl,
+                    @JsonProperty("start_time") final Long startTime, @JsonProperty("end_time") final Long endTime,
+                    @JsonProperty("current_depth") Integer currentDepth,
+                    @JsonProperty("crawl_definition") FileCrawlDefinition crawlDefinition,
+                    @JsonProperty("thread_cancelled") Boolean threadCancelled,
+                    @JsonProperty("thread_done") Boolean threadDone) {
+        super(FileCrawlStatus.class, nodeAddress, aborting, abortingReason, timer, crawled, ignored, redirect, error, lastError, currentCrawl,
+                startTime, endTime, currentDepth, crawlDefinition, threadCancelled, threadDone);
+    }
 
-	private FileCrawlStatus(Builder builder, boolean withCrawlDefinition) {
-		super(builder, withCrawlDefinition);
-	}
+    private FileCrawlStatus(Builder builder, boolean withCrawlDefinition) {
+        super(FileCrawlStatus.class, builder, withCrawlDefinition);
+    }
 
-	public static Builder of(String nodeAddress, TimeTracker timeTracker, FileCrawlDefinition crawlDefinition) {
-		return new Builder(nodeAddress, timeTracker, crawlDefinition);
-	}
+    public static Builder of(String nodeAddress, TimeTracker timeTracker, FileCrawlDefinition crawlDefinition) {
+        return new Builder(nodeAddress, timeTracker, crawlDefinition);
+    }
 
-	public static class Builder extends AbstractBuilder<FileCrawlDefinition, FileCrawlStatus, Builder> {
+    public static class Builder extends AbstractBuilder<FileCrawlDefinition, FileCrawlStatus, Builder> {
 
-		private Builder(String nodeAddress, TimeTracker timeTracker, FileCrawlDefinition crawlDefinition) {
-			super(Builder.class, nodeAddress, timeTracker, crawlDefinition);
-		}
+        private Builder(String nodeAddress, TimeTracker timeTracker, FileCrawlDefinition crawlDefinition) {
+            super(Builder.class, nodeAddress, timeTracker, crawlDefinition);
+        }
 
-		@Override
-		public FileCrawlStatus build(boolean withCrawlDefinition) {
-			return new FileCrawlStatus(this, withCrawlDefinition);
-		}
-	}
+        @Override
+        public FileCrawlStatus build(boolean withCrawlDefinition) {
+            return new FileCrawlStatus(this, withCrawlDefinition);
+        }
+    }
 
 }

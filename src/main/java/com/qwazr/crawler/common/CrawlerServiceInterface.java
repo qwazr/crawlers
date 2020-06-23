@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,28 +29,28 @@ import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.util.SortedMap;
 
-public interface CrawlerServiceInterface<D extends CrawlDefinition, T extends CrawlStatus<D>> extends ServiceInterface {
+public interface CrawlerServiceInterface<D extends CrawlDefinition, S extends CrawlStatus<D, S>> extends ServiceInterface {
 
-	@GET
-	@Path("/sessions")
-	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
-	SortedMap<String, T> getSessions();
+    @GET
+    @Path("/sessions")
+    @Produces(ServiceInterface.APPLICATION_JSON_UTF8)
+    SortedMap<String, S> getSessions();
 
-	@GET
-	@Path("/sessions/{session_name}")
-	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
-	T getSession(@PathParam("session_name") String sessionName);
+    @GET
+    @Path("/sessions/{session_name}")
+    @Produces(ServiceInterface.APPLICATION_JSON_UTF8)
+    S getSession(@PathParam("session_name") String sessionName);
 
-	@DELETE
-	@Path("/sessions/{session_name}")
-	@Produces({ ServiceInterface.APPLICATION_JSON_UTF8, MediaType.TEXT_PLAIN })
-	boolean abortSession(@PathParam("session_name") String sessionName, @QueryParam("reason") String abortingReason);
+    @DELETE
+    @Path("/sessions/{session_name}")
+    @Produces({ServiceInterface.APPLICATION_JSON_UTF8, MediaType.TEXT_PLAIN})
+    boolean abortSession(@PathParam("session_name") String sessionName, @QueryParam("reason") String abortingReason);
 
-	@POST
-	@Path("/sessions/{session_name}")
-	@Consumes(ServiceInterface.APPLICATION_JSON_UTF8)
-	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
-	T runSession(@PathParam("session_name") String sessionName, D crawlDefinition);
+    @POST
+    @Path("/sessions/{session_name}")
+    @Consumes(ServiceInterface.APPLICATION_JSON_UTF8)
+    @Produces(ServiceInterface.APPLICATION_JSON_UTF8)
+    S runSession(@PathParam("session_name") String sessionName, D crawlDefinition);
 
-	T runSession(String sessionName, String jsonCrawlDefinition) throws IOException;
+    S runSession(String sessionName, String jsonCrawlDefinition) throws IOException;
 }

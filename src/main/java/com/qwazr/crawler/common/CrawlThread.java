@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2018 Emmanuel Keller / QWAZR
+ * Copyright 2017-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public abstract class CrawlThread<D extends CrawlDefinition, S extends CrawlStatus<D>, M extends CrawlManager<?, D, S>>
+public abstract class CrawlThread<D extends CrawlDefinition, S extends CrawlStatus<D, S>, M extends CrawlManager<?, D, S>>
         implements Runnable {
 
     private final CrawlDefinition crawlDefinition;

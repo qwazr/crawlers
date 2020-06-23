@@ -49,7 +49,7 @@ public class FileCrawlerManager extends CrawlManager<FileCrawlThread, FileCrawlD
 
     @Override
     protected FileCrawlThread newCrawlThread(final String sessionName, final FileCrawlDefinition crawlDefinition) {
-        final TimeTracker timeTracker = new TimeTracker();
+        final TimeTracker timeTracker = TimeTracker.withDurations();
         final FileCrawlStatus.Builder crawlStatusBuilder = FileCrawlStatus.of(myAddress, timeTracker, crawlDefinition);
         final FileCrawlSession session =
                 new FileCrawlSession(sessionName, timeTracker, crawlDefinition, attributes, crawlStatusBuilder);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Emmanuel Keller / QWAZR
+ * Copyright 2017-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 import java.util.logging.Logger;
 
-public abstract class CrawlManager<T extends CrawlThread<D, S, ?>, D extends CrawlDefinition, S extends CrawlStatus<D>>
+public abstract class CrawlManager<T extends CrawlThread<D, S, ?>, D extends CrawlDefinition, S extends CrawlStatus<D, S>>
         extends AttributesBase {
 
     private final Map<String, S> statusHistory;

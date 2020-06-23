@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,45 +24,45 @@ import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import java.util.SortedMap;
 
-abstract public class CrawlerSingleClient<D extends CrawlDefinition, S extends CrawlStatus<D>> extends JsonClient
-		implements CrawlerServiceInterface<D, S> {
+abstract public class CrawlerSingleClient<D extends CrawlDefinition, S extends CrawlStatus<D, S>> extends JsonClient
+        implements CrawlerServiceInterface<D, S> {
 
-	private final Class<S> crawlStatusClass;
-	private final GenericType<SortedMap<String, S>> mapStatusType;
-	private final WebTarget sessionsTarget;
+    private final Class<S> crawlStatusClass;
+    private final GenericType<SortedMap<String, S>> mapStatusType;
+    private final WebTarget sessionsTarget;
 
-	protected CrawlerSingleClient(final RemoteService remote, final String pathPrefix, Class<S> crawlStatusClass,
-			GenericType<SortedMap<String, S>> mapStatusType) {
-		super(remote);
-		this.sessionsTarget = client.target(remote.serviceAddress).path(pathPrefix).path("sessions");
-		this.crawlStatusClass = crawlStatusClass;
-		this.mapStatusType = mapStatusType;
+    protected CrawlerSingleClient(final RemoteService remote, final String pathPrefix, Class<S> crawlStatusClass,
+                                  GenericType<SortedMap<String, S>> mapStatusType) {
+        super(remote);
+        this.sessionsTarget = client.target(remote.serviceAddress).path(pathPrefix).path("sessions");
+        this.crawlStatusClass = crawlStatusClass;
+        this.mapStatusType = mapStatusType;
 
-	}
+    }
 
-	@Override
-	public SortedMap<String, S> getSessions() {
-		return sessionsTarget.request(MediaType.APPLICATION_JSON).get(mapStatusType);
-	}
+    @Override
+    public SortedMap<String, S> getSessions() {
+        return sessionsTarget.request(MediaType.APPLICATION_JSON).get(mapStatusType);
+    }
 
-	@Override
-	public S getSession(final String sessionName) {
-		return sessionsTarget.path(sessionName).request(MediaType.APPLICATION_JSON).get(crawlStatusClass);
-	}
+    @Override
+    public S getSession(final String sessionName) {
+        return sessionsTarget.path(sessionName).request(MediaType.APPLICATION_JSON).get(crawlStatusClass);
+    }
 
-	@Override
-	public boolean abortSession(final String sessionName, final String reason) {
-		WebTarget target = sessionsTarget.path(sessionName);
-		if (reason != null)
-			target.queryParam("reason", reason);
-		return target.request(MediaType.TEXT_PLAIN).delete(boolean.class);
-	}
+    @Override
+    public boolean abortSession(final String sessionName, final String reason) {
+        WebTarget target = sessionsTarget.path(sessionName);
+        if (reason != null)
+            target.queryParam("reason", reason);
+        return target.request(MediaType.TEXT_PLAIN).delete(boolean.class);
+    }
 
-	@Override
-	public S runSession(final String sessionName, final D crawlDefinition) {
-		return sessionsTarget.path(sessionName)
-				.request(MediaType.APPLICATION_JSON)
-				.post(Entity.json(crawlDefinition), crawlStatusClass);
-	}
+    @Override
+    public S runSession(final String sessionName, final D crawlDefinition) {
+        return sessionsTarget.path(sessionName)
+                .request(MediaType.APPLICATION_JSON)
+                .post(Entity.json(crawlDefinition), crawlStatusClass);
+    }
 
 }

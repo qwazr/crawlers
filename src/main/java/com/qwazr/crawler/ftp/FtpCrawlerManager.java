@@ -50,7 +50,7 @@ public class FtpCrawlerManager extends CrawlManager<FtpCrawlThread, FtpCrawlDefi
 
     @Override
     protected FtpCrawlThread newCrawlThread(String sessionName, FtpCrawlDefinition crawlDefinition) {
-        final TimeTracker timeTracker = new TimeTracker();
+        final TimeTracker timeTracker = TimeTracker.withDurations();
         final FtpCrawlStatus.Builder crawlStatusBuilder = FtpCrawlStatus.of(myAddress, timeTracker, crawlDefinition);
         final FtpCrawlSession session =
                 new FtpCrawlSession(sessionName, timeTracker, crawlDefinition, attributes, crawlStatusBuilder);

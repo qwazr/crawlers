@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,13 +20,14 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qwazr.utils.Equalizer;
 import com.qwazr.utils.TimeTracker;
 
 import java.util.Objects;
 import java.util.concurrent.Future;
 
 @JsonInclude(Include.NON_NULL)
-public abstract class CrawlStatus<T extends CrawlDefinition> {
+public abstract class CrawlStatus<T extends CrawlDefinition, S extends CrawlStatus<T, S>> extends Equalizer.Immutable<S> {
 
     /**
      * The identifier of the current node
@@ -101,7 +102,9 @@ public abstract class CrawlStatus<T extends CrawlDefinition> {
     final public T crawlDefinition;
 
     @JsonCreator
-    protected CrawlStatus(@JsonProperty("node_address") String nodeAddress, @JsonProperty("aborting") Boolean aborting,
+    protected CrawlStatus(final Class<S> statusClass,
+                          @JsonProperty("node_address") String nodeAddress,
+                          @JsonProperty("aborting") Boolean aborting,
                           @JsonProperty("aborting_reason") String abortingReason, @JsonProperty("timer") TimeTracker.Status timer,
                           @JsonProperty("crawled") Integer crawled, @JsonProperty("ignored") Integer ignored,
                           @JsonProperty("redirect") Integer redirect, @JsonProperty("error") Integer error,
@@ -110,6 +113,7 @@ public abstract class CrawlStatus<T extends CrawlDefinition> {
                           @JsonProperty("current_depth") Integer currentDepth, @JsonProperty("crawl_definition") T crawlDefinition,
                           @JsonProperty("thread_cancelled") Boolean threadCancelled,
                           @JsonProperty("thread_done") Boolean threadDone) {
+        super(statusClass);
         this.nodeAddress = nodeAddress;
         this.timer = timer;
         this.aborting = aborting;
@@ -128,7 +132,9 @@ public abstract class CrawlStatus<T extends CrawlDefinition> {
         this.threadDone = threadDone;
     }
 
-    protected CrawlStatus(AbstractBuilder<T, ?, ?> builder, boolean withCrawlDefinition) {
+    protected CrawlStatus(final Class<S> statusClass,
+                          final AbstractBuilder<T, ?, ?> builder, boolean withCrawlDefinition) {
+        super(statusClass);
         this.nodeAddress = builder.nodeAddress;
         this.timer = builder.timeTracker == null ? null : builder.timeTracker.getStatus();
         this.aborting = builder.aborting;
@@ -254,17 +260,31 @@ public abstract class CrawlStatus<T extends CrawlDefinition> {
     }
 
     @Override
-    public int hashCode() {
+    protected int computeHashCode() {
         return Objects.hash(nodeAddress, startTime, endTime, currentCrawl, currentDepth, crawlDefinition);
     }
 
     @Override
-    public boolean equals(final Object o) {
-        if (!(o instanceof CrawlStatus))
-            return false;
-        if (o == this)
-            return true;
-        final CrawlStatus s = (CrawlStatus) o;
+    public String toString() {
+        return nodeAddress
+                + " " + startTime
+                + " " + aborting
+                + " " + abortingReason
+                + " " + crawled
+                + " " + ignored
+                + " " + error
+                + " " + lastError
+                + " " + currentCrawl
+                + " " + currentDepth
+                + " " + endTime
+                + " " + timer
+                + " " + crawlDefinition
+                + " " + threadCancelled
+                + " " + threadDone;
+    }
+
+    @Override
+    protected boolean isEqual(final S s) {
         return Objects.equals(nodeAddress, s.nodeAddress) && Objects.equals(startTime, s.startTime) &&
                 Objects.equals(aborting, s.aborting) && Objects.equals(abortingReason, s.abortingReason) &&
                 crawled == s.crawled && ignored == s.ignored && error == s.error &&
@@ -274,7 +294,7 @@ public abstract class CrawlStatus<T extends CrawlDefinition> {
                 Objects.equals(threadCancelled, s.threadCancelled) && Objects.equals(threadDone, s.threadDone);
     }
 
-    public abstract static class AbstractBuilder<D extends CrawlDefinition, S extends CrawlStatus<D>, B extends AbstractBuilder<D, S, ?>> {
+    public abstract static class AbstractBuilder<D extends CrawlDefinition, S extends CrawlStatus<D, S>, B extends AbstractBuilder<D, S, ?>> {
 
         private final Class<B> builderClass;
         private final String nodeAddress;

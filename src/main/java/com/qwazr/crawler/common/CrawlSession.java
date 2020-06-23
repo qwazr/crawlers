@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Emmanuel Keller / QWAZR
+ * Copyright 2016-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@ package com.qwazr.crawler.common;
 
 import com.qwazr.utils.TimeTracker;
 
-public interface CrawlSession<D extends CrawlDefinition, S extends CrawlStatus<D>> extends AttributesInterface {
+public interface CrawlSession<D extends CrawlDefinition, S extends CrawlStatus<D, S>> extends AttributesInterface {
 
     /**
      * @return the current crawl status
