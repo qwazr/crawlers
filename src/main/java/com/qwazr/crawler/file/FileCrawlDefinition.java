@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2018 Emmanuel Keller / QWAZR
+ * Copyright 2017-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,7 +38,7 @@ import java.util.Objects;
         creatorVisibility = JsonAutoDetect.Visibility.NONE,
         isGetterVisibility = JsonAutoDetect.Visibility.NONE,
         fieldVisibility = JsonAutoDetect.Visibility.PUBLIC_ONLY)
-public class FileCrawlDefinition extends CrawlDefinition {
+public class FileCrawlDefinition extends CrawlDefinition<FileCrawlDefinition> {
 
     /**
      * The entry point PATH of the crawl.
@@ -54,27 +54,18 @@ public class FileCrawlDefinition extends CrawlDefinition {
                                   @JsonProperty("crawl_wait_ms") Integer crawlWaitMs,
                                   @JsonProperty("variables") LinkedHashMap<String, String> variables,
                                   @JsonProperty("scripts") Map<EventEnum, ScriptDefinition> scripts) {
-        super(variables, scripts, inclusionPatterns, exclusionPatterns, maxDepth, crawlWaitMs);
+        super(FileCrawlDefinition.class, variables, scripts, inclusionPatterns, exclusionPatterns, maxDepth, crawlWaitMs);
         this.entryPath = entryPath;
     }
 
     @Override
-    public int hashCode() {
-        return Objects.hash(entryPath, super.hashCode());
+    protected int computeHashCode() {
+        return Objects.hash(entryPath, super.computeHashCode());
     }
 
     @Override
-    public boolean equals(final Object o) {
-        if (!super.equals(o))
-            return false;
-        if (!(o instanceof FileCrawlDefinition))
-            return false;
-        if (o == this)
-            return true;
-        final FileCrawlDefinition f = (FileCrawlDefinition) o;
-        if (!Objects.equals(entryPath, f.entryPath))
-            return false;
-        return true;
+    protected boolean isEqual(final FileCrawlDefinition f) {
+        return super.isEqual(f) && Objects.equals(entryPath, f.entryPath);
     }
 
     public String getEntryPath() {

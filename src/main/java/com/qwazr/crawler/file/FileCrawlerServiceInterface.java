@@ -26,10 +26,10 @@ import java.util.SortedMap;
 @Path(FileCrawlerServiceInterface.SERVICE_PATH)
 public interface FileCrawlerServiceInterface extends CrawlerServiceInterface<FileCrawlDefinition, FileCrawlStatus> {
 
-	String SERVICE_PATH = "/crawler/file";
-	String SERVICE_NAME = "filecrawler";
+    String SERVICE_PATH = "/crawler/file";
+    String SERVICE_NAME = "filecrawler";
 
-	GenericType<SortedMap<String, FileCrawlStatus>> sortedMapStringCrawlType =
-			new GenericType<SortedMap<String, FileCrawlStatus>>() {
-			};
+    GenericType<SortedMap<String, FileCrawlStatus>> sortedMapStringCrawlType =
+            new GenericType<>() {
+            };
 }

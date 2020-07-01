@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Emmanuel Keller / QWAZR
+ * Copyright 2017-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,80 +20,80 @@ import org.apache.commons.io.IOCase;
 
 interface RobotsTxtPathMatcher {
 
-	boolean match(String path);
+    boolean match(String path);
 
-	String getPattern();
+    String getPattern();
 
-	static RobotsTxtPathMatcher of(String pattern) {
-		if (pattern == null)
-			return null;
-		final boolean isWildcard = pattern.indexOf('*') != -1;
-		final boolean isEnding = pattern.endsWith("$");
-		if (isEnding)
-			return isWildcard ? new WildcarsdMatcher(pattern, true) : new ExactMatcher(pattern, true);
-		else
-			return isWildcard ? new WildcarsdMatcher(pattern, false) : new StartsWithMatcher(pattern);
+    static RobotsTxtPathMatcher of(String pattern) {
+        if (pattern == null)
+            return null;
+        final boolean isWildcard = pattern.indexOf('*') != -1;
+        final boolean isEnding = pattern.endsWith("$");
+        if (isEnding)
+            return isWildcard ? new WildcarsdMatcher(pattern, true) : new ExactMatcher(pattern, true);
+        else
+            return isWildcard ? new WildcarsdMatcher(pattern, false) : new StartsWithMatcher(pattern);
 
-	}
+    }
 
-	abstract class PathMatcher implements RobotsTxtPathMatcher {
+    abstract class PathMatcher implements RobotsTxtPathMatcher {
 
-		final String pattern;
+        final String pattern;
 
-		PathMatcher(String pattern) {
-			this.pattern = pattern;
-		}
+        PathMatcher(String pattern) {
+            this.pattern = pattern;
+        }
 
-		@Override
-		final public String getPattern() {
-			return pattern;
-		}
+        @Override
+        final public String getPattern() {
+            return pattern;
+        }
 
-	}
+    }
 
-	final class WildcarsdMatcher extends PathMatcher {
+    final class WildcarsdMatcher extends PathMatcher {
 
-		private final WildcardMatcher matcher;
+        private final WildcardMatcher matcher;
 
-		WildcarsdMatcher(String pattern, boolean isEnding) {
-			super(pattern);
-			final String wPattern = isEnding ? pattern.substring(0, pattern.length() - 1) : pattern.endsWith("*") ?
-					pattern :
-					pattern + '*';
-			matcher = new WildcardMatcher(wPattern);
-		}
+        WildcarsdMatcher(String pattern, boolean isEnding) {
+            super(pattern);
+            final String wPattern = isEnding ? pattern.substring(0, pattern.length() - 1) : pattern.endsWith("*") ?
+                    pattern :
+                    pattern + '*';
+            matcher = new WildcardMatcher(wPattern);
+        }
 
-		@Override
-		final public boolean match(String path) {
-			return path != null && matcher.match(path, IOCase.SENSITIVE);
-		}
-	}
+        @Override
+        final public boolean match(String path) {
+            return path != null && matcher.match(path, IOCase.SENSITIVE);
+        }
+    }
 
-	final class ExactMatcher extends PathMatcher {
+    final class ExactMatcher extends PathMatcher {
 
-		private String exactPattern;
+        private final String exactPattern;
 
-		ExactMatcher(String pattern, boolean isEnding) {
-			super(pattern);
-			exactPattern = isEnding ? pattern.substring(0, pattern.length() - 1) : pattern;
-		}
+        ExactMatcher(String pattern, boolean isEnding) {
+            super(pattern);
+            exactPattern = isEnding ? pattern.substring(0, pattern.length() - 1) : pattern;
+        }
 
-		@Override
-		final public boolean match(final String path) {
-			return path != null && exactPattern.equals(path);
-		}
-	}
+        @Override
+        final public boolean match(final String path) {
+            return exactPattern.equals(path);
+        }
+    }
 
-	final class StartsWithMatcher extends PathMatcher {
+    final class StartsWithMatcher extends PathMatcher {
 
-		StartsWithMatcher(String pattern) {
-			super(pattern);
-		}
+        StartsWithMatcher(String pattern) {
+            super(pattern);
+        }
 
-		@Override
-		final public boolean match(final String path) {
-			return path != null && path.startsWith(pattern);
-		}
-	}
+        @Override
+        final public boolean match(final String path) {
+            return path != null && path.startsWith(pattern);
+        }
+    }
 
 }

@@ -22,7 +22,7 @@ import javax.ws.rs.core.Response.Status;
 import java.util.TreeMap;
 import java.util.logging.Logger;
 
-public abstract class CrawlerServiceImpl<M extends CrawlManager<?, D, S>, D extends CrawlDefinition, S extends CrawlStatus<D, S>>
+public abstract class CrawlerServiceImpl<M extends CrawlManager<?, D, S>, D extends CrawlDefinition<D>, S extends CrawlStatus<D, S>>
         extends AbstractServiceImpl implements CrawlerServiceInterface<D, S> {
 
     protected final Logger logger;
@@ -37,7 +37,7 @@ public abstract class CrawlerServiceImpl<M extends CrawlManager<?, D, S>, D exte
     @Override
     public TreeMap<String, S> getSessions() {
         final TreeMap<String, S> map = new TreeMap<>();
-        crawlManager.forEachSession((name, status) -> map.put(name, (S) status));
+        crawlManager.forEachSession(map::put);
         return map;
     }
 

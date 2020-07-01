@@ -17,7 +17,7 @@ package com.qwazr.crawler.common;
 
 import com.qwazr.utils.TimeTracker;
 
-public interface CrawlSession<D extends CrawlDefinition, S extends CrawlStatus<D, S>> extends AttributesInterface {
+public interface CrawlSession<D extends CrawlDefinition<D>, S extends CrawlStatus<D, S>> extends AttributesInterface {
 
     /**
      * @return the current crawl status

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,46 +30,46 @@ import java.util.regex.Matcher;
 
 class UBuilder {
 
-	private UriBuilder builder;
-	private URI uri;
+    final private UriBuilder builder;
+    final private URI uri;
 
-	UBuilder(URI uri) {
-		builder = JerseyUriBuilder.fromUri(uri);
-		this.uri = uri;
-	}
+    UBuilder(URI uri) {
+        builder = JerseyUriBuilder.fromUri(uri);
+        this.uri = uri;
+    }
 
-	final void removeMatchingParameters(final Collection<Matcher> matcherList) throws UnsupportedEncodingException {
-		if (matcherList == null || matcherList.isEmpty())
-			return;
-		final MultivaluedMap<String, String> queryParams = LinkUtils.getQueryParameters(uri.getQuery());
-		if (queryParams == null || queryParams.isEmpty())
-			return;
-		builder.replaceQuery(null);
-		queryParams.forEach((key, values) -> {
-			final List<String> newValues = new ArrayList<>();
-			for (String value : values) {
-				if (!RegExpUtils.anyMatch(key + "=" + value, matcherList))
-					newValues.add(value);
-			}
-			builder.replaceQueryParam(key, newValues.toArray());
-		});
+    final void removeMatchingParameters(final Collection<Matcher> matcherList) throws UnsupportedEncodingException {
+        if (matcherList == null || matcherList.isEmpty())
+            return;
+        final MultivaluedMap<String, String> queryParams = LinkUtils.getQueryParameters(uri.getQuery());
+        if (queryParams == null || queryParams.isEmpty())
+            return;
+        builder.replaceQuery(null);
+        queryParams.forEach((key, values) -> {
+            final List<String> newValues = new ArrayList<>();
+            for (String value : values) {
+                if (!RegExpUtils.anyMatch(key + "=" + value, matcherList))
+                    newValues.add(value);
+            }
+            builder.replaceQueryParam(key, newValues.toArray());
+        });
 
-	}
+    }
 
-	final void cleanPath(final Collection<Matcher> matcherList) {
-		if (matcherList == null || matcherList.isEmpty())
-			return;
-		final String path = uri.getPath();
-		if (path == null || path.isEmpty())
-			return;
-		builder.path(RegExpUtils.removeAllMatches(path, matcherList));
-	}
+    final void cleanPath(final Collection<Matcher> matcherList) {
+        if (matcherList == null || matcherList.isEmpty())
+            return;
+        final String path = uri.getPath();
+        if (path == null || path.isEmpty())
+            return;
+        builder.path(RegExpUtils.removeAllMatches(path, matcherList));
+    }
 
-	void removeFragment() {
-		builder.fragment(null);
-	}
+    void removeFragment() {
+        builder.fragment(null);
+    }
 
-	URI build() {
-		return builder.build();
-	}
+    URI build() {
+        return builder.build();
+    }
 }

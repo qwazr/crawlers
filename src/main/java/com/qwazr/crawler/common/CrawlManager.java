@@ -29,7 +29,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 import java.util.logging.Logger;
 
-public abstract class CrawlManager<T extends CrawlThread<D, S, ?>, D extends CrawlDefinition, S extends CrawlStatus<D, S>>
+public abstract class CrawlManager<T extends CrawlThread<D, S, ?>, D extends CrawlDefinition<D>, S extends CrawlStatus<D, S>>
         extends AttributesBase {
 
     private final Map<String, S> statusHistory;

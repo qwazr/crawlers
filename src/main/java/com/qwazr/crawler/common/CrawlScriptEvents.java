@@ -19,25 +19,25 @@ import com.qwazr.scripts.ScriptInterface;
 
 import java.util.Map;
 
-public abstract class CrawlScriptEvents<D extends CrawlDefinition, S extends CrawlSession<D, ?>, C extends CurrentCrawl>
-		implements ScriptInterface<Boolean> {
+public abstract class CrawlScriptEvents<D extends CrawlDefinition<D>, S extends CrawlSession<D, ?>, C extends CurrentCrawl>
+        implements ScriptInterface<Boolean> {
 
-	final static String SESSION_ATTRIBUTE = "session";
-	final static String CURRENT_ATTRIBUTE = "current";
+    final static String SESSION_ATTRIBUTE = "session";
+    final static String CURRENT_ATTRIBUTE = "current";
 
-	protected final Class<S> crawlSessionClass;
-	protected final Class<C> currentCrawlClass;
+    protected final Class<S> crawlSessionClass;
+    protected final Class<C> currentCrawlClass;
 
-	protected CrawlScriptEvents(final Class<S> crawlSessionClass, final Class<C> currentCrawlClass) {
-		this.crawlSessionClass = crawlSessionClass;
-		this.currentCrawlClass = currentCrawlClass;
-	}
+    protected CrawlScriptEvents(final Class<S> crawlSessionClass, final Class<C> currentCrawlClass) {
+        this.crawlSessionClass = crawlSessionClass;
+        this.currentCrawlClass = currentCrawlClass;
+    }
 
-	protected abstract boolean run(S session, C crawl, Map<String, ?> variables) throws Exception;
+    protected abstract boolean run(S session, C crawl, Map<String, ?> variables) throws Exception;
 
-	@Override
-	public Boolean run(Map<String, ?> attributes) throws Exception {
-		return run(crawlSessionClass.cast(attributes.get(SESSION_ATTRIBUTE)),
-				currentCrawlClass.cast(attributes.get(CURRENT_ATTRIBUTE)), attributes);
-	}
+    @Override
+    public Boolean run(Map<String, ?> attributes) throws Exception {
+        return run(crawlSessionClass.cast(attributes.get(SESSION_ATTRIBUTE)),
+                currentCrawlClass.cast(attributes.get(CURRENT_ATTRIBUTE)), attributes);
+    }
 }

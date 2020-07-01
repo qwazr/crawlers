@@ -24,7 +24,7 @@ import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import java.util.SortedMap;
 
-abstract public class CrawlerSingleClient<D extends CrawlDefinition, S extends CrawlStatus<D, S>> extends JsonClient
+abstract public class CrawlerSingleClient<D extends CrawlDefinition<D>, S extends CrawlStatus<D, S>> extends JsonClient
         implements CrawlerServiceInterface<D, S> {
 
     private final Class<S> crawlStatusClass;

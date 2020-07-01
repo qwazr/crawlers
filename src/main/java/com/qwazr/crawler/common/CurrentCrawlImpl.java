@@ -19,105 +19,105 @@ import org.apache.commons.lang3.StringUtils;
 
 public class CurrentCrawlImpl implements CurrentCrawl {
 
-	final private int depth;
-	final private boolean isIgnored;
-	final private boolean isCrawled;
-	final private Boolean isInInclusion;
-	final private Boolean isInExclusion;
-	final private String error;
+    final private int depth;
+    final private boolean isIgnored;
+    final private boolean isCrawled;
+    final private Boolean isInInclusion;
+    final private Boolean isInExclusion;
+    final private String error;
 
-	protected CurrentCrawlImpl(BaseBuilder builder) {
-		this.depth = builder.depth;
-		this.isIgnored = builder.isIgnored;
-		this.isCrawled = builder.isCrawled;
-		this.isInInclusion = builder.isInInclusion;
-		this.isInExclusion = builder.isInExclusion;
-		this.error = builder.error;
-	}
+    protected CurrentCrawlImpl(BaseBuilder<?> builder) {
+        this.depth = builder.depth;
+        this.isIgnored = builder.isIgnored;
+        this.isCrawled = builder.isCrawled;
+        this.isInInclusion = builder.isInInclusion;
+        this.isInExclusion = builder.isInExclusion;
+        this.error = builder.error;
+    }
 
-	@Override
-	public int getDepth() {
-		return depth;
-	}
+    @Override
+    public int getDepth() {
+        return depth;
+    }
 
-	@Override
-	public Boolean isInInclusion() {
-		return isInInclusion;
-	}
+    @Override
+    public Boolean isInInclusion() {
+        return isInInclusion;
+    }
 
-	@Override
-	public Boolean isInExclusion() {
-		return isInExclusion;
-	}
+    @Override
+    public Boolean isInExclusion() {
+        return isInExclusion;
+    }
 
-	@Override
-	public boolean isIgnored() {
-		return isIgnored;
-	}
+    @Override
+    public boolean isIgnored() {
+        return isIgnored;
+    }
 
-	@Override
-	public boolean isCrawled() {
-		return isCrawled;
-	}
+    @Override
+    public boolean isCrawled() {
+        return isCrawled;
+    }
 
-	@Override
-	public String getError() {
-		return error;
-	}
+    @Override
+    public String getError() {
+        return error;
+    }
 
-	protected static abstract class BaseBuilder<T extends BaseBuilder> {
+    protected static abstract class BaseBuilder<T extends BaseBuilder<T>> {
 
-		private final Class<T> builderClass;
+        private final Class<T> builderClass;
 
-		public final int depth;
-		private boolean isIgnored;
-		private boolean isCrawled;
-		private Boolean isInInclusion;
-		private Boolean isInExclusion;
-		private String error;
+        public final int depth;
+        private boolean isIgnored;
+        private boolean isCrawled;
+        private Boolean isInInclusion;
+        private Boolean isInExclusion;
+        private String error;
 
-		protected BaseBuilder(Class<T> builderClass, int depth) {
-			this.builderClass = builderClass;
-			this.depth = depth;
-		}
+        protected BaseBuilder(Class<T> builderClass, int depth) {
+            this.builderClass = builderClass;
+            this.depth = depth;
+        }
 
-		public T ignored(boolean isIgnored) {
-			this.isIgnored = isIgnored;
-			return builderClass.cast(this);
-		}
+        public T ignored(boolean isIgnored) {
+            this.isIgnored = isIgnored;
+            return builderClass.cast(this);
+        }
 
-		public T crawled(boolean isCrawled) {
-			this.isCrawled = isCrawled;
-			return builderClass.cast(this);
-		}
+        public T crawled(boolean isCrawled) {
+            this.isCrawled = isCrawled;
+            return builderClass.cast(this);
+        }
 
-		public T inInclusion(Boolean isInInclusion) {
-			this.isInInclusion = isInInclusion;
-			return builderClass.cast(this);
-		}
+        public T inInclusion(Boolean isInInclusion) {
+            this.isInInclusion = isInInclusion;
+            return builderClass.cast(this);
+        }
 
-		public T inExclusion(Boolean isInExclusion) {
-			this.isInExclusion = isInExclusion;
-			return builderClass.cast(this);
-		}
+        public T inExclusion(Boolean isInExclusion) {
+            this.isInExclusion = isInExclusion;
+            return builderClass.cast(this);
+        }
 
-		public T error(String error) {
-			this.error = error;
-			return builderClass.cast(this);
-		}
+        public T error(String error) {
+            this.error = error;
+            return builderClass.cast(this);
+        }
 
-		public void error(Exception e) {
-			if (e == null) {
-				error = null;
-				return;
-			}
-			String err = e.getMessage();
-			if (StringUtils.isBlank(err))
-				err = e.toString();
-			if (StringUtils.isBlank(err))
-				err = e.getClass().getName();
-			error(err);
-		}
+        public void error(Exception e) {
+            if (e == null) {
+                error = null;
+                return;
+            }
+            String err = e.getMessage();
+            if (StringUtils.isBlank(err))
+                err = e.toString();
+            if (StringUtils.isBlank(err))
+                err = e.getClass().getName();
+            error(err);
+        }
 
-	}
+    }
 }

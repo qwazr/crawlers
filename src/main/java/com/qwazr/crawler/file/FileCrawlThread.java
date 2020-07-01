@@ -31,94 +31,94 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class FileCrawlThread extends CrawlThread<FileCrawlDefinition, FileCrawlStatus, FileCrawlerManager>
-		implements FileVisitor<Path> {
+        implements FileVisitor<Path> {
 
-	private final FileCrawlDefinition crawlDefinition;
-	private final Path startPath;
+    private final FileCrawlDefinition crawlDefinition;
+    private final Path startPath;
 
-	FileCrawlThread(FileCrawlerManager manager, FileCrawlSession session, Logger logger) {
-		super(manager, session, logger);
-		this.crawlDefinition = session.getCrawlDefinition();
-		this.startPath = Paths.get(crawlDefinition.getEntryPath());
-	}
+    FileCrawlThread(FileCrawlerManager manager, FileCrawlSession session, Logger logger) {
+        super(manager, session, logger);
+        this.crawlDefinition = session.getCrawlDefinition();
+        this.startPath = Paths.get(crawlDefinition.getEntryPath());
+    }
 
-	private int computeDepth(final Path path) {
-		int depth = 0;
-		Path p = path;
-		while (p != null && !p.equals(startPath)) {
-			p = p.getParent();
-			depth++;
-		}
-		return depth;
-	}
+    private int computeDepth(final Path path) {
+        int depth = 0;
+        Path p = path;
+        while (p != null && !p.equals(startPath)) {
+            p = p.getParent();
+            depth++;
+        }
+        return depth;
+    }
 
-	@Override
-	protected void runner() throws Exception {
-		script(EventEnum.before_session, null);
-		try {
-			if (!Files.exists(startPath)) {
-				logger.warning(() -> "The path does not exists: " + startPath.toAbsolutePath());
-				return;
-			}
-			Files.walkFileTree(startPath, Collections.emptySet(),
-					crawlDefinition.maxDepth == null ? Integer.MAX_VALUE : crawlDefinition.maxDepth, this);
-		} finally {
-			script(EventEnum.after_session, null);
-		}
-	}
+    @Override
+    protected void runner() throws Exception {
+        script(EventEnum.before_session, null);
+        try {
+            if (!Files.exists(startPath)) {
+                logger.warning(() -> "The path does not exists: " + startPath.toAbsolutePath());
+                return;
+            }
+            Files.walkFileTree(startPath, Collections.emptySet(),
+                    crawlDefinition.maxDepth == null ? Integer.MAX_VALUE : crawlDefinition.maxDepth, this);
+        } finally {
+            script(EventEnum.after_session, null);
+        }
+    }
 
-	@Override
-	public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-		if (session.isAborting())
-			return FileVisitResult.TERMINATE;
-		final FileCurrentPath.Builder builder = new FileCurrentPath.Builder(computeDepth(dir), dir, attrs);
-		final FileCurrentPath current = crawl(builder);
-		if (current.isIgnored())
-			return FileVisitResult.SKIP_SUBTREE;
-		return FileVisitResult.CONTINUE;
-	}
+    @Override
+    public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
+        if (session.isAborting())
+            return FileVisitResult.TERMINATE;
+        final FileCurrentPath.Builder builder = new FileCurrentPath.Builder(computeDepth(dir), dir, attrs);
+        final FileCurrentPath current = crawl(builder);
+        if (current.isIgnored())
+            return FileVisitResult.SKIP_SUBTREE;
+        return FileVisitResult.CONTINUE;
+    }
 
-	private FileCurrentPath crawl(final FileCurrentPath.Builder builder) {
-		FileCurrentPath current = builder.build();
-		if (!script(EventEnum.before_crawl, current))
-			return current;
-		checkPassInclusionExclusion(builder, builder.pathString);
-		current = builder.build();
-		if (current.isIgnored())
-			return current;
-		try {
-			script(EventEnum.after_crawl, current);
-			return current;
-		} catch (Exception e) {
-			final String err = "File crawling error on " + current.pathString;
-			logger.log(Level.WARNING, err, e);
-			session.incErrorCount(err + ": " + ExceptionUtils.getRootCauseMessage(e));
-			return current;
-		}
-	}
+    private FileCurrentPath crawl(final FileCurrentPath.Builder builder) {
+        FileCurrentPath current = builder.build();
+        if (!script(EventEnum.before_crawl, current))
+            return current;
+        checkPassInclusionExclusion(builder, builder.pathString);
+        current = builder.build();
+        if (current.isIgnored())
+            return current;
+        try {
+            script(EventEnum.after_crawl, current);
+            return current;
+        } catch (Exception e) {
+            final String err = "File crawling error on " + current.pathString;
+            logger.log(Level.WARNING, err, e);
+            session.incErrorCount(err + ": " + ExceptionUtils.getRootCauseMessage(e));
+            return current;
+        }
+    }
 
-	@Override
-	public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-		if (session.isAborting())
-			return FileVisitResult.TERMINATE;
-		if (crawlDefinition.crawlWaitMs != null)
-			session.sleep(crawlDefinition.crawlWaitMs);
-		crawl(new FileCurrentPath.Builder(computeDepth(file), file, attrs));
-		return FileVisitResult.CONTINUE;
-	}
+    @Override
+    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
+        if (session.isAborting())
+            return FileVisitResult.TERMINATE;
+        if (crawlDefinition.crawlWaitMs != null)
+            session.sleep(crawlDefinition.crawlWaitMs);
+        crawl(new FileCurrentPath.Builder(computeDepth(file), file, attrs));
+        return FileVisitResult.CONTINUE;
+    }
 
-	@Override
-	public FileVisitResult visitFileFailed(Path file, IOException e) throws IOException {
-		final String error = "File crawling error on " + file;
-		logger.log(Level.WARNING, error, e);
-		session.incErrorCount(error);
-		return FileVisitResult.CONTINUE;
-	}
+    @Override
+    public FileVisitResult visitFileFailed(Path file, IOException e) {
+        final String error = "File crawling error on " + file;
+        logger.log(Level.WARNING, error, e);
+        session.incErrorCount(error);
+        return FileVisitResult.CONTINUE;
+    }
 
-	@Override
-	public FileVisitResult postVisitDirectory(Path dir, IOException e) throws IOException {
-		if (e != null)
-			logger.log(Level.WARNING, e, () -> "Directory crawling error on " + dir);
-		return FileVisitResult.CONTINUE;
-	}
+    @Override
+    public FileVisitResult postVisitDirectory(Path dir, IOException e) {
+        if (e != null)
+            logger.log(Level.WARNING, e, () -> "Directory crawling error on " + dir);
+        return FileVisitResult.CONTINUE;
+    }
 }

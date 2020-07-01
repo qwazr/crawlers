@@ -45,92 +45,92 @@ import java.util.concurrent.Executors;
 
 public class CrawlerServer implements BaseServer {
 
-	private final GenericServer server;
-	private final WebCrawlerServiceBuilder webCrawlerServiceBuilder;
-	private final FileCrawlerServiceBuilder fileCrawlerServiceBuilder;
-	private final FtpCrawlerServiceBuilder ftpCrawlerServiceBuilder;
+    private final GenericServer server;
+    private final WebCrawlerServiceBuilder webCrawlerServiceBuilder;
+    private final FileCrawlerServiceBuilder fileCrawlerServiceBuilder;
+    private final FtpCrawlerServiceBuilder ftpCrawlerServiceBuilder;
 
-	private CrawlerServer(final ServerConfiguration configuration) throws IOException, URISyntaxException {
-		final ExecutorService executorService = Executors.newCachedThreadPool();
-		final GenericServerBuilder builder = GenericServer.of(configuration, executorService);
+    private CrawlerServer(final ServerConfiguration configuration) throws IOException {
+        final ExecutorService executorService = Executors.newCachedThreadPool();
+        final GenericServerBuilder builder = GenericServer.of(configuration, executorService);
 
-		final Set<String> services = new HashSet<>();
-		services.add(ClusterServiceInterface.SERVICE_NAME);
-		services.add(LibraryServiceInterface.SERVICE_NAME);
-		services.add(WebCrawlerServiceInterface.SERVICE_NAME);
-		services.add(FileCrawlerServiceInterface.SERVICE_NAME);
+        final Set<String> services = new HashSet<>();
+        services.add(ClusterServiceInterface.SERVICE_NAME);
+        services.add(LibraryServiceInterface.SERVICE_NAME);
+        services.add(WebCrawlerServiceInterface.SERVICE_NAME);
+        services.add(FileCrawlerServiceInterface.SERVICE_NAME);
 
-		final ApplicationBuilder webServices = ApplicationBuilder.of("/*").classes(RestApplication.JSON_CLASSES).
-				singletons(new WelcomeShutdownService());
+        final ApplicationBuilder webServices = ApplicationBuilder.of("/*").classes(RestApplication.JSON_CLASSES).
+                singletons(new WelcomeShutdownService());
 
-		final ClusterManager clusterManager =
-				new ClusterManager(executorService, configuration).registerProtocolListener(builder, services);
-		webServices.singletons(clusterManager.getService());
+        final ClusterManager clusterManager =
+                new ClusterManager(executorService, configuration).registerProtocolListener(builder, services);
+        webServices.singletons(clusterManager.getService());
 
-		final LibraryManager libraryManager =
-				new LibraryManager(configuration.dataDirectory, configuration.getEtcFiles());
-		builder.shutdownListener(server -> libraryManager.close());
-		webServices.singletons(libraryManager.getService());
+        final LibraryManager libraryManager =
+                new LibraryManager(configuration.dataDirectory, configuration.getEtcFiles());
+        builder.shutdownListener(server -> libraryManager.close());
+        webServices.singletons(libraryManager.getService());
 
-		final ScriptManager scriptManager =
-				new ScriptManager(executorService, clusterManager, libraryManager.getService(),
-						configuration.dataDirectory);
-		webServices.singletons(scriptManager.getService());
+        final ScriptManager scriptManager =
+                new ScriptManager(executorService, clusterManager, libraryManager.getService(),
+                        configuration.dataDirectory);
+        webServices.singletons(scriptManager.getService());
 
-		final WebCrawlerManager webCrawlerManager =
-				new WebCrawlerManager(clusterManager, scriptManager, executorService);
-		webServices.singletons(webCrawlerManager.getService());
-		webCrawlerServiceBuilder = new WebCrawlerServiceBuilder(executorService, clusterManager, webCrawlerManager);
+        final WebCrawlerManager webCrawlerManager =
+                new WebCrawlerManager(clusterManager, scriptManager, executorService);
+        webServices.singletons(webCrawlerManager.getService());
+        webCrawlerServiceBuilder = new WebCrawlerServiceBuilder(executorService, clusterManager, webCrawlerManager);
 
-		final FileCrawlerManager fileCrawlerManager =
-				new FileCrawlerManager(clusterManager, scriptManager, executorService);
-		webServices.singletons(fileCrawlerManager.getService());
-		fileCrawlerServiceBuilder = new FileCrawlerServiceBuilder(clusterManager, fileCrawlerManager);
+        final FileCrawlerManager fileCrawlerManager =
+                new FileCrawlerManager(clusterManager, scriptManager, executorService);
+        webServices.singletons(fileCrawlerManager.getService());
+        fileCrawlerServiceBuilder = new FileCrawlerServiceBuilder(clusterManager, fileCrawlerManager);
 
-		final FtpCrawlerManager ftpCrawlerManager =
-				new FtpCrawlerManager(clusterManager, scriptManager, executorService);
-		webServices.singletons(ftpCrawlerManager.getService());
-		ftpCrawlerServiceBuilder = new FtpCrawlerServiceBuilder(clusterManager, ftpCrawlerManager);
+        final FtpCrawlerManager ftpCrawlerManager =
+                new FtpCrawlerManager(clusterManager, scriptManager, executorService);
+        webServices.singletons(ftpCrawlerManager.getService());
+        ftpCrawlerServiceBuilder = new FtpCrawlerServiceBuilder(clusterManager, ftpCrawlerManager);
 
-		builder.getWebServiceContext().jaxrs(webServices);
+        builder.getWebServiceContext().jaxrs(webServices);
 
-		server = builder.build();
-	}
+        server = builder.build();
+    }
 
-	public WebCrawlerServiceBuilder getWebCrawlerServiceBuilder() {
-		return webCrawlerServiceBuilder;
-	}
+    public WebCrawlerServiceBuilder getWebCrawlerServiceBuilder() {
+        return webCrawlerServiceBuilder;
+    }
 
-	public FileCrawlerServiceBuilder getFileCrawlerServiceBuilder() {
-		return fileCrawlerServiceBuilder;
-	}
+    public FileCrawlerServiceBuilder getFileCrawlerServiceBuilder() {
+        return fileCrawlerServiceBuilder;
+    }
 
-	public FtpCrawlerServiceBuilder getFtpCrawlerServiceBuilder() {
-		return ftpCrawlerServiceBuilder;
-	}
+    public FtpCrawlerServiceBuilder getFtpCrawlerServiceBuilder() {
+        return ftpCrawlerServiceBuilder;
+    }
 
-	@Override
-	public GenericServer getServer() {
-		return server;
-	}
+    @Override
+    public GenericServer getServer() {
+        return server;
+    }
 
-	private static volatile CrawlerServer INSTANCE;
+    private static volatile CrawlerServer INSTANCE;
 
-	public static CrawlerServer getInstance() {
-		return INSTANCE;
-	}
+    public static CrawlerServer getInstance() {
+        return INSTANCE;
+    }
 
-	public static synchronized void main(final String... args) throws Exception {
-		shutdown();
-		INSTANCE = new CrawlerServer(new ServerConfiguration(args));
-		INSTANCE.start();
-	}
+    public static synchronized void main(final String... args) throws Exception {
+        shutdown();
+        INSTANCE = new CrawlerServer(new ServerConfiguration(args));
+        INSTANCE.start();
+    }
 
-	public static synchronized void shutdown() {
-		if (INSTANCE == null)
-			return;
-		INSTANCE.stop();
-		INSTANCE = null;
-	}
+    public static synchronized void shutdown() {
+        if (INSTANCE == null)
+            return;
+        INSTANCE.stop();
+        INSTANCE = null;
+    }
 
 }

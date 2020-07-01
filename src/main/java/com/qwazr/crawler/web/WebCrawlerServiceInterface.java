@@ -26,11 +26,11 @@ import java.util.SortedMap;
 @Path(WebCrawlerServiceInterface.SERVICE_PATH)
 public interface WebCrawlerServiceInterface extends CrawlerServiceInterface<WebCrawlDefinition, WebCrawlStatus> {
 
-	String SERVICE_NAME = "webcrawler";
-	String SERVICE_PATH = "/crawler/web";
+    String SERVICE_NAME = "webcrawler";
+    String SERVICE_PATH = "/crawler/web";
 
-	GenericType<SortedMap<String, WebCrawlStatus>> sortedMapStringCrawlType =
-			new GenericType<SortedMap<String, WebCrawlStatus>>() {
-			};
+    GenericType<SortedMap<String, WebCrawlStatus>> sortedMapStringCrawlType =
+            new GenericType<>() {
+            };
 
 }

@@ -126,7 +126,7 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
         }
     }
 
-    private final void applyIgnore(final String uriString, final String msg, final CrawlUnit crawlUnit) {
+    private void applyIgnore(final String uriString, final String msg, final CrawlUnit crawlUnit) {
         session.incIgnoredCount();
         crawlUnit.currentBuilder.ignored(true);
         LOGGER.info(() -> "Ignored (" + msg + "): " + uriString);

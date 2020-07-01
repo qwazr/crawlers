@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public abstract class CrawlSessionBase<D extends CrawlDefinition, S extends CrawlStatus<D, S>>
+public abstract class CrawlSessionBase<D extends CrawlDefinition<D>, S extends CrawlStatus<D, S>>
         extends AttributesBase implements CrawlSession<D, S> {
 
     private final D crawlDefinition;

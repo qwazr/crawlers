@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.utils.CollectionsUtils;
+import com.qwazr.utils.Equalizer;
 import com.qwazr.utils.StringUtils;
 
 import java.io.IOException;
@@ -30,6 +31,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -39,7 +41,7 @@ import java.util.Objects;
         creatorVisibility = JsonAutoDetect.Visibility.NONE,
         isGetterVisibility = JsonAutoDetect.Visibility.NONE,
         fieldVisibility = JsonAutoDetect.Visibility.PUBLIC_ONLY)
-public abstract class CrawlDefinition {
+public abstract class CrawlDefinition<C extends CrawlDefinition<C>> extends Equalizer.Immutable<C> {
 
     /**
      * The users variables shared by all the scripts.
@@ -72,29 +74,38 @@ public abstract class CrawlDefinition {
     final public Integer maxDepth;
 
     /**
-     * Time wait on successfull crawl
+     * Time wait on successful crawl
      */
     @JsonProperty("crawl_wait_ms")
     final public Integer crawlWaitMs;
 
     @JsonCreator
-    protected CrawlDefinition(@JsonProperty("variables") LinkedHashMap<String, String> variables,
-                              @JsonProperty("scripts") Map<EventEnum, ScriptDefinition> scripts,
-                              @JsonProperty("inclusion_patterns") Collection<String> inclusionPatterns,
-                              @JsonProperty("exclusion_patterns") Collection<String> exclusionPatterns,
-                              @JsonProperty("max_depth") Integer maxDepth, @JsonProperty("crawl_wait_ms") Integer crawlWaitMs) {
+    protected CrawlDefinition(final Class<C> crawldefinitionClass,
+                              final @JsonProperty("variables") LinkedHashMap<String, String> variables,
+                              final @JsonProperty("scripts") Map<EventEnum, ScriptDefinition> scripts,
+                              final @JsonProperty("inclusion_patterns") Collection<String> inclusionPatterns,
+                              final @JsonProperty("exclusion_patterns") Collection<String> exclusionPatterns,
+                              final @JsonProperty("max_depth") Integer maxDepth,
+                              final @JsonProperty("crawl_wait_ms") Integer crawlWaitMs) {
+        super(crawldefinitionClass);
         this.variables = variables == null ? null : Collections.unmodifiableMap(variables);
         this.scripts = scripts == null ? null : Collections.unmodifiableMap(scripts);
         this.inclusionPatterns =
-                inclusionPatterns == null ? null : Collections.unmodifiableList(new ArrayList<>(inclusionPatterns));
+                inclusionPatterns == null ? null : List.copyOf(inclusionPatterns);
         this.exclusionPatterns =
-                exclusionPatterns == null ? null : Collections.unmodifiableList(new ArrayList<>(exclusionPatterns));
+                exclusionPatterns == null ? null : List.copyOf(new ArrayList<>(exclusionPatterns));
         this.maxDepth = maxDepth;
         this.crawlWaitMs = crawlWaitMs;
     }
 
-    protected CrawlDefinition(AbstractBuilder<? extends CrawlDefinition, ?> builder) {
-        this(builder.variables, builder.scripts, builder.inclusionPatterns, builder.exclusionPatterns, builder.maxDepth,
+    protected CrawlDefinition(final Class<C> crawldefinitionClass,
+                              final AbstractBuilder<C, ?> builder) {
+        this(crawldefinitionClass,
+                builder.variables,
+                builder.scripts,
+                builder.inclusionPatterns,
+                builder.exclusionPatterns,
+                builder.maxDepth,
                 builder.crawlWaitMs);
 
     }
@@ -124,24 +135,19 @@ public abstract class CrawlDefinition {
     }
 
     @Override
-    public int hashCode() {
+    protected int computeHashCode() {
         return Objects.hash(variables, scripts, inclusionPatterns, exclusionPatterns, maxDepth, crawlWaitMs);
     }
 
     @Override
-    public boolean equals(final Object o) {
-        if (!(o instanceof CrawlDefinition))
-            return false;
-        if (o == this)
-            return true;
-        final CrawlDefinition c = (CrawlDefinition) o;
+    protected boolean isEqual(final C c) {
         return CollectionsUtils.equals(variables, c.variables) && CollectionsUtils.equals(scripts, c.scripts) &&
                 CollectionsUtils.equals(inclusionPatterns, c.inclusionPatterns) &&
                 CollectionsUtils.equals(exclusionPatterns, c.exclusionPatterns) &&
                 Objects.equals(maxDepth, c.maxDepth) && Objects.equals(crawlWaitMs, c.crawlWaitMs);
     }
 
-    public static abstract class AbstractBuilder<D extends CrawlDefinition, B extends AbstractBuilder<D, B>> {
+    public static abstract class AbstractBuilder<D extends CrawlDefinition<D>, B extends AbstractBuilder<D, B>> {
 
         protected LinkedHashMap<String, String> variables;
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,29 +29,29 @@ import java.io.IOException;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class WebCrawlerTool extends AbstractLibrary {
 
-	final public WebCrawlDefinition config;
+    final public WebCrawlDefinition config;
 
-	@JsonCreator
-	WebCrawlerTool(@JsonProperty("config") WebCrawlDefinition config) {
-		this.config = config;
-	}
+    @JsonCreator
+    WebCrawlerTool(@JsonProperty("config") WebCrawlDefinition config) {
+        this.config = config;
+    }
 
-	@JsonIgnore
-	public WebCrawlDefinition.Builder getNewWebCrawlDefinition() {
-		return config == null ? WebCrawlDefinition.of() : WebCrawlDefinition.of(config);
-	}
+    @JsonIgnore
+    public WebCrawlDefinition.Builder getNewWebCrawlDefinition() {
+        return config == null ? WebCrawlDefinition.of() : WebCrawlDefinition.of(config);
+    }
 
-	@JsonIgnore
-	public DriverInterface getNewWebDriver(final IOUtils.CloseableContext context, final String json)
-			throws IOException {
-		final WebCrawlDefinition webCrawlDef = ObjectMappers.JSON.readValue(json, WebCrawlDefinition.class);
-		final DriverInterface driver = DriverInterface.of(webCrawlDef);
-		return context == null ? driver : context.add(driver);
-	}
+    @JsonIgnore
+    public DriverInterface getNewWebDriver(final IOUtils.CloseableContext context, final String json)
+            throws IOException {
+        final WebCrawlDefinition webCrawlDef = ObjectMappers.JSON.readValue(json, WebCrawlDefinition.class);
+        final DriverInterface driver = DriverInterface.of(webCrawlDef);
+        return context == null ? driver : context.add(driver);
+    }
 
-	@JsonIgnore
-	public DriverInterface getNewWebDriver(final IOUtils.CloseableContext context) throws IOException {
-		final DriverInterface driver = DriverInterface.of(config);
-		return context == null ? driver : context.add(driver);
-	}
+    @JsonIgnore
+    public DriverInterface getNewWebDriver(final IOUtils.CloseableContext context) {
+        final DriverInterface driver = DriverInterface.of(config);
+        return context == null ? driver : context.add(driver);
+    }
 }

@@ -29,7 +29,7 @@ import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.util.SortedMap;
 
-public interface CrawlerServiceInterface<D extends CrawlDefinition, S extends CrawlStatus<D, S>> extends ServiceInterface {
+public interface CrawlerServiceInterface<D extends CrawlDefinition<D>, S extends CrawlStatus<D, S>> extends ServiceInterface {
 
     @GET
     @Path("/sessions")

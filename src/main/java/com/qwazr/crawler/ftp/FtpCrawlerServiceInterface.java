@@ -26,10 +26,10 @@ import java.util.SortedMap;
 @Path(FtpCrawlerServiceInterface.SERVICE_PATH)
 public interface FtpCrawlerServiceInterface extends CrawlerServiceInterface<FtpCrawlDefinition, FtpCrawlStatus> {
 
-	String SERVICE_PATH = "/crawler/ftp";
-	String SERVICE_NAME = "ftpcrawler";
+    String SERVICE_PATH = "/crawler/ftp";
+    String SERVICE_NAME = "ftpcrawler";
 
-	GenericType<SortedMap<String, FtpCrawlStatus>> sortedMapStringCrawlType =
-			new GenericType<SortedMap<String, FtpCrawlStatus>>() {
-			};
+    GenericType<SortedMap<String, FtpCrawlStatus>> sortedMapStringCrawlType =
+            new GenericType<>() {
+            };
 }

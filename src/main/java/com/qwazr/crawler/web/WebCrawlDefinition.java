@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,7 +43,7 @@ import java.util.Objects;
         creatorVisibility = JsonAutoDetect.Visibility.NONE,
         isGetterVisibility = JsonAutoDetect.Visibility.NONE,
         fieldVisibility = JsonAutoDetect.Visibility.PUBLIC_ONLY)
-public class WebCrawlDefinition extends CrawlDefinition {
+public class WebCrawlDefinition extends CrawlDefinition<WebCrawlDefinition> {
 
     /**
      * URL called before a crawl session starts
@@ -155,7 +155,7 @@ public class WebCrawlDefinition extends CrawlDefinition {
                                  @JsonProperty("user_agent") String userAgent,
                                  @JsonProperty("disable_ssl_check") Boolean disableSslCheck,
                                  @JsonProperty("time_out_sec") Integer timeOutSecs) {
-        super(variables, scripts, inclusionPatterns, exclusionPatterns, maxDepth, crawlWaitMs);
+        super(WebCrawlDefinition.class, variables, scripts, inclusionPatterns, exclusionPatterns, maxDepth, crawlWaitMs);
         this.preUrl = preUrl;
         this.entryUrl = entryUrl;
         this.entryRequest = entryRequest;
@@ -174,7 +174,7 @@ public class WebCrawlDefinition extends CrawlDefinition {
     }
 
     protected WebCrawlDefinition(Builder builder) {
-        super(builder);
+        super(WebCrawlDefinition.class, builder);
         preUrl = builder.preUrl;
         entryUrl = builder.entryUrl;
         entryRequest = builder.entryRequest;
@@ -182,18 +182,18 @@ public class WebCrawlDefinition extends CrawlDefinition {
         maxUrlNumber = builder.maxUrlNumber;
         acceptedContentType = builder.acceptedContentType == null ?
                 null :
-                Collections.unmodifiableList(new ArrayList<>(builder.acceptedContentType));
+                List.copyOf(new ArrayList<>(builder.acceptedContentType));
         parametersPatterns = builder.parametersPatterns == null ?
                 null :
-                Collections.unmodifiableList(new ArrayList<>(builder.parametersPatterns));
+                List.copyOf(new ArrayList<>(builder.parametersPatterns));
         pathCleanerPatterns = builder.pathCleanerPatterns == null ?
                 null :
-                Collections.unmodifiableList(new ArrayList<>(builder.pathCleanerPatterns));
+                List.copyOf(new ArrayList<>(builder.pathCleanerPatterns));
         removeFragments = builder.removeFragments;
         robotsTxtEnabled = builder.robotsTxtEnabled;
         userAgent = builder.userAgent;
-        cookies = builder.cookies == null ? null : Collections.unmodifiableMap(new LinkedHashMap<>(builder.cookies));
-        proxies = builder.proxies == null ? null : Collections.unmodifiableList(new ArrayList<>(builder.proxies));
+        cookies = builder.cookies == null ? null : Map.copyOf(new LinkedHashMap<>(builder.cookies));
+        proxies = builder.proxies == null ? null : List.copyOf(new ArrayList<>(builder.proxies));
         disableSslCheck = builder.disableSslCheck;
         timeOutSecs = builder.timeOutSecs;
     }
@@ -266,20 +266,14 @@ public class WebCrawlDefinition extends CrawlDefinition {
     }
 
     @Override
-    public int hashCode() {
-        return Objects.hash(entryUrl, entryRequest, maxUrlNumber, super.hashCode());
+    protected int computeHashCode() {
+        return Objects.hash(entryUrl, entryRequest, maxUrlNumber, super.computeHashCode());
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (!super.equals(o))
-            return false;
-        if (!(o instanceof WebCrawlDefinition))
-            return false;
-        if (o == this)
-            return true;
-        final WebCrawlDefinition w = (WebCrawlDefinition) o;
-        return Objects.equals(preUrl, w.preUrl) &&
+    protected boolean isEqual(WebCrawlDefinition w) {
+        return super.isEqual(w) &&
+                Objects.equals(preUrl, w.preUrl) &&
                 Objects.equals(entryUrl, w.entryUrl) &&
                 Objects.equals(entryRequest, w.entryRequest) &&
                 CollectionsUtils.equals(urls, w.urls) &&

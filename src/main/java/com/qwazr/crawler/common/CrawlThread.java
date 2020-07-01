@@ -29,10 +29,10 @@ import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public abstract class CrawlThread<D extends CrawlDefinition, S extends CrawlStatus<D, S>, M extends CrawlManager<?, D, S>>
+public abstract class CrawlThread<D extends CrawlDefinition<D>, S extends CrawlStatus<D, S>, M extends CrawlManager<?, D, S>>
         implements Runnable {
 
-    private final CrawlDefinition crawlDefinition;
+    private final CrawlDefinition<D> crawlDefinition;
     private final TimeTracker timeTracker;
     protected final M manager;
     protected final CrawlSessionBase<D, S> session;
@@ -83,7 +83,7 @@ public abstract class CrawlThread<D extends CrawlDefinition, S extends CrawlStat
                 attributes.put(CrawlScriptEvents.CURRENT_ATTRIBUTE, currentCrawl);
             if (script.variables != null)
                 attributes.putAll(script.variables);
-            final ScriptRunThread
+            final ScriptRunThread<?>
                     scriptRunThread = manager.scriptService.runSync(script.name, Collections.unmodifiableMap(attributes));
             if (scriptRunThread.getException() != null)
                 throw ServerException.of(scriptRunThread.getException());
@@ -126,7 +126,7 @@ public abstract class CrawlThread<D extends CrawlDefinition, S extends CrawlStat
         return (inInclusion == null || inInclusion) && (inExclusion == null || !inExclusion);
     }
 
-    protected void checkPassInclusionExclusion(CurrentCrawlImpl.BaseBuilder current, String itemText) {
+    protected void checkPassInclusionExclusion(CurrentCrawlImpl.BaseBuilder<?> current, String itemText) {
         if (!checkPassInclusionExclusion(itemText, current::inInclusion, current::inExclusion)) {
             current.ignored(true);
             session.incIgnoredCount();

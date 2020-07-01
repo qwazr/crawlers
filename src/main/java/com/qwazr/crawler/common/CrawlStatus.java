@@ -27,7 +27,7 @@ import java.util.Objects;
 import java.util.concurrent.Future;
 
 @JsonInclude(Include.NON_NULL)
-public abstract class CrawlStatus<T extends CrawlDefinition, S extends CrawlStatus<T, S>> extends Equalizer.Immutable<S> {
+public abstract class CrawlStatus<T extends CrawlDefinition<T>, S extends CrawlStatus<T, S>> extends Equalizer.Immutable<S> {
 
     /**
      * The identifier of the current node
@@ -294,7 +294,7 @@ public abstract class CrawlStatus<T extends CrawlDefinition, S extends CrawlStat
                 Objects.equals(threadCancelled, s.threadCancelled) && Objects.equals(threadDone, s.threadDone);
     }
 
-    public abstract static class AbstractBuilder<D extends CrawlDefinition, S extends CrawlStatus<D, S>, B extends AbstractBuilder<D, S, ?>> {
+    public abstract static class AbstractBuilder<D extends CrawlDefinition<D>, S extends CrawlStatus<D, S>, B extends AbstractBuilder<D, S, ?>> {
 
         private final Class<B> builderClass;
         private final String nodeAddress;
@@ -312,7 +312,7 @@ public abstract class CrawlStatus<T extends CrawlDefinition, S extends CrawlStat
         private String currentCrawl;
         private Integer currentDepth;
         private Long endTime;
-        private volatile Future future;
+        private volatile Future<?> future;
 
         protected AbstractBuilder(final Class<B> builderClass, final String nodeAddress, final TimeTracker timeTracker,
                                   final D crawlDefinition) {
@@ -365,7 +365,7 @@ public abstract class CrawlStatus<T extends CrawlDefinition, S extends CrawlStat
             return builderClass.cast(this);
         }
 
-        B future(Future future) {
+        B future(Future<?> future) {
             this.future = future;
             return builderClass.cast(this);
         }

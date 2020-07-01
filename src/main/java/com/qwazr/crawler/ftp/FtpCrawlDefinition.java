@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2018 Emmanuel Keller / QWAZR
+ * Copyright 2017-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,7 +38,7 @@ import java.util.Objects;
         creatorVisibility = JsonAutoDetect.Visibility.NONE,
         isGetterVisibility = JsonAutoDetect.Visibility.NONE,
         fieldVisibility = JsonAutoDetect.Visibility.PROTECTED_AND_PUBLIC)
-public class FtpCrawlDefinition extends CrawlDefinition {
+public class FtpCrawlDefinition extends CrawlDefinition<FtpCrawlDefinition> {
 
     /**
      * The host name of the FTP server.
@@ -86,7 +86,7 @@ public class FtpCrawlDefinition extends CrawlDefinition {
                                  @JsonProperty("hostname") String hostname, @JsonProperty("entry_path") String entryPath,
                                  @JsonProperty("username") String username, @JsonProperty("password") String password,
                                  @JsonProperty("is_ssl") Boolean isSsl, @JsonProperty("is_passive") Boolean isPassive) {
-        super(variables, scripts, inclusionPatterns, exclusionPatterns, maxDepth, crawlWaitMs);
+        super(FtpCrawlDefinition.class, variables, scripts, inclusionPatterns, exclusionPatterns, maxDepth, crawlWaitMs);
         this.hostname = hostname;
         this.entryPath = entryPath;
         this.username = username;
@@ -96,7 +96,7 @@ public class FtpCrawlDefinition extends CrawlDefinition {
     }
 
     private FtpCrawlDefinition(Builder builder) {
-        super(builder);
+        super(FtpCrawlDefinition.class, builder);
         this.hostname = builder.hostname;
         this.entryPath = builder.entryPath;
         this.username = builder.username;
@@ -106,20 +106,14 @@ public class FtpCrawlDefinition extends CrawlDefinition {
     }
 
     @Override
-    public int hashCode() {
-        return Objects.hash(hostname, entryPath, super.hashCode());
+    protected int computeHashCode() {
+        return Objects.hash(hostname, entryPath, super.computeHashCode());
     }
 
     @Override
-    public boolean equals(final Object o) {
-        if (!super.equals(o))
-            return false;
-        if (!(o instanceof FtpCrawlDefinition))
-            return false;
-        if (o == this)
-            return true;
-        final FtpCrawlDefinition f = (FtpCrawlDefinition) o;
-        return Objects.equals(hostname, f.hostname) && Objects.equals(entryPath, f.entryPath) &&
+    protected boolean isEqual(final FtpCrawlDefinition f) {
+        return super.isEqual(f) &&
+                Objects.equals(hostname, f.hostname) && Objects.equals(entryPath, f.entryPath) &&
                 Objects.equals(username, f.username) && Objects.equals(password, f.password) &&
                 Objects.equals(isSsl, f.isSsl) && Objects.equals(isPassive, f.isPassive);
     }
