@@ -16,6 +16,7 @@
 package com.qwazr.crawler.common;
 
 import com.qwazr.utils.TimeTracker;
+import java.net.URI;
 import java.util.Map;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -162,4 +163,5 @@ public abstract class CrawlSessionBase<
         buildStatus();
         sessionDB.commit();
     }
+
 }

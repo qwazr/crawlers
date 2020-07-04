@@ -17,7 +17,6 @@ package com.qwazr.crawler.web;
 
 import com.qwazr.crawler.common.CurrentCrawl;
 import com.qwazr.crawler.web.driver.DriverInterface;
-
 import java.net.URI;
 import java.util.Map;
 import java.util.Set;
@@ -25,63 +24,63 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public interface WebCurrentCrawl extends CurrentCrawl {
 
-	/**
-	 * The initial URI and the final URI may be different if any redirection was followed
-	 *
-	 * @return the current URI
-	 */
-	URI getUri();
+    /**
+     * The initial URI and the final URI may be different if any redirection was followed
+     *
+     * @return the current URI
+     */
+    URI getUri();
 
-	/**
-	 * @return true if the Robots.txt disallow the current URI
-	 */
-	Boolean isRobotsTxtDisallow();
+    /**
+     * @return true if the Robots.txt disallow the current URI
+     */
+    Boolean isRobotsTxtDisallow();
 
-	/**
-	 * Check if the URL has been redirected
-	 *
-	 * @return the redirect URL
-	 */
-	URI getRedirect();
+    /**
+     * Check if the URL has been redirected
+     *
+     * @return the redirect URL
+     */
+    URI getRedirect();
 
-	/**
-	 * The HTTP status code of the crawled URI
-	 *
-	 * @return a status code
-	 */
-	Integer getStatusCode();
+    /**
+     * The HTTP status code of the crawled URI
+     *
+     * @return a status code
+     */
+    Integer getStatusCode();
 
-	/**
-	 * The content-type of the crawled URI
-	 *
-	 * @return a content-type
-	 */
-	String getContentType();
+    /**
+     * The content-type of the crawled URI
+     *
+     * @return a content-type
+     */
+    String getContentType();
 
-	/**
-	 * Tells if the content-type has been rejected (not present in the accepted_content_type list)
-	 *
-	 * @return
-	 */
-	Boolean isRejectedContentType();
+    /**
+     * Tells if the content-type has been rejected (not present in the accepted_content_type list)
+     *
+     * @return
+     */
+    Boolean isRejectedContentType();
 
-	/**
-	 * Get next level links
-	 *
-	 * @return a collection of links
-	 */
-	Map<URI, AtomicInteger> getLinks();
+    /**
+     * Get next level links
+     *
+     * @return a collection of links
+     */
+    Map<URI, AtomicInteger> getLinks();
 
-	/**
-	 * Get the links who match the inclusion and exclusion patterns
-	 *
-	 * @return a filtered collection of links
-	 */
-	Set<URI> getFilteredLinks();
+    /**
+     * Get the links who match the inclusion and exclusion patterns
+     *
+     * @return a filtered collection of links
+     */
+    Set<URI> getFilteredLinks();
 
-	/**
-	 * @return the crawled body
-	 */
-	DriverInterface.Body getBody();
+    /**
+     * @return the crawled body
+     */
+    DriverInterface.Body getBody();
 
 }

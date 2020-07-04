@@ -24,18 +24,11 @@ import com.qwazr.utils.LoggerUtils;
 import com.qwazr.utils.RegExpUtils;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.TimeTracker;
-import org.apache.commons.collections4.trie.PatriciaTrie;
-import org.apache.commons.lang3.NotImplementedException;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-
-import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -48,6 +41,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.PatternSyntaxException;
+import javax.ws.rs.core.Response.Status;
+import org.apache.commons.lang3.NotImplementedException;
+import org.apache.commons.lang3.tuple.Pair;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 
 public class WebCrawlThread extends CrawlThread
         <WebCrawlThread, WebCrawlDefinition, WebCrawlStatus, WebCrawlStatus.Builder,
@@ -236,9 +234,7 @@ public class WebCrawlThread extends CrawlThread
         }
     }
 
-    private void crawlOne(final CrawlUnit crawlUnit,
-                          final PatriciaTrie<Boolean> crawledURIs,
-                          final Collection<URI> nextLevelUris)
+    private void crawlOne(final CrawlUnit crawlUnit)
             throws InterruptedException, URISyntaxException {
 
         if (session.isAborting())
@@ -247,12 +243,11 @@ public class WebCrawlThread extends CrawlThread
         session.setCurrentCrawl(crawlUnit.currentBuilder.uriString, crawlUnit.currentBuilder.depth);
 
         // Check if it has been already crawled
-        if (crawledURIs != null) {
-            final String uriString = crawlUnit.currentBuilder.uri.toASCIIString();
-            if (crawledURIs.containsKey(uriString))
-                return;
-            crawledURIs.put(uriString, true);
-        }
+        final String uriString = crawlUnit.currentBuilder.uri.toASCIIString();
+        if (session.isCrawled(uriString))
+            return;
+
+        session.setCrawled(uriString);
 
         // Check the SCHEME, we only accept http or https
         final String scheme = crawlUnit.currentBuilder.uri.getScheme();
@@ -309,62 +304,34 @@ public class WebCrawlThread extends CrawlThread
         // Manage any redirection
         final URI redirectUri = afterCrawlCurrent.getRedirect();
         if (redirectUri != null) {
-            crawlOne(crawlUnit.redirect(redirectUri), crawledURIs, nextLevelUris);
+            crawlOne(crawlUnit.redirect(redirectUri));
             return;
         }
 
         // Add the next level URIs
-        if (nextLevelUris != null) {
-            final Map<URI, AtomicInteger> links = afterCrawlCurrent.getLinks();
-            if (links != null)
-                nextLevelUris.addAll(links.keySet());
+        final Map<URI, AtomicInteger> links = afterCrawlCurrent.getLinks();
+        if (links != null)
+            session.addUrlsToCrawl(links.keySet(), crawlUnit.currentBuilder.depth + 1);
+    }
+
+    private void crawlRemaining(final DriverInterface driver) throws URISyntaxException, InterruptedException {
+        while (!session.isAborting()) {
+            final Pair<String, Integer> nextUrl = session.nextUrlToCrawl();
+            if (nextUrl == null)
+                break;
+            crawlOne(new Get(driver, WebRequestDefinition.of(nextUrl.getKey()).build(), nextUrl.getValue()));
         }
     }
 
-    private void crawlSubLevel(final CrawlUnit crawlUnit,
-                               final PatriciaTrie<Boolean> crawledURIs,
-                               final Collection<URI> levelURIs,
-                               final int depth) throws InterruptedException, URISyntaxException {
-
-        if (crawlDefinition.maxDepth == null || depth > crawlDefinition.maxDepth)
-            return;
-
-        if (session.isAborting())
-            return;
-
-        if (levelURIs == null || levelURIs.isEmpty())
-            return;
-
-        final Set<URI> nextLevelURIs = new HashSet<>();
-
-        // Crawl all URLs from the level
-        for (URI uri : levelURIs)
-            crawlOne(crawlUnit.next(uri, depth), crawledURIs, nextLevelURIs);
-
-        // Let's crawl the next level if any
-        crawlSubLevel(crawlUnit, crawledURIs, nextLevelURIs, depth + 1);
-    }
-
-    private void crawlStart(final CrawlUnit crawlUnit, final PatriciaTrie<Boolean> crawledURIs)
-            throws URISyntaxException, InterruptedException {
-        final Set<URI> nextLevelURIs = new HashSet<>();
-        crawlOne(crawlUnit, crawledURIs, nextLevelURIs);
-        crawlSubLevel(crawlUnit, crawledURIs, nextLevelURIs, crawlUnit.currentBuilder.depth + 1);
+    private void crawlStart(final CrawlUnit crawlUnit) throws URISyntaxException, InterruptedException {
+        crawlOne(crawlUnit);
+        crawlRemaining(crawlUnit.driver);
     }
 
     private void crawlUrlMap(final DriverInterface driver,
-                             final PatriciaTrie<Boolean> crawledURIs,
-                             final Map<String, Integer> urlMap) {
-        urlMap.forEach((uriString, depth) -> {
-            try {
-                crawlOne(new Get(driver, WebRequestDefinition.of(uriString).build(), depth == null ? 0 : depth),
-                        crawledURIs, null);
-            } catch (URISyntaxException e) {
-                LOGGER.warning(() -> "Malformed URI: " + uriString);
-            } catch (InterruptedException e) {
-                LOGGER.log(Level.WARNING, e, () -> "Interruption on " + uriString);
-            }
-        });
+                             final Map<String, Integer> urlMap) throws URISyntaxException, InterruptedException {
+        session.addUrlsToCrawl(urlMap);
+        crawlRemaining(driver);
     }
 
     protected void runner() throws URISyntaxException, IOException, ServerException, InterruptedException {
@@ -373,15 +340,13 @@ public class WebCrawlThread extends CrawlThread
             script(EventEnum.before_session, null);
             if (crawlDefinition.preUrl != null && !crawlDefinition.preUrl.isEmpty())
                 driver.body(WebRequestDefinition.of(crawlDefinition.preUrl).build()).close();
-            final PatriciaTrie<Boolean> crawledURIs = new PatriciaTrie<>();
             if (crawlDefinition.urls != null && !crawlDefinition.urls.isEmpty())
-                crawlUrlMap(driver, crawledURIs, crawlDefinition.urls);
+                crawlUrlMap(driver, crawlDefinition.urls);
             else {
                 if (crawlDefinition.entryUrl != null)
-                    crawlStart(new Get(driver, WebRequestDefinition.of(crawlDefinition.entryUrl).build(), 0),
-                            crawledURIs);
+                    crawlStart(new Get(driver, WebRequestDefinition.of(crawlDefinition.entryUrl).build(), 0));
                 else if (crawlDefinition.entryRequest != null)
-                    crawlStart(crawlUnit(driver, crawlDefinition.entryRequest), crawledURIs);
+                    crawlStart(crawlUnit(driver, crawlDefinition.entryRequest));
             }
         } finally {
             script(EventEnum.after_session, null);

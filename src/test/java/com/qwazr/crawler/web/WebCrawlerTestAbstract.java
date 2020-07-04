@@ -128,16 +128,16 @@ public abstract class WebCrawlerTestAbstract {
                 .build());
         webCrawl.userAgent("QWAZR_BOT");
         service.runSession(sessionName, webCrawl.build());
-        final CrawlStatus status = CommonEvent.crawlWait(sessionName, service);
+        final CrawlStatus<?> status = CommonEvent.crawlWait(sessionName, service);
 
-        Assert.assertEquals(3, status.crawled);
+        Assert.assertEquals(4, status.crawled);
         Assert.assertEquals(1, status.ignored);
         Assert.assertEquals(1, status.redirect);
         Assert.assertEquals(1, status.error);
 
         Assert.assertEquals(1, WebEvents.feedbacks.get(EventEnum.before_session).count());
-        Assert.assertEquals(6, WebEvents.feedbacks.get(EventEnum.before_crawl).count());
-        Assert.assertEquals(5, WebEvents.feedbacks.get(EventEnum.after_crawl).count());
+        Assert.assertEquals(7, WebEvents.feedbacks.get(EventEnum.before_crawl).count());
+        Assert.assertEquals(6, WebEvents.feedbacks.get(EventEnum.after_crawl).count());
         Assert.assertEquals(1, WebEvents.feedbacks.get(EventEnum.after_session).count());
         for (EventEnum eventEnum : EventEnum.values())
             Assert.assertEquals(variableValue + eventEnum.name(),
