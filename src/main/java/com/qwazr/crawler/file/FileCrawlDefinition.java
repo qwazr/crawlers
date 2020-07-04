@@ -101,6 +101,11 @@ public class FileCrawlDefinition extends CrawlDefinition<FileCrawlDefinition> {
         }
 
         @Override
+        protected Builder me() {
+            return this;
+        }
+
+        @Override
         public FileCrawlDefinition build() {
             return new FileCrawlDefinition(entryPath, maxDepth, inclusionPatterns, exclusionPatterns, crawlWaitMs,
                     variables, scripts);

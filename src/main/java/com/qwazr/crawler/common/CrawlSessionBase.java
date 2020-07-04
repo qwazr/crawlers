@@ -16,30 +16,43 @@
 package com.qwazr.crawler.common;
 
 import com.qwazr.utils.TimeTracker;
-import org.apache.commons.lang3.exception.ExceptionUtils;
-
 import java.util.Map;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.mapdb.DB;
+import org.mapdb.DBMaker;
 
-public abstract class CrawlSessionBase<D extends CrawlDefinition<D>, S extends CrawlStatus<D, S>>
-        extends AttributesBase implements CrawlSession<D, S> {
+public abstract class CrawlSessionBase<
+        SESSION extends CrawlSessionBase<SESSION, THREAD, MANAGER, DEFINITION, STATUS, BUILDER>,
+        THREAD extends CrawlThread<THREAD, DEFINITION, STATUS, BUILDER, MANAGER, SESSION>,
+        MANAGER extends CrawlManager<MANAGER, THREAD, SESSION, DEFINITION, STATUS, BUILDER>,
+        DEFINITION extends CrawlDefinition<DEFINITION>,
+        STATUS extends CrawlStatus<STATUS>,
+        BUILDER extends CrawlStatus.AbstractBuilder<STATUS, BUILDER>>
+        extends AttributesBase implements CrawlSession<DEFINITION, STATUS> {
 
-    private final D crawlDefinition;
+    private final MANAGER crawlManager;
+    private final DEFINITION crawlDefinition;
     private final String name;
     private final AtomicBoolean abort;
     private final TimeTracker timeTracker;
-
-    private volatile S crawlStatusNoDefinition;
-    private volatile S crawlStatusWithDefinition;
-    private final CrawlStatus.AbstractBuilder<D, S, ?> crawlStatusBuilder;
+    private final BUILDER crawlStatusBuilder;
+    private volatile STATUS crawlStatus;
+    protected final DB sessionDB;
 
     protected CrawlSessionBase(final String sessionName,
+                               final MANAGER crawlManager,
                                final TimeTracker timeTracker,
-                               final D crawlDefinition,
+                               final DEFINITION crawlDefinition,
                                final Map<String, Object> attributes,
-                               final CrawlStatus.AbstractBuilder<D, S, ?> crawlStatusBuilder) {
+                               final BUILDER crawlStatusBuilder) {
         super(attributes);
+        this.sessionDB = DBMaker
+                .fileDB(crawlManager.sessionsDirectory.resolve(sessionName).toFile())
+                .transactionEnable()
+                .make();
+        this.crawlManager = crawlManager;
         this.timeTracker = timeTracker;
         this.crawlStatusBuilder = crawlStatusBuilder;
         this.crawlDefinition = crawlDefinition;
@@ -49,13 +62,13 @@ public abstract class CrawlSessionBase<D extends CrawlDefinition<D>, S extends C
     }
 
     private void buildStatus() {
-        crawlStatusWithDefinition = crawlStatusBuilder.build(true);
-        crawlStatusNoDefinition = crawlStatusBuilder.build(false);
+        crawlStatus = crawlStatusBuilder.build();
+        crawlManager.setSessionStatus(name, crawlStatus);
     }
 
     @Override
-    public S getCrawlStatus(final boolean withDefinition) {
-        return withDefinition ? crawlStatusWithDefinition : crawlStatusNoDefinition;
+    public STATUS getCrawlStatus() {
+        return crawlStatus;
     }
 
     @Override
@@ -97,7 +110,7 @@ public abstract class CrawlSessionBase<D extends CrawlDefinition<D>, S extends C
     public int incCrawledCount() {
         crawlStatusBuilder.incCrawled();
         buildStatus();
-        return crawlStatusNoDefinition.crawled;
+        return crawlStatus.crawled;
     }
 
     public void incRedirectCount() {
@@ -125,7 +138,7 @@ public abstract class CrawlSessionBase<D extends CrawlDefinition<D>, S extends C
         buildStatus();
     }
 
-    public D getCrawlDefinition() {
+    public DEFINITION getCrawlDefinition() {
         return crawlDefinition;
     }
 
@@ -141,5 +154,12 @@ public abstract class CrawlSessionBase<D extends CrawlDefinition<D>, S extends C
     void setFuture(Future<?> future) {
         crawlStatusBuilder.future(future);
         buildStatus();
+    }
+
+    @Override
+    public void close() {
+        crawlStatusBuilder.abort(null);
+        buildStatus();
+        sessionDB.commit();
     }
 }

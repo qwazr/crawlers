@@ -45,6 +45,11 @@
       <version>1.13.1</version>
     </dependency>
     <dependency>
+      <groupId>org.mapdb</groupId>
+      <artifactId>mapdb</artifactId>
+      <version>3.0.8</version>
+    </dependency>
+    <dependency>
       <groupId>org.seleniumhq.selenium</groupId>
       <artifactId>selenium-chrome-driver</artifactId>
       <version>3.141.59</version>
@@ -59,7 +64,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-shade-plugin</artifactId>
-            <version>3.2.3</version>
+            <version>3.2.4</version>
             <executions>
               <execution>
                 <phase>package</phase>

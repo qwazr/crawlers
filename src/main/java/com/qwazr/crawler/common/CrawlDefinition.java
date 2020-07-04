@@ -16,7 +16,6 @@
 package com.qwazr.crawler.common;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -24,7 +23,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.utils.CollectionsUtils;
 import com.qwazr.utils.Equalizer;
 import com.qwazr.utils.StringUtils;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -41,7 +39,8 @@ import java.util.Objects;
         creatorVisibility = JsonAutoDetect.Visibility.NONE,
         isGetterVisibility = JsonAutoDetect.Visibility.NONE,
         fieldVisibility = JsonAutoDetect.Visibility.PUBLIC_ONLY)
-public abstract class CrawlDefinition<C extends CrawlDefinition<C>> extends Equalizer.Immutable<C> {
+public abstract class CrawlDefinition<
+        DEFINITION extends CrawlDefinition<DEFINITION>> extends Equalizer.Immutable<DEFINITION> {
 
     /**
      * The users variables shared by all the scripts.
@@ -79,8 +78,7 @@ public abstract class CrawlDefinition<C extends CrawlDefinition<C>> extends Equa
     @JsonProperty("crawl_wait_ms")
     final public Integer crawlWaitMs;
 
-    @JsonCreator
-    protected CrawlDefinition(final Class<C> crawldefinitionClass,
+    protected CrawlDefinition(final Class<DEFINITION> crawldefinitionClass,
                               final @JsonProperty("variables") LinkedHashMap<String, String> variables,
                               final @JsonProperty("scripts") Map<EventEnum, ScriptDefinition> scripts,
                               final @JsonProperty("inclusion_patterns") Collection<String> inclusionPatterns,
@@ -98,8 +96,8 @@ public abstract class CrawlDefinition<C extends CrawlDefinition<C>> extends Equa
         this.crawlWaitMs = crawlWaitMs;
     }
 
-    protected CrawlDefinition(final Class<C> crawldefinitionClass,
-                              final AbstractBuilder<C, ?> builder) {
+    protected CrawlDefinition(final Class<DEFINITION> crawldefinitionClass,
+                              final AbstractBuilder<DEFINITION, ?> builder) {
         this(crawldefinitionClass,
                 builder.variables,
                 builder.scripts,
@@ -140,14 +138,16 @@ public abstract class CrawlDefinition<C extends CrawlDefinition<C>> extends Equa
     }
 
     @Override
-    protected boolean isEqual(final C c) {
+    protected boolean isEqual(final DEFINITION c) {
         return CollectionsUtils.equals(variables, c.variables) && CollectionsUtils.equals(scripts, c.scripts) &&
                 CollectionsUtils.equals(inclusionPatterns, c.inclusionPatterns) &&
                 CollectionsUtils.equals(exclusionPatterns, c.exclusionPatterns) &&
                 Objects.equals(maxDepth, c.maxDepth) && Objects.equals(crawlWaitMs, c.crawlWaitMs);
     }
 
-    public static abstract class AbstractBuilder<D extends CrawlDefinition<D>, B extends AbstractBuilder<D, B>> {
+    public static abstract class AbstractBuilder<
+            DEFINITION extends CrawlDefinition<DEFINITION>,
+            BUILDER extends AbstractBuilder<DEFINITION, BUILDER>> {
 
         protected LinkedHashMap<String, String> variables;
 
@@ -160,13 +160,13 @@ public abstract class CrawlDefinition<C extends CrawlDefinition<C>> extends Equa
 
         protected Integer crawlWaitMs;
 
-        private final Class<B> builderClass;
+        private final Class<BUILDER> builderClass;
 
-        protected AbstractBuilder(final Class<B> builderClass) {
+        protected AbstractBuilder(final Class<BUILDER> builderClass) {
             this.builderClass = builderClass;
         }
 
-        protected AbstractBuilder(final Class<B> builderClass, D src) {
+        protected AbstractBuilder(final Class<BUILDER> builderClass, DEFINITION src) {
             this(builderClass);
             variables = src.variables == null ? null : new LinkedHashMap<>(src.variables);
             scripts = src.scripts == null ? null : new LinkedHashMap<>(src.scripts);
@@ -178,28 +178,30 @@ public abstract class CrawlDefinition<C extends CrawlDefinition<C>> extends Equa
                     new LinkedHashSet<>(src.exclusionPatterns);
         }
 
-        public B variable(final String name, final String value) {
+        protected abstract BUILDER me();
+
+        public BUILDER variable(final String name, final String value) {
             if (variables == null)
                 variables = new LinkedHashMap<>();
             variables.put(name, value);
-            return builderClass.cast(this);
+            return me();
         }
 
-        public B script(final EventEnum event, final ScriptDefinition script) {
+        public BUILDER script(final EventEnum event, final ScriptDefinition script) {
             if (scripts == null)
                 scripts = new LinkedHashMap<>();
             scripts.put(event, script);
-            return builderClass.cast(this);
+            return me();
         }
 
-        public B setInclusionPatterns(final Collection<String> inclusionPatterns) {
+        public BUILDER setInclusionPatterns(final Collection<String> inclusionPatterns) {
             this.inclusionPatterns = inclusionPatterns == null || inclusionPatterns.isEmpty() ?
                     null :
                     new LinkedHashSet<>(inclusionPatterns);
-            return builderClass.cast(this);
+            return me();
         }
 
-        public B setInclusionPatterns(final String inclusionPatternText) throws IOException {
+        public BUILDER setInclusionPatterns(final String inclusionPatternText) throws IOException {
             if (StringUtils.isBlank(inclusionPatternText)) {
                 inclusionPatterns = null;
                 return builderClass.cast(this);
@@ -209,59 +211,60 @@ public abstract class CrawlDefinition<C extends CrawlDefinition<C>> extends Equa
             else
                 inclusionPatterns = new LinkedHashSet<>();
             StringUtils.linesCollector(inclusionPatternText, false, inclusionPatterns);
-            return builderClass.cast(this);
+            return me();
         }
 
-        public B addInclusionPattern(final String inclusionPattern) {
+        public BUILDER addInclusionPattern(final String inclusionPattern) {
             if (StringUtils.isBlank(inclusionPattern))
                 return builderClass.cast(this);
             if (inclusionPatterns == null)
                 inclusionPatterns = new LinkedHashSet<>();
             inclusionPatterns.add(inclusionPattern);
-            return builderClass.cast(this);
+            return me();
         }
 
-        public B setExclusionPatterns(final Collection<String> exclusionPatterns) {
+        public BUILDER setExclusionPatterns(final Collection<String> exclusionPatterns) {
             this.exclusionPatterns = exclusionPatterns == null || exclusionPatterns.isEmpty() ?
                     null :
                     new LinkedHashSet<>(exclusionPatterns);
-            return builderClass.cast(this);
+            return me();
         }
 
-        public B setExclusionPatterns(final String exclusionPatternText) throws IOException {
+        public BUILDER setExclusionPatterns(final String exclusionPatternText) throws IOException {
             if (StringUtils.isBlank(exclusionPatternText)) {
                 exclusionPatterns = null;
-                return builderClass.cast(this);
+                return me();
             }
             if (exclusionPatterns != null)
                 exclusionPatterns.clear();
             else
                 exclusionPatterns = new LinkedHashSet<>();
             StringUtils.linesCollector(exclusionPatternText, false, exclusionPatterns);
-            return builderClass.cast(this);
+            return me();
         }
 
-        public B addExclusionPattern(final String exclusionPattern) {
+        public BUILDER addExclusionPattern(final String exclusionPattern) {
             if (StringUtils.isBlank(exclusionPattern))
-                return builderClass.cast(this);
+                return me();
             if (exclusionPatterns == null)
                 exclusionPatterns = new LinkedHashSet<>();
             exclusionPatterns.add(exclusionPattern);
-            return builderClass.cast(this);
+            return me();
         }
 
-        public B setMaxDepth(final Integer maxDepth) {
+        public BUILDER setMaxDepth(final Integer maxDepth) {
             this.maxDepth = maxDepth;
-            return builderClass.cast(this);
+            return me();
         }
 
         @JsonIgnore
-        public B setCrawlWaitMs(Integer crawlWaitMs) {
+        public BUILDER setCrawlWaitMs(Integer crawlWaitMs) {
             this.crawlWaitMs = crawlWaitMs;
-            return builderClass.cast(this);
+            return me();
         }
 
-        public abstract D build();
+        public abstract DEFINITION build();
 
     }
+
 }

@@ -29,19 +29,27 @@ import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public abstract class CrawlThread<D extends CrawlDefinition<D>, S extends CrawlStatus<D, S>, M extends CrawlManager<?, D, S>>
+public abstract class CrawlThread<
+        THREAD extends CrawlThread<THREAD, DEFINITION, STATUS, BUILDER, MANAGER, SESSION>,
+        DEFINITION extends CrawlDefinition<DEFINITION>,
+        STATUS extends CrawlStatus<STATUS>,
+        BUILDER extends CrawlStatus.AbstractBuilder<STATUS, BUILDER>,
+        MANAGER extends CrawlManager<MANAGER, THREAD, SESSION, DEFINITION, STATUS, BUILDER>,
+        SESSION extends CrawlSessionBase<SESSION, THREAD, MANAGER, DEFINITION, STATUS, BUILDER>>
         implements Runnable {
 
-    private final CrawlDefinition<D> crawlDefinition;
+    private final CrawlDefinition<DEFINITION> crawlDefinition;
     private final TimeTracker timeTracker;
-    protected final M manager;
-    protected final CrawlSessionBase<D, S> session;
+    protected final MANAGER manager;
+    protected final SESSION session;
     protected final Logger logger;
     private final List<WildcardMatcher> exclusionMatcherList;
     private final List<WildcardMatcher> inclusionMatcherList;
     private final Map<String, Object> scriptGlobalObjects;
 
-    protected CrawlThread(final M manager, final CrawlSessionBase<D, S> session, final Logger logger) {
+    protected CrawlThread(final MANAGER manager,
+                          final SESSION session,
+                          final Logger logger) {
         this.manager = manager;
         this.session = session;
         this.crawlDefinition = session.getCrawlDefinition();
@@ -145,12 +153,12 @@ public abstract class CrawlThread<D extends CrawlDefinition<D>, S extends CrawlS
             session.error(e);
         } finally {
             session.done();
-            manager.removeSession(this);
+            manager.removeSession(session.getName());
         }
     }
 
-    protected final S getStatus(boolean withDefinition) {
-        return session.getCrawlStatus(withDefinition);
+    protected final STATUS getStatus() {
+        return session.getCrawlStatus();
     }
 
     protected void start() {

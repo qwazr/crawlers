@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Emmanuel Keller / QWAZR
+ * Copyright 2017-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,27 +21,38 @@ import com.qwazr.crawler.file.FileCrawlerManager;
 import com.qwazr.scripts.ScriptManager;
 import com.qwazr.utils.LoggerUtils;
 import com.qwazr.utils.TimeTracker;
-
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.concurrent.ExecutorService;
 import java.util.logging.Logger;
 
-public class FtpCrawlerManager extends CrawlManager<FtpCrawlThread, FtpCrawlDefinition, FtpCrawlStatus> {
+public class FtpCrawlerManager extends CrawlManager
+        <FtpCrawlerManager, FtpCrawlThread, FtpCrawlSession, FtpCrawlDefinition,
+                FtpCrawlStatus, FtpCrawlStatus.Builder> {
 
     private static final Logger LOGGER = LoggerUtils.getLogger(FileCrawlerManager.class);
     private final FtpCrawlerServiceInterface service;
 
-    public FtpCrawlerManager(String myAddress, ScriptManager scriptManager, ExecutorService executorService) {
-        super(myAddress, scriptManager, executorService, LOGGER);
+    public FtpCrawlerManager(final Path crawlerRootDirectory,
+                             final String myAddress,
+                             final ScriptManager scriptManager,
+                             final ExecutorService executorService) throws IOException {
+        super(crawlerRootDirectory, myAddress, scriptManager, executorService,
+                LOGGER, FtpCrawlStatus.class, FtpCrawlDefinition.class);
         service = new FtpCrawlerServiceImpl(this);
     }
 
-    public FtpCrawlerManager(ClusterManager clusterManager, ScriptManager scriptManager,
-                             ExecutorService executorService) {
-        this(clusterManager.getService().getStatus().me, scriptManager, executorService);
+    public FtpCrawlerManager(final Path crawlerRootDirectory,
+                             final ClusterManager clusterManager,
+                             final ScriptManager scriptManager,
+                             final ExecutorService executorService) throws IOException {
+        this(crawlerRootDirectory, clusterManager.getService().getStatus().me, scriptManager, executorService);
     }
 
-    public FtpCrawlerManager(ScriptManager scriptManager, ExecutorService executorService) {
-        this((String) null, scriptManager, executorService);
+    public FtpCrawlerManager(final Path crawlerRootDirectory,
+                             final ScriptManager scriptManager,
+                             final ExecutorService executorService) throws IOException {
+        this(crawlerRootDirectory, (String) null, scriptManager, executorService);
     }
 
     public FtpCrawlerServiceInterface getService() {
@@ -51,9 +62,8 @@ public class FtpCrawlerManager extends CrawlManager<FtpCrawlThread, FtpCrawlDefi
     @Override
     protected FtpCrawlThread newCrawlThread(String sessionName, FtpCrawlDefinition crawlDefinition) {
         final TimeTracker timeTracker = TimeTracker.withDurations();
-        final FtpCrawlStatus.Builder crawlStatusBuilder = FtpCrawlStatus.of(myAddress, timeTracker, crawlDefinition);
-        final FtpCrawlSession session =
-                new FtpCrawlSession(sessionName, timeTracker, crawlDefinition, attributes, crawlStatusBuilder);
+        final FtpCrawlStatus.Builder crawlStatusBuilder = FtpCrawlStatus.of(myAddress, timeTracker);
+        final FtpCrawlSession session = new FtpCrawlSession(sessionName, this, timeTracker, crawlDefinition, attributes, crawlStatusBuilder);
         return new FtpCrawlThread(this, session, LOGGER);
     }
 }

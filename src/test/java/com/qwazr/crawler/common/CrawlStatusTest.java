@@ -15,30 +15,29 @@
  */
 package com.qwazr.crawler.common;
 
-import com.qwazr.crawler.file.FileCrawlDefinition;
 import com.qwazr.crawler.file.FileCrawlStatus;
-import com.qwazr.crawler.web.WebCrawlDefinition;
 import com.qwazr.crawler.web.WebCrawlStatus;
 import com.qwazr.utils.ObjectMappers;
 import com.qwazr.utils.RandomUtils;
 import com.qwazr.utils.TimeTracker;
+import java.io.IOException;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.io.IOException;
-
 public class CrawlStatusTest {
 
-    <T extends CrawlDefinition<T>, S extends CrawlStatus<T, S>> void checkBuilderAndGetter(
-            final CrawlStatus.AbstractBuilder<T, S, ?> crawlStatus, final String nodeAddress,
-            final TimeTracker timeTracker, final T crawlDefinition, Class<S> crawlStatusClass) throws IOException {
+    <STATUS extends CrawlStatus<STATUS>> void checkBuilderAndGetter(
+            final CrawlStatus.AbstractBuilder<STATUS, ?> crawlStatus,
+            final String nodeAddress,
+            final TimeTracker timeTracker,
+            final Class<STATUS> crawlStatusClass) throws IOException {
 
         final String lastError = RandomUtils.alphanumeric(20);
         final String currentCrawl = RandomUtils.alphanumeric(16);
         final Integer currentDepth = RandomUtils.nextInt(1, 100);
         final String abortingReason = RandomUtils.alphanumeric(25);
 
-        final CrawlStatus<T, S> status = crawlStatus.incError()
+        final CrawlStatus<STATUS> status = crawlStatus.incError()
                 .lastError(lastError)
                 .crawl(currentCrawl, currentDepth)
                 .abort(abortingReason)
@@ -49,9 +48,8 @@ public class CrawlStatusTest {
                 .incIgnored()
                 .incRedirect()
                 .done()
-                .build(true);
+                .build();
 
-        Assert.assertEquals(crawlDefinition, status.getCrawlDefinition());
         Assert.assertEquals(nodeAddress, status.getNodeAddress());
         Assert.assertEquals(timeTracker.getStatus(), status.getTimer());
         Assert.assertEquals(lastError, status.getLastError());
@@ -66,29 +64,25 @@ public class CrawlStatusTest {
         Assert.assertNotNull(status.getStartTime());
         Assert.assertNotNull(status.getEndTime());
 
-        final CrawlStatus<T, S> status2 =
+        final CrawlStatus<STATUS> status2 =
                 ObjectMappers.JSON.readValue(ObjectMappers.JSON.writeValueAsString(status), crawlStatusClass);
         Assert.assertEquals(status, status2);
     }
 
     @Test
     public void testWebCrawlStatus() throws IOException {
-        final WebCrawlDefinition crawlDefinition =
-                WebCrawlDefinition.of().variable(RandomUtils.alphanumeric(5), RandomUtils.alphanumeric(6)).build();
         final String nodeAddress = RandomUtils.alphanumeric(10);
         final TimeTracker timeTracker = TimeTracker.withDurations();
-        checkBuilderAndGetter(WebCrawlStatus.of(nodeAddress, timeTracker, crawlDefinition), nodeAddress, timeTracker,
-                crawlDefinition, WebCrawlStatus.class);
+        checkBuilderAndGetter(WebCrawlStatus.of(nodeAddress, timeTracker),
+                nodeAddress, timeTracker, WebCrawlStatus.class);
     }
 
     @Test
     public void testFileCrawlStatus() throws IOException {
-        final FileCrawlDefinition crawlDefinition =
-                FileCrawlDefinition.of().variable(RandomUtils.alphanumeric(5), RandomUtils.alphanumeric(6)).build();
         final String nodeAddress = RandomUtils.alphanumeric(10);
         final TimeTracker timeTracker = TimeTracker.withDurations();
-        checkBuilderAndGetter(FileCrawlStatus.of(nodeAddress, timeTracker, crawlDefinition), nodeAddress, timeTracker,
-                crawlDefinition, FileCrawlStatus.class);
+        checkBuilderAndGetter(FileCrawlStatus.of(nodeAddress, timeTracker),
+                nodeAddress, timeTracker, FileCrawlStatus.class);
     }
 
 }

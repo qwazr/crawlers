@@ -24,15 +24,20 @@ import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import java.util.SortedMap;
 
-abstract public class CrawlerSingleClient<D extends CrawlDefinition<D>, S extends CrawlStatus<D, S>> extends JsonClient
-        implements CrawlerServiceInterface<D, S> {
+abstract public class CrawlerSingleClient<
+        DEFINITION extends CrawlDefinition<DEFINITION>,
+        STATUS extends CrawlStatus<STATUS>>
+        extends JsonClient
+        implements CrawlerServiceInterface<DEFINITION, STATUS> {
 
-    private final Class<S> crawlStatusClass;
-    private final GenericType<SortedMap<String, S>> mapStatusType;
+    private final Class<STATUS> crawlStatusClass;
+    private final GenericType<SortedMap<String, STATUS>> mapStatusType;
     private final WebTarget sessionsTarget;
 
-    protected CrawlerSingleClient(final RemoteService remote, final String pathPrefix, Class<S> crawlStatusClass,
-                                  GenericType<SortedMap<String, S>> mapStatusType) {
+    protected CrawlerSingleClient(final RemoteService remote,
+                                  final String pathPrefix,
+                                  final Class<STATUS> crawlStatusClass,
+                                  GenericType<SortedMap<String, STATUS>> mapStatusType) {
         super(remote);
         this.sessionsTarget = client.target(remote.serviceAddress).path(pathPrefix).path("sessions");
         this.crawlStatusClass = crawlStatusClass;
@@ -41,12 +46,12 @@ abstract public class CrawlerSingleClient<D extends CrawlDefinition<D>, S extend
     }
 
     @Override
-    public SortedMap<String, S> getSessions() {
+    public SortedMap<String, STATUS> getSessions() {
         return sessionsTarget.request(MediaType.APPLICATION_JSON).get(mapStatusType);
     }
 
     @Override
-    public S getSession(final String sessionName) {
+    public STATUS getSession(final String sessionName) {
         return sessionsTarget.path(sessionName).request(MediaType.APPLICATION_JSON).get(crawlStatusClass);
     }
 
@@ -59,7 +64,7 @@ abstract public class CrawlerSingleClient<D extends CrawlDefinition<D>, S extend
     }
 
     @Override
-    public S runSession(final String sessionName, final D crawlDefinition) {
+    public STATUS runSession(final String sessionName, final DEFINITION crawlDefinition) {
         return sessionsTarget.path(sessionName)
                 .request(MediaType.APPLICATION_JSON)
                 .post(Entity.json(crawlDefinition), crawlStatusClass);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,9 +35,9 @@ import com.qwazr.server.GenericServerBuilder;
 import com.qwazr.server.RestApplication;
 import com.qwazr.server.WelcomeShutdownService;
 import com.qwazr.server.configuration.ServerConfiguration;
-
 import java.io.IOException;
-import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -77,18 +77,34 @@ public class CrawlerServer implements BaseServer {
                         configuration.dataDirectory);
         webServices.singletons(scriptManager.getService());
 
-        final WebCrawlerManager webCrawlerManager =
-                new WebCrawlerManager(clusterManager, scriptManager, executorService);
+
+        final Path webCrawlerDirectory = configuration.dataDirectory.resolve("webcrawler");
+        if (!Files.exists(webCrawlerDirectory))
+            Files.createDirectory(webCrawlerDirectory);
+
+        final WebCrawlerManager webCrawlerManager = new WebCrawlerManager(
+                webCrawlerDirectory, clusterManager, scriptManager, executorService);
+        builder.shutdownListener(server -> webCrawlerManager.close());
         webServices.singletons(webCrawlerManager.getService());
         webCrawlerServiceBuilder = new WebCrawlerServiceBuilder(executorService, clusterManager, webCrawlerManager);
 
-        final FileCrawlerManager fileCrawlerManager =
-                new FileCrawlerManager(clusterManager, scriptManager, executorService);
+        final Path fileCrawlerDirectory = configuration.dataDirectory.resolve("filecrawler");
+        if (!Files.exists(fileCrawlerDirectory))
+            Files.createDirectory(fileCrawlerDirectory);
+
+        final FileCrawlerManager fileCrawlerManager = new FileCrawlerManager(
+                fileCrawlerDirectory, clusterManager, scriptManager, executorService);
+        builder.shutdownListener(server -> fileCrawlerManager.close());
         webServices.singletons(fileCrawlerManager.getService());
         fileCrawlerServiceBuilder = new FileCrawlerServiceBuilder(clusterManager, fileCrawlerManager);
 
-        final FtpCrawlerManager ftpCrawlerManager =
-                new FtpCrawlerManager(clusterManager, scriptManager, executorService);
+        final Path ftpCrawlerDirectory = configuration.dataDirectory.resolve("ftpcrawler");
+        if (!Files.exists(ftpCrawlerDirectory))
+            Files.createDirectory(ftpCrawlerDirectory);
+
+        final FtpCrawlerManager ftpCrawlerManager = new FtpCrawlerManager(
+                ftpCrawlerDirectory, clusterManager, scriptManager, executorService);
+        builder.shutdownListener(server -> ftpCrawlerManager.close());
         webServices.singletons(ftpCrawlerManager.getService());
         ftpCrawlerServiceBuilder = new FtpCrawlerServiceBuilder(clusterManager, ftpCrawlerManager);
 

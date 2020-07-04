@@ -18,6 +18,10 @@ package com.qwazr.crawler.ftp;
 import com.qwazr.crawler.common.EventEnum;
 import com.qwazr.crawler.common.ScriptDefinition;
 import com.qwazr.scripts.ScriptManager;
+import com.qwazr.utils.FileUtils;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import static org.hamcrest.MatcherAssert.assertThat;
 import org.junit.After;
 import org.junit.Before;
@@ -35,13 +39,15 @@ public class FtpCrawlerTest {
 
     private FtpCrawlerServiceInterface ftpCrawler;
     private ExecutorService executorService;
+    private Path dataDir;
     private static final Object attributeTest = new Object();
 
     @Before
-    public void setup() {
+    public void setup() throws IOException {
+        dataDir = Files.createTempDirectory("ftptest_data");
         executorService = Executors.newCachedThreadPool();
         ScriptManager scriptManager = new ScriptManager(executorService, Paths.get("."));
-        FtpCrawlerManager ftpCrawlerManager = new FtpCrawlerManager(scriptManager, executorService);
+        FtpCrawlerManager ftpCrawlerManager = new FtpCrawlerManager(dataDir, scriptManager, executorService);
         ftpCrawlerManager.setAttribute("attributeTest", attributeTest, Object.class);
         ftpCrawler = ftpCrawlerManager.getService();
     }
@@ -64,12 +70,13 @@ public class FtpCrawlerTest {
     }
 
     @After
-    public void cleanup() throws InterruptedException {
+    public void cleanup() throws InterruptedException, IOException {
         if (executorService != null) {
             executorService.shutdown();
             executorService.awaitTermination(5, TimeUnit.MINUTES);
             executorService = null;
         }
+        FileUtils.deleteDirectory(dataDir);
     }
 
     public static class FtpCrawl extends FtpCrawlScriptEvent {

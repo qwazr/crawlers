@@ -21,30 +21,39 @@ import com.qwazr.crawler.common.CrawlStatus;
 import com.qwazr.crawler.common.EventEnum;
 import com.qwazr.crawler.common.ScriptDefinition;
 import com.qwazr.crawler.web.driver.DriverInterface;
+import com.qwazr.utils.FileUtils;
 import com.qwazr.utils.RandomUtils;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.SortedMap;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
-import java.util.SortedMap;
-
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public abstract class WebCrawlerTestAbstract {
 
     static WebCrawlerServiceInterface service;
+    private static Path tempDatDir;
 
     public static void setup() throws Exception {
-        if (CrawlerServer.getInstance() == null)
-            CrawlerServer.main();
+        tempDatDir = Files.createTempDirectory("test_data_dir");
+        System.setProperty("QWAZR_DATA", tempDatDir.toAbsolutePath().toString());
+        CrawlerServer.main();
         WebAppTestServer.start();
     }
 
     @AfterClass
-    public static void cleanup() throws InterruptedException {
+    public static void cleanup() throws InterruptedException, IOException {
         WebAppTestServer.stop();
         CrawlerServer.shutdown();
+        if (tempDatDir != null) {
+            FileUtils.deleteDirectory(tempDatDir);
+            tempDatDir = null;
+        }
     }
 
     @Test

@@ -35,158 +35,160 @@ import java.util.function.BiFunction;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class FtpCrawlThread extends CrawlThread<FtpCrawlDefinition, FtpCrawlStatus, FtpCrawlerManager> {
+public class FtpCrawlThread extends CrawlThread
+        <FtpCrawlThread, FtpCrawlDefinition, FtpCrawlStatus, FtpCrawlStatus.Builder,
+                FtpCrawlerManager, FtpCrawlSession> {
 
-	private final FtpCrawlDefinition crawlDefinition;
-	private final FTPClient ftp;
+    private final FtpCrawlDefinition crawlDefinition;
+    private final FTPClient ftp;
 
-	FtpCrawlThread(final FtpCrawlerManager manager, final FtpCrawlSession session, final Logger logger) {
-		super(manager, session, logger);
-		this.crawlDefinition = session.getCrawlDefinition();
-		if (crawlDefinition.isSsl != null && crawlDefinition.isSsl)
-			ftp = new FTPSClient();
-		else
-			ftp = new FTPClient();
-		ftp.setConnectTimeout(60000);
-		ftp.setDataTimeout(60000);
-	}
+    FtpCrawlThread(final FtpCrawlerManager manager, final FtpCrawlSession session, final Logger logger) {
+        super(manager, session, logger);
+        this.crawlDefinition = session.getCrawlDefinition();
+        if (crawlDefinition.isSsl != null && crawlDefinition.isSsl)
+            ftp = new FTPSClient();
+        else
+            ftp = new FTPClient();
+        ftp.setConnectTimeout(60000);
+        ftp.setDataTimeout(60000);
+    }
 
-	@Override
-	protected void runner() throws Exception {
-		script(EventEnum.before_session, null);
-		try {
-			crawl();
-		} finally {
-			script(EventEnum.after_session, null);
-		}
-	}
+    @Override
+    protected void runner() throws Exception {
+        script(EventEnum.before_session, null);
+        try {
+            crawl();
+        } finally {
+            script(EventEnum.after_session, null);
+        }
+    }
 
-	private void crawl() throws IOException {
-		Objects.requireNonNull(crawlDefinition.hostname, "The host name of the server is missing");
-		try {
+    private void crawl() throws IOException {
+        Objects.requireNonNull(crawlDefinition.hostname, "The host name of the server is missing");
+        try {
 
-			// Connection
-			checkPositiveReply(() -> ftp.connect(crawlDefinition.hostname),
-					(code, msg) -> "FTP server refused connection (" + code + "): " + msg);
+            // Connection
+            checkPositiveReply(() -> ftp.connect(crawlDefinition.hostname),
+                    (code, msg) -> "FTP server refused connection (" + code + "): " + msg);
 
-			// Login
-			checkPositiveReply(() -> ftp.login(
-					StringUtils.isBlank(crawlDefinition.username) ? "anonymous" : crawlDefinition.username,
-					StringUtils.isBlank(crawlDefinition.password) ? "guest" : crawlDefinition.password),
-					(code, msg) -> "Cannot login as " + crawlDefinition.username + " - " + msg + " (" + code + ')');
+            // Login
+            checkPositiveReply(() -> ftp.login(
+                    StringUtils.isBlank(crawlDefinition.username) ? "anonymous" : crawlDefinition.username,
+                    StringUtils.isBlank(crawlDefinition.password) ? "guest" : crawlDefinition.password),
+                    (code, msg) -> "Cannot login as " + crawlDefinition.username + " - " + msg + " (" + code + ')');
 
-			// Let crawl the current directory
-			listCurrentDirectory(crawlDefinition.entryPath, 0);
+            // Let crawl the current directory
+            listCurrentDirectory(crawlDefinition.entryPath, 0);
 
-			// Finished, we logout
-			ftp.logout();
-		} finally {
-			if (ftp.isConnected()) {
-				try {
-					ftp.disconnect();
-				} catch (IOException ioe) {
-					logger.log(Level.WARNING, ioe, ioe::getMessage);
-				}
-			}
-		}
-	}
+            // Finished, we logout
+            ftp.logout();
+        } finally {
+            if (ftp.isConnected()) {
+                try {
+                    ftp.disconnect();
+                } catch (IOException ioe) {
+                    logger.log(Level.WARNING, ioe, ioe::getMessage);
+                }
+            }
+        }
+    }
 
-	private void checkTransferMode() throws IOException {
-		// Do we switch to passive mode ?
-		if (crawlDefinition.isPassive != null && crawlDefinition.isPassive)
-			checkPositiveReply(ftp::enterLocalPassiveMode,
-					(code, msg) -> "Passive mode failed: " + msg + " (" + code + ')');
-		else
-			checkPositiveReply(ftp::enterLocalActiveMode,
-					(code, msg) -> "Passive mode failed: " + msg + " (" + code + ')');
-	}
+    private void checkTransferMode() throws IOException {
+        // Do we switch to passive mode ?
+        if (crawlDefinition.isPassive != null && crawlDefinition.isPassive)
+            checkPositiveReply(ftp::enterLocalPassiveMode,
+                    (code, msg) -> "Passive mode failed: " + msg + " (" + code + ')');
+        else
+            checkPositiveReply(ftp::enterLocalActiveMode,
+                    (code, msg) -> "Passive mode failed: " + msg + " (" + code + ')');
+    }
 
-	private void listCurrentDirectory(final String currentPath, int depth) throws IOException {
-		if (session.isAborting())
-			return;
+    private void listCurrentDirectory(final String currentPath, int depth) throws IOException {
+        if (session.isAborting())
+            return;
 
-		// Change directory
-		checkTransferMode();
-		if (!StringUtils.isBlank(currentPath))
-			checkPositiveReply(() -> ftp.changeWorkingDirectory(currentPath),
-					(code, msg) -> "Cannot change the directory to " + currentPath + " - : " + msg + " (" + code + ')');
+        // Change directory
+        checkTransferMode();
+        if (!StringUtils.isBlank(currentPath))
+            checkPositiveReply(() -> ftp.changeWorkingDirectory(currentPath),
+                    (code, msg) -> "Cannot change the directory to " + currentPath + " - : " + msg + " (" + code + ')');
 
-		final FTPFile[] ftpFiles = ftp.listFiles();
-		if (ftpFiles == null || ftpFiles.length == 0)
-			return;
+        final FTPFile[] ftpFiles = ftp.listFiles();
+        if (ftpFiles == null || ftpFiles.length == 0)
+            return;
 
-		final FtpCurrentCrawl.Builder currentBuilder = new FtpCurrentCrawl.Builder(currentPath, depth);
-		checkPassInclusionExclusion(currentBuilder, currentPath);
-		if (currentBuilder.build().isIgnored())
-			return;
+        final FtpCurrentCrawl.Builder currentBuilder = new FtpCurrentCrawl.Builder(currentPath, depth);
+        checkPassInclusionExclusion(currentBuilder, currentPath);
+        if (currentBuilder.build().isIgnored())
+            return;
 
-		// First pass we only want files
-		for (FTPFile ftpFile : ftpFiles)
-			if (ftpFile.isFile())
-				crawlFile(ftpFile, currentBuilder);
+        // First pass we only want files
+        for (FTPFile ftpFile : ftpFiles)
+            if (ftpFile.isFile())
+                crawlFile(ftpFile, currentBuilder);
 
-		// Second pass, we manage the directories
-		final int nextDepth = depth + 1;
-		for (FTPFile ftpFile : ftpFiles) {
-			if (".".equals(ftpFile.getName()) || "..".equals(ftpFile.getName()))
-				continue;
-			if (ftpFile.isDirectory()) {
-				final String directoryName = ftpFile.getName();
-				checkPositiveReply(() -> ftp.changeWorkingDirectory(directoryName),
-						(code, msg) -> "Cannot change the directory to " + directoryName + " - : " + msg + " (" + code +
-								')');
-				listCurrentDirectory(currentPath + '/' + directoryName, nextDepth);
-				ftp.changeToParentDirectory();
-			}
-		}
-	}
+        // Second pass, we manage the directories
+        final int nextDepth = depth + 1;
+        for (FTPFile ftpFile : ftpFiles) {
+            if (".".equals(ftpFile.getName()) || "..".equals(ftpFile.getName()))
+                continue;
+            if (ftpFile.isDirectory()) {
+                final String directoryName = ftpFile.getName();
+                checkPositiveReply(() -> ftp.changeWorkingDirectory(directoryName),
+                        (code, msg) -> "Cannot change the directory to " + directoryName + " - : " + msg + " (" + code +
+                                ')');
+                listCurrentDirectory(currentPath + '/' + directoryName, nextDepth);
+                ftp.changeToParentDirectory();
+            }
+        }
+    }
 
-	private void crawlFile(final FTPFile ftpFile, final FtpCurrentCrawl.Builder builder) throws IOException {
-		if (session.isAborting())
-			return;
+    private void crawlFile(final FTPFile ftpFile, final FtpCurrentCrawl.Builder builder) throws IOException {
+        if (session.isAborting())
+            return;
 
-		builder.ftpFile(ftpFile);
+        builder.ftpFile(ftpFile);
 
-		final FtpCurrentCrawl currentCrawl = builder.build();
+        final FtpCurrentCrawl currentCrawl = builder.build();
 
-		if (!script(EventEnum.before_crawl, currentCrawl))
-			return;
+        if (!script(EventEnum.before_crawl, currentCrawl))
+            return;
 
-		checkPassInclusionExclusion(builder, currentCrawl.getPath());
-		if (builder.build().isIgnored())
-			return;
+        checkPassInclusionExclusion(builder, currentCrawl.getPath());
+        if (builder.build().isIgnored())
+            return;
 
-		checkTransferMode();
+        checkTransferMode();
 
-		final Path tmpFile = Files.createTempFile("ftpCrawler-", ftpFile.getName());
-		try {
-			try (final OutputStream output = new BufferedOutputStream(Files.newOutputStream(tmpFile))) {
-				ftp.retrieveFile(ftpFile.getName(), output);
-			}
-			builder.crawled(true);
-			script(EventEnum.after_crawl, builder.build());
-		} catch (RuntimeException | IOException e) {
-			builder.error(e);
-			script(EventEnum.after_crawl, builder.build());
-			throw e;
-		} finally {
-			Files.deleteIfExists(tmpFile);
-		}
-	}
+        final Path tmpFile = Files.createTempFile("ftpCrawler-", ftpFile.getName());
+        try {
+            try (final OutputStream output = new BufferedOutputStream(Files.newOutputStream(tmpFile))) {
+                ftp.retrieveFile(ftpFile.getName(), output);
+            }
+            builder.crawled(true);
+            script(EventEnum.after_crawl, builder.build());
+        } catch (RuntimeException | IOException e) {
+            builder.error(e);
+            script(EventEnum.after_crawl, builder.build());
+            throw e;
+        } finally {
+            Files.deleteIfExists(tmpFile);
+        }
+    }
 
-	private void checkPositiveReply(final RunnableEx<IOException> action,
-			final BiFunction<Integer, String, String> errorMessage) throws IOException {
-		action.run();
-		final int code = ftp.getReplyCode();
-		final String msg = ftp.getReplyString();
-		if (!FTPReply.isPositiveCompletion(code))
-			throw new IOException(errorMessage.apply(code, msg));
-	}
+    private void checkPositiveReply(final RunnableEx<IOException> action,
+                                    final BiFunction<Integer, String, String> errorMessage) throws IOException {
+        action.run();
+        final int code = ftp.getReplyCode();
+        final String msg = ftp.getReplyString();
+        if (!FTPReply.isPositiveCompletion(code))
+            throw new IOException(errorMessage.apply(code, msg));
+    }
 
-	private void checkPositiveReply(final SupplierEx<Boolean, IOException> action,
-			final BiFunction<Integer, String, String> errorMessage) throws IOException {
-		if (!action.get())
-			throw new IOException(errorMessage.apply(ftp.getReplyCode(), ftp.getReplyString()));
-	}
+    private void checkPositiveReply(final SupplierEx<Boolean, IOException> action,
+                                    final BiFunction<Integer, String, String> errorMessage) throws IOException {
+        if (!action.get())
+            throw new IOException(errorMessage.apply(ftp.getReplyCode(), ftp.getReplyString()));
+    }
 
 }

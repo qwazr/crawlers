@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Emmanuel Keller / QWAZR
+ * Copyright 2017-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,16 +17,30 @@ package com.qwazr.crawler.web;
 
 import com.qwazr.crawler.common.CrawlSessionBase;
 import com.qwazr.utils.TimeTracker;
-
 import java.util.Map;
+import org.mapdb.Serializer;
 
-public class WebCrawlSession extends CrawlSessionBase<WebCrawlDefinition, WebCrawlStatus> {
+public class WebCrawlSession extends CrawlSessionBase
+        <WebCrawlSession, WebCrawlThread, WebCrawlerManager, WebCrawlDefinition, WebCrawlStatus, WebCrawlStatus.Builder> {
+
+    private final Map<String, Integer> crawledUrls;
+    private final Map<String, Integer> toCrawlUrls;
 
     WebCrawlSession(final String sessionName,
+                    final WebCrawlerManager webCrawlerManager,
                     final TimeTracker timeTracker,
                     final WebCrawlDefinition crawlDefinition,
                     final Map<String, Object> attributes,
                     final WebCrawlStatus.Builder crawlStatusBuilder) {
-        super(sessionName, timeTracker, crawlDefinition, attributes, crawlStatusBuilder);
+        super(sessionName, webCrawlerManager, timeTracker, crawlDefinition, attributes, crawlStatusBuilder);
+        crawledUrls = sessionDB.hashMap("crawled")
+                .keySerializer(Serializer.STRING)
+                .valueSerializer(Serializer.INTEGER)
+                .createOrOpen();
+        toCrawlUrls = sessionDB.hashMap("tocrawl")
+                .keySerializer(Serializer.STRING)
+                .valueSerializer(Serializer.INTEGER)
+                .createOrOpen();
     }
+
 }

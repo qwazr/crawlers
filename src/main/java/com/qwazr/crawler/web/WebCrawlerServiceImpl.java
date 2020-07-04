@@ -22,7 +22,9 @@ import java.io.IOException;
 import java.util.TreeMap;
 import java.util.logging.Logger;
 
-class WebCrawlerServiceImpl extends CrawlerServiceImpl<WebCrawlerManager, WebCrawlDefinition, WebCrawlStatus>
+class WebCrawlerServiceImpl extends CrawlerServiceImpl
+        <WebCrawlSession, WebCrawlThread, WebCrawlerManager, WebCrawlDefinition,
+                WebCrawlStatus, WebCrawlStatus.Builder>
         implements WebCrawlerServiceInterface {
 
     private static final Logger LOGGER = LoggerUtils.getLogger(WebCrawlerServiceImpl.class);
@@ -34,7 +36,7 @@ class WebCrawlerServiceImpl extends CrawlerServiceImpl<WebCrawlerManager, WebCra
     @Override
     public TreeMap<String, WebCrawlStatus> getSessions() {
         final TreeMap<String, WebCrawlStatus> map = new TreeMap<>();
-        crawlManager.forEachSession(map::put);
+        crawlManager.forEachLiveSession(map::put);
         return map;
     }
 

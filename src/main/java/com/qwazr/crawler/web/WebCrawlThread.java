@@ -49,7 +49,9 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.PatternSyntaxException;
 
-public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStatus, WebCrawlerManager> {
+public class WebCrawlThread extends CrawlThread
+        <WebCrawlThread, WebCrawlDefinition, WebCrawlStatus, WebCrawlStatus.Builder,
+                WebCrawlerManager, WebCrawlSession> {
 
     private static final Logger LOGGER = LoggerUtils.getLogger(WebCrawlThread.class);
 
@@ -65,7 +67,8 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
 
     private final TimeTracker timeTracker;
 
-    WebCrawlThread(final WebCrawlerManager webCrawlerManager, final WebCrawlSession session,
+    WebCrawlThread(final WebCrawlerManager webCrawlerManager,
+                   final WebCrawlSession session,
                    final WebCrawlDefinition crawlDefinition) throws ServerException {
         super(webCrawlerManager, session, LOGGER);
         this.crawlDefinition = crawlDefinition;
@@ -349,7 +352,8 @@ public class WebCrawlThread extends CrawlThread<WebCrawlDefinition, WebCrawlStat
         crawlSubLevel(crawlUnit, crawledURIs, nextLevelURIs, crawlUnit.currentBuilder.depth + 1);
     }
 
-    private void crawlUrlMap(final DriverInterface driver, final PatriciaTrie<Boolean> crawledURIs,
+    private void crawlUrlMap(final DriverInterface driver,
+                             final PatriciaTrie<Boolean> crawledURIs,
                              final Map<String, Integer> urlMap) {
         urlMap.forEach((uriString, depth) -> {
             try {

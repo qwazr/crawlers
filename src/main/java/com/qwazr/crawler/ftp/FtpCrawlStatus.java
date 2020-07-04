@@ -26,40 +26,51 @@ import com.qwazr.utils.TimeTracker;
         creatorVisibility = JsonAutoDetect.Visibility.NONE,
         isGetterVisibility = JsonAutoDetect.Visibility.NONE,
         fieldVisibility = JsonAutoDetect.Visibility.PROTECTED_AND_PUBLIC)
-public class FtpCrawlStatus extends CrawlStatus<FtpCrawlDefinition, FtpCrawlStatus> {
+public class FtpCrawlStatus extends CrawlStatus<FtpCrawlStatus> {
 
     @JsonCreator
-    FtpCrawlStatus(@JsonProperty("node_address") String nodeAddress, @JsonProperty("aborting") Boolean aborting,
-                   @JsonProperty("aborting_reason") String abortingReason, @JsonProperty("timer") TimeTracker.Status timer,
-                   @JsonProperty("crawled") Integer crawled, @JsonProperty("ignored") Integer ignored,
-                   @JsonProperty("redirect") Integer redirect, @JsonProperty("error") Integer error,
-                   @JsonProperty("last_error") String lastError, @JsonProperty("current_crawl") String currentCrawl,
-                   @JsonProperty("start_time") final Long startTime, @JsonProperty("end_time") final Long endTime,
+    FtpCrawlStatus(@JsonProperty("node_address") String nodeAddress,
+                   @JsonProperty("aborting") Boolean aborting,
+                   @JsonProperty("aborting_reason") String abortingReason,
+                   @JsonProperty("timer") TimeTracker.Status timer,
+                   @JsonProperty("crawled") Integer crawled,
+                   @JsonProperty("ignored") Integer ignored,
+                   @JsonProperty("redirect") Integer redirect,
+                   @JsonProperty("error") Integer error,
+                   @JsonProperty("last_error") String lastError,
+                   @JsonProperty("current_crawl") String currentCrawl,
+                   @JsonProperty("start_time") final Long startTime,
+                   @JsonProperty("end_time") final Long endTime,
                    @JsonProperty("current_depth") Integer currentDepth,
-                   @JsonProperty("crawl_definition") FtpCrawlDefinition crawlDefinition,
                    @JsonProperty("thread_cancelled") Boolean threadCancelled,
                    @JsonProperty("thread_done") Boolean threadDone) {
-        super(FtpCrawlStatus.class, nodeAddress, aborting, abortingReason, timer, crawled, ignored, redirect, error, lastError, currentCrawl,
-                startTime, endTime, currentDepth, crawlDefinition, threadCancelled, threadDone);
+        super(FtpCrawlStatus.class, nodeAddress, aborting, abortingReason, timer,
+                crawled, ignored, redirect, error, lastError, currentCrawl,
+                startTime, endTime, currentDepth, threadCancelled, threadDone);
     }
 
-    private FtpCrawlStatus(Builder builder, boolean withCrawlDefinition) {
-        super(FtpCrawlStatus.class, builder, withCrawlDefinition);
+    private FtpCrawlStatus(Builder builder) {
+        super(FtpCrawlStatus.class, builder);
     }
 
-    public static Builder of(String nodeAddress, TimeTracker timeTracker, FtpCrawlDefinition crawlDefinition) {
-        return new Builder(nodeAddress, timeTracker, crawlDefinition);
+    public static Builder of(String nodeAddress, TimeTracker timeTracker) {
+        return new Builder(nodeAddress, timeTracker);
     }
 
-    public static class Builder extends AbstractBuilder<FtpCrawlDefinition, FtpCrawlStatus, Builder> {
+    public static class Builder extends AbstractBuilder<FtpCrawlStatus, Builder> {
 
-        private Builder(String nodeAddress, TimeTracker timeTracker, FtpCrawlDefinition crawlDefinition) {
-            super(Builder.class, nodeAddress, timeTracker, crawlDefinition);
+        private Builder(String nodeAddress, TimeTracker timeTracker) {
+            super(nodeAddress, timeTracker);
         }
 
         @Override
-        public FtpCrawlStatus build(boolean withCrawlDefinition) {
-            return new FtpCrawlStatus(this, withCrawlDefinition);
+        protected Builder me() {
+            return this;
+        }
+
+        @Override
+        public FtpCrawlStatus build() {
+            return new FtpCrawlStatus(this);
         }
     }
 

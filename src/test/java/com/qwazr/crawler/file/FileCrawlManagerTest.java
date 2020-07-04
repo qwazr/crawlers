@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2018 Emmanuel Keller / QWAZR
+ * Copyright 2017-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,11 @@
  */
 package com.qwazr.crawler.file;
 
+import com.qwazr.utils.FileUtils;
 import com.qwazr.utils.RandomUtils;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -30,17 +34,21 @@ public class FileCrawlManagerTest {
 
     private static ExecutorService executorService;
     private static FileCrawlerManager crawlerManager;
+    private static Path dataDir;
 
     @BeforeClass
-    public static void setup() {
+    public static void setup() throws IOException {
         executorService = Executors.newCachedThreadPool();
-        crawlerManager = new FileCrawlerManager(null, executorService);
+        dataDir = Files.createTempDirectory("ftptest_data");
+        crawlerManager = new FileCrawlerManager(dataDir, null, executorService);
     }
 
     @AfterClass
-    public static void cleanup() {
+    public static void cleanup() throws IOException {
         if (executorService != null)
             executorService.shutdown();
+        if (dataDir != null)
+            FileUtils.deleteDirectory(dataDir);
     }
 
     FileCrawlDefinition.Builder getFileCrawlDefinition() {
@@ -52,13 +60,15 @@ public class FileCrawlManagerTest {
                 .addExclusionPattern("*" + File.separator + "ignore" + File.separator);
     }
 
-    void crawlTest(FileCrawlDefinition.Builder fileCrawlDefinitionBuilder, int expectedCrawled, int expectedIgnored,
-                   int expectedError) throws InterruptedException {
+    void crawlTest(final FileCrawlDefinition.Builder fileCrawlDefinitionBuilder,
+                   final int expectedCrawled,
+                   final int expectedIgnored,
+                   final int expectedError) throws InterruptedException {
         final String crawlSession = RandomUtils.alphanumeric(5);
         FileCrawlStatus crawlStatus = crawlerManager.runSession(crawlSession, fileCrawlDefinitionBuilder.build());
         Assert.assertNotNull(crawlStatus);
         while (crawlStatus.endTime == null) {
-            crawlStatus = crawlerManager.getSession(crawlSession);
+            crawlStatus = crawlerManager.getSessionStatus(crawlSession);
             Thread.sleep(500);
         }
         Assert.assertEquals(expectedCrawled, crawlStatus.crawled);

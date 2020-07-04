@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2019 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,25 +20,33 @@ import com.qwazr.crawler.common.CrawlManager;
 import com.qwazr.scripts.ScriptManager;
 import com.qwazr.utils.LoggerUtils;
 import com.qwazr.utils.TimeTracker;
-
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.concurrent.ExecutorService;
 import java.util.logging.Logger;
 
-public class WebCrawlerManager extends CrawlManager<WebCrawlThread, WebCrawlDefinition, WebCrawlStatus> {
+public class WebCrawlerManager extends CrawlManager
+        <WebCrawlerManager, WebCrawlThread, WebCrawlSession, WebCrawlDefinition,
+                WebCrawlStatus, WebCrawlStatus.Builder> {
 
     private static final Logger LOGGER = LoggerUtils.getLogger(WebCrawlerManager.class);
 
     private final WebCrawlerServiceInterface service;
 
-    public WebCrawlerManager(final String myAddress, final ScriptManager scriptManager,
-                             final ExecutorService executor) {
-        super(myAddress, scriptManager, executor, LOGGER);
+    public WebCrawlerManager(final Path crawlerRootDirectory,
+                             final String myAddress,
+                             final ScriptManager scriptManager,
+                             final ExecutorService executor) throws IOException {
+        super(crawlerRootDirectory, myAddress, scriptManager, executor,
+                LOGGER, WebCrawlStatus.class, WebCrawlDefinition.class);
         service = new WebCrawlerServiceImpl(this);
     }
 
-    public WebCrawlerManager(ClusterManager clusterManager, ScriptManager scriptManager,
-                             ExecutorService executorService) {
-        this(clusterManager.getService().getStatus().me, scriptManager, executorService);
+    public WebCrawlerManager(final Path crawlerRootDirectory,
+                             final ClusterManager clusterManager,
+                             final ScriptManager scriptManager,
+                             final ExecutorService executorService) throws IOException {
+        this(crawlerRootDirectory, clusterManager.getService().getStatus().me, scriptManager, executorService);
     }
 
     public WebCrawlerServiceInterface getService() {
@@ -46,11 +54,12 @@ public class WebCrawlerManager extends CrawlManager<WebCrawlThread, WebCrawlDefi
     }
 
     @Override
-    protected WebCrawlThread newCrawlThread(String sessionName, WebCrawlDefinition webCrawlDefinition) {
+    protected WebCrawlThread newCrawlThread(final String sessionName,
+                                            final WebCrawlDefinition webCrawlDefinition) {
         final TimeTracker timeTracker = TimeTracker.withDurations();
-        final WebCrawlStatus.Builder crawlStatusBuilder = WebCrawlStatus.of(myAddress, timeTracker, webCrawlDefinition);
-        final WebCrawlSession session =
-                new WebCrawlSession(sessionName, timeTracker, webCrawlDefinition, attributes, crawlStatusBuilder);
+        final WebCrawlStatus.Builder crawlStatusBuilder = WebCrawlStatus.of(myAddress, timeTracker);
+        final WebCrawlSession session = new WebCrawlSession(sessionName, this,
+                timeTracker, webCrawlDefinition, attributes, crawlStatusBuilder);
         return new WebCrawlThread(this, session, webCrawlDefinition);
     }
 

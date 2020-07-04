@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,17 +21,19 @@ import com.qwazr.utils.LoggerUtils;
 import java.io.IOException;
 import java.util.logging.Logger;
 
-class FileCrawlerServiceImpl extends CrawlerServiceImpl<FileCrawlerManager, FileCrawlDefinition, FileCrawlStatus>
-		implements FileCrawlerServiceInterface {
+class FileCrawlerServiceImpl extends CrawlerServiceImpl
+        <FileCrawlSession, FileCrawlThread, FileCrawlerManager, FileCrawlDefinition,
+                FileCrawlStatus, FileCrawlStatus.Builder>
+        implements FileCrawlerServiceInterface {
 
-	private static final Logger LOGGER = LoggerUtils.getLogger(FileCrawlerServiceImpl.class);
+    private static final Logger LOGGER = LoggerUtils.getLogger(FileCrawlerServiceImpl.class);
 
-	FileCrawlerServiceImpl(FileCrawlerManager crawlerManager) {
-		super(LOGGER, crawlerManager);
-	}
+    FileCrawlerServiceImpl(FileCrawlerManager crawlerManager) {
+        super(LOGGER, crawlerManager);
+    }
 
-	public FileCrawlStatus runSession(final String sessionName, final String jsonCrawlDefinition) throws IOException {
-		return runSession(sessionName, FileCrawlDefinition.newInstance(jsonCrawlDefinition));
-	}
+    public FileCrawlStatus runSession(final String sessionName, final String jsonCrawlDefinition) throws IOException {
+        return runSession(sessionName, FileCrawlDefinition.newInstance(jsonCrawlDefinition));
+    }
 
 }

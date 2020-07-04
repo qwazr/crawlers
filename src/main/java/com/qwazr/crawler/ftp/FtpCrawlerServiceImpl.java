@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,17 +21,19 @@ import com.qwazr.utils.LoggerUtils;
 import java.io.IOException;
 import java.util.logging.Logger;
 
-class FtpCrawlerServiceImpl extends CrawlerServiceImpl<FtpCrawlerManager, FtpCrawlDefinition, FtpCrawlStatus>
-		implements FtpCrawlerServiceInterface {
+class FtpCrawlerServiceImpl extends CrawlerServiceImpl
+        <FtpCrawlSession, FtpCrawlThread, FtpCrawlerManager, FtpCrawlDefinition,
+                FtpCrawlStatus, FtpCrawlStatus.Builder>
+        implements FtpCrawlerServiceInterface {
 
-	private static final Logger LOGGER = LoggerUtils.getLogger(FtpCrawlerServiceImpl.class);
+    private static final Logger LOGGER = LoggerUtils.getLogger(FtpCrawlerServiceImpl.class);
 
-	FtpCrawlerServiceImpl(FtpCrawlerManager crawlerManager) {
-		super(LOGGER, crawlerManager);
-	}
+    FtpCrawlerServiceImpl(FtpCrawlerManager crawlerManager) {
+        super(LOGGER, crawlerManager);
+    }
 
-	public FtpCrawlStatus runSession(final String sessionName, final String jsonCrawlDefinition) throws IOException {
-		return runSession(sessionName, FtpCrawlDefinition.newInstance(jsonCrawlDefinition));
-	}
+    public FtpCrawlStatus runSession(final String sessionName, final String jsonCrawlDefinition) throws IOException {
+        return runSession(sessionName, FtpCrawlDefinition.newInstance(jsonCrawlDefinition));
+    }
 
 }

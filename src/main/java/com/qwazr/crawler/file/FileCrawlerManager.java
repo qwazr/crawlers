@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Emmanuel Keller / QWAZR
+ * Copyright 2017-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,26 +21,37 @@ import com.qwazr.scripts.ScriptManager;
 import com.qwazr.utils.LoggerUtils;
 import com.qwazr.utils.TimeTracker;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.concurrent.ExecutorService;
 import java.util.logging.Logger;
 
-public class FileCrawlerManager extends CrawlManager<FileCrawlThread, FileCrawlDefinition, FileCrawlStatus> {
+public class FileCrawlerManager extends CrawlManager
+        <FileCrawlerManager, FileCrawlThread, FileCrawlSession, FileCrawlDefinition, FileCrawlStatus, FileCrawlStatus.Builder> {
 
     private static final Logger LOGGER = LoggerUtils.getLogger(FileCrawlerManager.class);
     private final FileCrawlerServiceInterface service;
 
-    public FileCrawlerManager(String myAddress, ScriptManager scriptManager, ExecutorService executorService) {
-        super(myAddress, scriptManager, executorService, LOGGER);
+    public FileCrawlerManager(final Path crawlerRootDirectory,
+                              final String myAddress,
+                              final ScriptManager scriptManager,
+                              final ExecutorService executorService) throws IOException {
+        super(crawlerRootDirectory, myAddress, scriptManager, executorService,
+                LOGGER, FileCrawlStatus.class, FileCrawlDefinition.class);
         service = new FileCrawlerServiceImpl(this);
     }
 
-    public FileCrawlerManager(ClusterManager clusterManager, ScriptManager scriptManager,
-                              ExecutorService executorService) {
-        this(clusterManager.getService().getStatus().me, scriptManager, executorService);
+    public FileCrawlerManager(final Path crawlerRootDirectory,
+                              final ClusterManager clusterManager,
+                              final ScriptManager scriptManager,
+                              final ExecutorService executorService) throws IOException {
+        this(crawlerRootDirectory, clusterManager.getService().getStatus().me, scriptManager, executorService);
     }
 
-    public FileCrawlerManager(ScriptManager scriptManager, ExecutorService executorService) {
-        this((String) null, scriptManager, executorService);
+    public FileCrawlerManager(final Path crawlerRootDirectory,
+                              final ScriptManager scriptManager,
+                              final ExecutorService executorService) throws IOException {
+        this(crawlerRootDirectory, (String) null, scriptManager, executorService);
     }
 
     public FileCrawlerServiceInterface getService() {
@@ -50,9 +61,9 @@ public class FileCrawlerManager extends CrawlManager<FileCrawlThread, FileCrawlD
     @Override
     protected FileCrawlThread newCrawlThread(final String sessionName, final FileCrawlDefinition crawlDefinition) {
         final TimeTracker timeTracker = TimeTracker.withDurations();
-        final FileCrawlStatus.Builder crawlStatusBuilder = FileCrawlStatus.of(myAddress, timeTracker, crawlDefinition);
-        final FileCrawlSession session =
-                new FileCrawlSession(sessionName, timeTracker, crawlDefinition, attributes, crawlStatusBuilder);
+        final FileCrawlStatus.Builder crawlStatusBuilder = FileCrawlStatus.of(myAddress, timeTracker);
+        final FileCrawlSession session = new FileCrawlSession(sessionName, this,
+                timeTracker, crawlDefinition, attributes, crawlStatusBuilder);
         return new FileCrawlThread(this, session, LOGGER);
     }
 

@@ -21,7 +21,14 @@ import com.qwazr.crawler.common.CrawlStatus;
 import com.qwazr.crawler.common.EventEnum;
 import com.qwazr.crawler.common.ScriptDefinition;
 import com.qwazr.server.RemoteService;
+import com.qwazr.utils.FileUtils;
 import com.qwazr.utils.RandomUtils;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.SortedMap;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -29,25 +36,27 @@ import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
-import java.io.File;
-import java.nio.file.Paths;
-import java.util.SortedMap;
-
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class FileCrawlerTest {
 
     private static FileCrawlerServiceInterface local;
     private static FileCrawlerServiceInterface remote;
+    private static Path tempDatDir;
 
     @BeforeClass
     public static void before() throws Exception {
-        if (CrawlerServer.getInstance() == null)
-            CrawlerServer.main();
+        tempDatDir = Files.createTempDirectory("test_data_dir");
+        System.setProperty("QWAZR_DATA", tempDatDir.toAbsolutePath().toString());
+        CrawlerServer.main();
     }
 
     @AfterClass
-    public static void after() {
+    public static void after() throws IOException {
         CrawlerServer.shutdown();
+        if (tempDatDir != null) {
+            FileUtils.deleteDirectory(tempDatDir);
+            tempDatDir = null;
+        }
     }
 
     @Test

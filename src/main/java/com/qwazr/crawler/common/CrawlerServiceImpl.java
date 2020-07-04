@@ -22,28 +22,34 @@ import javax.ws.rs.core.Response.Status;
 import java.util.TreeMap;
 import java.util.logging.Logger;
 
-public abstract class CrawlerServiceImpl<M extends CrawlManager<?, D, S>, D extends CrawlDefinition<D>, S extends CrawlStatus<D, S>>
-        extends AbstractServiceImpl implements CrawlerServiceInterface<D, S> {
+public abstract class CrawlerServiceImpl<
+        SESSION extends CrawlSessionBase<SESSION, THREAD, MANAGER, DEFINITION, STATUS, BUILDER>,
+        THREAD extends CrawlThread<THREAD, DEFINITION, STATUS, BUILDER, MANAGER, SESSION>,
+        MANAGER extends CrawlManager<MANAGER, THREAD, SESSION, DEFINITION, STATUS, BUILDER>,
+        DEFINITION extends CrawlDefinition<DEFINITION>,
+        STATUS extends CrawlStatus<STATUS>,
+        BUILDER extends CrawlStatus.AbstractBuilder<STATUS, BUILDER>>
+        extends AbstractServiceImpl implements CrawlerServiceInterface<DEFINITION, STATUS> {
 
     protected final Logger logger;
 
-    protected final M crawlManager;
+    protected final MANAGER crawlManager;
 
-    protected CrawlerServiceImpl(Logger logger, M crawlManager) {
+    protected CrawlerServiceImpl(Logger logger, MANAGER crawlManager) {
         this.logger = logger;
         this.crawlManager = crawlManager;
     }
 
     @Override
-    public TreeMap<String, S> getSessions() {
-        final TreeMap<String, S> map = new TreeMap<>();
-        crawlManager.forEachSession(map::put);
+    public TreeMap<String, STATUS> getSessions() {
+        final TreeMap<String, STATUS> map = new TreeMap<>();
+        crawlManager.forEachLiveSession(map::put);
         return map;
     }
 
-    public S getSession(final String sessionName) {
+    public STATUS getSession(final String sessionName) {
         try {
-            final S status = crawlManager.getSession(sessionName);
+            final STATUS status = crawlManager.getSessionStatus(sessionName);
             if (status != null)
                 return status;
             throw new ServerException(Status.NOT_FOUND, "Session not found");
@@ -62,7 +68,7 @@ public abstract class CrawlerServiceImpl<M extends CrawlManager<?, D, S>, D exte
         }
     }
 
-    public S runSession(final String sessionName, final D crawlDefinition) {
+    public STATUS runSession(final String sessionName, final DEFINITION crawlDefinition) {
         try {
             return crawlManager.runSession(sessionName, crawlDefinition);
         } catch (ServerException e) {

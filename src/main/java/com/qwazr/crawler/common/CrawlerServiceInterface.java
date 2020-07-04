@@ -29,17 +29,19 @@ import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.util.SortedMap;
 
-public interface CrawlerServiceInterface<D extends CrawlDefinition<D>, S extends CrawlStatus<D, S>> extends ServiceInterface {
+public interface CrawlerServiceInterface<
+        DEFINITION extends CrawlDefinition<DEFINITION>,
+        STATUS extends CrawlStatus<STATUS>> extends ServiceInterface {
 
     @GET
     @Path("/sessions")
     @Produces(ServiceInterface.APPLICATION_JSON_UTF8)
-    SortedMap<String, S> getSessions();
+    SortedMap<String, STATUS> getSessions();
 
     @GET
     @Path("/sessions/{session_name}")
     @Produces(ServiceInterface.APPLICATION_JSON_UTF8)
-    S getSession(@PathParam("session_name") String sessionName);
+    STATUS getSession(@PathParam("session_name") String sessionName);
 
     @DELETE
     @Path("/sessions/{session_name}")
@@ -50,7 +52,7 @@ public interface CrawlerServiceInterface<D extends CrawlDefinition<D>, S extends
     @Path("/sessions/{session_name}")
     @Consumes(ServiceInterface.APPLICATION_JSON_UTF8)
     @Produces(ServiceInterface.APPLICATION_JSON_UTF8)
-    S runSession(@PathParam("session_name") String sessionName, D crawlDefinition);
+    STATUS runSession(@PathParam("session_name") String sessionName, DEFINITION crawlDefinition);
 
-    S runSession(String sessionName, String jsonCrawlDefinition) throws IOException;
+    STATUS runSession(String sessionName, String jsonCrawlDefinition) throws IOException;
 }

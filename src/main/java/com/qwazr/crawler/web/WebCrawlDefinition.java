@@ -453,6 +453,11 @@ public class WebCrawlDefinition extends CrawlDefinition<WebCrawlDefinition> {
         }
 
         @Override
+        protected Builder me() {
+            return this;
+        }
+
+        @Override
         public WebCrawlDefinition build() {
             return new WebCrawlDefinition(this);
         }

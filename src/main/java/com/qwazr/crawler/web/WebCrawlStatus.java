@@ -26,7 +26,7 @@ import com.qwazr.utils.TimeTracker;
         creatorVisibility = JsonAutoDetect.Visibility.NONE,
         isGetterVisibility = JsonAutoDetect.Visibility.NONE,
         fieldVisibility = JsonAutoDetect.Visibility.PROTECTED_AND_PUBLIC)
-public class WebCrawlStatus extends CrawlStatus<WebCrawlDefinition, WebCrawlStatus> {
+public class WebCrawlStatus extends CrawlStatus<WebCrawlStatus> {
 
     @JsonCreator
     WebCrawlStatus(@JsonProperty("node_address") String nodeAddress, @JsonProperty("aborting") Boolean aborting,
@@ -36,30 +36,34 @@ public class WebCrawlStatus extends CrawlStatus<WebCrawlDefinition, WebCrawlStat
                    @JsonProperty("last_error") String lastError, @JsonProperty("current_crawl") String currentCrawl,
                    @JsonProperty("start_time") final Long startTime, @JsonProperty("end_time") final Long endTime,
                    @JsonProperty("current_depth") Integer currentDepth,
-                   @JsonProperty("crawl_definition") WebCrawlDefinition crawlDefinition,
                    @JsonProperty("thread_cancelled") Boolean threadCancelled,
                    @JsonProperty("thread_done") Boolean threadDone) {
         super(WebCrawlStatus.class, nodeAddress, aborting, abortingReason, timer, crawled, ignored, redirect, error, lastError, currentCrawl,
-                startTime, endTime, currentDepth, crawlDefinition, threadCancelled, threadDone);
+                startTime, endTime, currentDepth, threadCancelled, threadDone);
     }
 
-    private WebCrawlStatus(Builder builder, boolean withDefinition) {
-        super(WebCrawlStatus.class, builder, withDefinition);
+    private WebCrawlStatus(Builder builder) {
+        super(WebCrawlStatus.class, builder);
     }
 
-    public static Builder of(String nodeAddress, TimeTracker timeTracker, WebCrawlDefinition crawlDefinition) {
-        return new Builder(nodeAddress, timeTracker, crawlDefinition);
+    public static Builder of(String nodeAddress, TimeTracker timeTracker) {
+        return new Builder(nodeAddress, timeTracker);
     }
 
-    public static class Builder extends AbstractBuilder<WebCrawlDefinition, WebCrawlStatus, Builder> {
+    public static class Builder extends AbstractBuilder<WebCrawlStatus, Builder> {
 
-        private Builder(String nodeAddress, TimeTracker timeTracker, WebCrawlDefinition crawlDefinition) {
-            super(Builder.class, nodeAddress, timeTracker, crawlDefinition);
+        private Builder(String nodeAddress, TimeTracker timeTracker) {
+            super(nodeAddress, timeTracker);
         }
 
         @Override
-        public WebCrawlStatus build(boolean withDefinition) {
-            return new WebCrawlStatus(this, withDefinition);
+        protected Builder me() {
+            return this;
+        }
+
+        @Override
+        public WebCrawlStatus build() {
+            return new WebCrawlStatus(this);
         }
     }
 

@@ -212,6 +212,11 @@ public class FtpCrawlDefinition extends CrawlDefinition<FtpCrawlDefinition> {
         }
 
         @Override
+        protected Builder me() {
+            return this;
+        }
+
+        @Override
         public FtpCrawlDefinition build() {
             return new FtpCrawlDefinition(this);
         }

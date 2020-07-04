@@ -15,19 +15,17 @@
  **/
 package com.qwazr.crawler.common;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.utils.Equalizer;
 import com.qwazr.utils.TimeTracker;
-
 import java.util.Objects;
 import java.util.concurrent.Future;
 
 @JsonInclude(Include.NON_NULL)
-public abstract class CrawlStatus<T extends CrawlDefinition<T>, S extends CrawlStatus<T, S>> extends Equalizer.Immutable<S> {
+public abstract class CrawlStatus<STATUS extends CrawlStatus<STATUS>> extends Equalizer.Immutable<STATUS> {
 
     /**
      * The identifier of the current node
@@ -95,24 +93,22 @@ public abstract class CrawlStatus<T extends CrawlDefinition<T>, S extends CrawlS
 
     final public TimeTracker.Status timer;
 
-    /**
-     * the attributes of the session
-     */
-    @JsonProperty("crawl_definition")
-    final public T crawlDefinition;
-
-    @JsonCreator
-    protected CrawlStatus(final Class<S> statusClass,
-                          @JsonProperty("node_address") String nodeAddress,
-                          @JsonProperty("aborting") Boolean aborting,
-                          @JsonProperty("aborting_reason") String abortingReason, @JsonProperty("timer") TimeTracker.Status timer,
-                          @JsonProperty("crawled") Integer crawled, @JsonProperty("ignored") Integer ignored,
-                          @JsonProperty("redirect") Integer redirect, @JsonProperty("error") Integer error,
-                          @JsonProperty("last_error") String lastError, @JsonProperty("current_crawl") String currentCrawl,
-                          @JsonProperty("start_time") final Long startTime, @JsonProperty("end_time") final Long endTime,
-                          @JsonProperty("current_depth") Integer currentDepth, @JsonProperty("crawl_definition") T crawlDefinition,
-                          @JsonProperty("thread_cancelled") Boolean threadCancelled,
-                          @JsonProperty("thread_done") Boolean threadDone) {
+    protected CrawlStatus(final Class<STATUS> statusClass,
+                          final @JsonProperty("node_address") String nodeAddress,
+                          final @JsonProperty("aborting") Boolean aborting,
+                          final @JsonProperty("aborting_reason") String abortingReason,
+                          final @JsonProperty("timer") TimeTracker.Status timer,
+                          final @JsonProperty("crawled") Integer crawled,
+                          final @JsonProperty("ignored") Integer ignored,
+                          final @JsonProperty("redirect") Integer redirect,
+                          final @JsonProperty("error") Integer error,
+                          final @JsonProperty("last_error") String lastError,
+                          final @JsonProperty("current_crawl") String currentCrawl,
+                          final @JsonProperty("start_time") Long startTime,
+                          final @JsonProperty("end_time") Long endTime,
+                          final @JsonProperty("current_depth") Integer currentDepth,
+                          final @JsonProperty("thread_cancelled") Boolean threadCancelled,
+                          final @JsonProperty("thread_done") Boolean threadDone) {
         super(statusClass);
         this.nodeAddress = nodeAddress;
         this.timer = timer;
@@ -127,13 +123,12 @@ public abstract class CrawlStatus<T extends CrawlDefinition<T>, S extends CrawlS
         this.currentDepth = currentDepth;
         this.startTime = startTime;
         this.endTime = endTime;
-        this.crawlDefinition = crawlDefinition;
         this.threadCancelled = threadCancelled;
         this.threadDone = threadDone;
     }
 
-    protected CrawlStatus(final Class<S> statusClass,
-                          final AbstractBuilder<T, ?, ?> builder, boolean withCrawlDefinition) {
+    protected CrawlStatus(final Class<STATUS> statusClass,
+                          final AbstractBuilder<STATUS, ?> builder) {
         super(statusClass);
         this.nodeAddress = builder.nodeAddress;
         this.timer = builder.timeTracker == null ? null : builder.timeTracker.getStatus();
@@ -148,7 +143,6 @@ public abstract class CrawlStatus<T extends CrawlDefinition<T>, S extends CrawlS
         this.currentDepth = builder.currentDepth;
         this.startTime = builder.startTime;
         this.endTime = builder.endTime;
-        this.crawlDefinition = withCrawlDefinition ? builder.crawlDefinition : null;
         if (builder.future == null) {
             this.threadDone = null;
             this.threadCancelled = null;
@@ -240,13 +234,9 @@ public abstract class CrawlStatus<T extends CrawlDefinition<T>, S extends CrawlS
         return endTime;
     }
 
+    @JsonIgnore
     public TimeTracker.Status getTimer() {
         return timer;
-    }
-
-    @JsonIgnore
-    public T getCrawlDefinition() {
-        return crawlDefinition;
     }
 
     @JsonIgnore
@@ -261,7 +251,7 @@ public abstract class CrawlStatus<T extends CrawlDefinition<T>, S extends CrawlS
 
     @Override
     protected int computeHashCode() {
-        return Objects.hash(nodeAddress, startTime, endTime, currentCrawl, currentDepth, crawlDefinition);
+        return Objects.hash(nodeAddress, startTime, endTime, currentCrawl, currentDepth);
     }
 
     @Override
@@ -278,29 +268,33 @@ public abstract class CrawlStatus<T extends CrawlDefinition<T>, S extends CrawlS
                 + " " + currentDepth
                 + " " + endTime
                 + " " + timer
-                + " " + crawlDefinition
                 + " " + threadCancelled
                 + " " + threadDone;
     }
 
     @Override
-    protected boolean isEqual(final S s) {
-        return Objects.equals(nodeAddress, s.nodeAddress) && Objects.equals(startTime, s.startTime) &&
-                Objects.equals(aborting, s.aborting) && Objects.equals(abortingReason, s.abortingReason) &&
-                crawled == s.crawled && ignored == s.ignored && error == s.error &&
-                Objects.equals(lastError, s.lastError) && Objects.equals(currentCrawl, s.currentCrawl) &&
-                Objects.equals(currentDepth, s.currentDepth) && Objects.equals(endTime, s.endTime) &&
-                Objects.equals(timer, s.timer) && Objects.equals(crawlDefinition, s.crawlDefinition) &&
-                Objects.equals(threadCancelled, s.threadCancelled) && Objects.equals(threadDone, s.threadDone);
+    protected boolean isEqual(final STATUS s) {
+        return Objects.equals(nodeAddress, s.nodeAddress)
+                && Objects.equals(startTime, s.startTime)
+                && Objects.equals(aborting, s.aborting)
+                && Objects.equals(abortingReason, s.abortingReason)
+                && crawled == s.crawled && ignored == s.ignored && error == s.error
+                && Objects.equals(lastError, s.lastError)
+                && Objects.equals(currentCrawl, s.currentCrawl)
+                && Objects.equals(currentDepth, s.currentDepth)
+                && Objects.equals(endTime, s.endTime)
+                && Objects.equals(timer, s.timer)
+                && Objects.equals(threadCancelled, s.threadCancelled)
+                && Objects.equals(threadDone, s.threadDone);
     }
 
-    public abstract static class AbstractBuilder<D extends CrawlDefinition<D>, S extends CrawlStatus<D, S>, B extends AbstractBuilder<D, S, ?>> {
+    public abstract static class AbstractBuilder<
+            STATUS extends CrawlStatus<STATUS>,
+            BUILDER extends AbstractBuilder<STATUS, BUILDER>> {
 
-        private final Class<B> builderClass;
         private final String nodeAddress;
         private final long startTime;
         private final TimeTracker timeTracker;
-        private final D crawlDefinition;
 
         private Boolean aborting;
         private String abortingReason;
@@ -314,63 +308,63 @@ public abstract class CrawlStatus<T extends CrawlDefinition<T>, S extends CrawlS
         private Long endTime;
         private volatile Future<?> future;
 
-        protected AbstractBuilder(final Class<B> builderClass, final String nodeAddress, final TimeTracker timeTracker,
-                                  final D crawlDefinition) {
-            this.builderClass = builderClass;
+        protected AbstractBuilder(final String nodeAddress,
+                                  final TimeTracker timeTracker) {
             this.nodeAddress = nodeAddress;
             this.startTime = System.currentTimeMillis();
             this.timeTracker = timeTracker;
-            this.crawlDefinition = crawlDefinition;
         }
 
-        public B abort(String abortingReason) {
+        protected abstract BUILDER me();
+
+        public BUILDER abort(String abortingReason) {
             this.aborting = true;
             this.abortingReason = abortingReason;
-            return builderClass.cast(this);
+            return me();
         }
 
-        public B incCrawled() {
+        public BUILDER incCrawled() {
             crawled++;
-            return builderClass.cast(this);
+            return me();
         }
 
-        public B incIgnored() {
+        public BUILDER incIgnored() {
             ignored++;
-            return builderClass.cast(this);
+            return me();
         }
 
-        public B incRedirect() {
+        public BUILDER incRedirect() {
             redirect++;
-            return builderClass.cast(this);
+            return me();
         }
 
-        public B incError() {
+        public BUILDER incError() {
             error++;
-            return builderClass.cast(this);
+            return me();
         }
 
-        public B lastError(String errorMessage) {
+        public BUILDER lastError(String errorMessage) {
             this.lastError = errorMessage;
-            return builderClass.cast(this);
+            return me();
         }
 
-        public B crawl(String currentCrawl, Integer currentDepth) {
+        public BUILDER crawl(String currentCrawl, Integer currentDepth) {
             this.currentCrawl = currentCrawl;
             this.currentDepth = currentDepth;
-            return builderClass.cast(this);
+            return me();
         }
 
-        public B done() {
+        public BUILDER done() {
             this.endTime = System.currentTimeMillis();
-            return builderClass.cast(this);
+            return me();
         }
 
-        B future(Future<?> future) {
+        BUILDER future(Future<?> future) {
             this.future = future;
-            return builderClass.cast(this);
+            return me();
         }
 
-        public abstract S build(boolean withCrawlDefinition);
+        public abstract STATUS build();
     }
 
 }

@@ -30,7 +30,8 @@ import java.util.Collections;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class FileCrawlThread extends CrawlThread<FileCrawlDefinition, FileCrawlStatus, FileCrawlerManager>
+public class FileCrawlThread extends CrawlThread
+        <FileCrawlThread, FileCrawlDefinition, FileCrawlStatus, FileCrawlStatus.Builder, FileCrawlerManager, FileCrawlSession>
         implements FileVisitor<Path> {
 
     private final FileCrawlDefinition crawlDefinition;

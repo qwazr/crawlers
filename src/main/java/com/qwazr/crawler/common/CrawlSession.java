@@ -17,17 +17,19 @@ package com.qwazr.crawler.common;
 
 import com.qwazr.utils.TimeTracker;
 
-public interface CrawlSession<D extends CrawlDefinition<D>, S extends CrawlStatus<D, S>> extends AttributesInterface {
+public interface CrawlSession<
+        DEFINITION extends CrawlDefinition<DEFINITION>,
+        STATUS extends CrawlStatus<STATUS>> extends AttributesInterface, AutoCloseable {
 
     /**
      * @return the current crawl status
      */
-    S getCrawlStatus(boolean withDefinition);
+    STATUS getCrawlStatus();
 
     /**
      * @return the crawl definition
      */
-    D getCrawlDefinition();
+    DEFINITION getCrawlDefinition();
 
     /**
      * @param name the name of the variable
@@ -68,4 +70,5 @@ public interface CrawlSession<D extends CrawlDefinition<D>, S extends CrawlStatu
      */
     TimeTracker getTimeTracker();
 
+    void close();
 }
