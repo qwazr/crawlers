@@ -25,9 +25,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
-final class WebCrawlItemImpl extends CrawlItemBase implements WebCrawlItem {
+final class WebCrawlItemImpl extends CrawlItemBase<URI> implements WebCrawlItem {
 
-    private final URI uri;
     private final URI redirect;
     private final Map<URI, AtomicInteger> links;
     private final Set<URI> filteredLinks;
@@ -37,9 +36,8 @@ final class WebCrawlItemImpl extends CrawlItemBase implements WebCrawlItem {
     private final Boolean rejectedContentType;
     private final DriverInterface.Body body;
 
-    WebCrawlItemImpl(Builder builder) {
+    WebCrawlItemImpl(final Builder builder) {
         super(builder);
-        this.uri = builder.uri;
         this.redirect = builder.redirect;
         this.isRobotsTxtDisallow = builder.isRobotsTxtDisallow;
         this.statusCode = builder.statusCode;
@@ -50,11 +48,6 @@ final class WebCrawlItemImpl extends CrawlItemBase implements WebCrawlItem {
                 Collections.emptySet() :
                 Collections.unmodifiableSet(builder.filteredLinks);
         this.body = builder.body;
-    }
-
-    @Override
-    public URI getUri() {
-        return uri;
     }
 
     @Override
@@ -97,9 +90,8 @@ final class WebCrawlItemImpl extends CrawlItemBase implements WebCrawlItem {
         return body;
     }
 
-    final static class Builder extends BaseBuilder<Builder> {
+    final static class Builder extends BaseBuilder<URI, Builder> {
 
-        final URI uri;
         final String uriString;
         private URI redirect;
         private Boolean isRobotsTxtDisallow;
@@ -111,13 +103,17 @@ final class WebCrawlItemImpl extends CrawlItemBase implements WebCrawlItem {
         private DriverInterface.Body body;
 
         protected Builder(URI uri, int depth) {
-            super(Builder.class, depth);
-            this.uri = uri;
-            this.uriString = uri.toString();
+            super(uri, depth);
+            this.uriString = uri.toASCIIString();
+        }
+
+        @Override
+        protected Builder me() {
+            return this;
         }
 
         public Builder redirect(URI redirect) {
-            this.redirect = redirect == null ? null : uri.resolve(redirect);
+            this.redirect = redirect == null ? null : item.resolve(redirect);
             return this;
         }
 

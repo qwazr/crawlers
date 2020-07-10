@@ -53,7 +53,7 @@ public abstract class CrawlerServiceImpl<
             if (status != null)
                 return status;
             throw new ServerException(Status.NOT_FOUND, "Session not found");
-        } catch (ServerException e) {
+        } catch (Exception e) {
             throw ServerException.getJsonException(logger, e);
         }
     }
@@ -63,7 +63,7 @@ public abstract class CrawlerServiceImpl<
         try {
             crawlManager.abortSession(sessionName, reason);
             return true;
-        } catch (ServerException e) {
+        } catch (Exception e) {
             throw ServerException.getTextException(logger, e);
         }
     }
@@ -71,7 +71,7 @@ public abstract class CrawlerServiceImpl<
     public STATUS runSession(final String sessionName, final DEFINITION crawlDefinition) {
         try {
             return crawlManager.runSession(sessionName, crawlDefinition);
-        } catch (ServerException e) {
+        } catch (Exception e) {
             throw ServerException.getJsonException(logger, e);
         }
     }

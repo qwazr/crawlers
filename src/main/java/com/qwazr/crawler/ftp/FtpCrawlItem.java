@@ -20,7 +20,7 @@ import com.qwazr.utils.StringUtils;
 import java.nio.file.Path;
 import org.apache.commons.net.ftp.FTPFile;
 
-public class FtpCrawlItem extends CrawlItemBase {
+public class FtpCrawlItem extends CrawlItemBase<String> {
 
     private final FTPFile ftpFile;
     private final String parentPath;
@@ -49,11 +49,7 @@ public class FtpCrawlItem extends CrawlItemBase {
         return localFilePath;
     }
 
-    public String getPath() {
-        return ftpFile == null ? null : StringUtils.joinWithSeparator('/', parentPath, ftpFile.getName());
-    }
-
-    static class Builder extends BaseBuilder<Builder> {
+    static class Builder extends BaseBuilder<String, Builder> {
 
         private final String parentPath;
 
@@ -61,23 +57,29 @@ public class FtpCrawlItem extends CrawlItemBase {
 
         private Path localFilePath;
 
-        protected Builder(final String parentPath, final int depth) {
-            super(Builder.class, depth);
+        protected Builder(final String currenPath, final String parentPath, final int depth) {
+            super(currenPath, depth);
             this.parentPath = parentPath;
         }
 
         Builder ftpFile(final FTPFile ftpFile) {
             this.ftpFile = ftpFile;
-            return this;
+            return me();
         }
 
         Builder localFilePath(final Path localFilePath) {
             this.localFilePath = localFilePath;
+            return me();
+        }
+
+        @Override
+        protected Builder me() {
             return this;
         }
 
         FtpCrawlItem build() {
             return new FtpCrawlItem(this);
         }
+
     }
 }

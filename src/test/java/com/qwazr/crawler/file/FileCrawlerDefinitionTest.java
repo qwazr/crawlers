@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Emmanuel Keller / QWAZR
+ * Copyright 2017-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,24 +16,23 @@
 package com.qwazr.crawler.file;
 
 import com.qwazr.utils.IOUtils;
-import org.junit.Assert;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import org.junit.Assert;
+import org.junit.jupiter.api.Test;
 
 public class FileCrawlerDefinitionTest {
 
-	@Test
-	public void fileCrawlDefinitionTest() throws IOException {
-		final FileCrawlDefinition crawlDefJson = FileCrawlDefinition.newInstance(
-				IOUtils.toString(FileCrawlerDefinitionTest.class.getResourceAsStream("file_crawl.json"),
-						StandardCharsets.UTF_8));
-		Assert.assertNotNull(crawlDefJson);
-		final FileCrawlDefinition crawlDef = FileCrawlDefinition.of(crawlDefJson).build();
-		// Check that they are not the same reference
-		Assert.assertTrue(crawlDef != crawlDefJson);
-		// Check that they are equals
-		Assert.assertEquals(crawlDef, crawlDefJson);
-	}
+    @Test
+    public void fileCrawlDefinitionTest() throws IOException {
+        final FileCrawlDefinition crawlDefJson = FileCrawlDefinition.newInstance(
+                IOUtils.toString(FileCrawlerDefinitionTest.class.getResourceAsStream("file_crawl.json"),
+                        StandardCharsets.UTF_8));
+        Assert.assertNotNull(crawlDefJson);
+        final FileCrawlDefinition crawlDef = FileCrawlDefinition.of(crawlDefJson).build();
+        // Check that they are not the same reference
+        Assert.assertTrue(crawlDef != crawlDefJson);
+        // Check that they are equals
+        Assert.assertEquals(crawlDef, crawlDefJson);
+    }
 }

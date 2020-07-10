@@ -78,18 +78,22 @@ public class FileCrawlThread extends CrawlThread
 
     private FileCrawlItem crawl(final FileCrawlItem.Builder builder) {
         final String currentPathString = builder.attributes.isDirectory() ?
-                StringUtils.ensureSuffix(builder.path.toString(), File.separator) :
-                builder.path.toString();
-        checkPassInclusionExclusion(builder, currentPathString);
-        final FileCrawlItem current = builder.build();
+                StringUtils.ensureSuffix(builder.item.toString(), File.separator) :
+                builder.item.toString();
+        if (!checkPassInclusionExclusion(builder, currentPathString))
+            session.incIgnoredCount();
+        else
+            session.incCrawledCount();
         try {
+            final FileCrawlItem current = builder.build();
             session.collect(current);
             return current;
         } catch (Exception e) {
             final String err = "File crawling error on " + currentPathString;
+            builder.error(e);
             logger.log(Level.WARNING, err, e);
             session.incErrorCount(err + ": " + ExceptionUtils.getRootCauseMessage(e));
-            return current;
+            return builder.build();
         }
     }
 

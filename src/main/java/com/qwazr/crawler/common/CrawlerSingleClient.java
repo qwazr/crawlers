@@ -37,7 +37,7 @@ abstract public class CrawlerSingleClient<
     protected CrawlerSingleClient(final RemoteService remote,
                                   final String pathPrefix,
                                   final Class<STATUS> crawlStatusClass,
-                                  GenericType<SortedMap<String, STATUS>> mapStatusType) {
+                                  final GenericType<SortedMap<String, STATUS>> mapStatusType) {
         super(remote);
         this.sessionsTarget = client.target(remote.serviceAddress).path(pathPrefix).path("sessions");
         this.crawlStatusClass = crawlStatusClass;

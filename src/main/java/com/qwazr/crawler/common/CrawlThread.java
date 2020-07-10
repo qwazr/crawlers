@@ -15,7 +15,6 @@
  */
 package com.qwazr.crawler.common;
 
-import com.qwazr.utils.TimeTracker;
 import com.qwazr.utils.WildcardMatcher;
 import java.util.List;
 import java.util.function.Consumer;
@@ -32,8 +31,6 @@ public abstract class CrawlThread<
         ITEM extends CrawlItem
         > implements Runnable {
 
-    private final CrawlDefinition<DEFINITION> crawlDefinition;
-    private final TimeTracker timeTracker;
     protected final MANAGER manager;
     protected final SESSION session;
     protected final Logger logger;
@@ -45,8 +42,7 @@ public abstract class CrawlThread<
                           final Logger logger) {
         this.manager = manager;
         this.session = session;
-        this.crawlDefinition = session.getCrawlDefinition();
-        this.timeTracker = session.getTimeTracker();
+        final DEFINITION crawlDefinition = session.getCrawlDefinition();
         this.logger = logger;
         this.exclusionMatcherList = WildcardMatcher.getList(crawlDefinition.exclusionPatterns);
         this.inclusionMatcherList = WildcardMatcher.getList(crawlDefinition.inclusionPatterns);
@@ -72,8 +68,9 @@ public abstract class CrawlThread<
         return WildcardMatcher.anyMatch(text, matchers);
     }
 
-    protected boolean checkPassInclusionExclusion(String itemText, Consumer<Boolean> inclusionConsumer,
-                                                  Consumer<Boolean> exclusionConsumer) {
+    protected boolean checkPassInclusionExclusion(final String itemText,
+                                                  final Consumer<Boolean> inclusionConsumer,
+                                                  final Consumer<Boolean> exclusionConsumer) {
 
         // We check the inclusion/exclusion.
         final Boolean inInclusion = matches(itemText, inclusionMatcherList);
@@ -86,13 +83,13 @@ public abstract class CrawlThread<
         return (inInclusion == null || inInclusion) && (inExclusion == null || !inExclusion);
     }
 
-    protected void checkPassInclusionExclusion(CrawlItemBase.BaseBuilder<?> current, String itemText) {
+    protected boolean checkPassInclusionExclusion(CrawlItemBase.BaseBuilder<?, ?> current, String itemText) {
         if (!checkPassInclusionExclusion(itemText, current::inInclusion, current::inExclusion)) {
             current.ignored(true);
-            session.incIgnoredCount();
+            return false;
         } else {
             current.crawled(true);
-            session.incCrawledCount();
+            return true;
         }
     }
 

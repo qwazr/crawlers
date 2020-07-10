@@ -16,7 +16,8 @@
 package com.qwazr.crawler.file;
 
 import com.qwazr.crawler.CrawlerServer;
-import com.qwazr.crawler.common.CommonEvent;
+import com.qwazr.crawler.common.CrawlCollectorTest;
+import com.qwazr.crawler.common.CrawlHelpers;
 import com.qwazr.crawler.common.CrawlStatus;
 import com.qwazr.server.RemoteService;
 import com.qwazr.utils.FileUtils;
@@ -26,29 +27,38 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.LinkedHashMap;
 import java.util.SortedMap;
-import org.junit.AfterClass;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.MatcherAssert.assertThat;
 import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.FixMethodOrder;
-import org.junit.Test;
-import org.junit.runners.MethodSorters;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class FileCrawlerTest {
 
     private static FileCrawlerServiceInterface local;
     private static FileCrawlerServiceInterface remote;
     private static Path tempDatDir;
 
-    @BeforeClass
+    @BeforeAll
     public static void before() throws Exception {
         tempDatDir = Files.createTempDirectory("test_data_dir");
         System.setProperty("QWAZR_DATA", tempDatDir.toAbsolutePath().toString());
         CrawlerServer.main();
+
+        local = CrawlerServer.getInstance().getFileCrawlerServiceBuilder().local();
+        Assert.assertNotNull(local);
+        remote = new FileCrawlerSingleClient(RemoteService.of("http://localhost:9091").build());
+        Assert.assertNotNull(remote);
     }
 
-    @AfterClass
+    @AfterAll
     public static void after() throws IOException {
         CrawlerServer.shutdown();
         if (tempDatDir != null) {
@@ -58,14 +68,7 @@ public class FileCrawlerTest {
     }
 
     @Test
-    public void test100startServer() throws Exception {
-        local = CrawlerServer.getInstance().getFileCrawlerServiceBuilder().local();
-        Assert.assertNotNull(local);
-        remote = new FileCrawlerSingleClient(RemoteService.of("http://localhost:9091").build());
-        Assert.assertNotNull(remote);
-    }
-
-    @Test
+    @Order(200)
     public void test200emptySessions() {
         SortedMap<String, FileCrawlStatus> sessions = remote.getSessions();
         Assert.assertNotNull(sessions);
@@ -84,10 +87,11 @@ public class FileCrawlerTest {
     }
 
     @Test
+    @Order(300)
     public void test300SimpleCrawl() throws InterruptedException {
         final String sessionName = RandomUtils.alphanumeric(10);
         remote.runSession(sessionName, getNewCrawl().build());
-        final CrawlStatus status = CommonEvent.crawlWait(sessionName, remote);
+        final CrawlStatus<?> status = CrawlHelpers.crawlWait(sessionName, remote);
         Assert.assertEquals(7, status.crawled);
         Assert.assertEquals(2, status.ignored);
         Assert.assertEquals(0, status.error);
@@ -95,47 +99,35 @@ public class FileCrawlerTest {
     }
 
     @Test
+    @Order(400)
     public void test400CrawlEvent() throws InterruptedException {
-        FileEvents.feedbacks.clear();
+        FileCrawlCollectorFactoryTest.resetCounters();
         final String sessionName = RandomUtils.alphanumeric(10);
         final FileCrawlDefinition.Builder crawl = getNewCrawl();
-        final String variableName = RandomUtils.alphanumeric(5);
-        final String variableValue = RandomUtils.alphanumeric(6);
-        crawl.script(EventEnum.before_crawl, ScriptDefinition.of(FileEvents.BeforeCrawl.class)
-                .variable(variableName, variableValue + EventEnum.before_crawl.name())
-                .build());
-        crawl.script(EventEnum.after_crawl, ScriptDefinition.of(FileEvents.AfterCrawl.class)
-                .variable(variableName, variableValue + EventEnum.after_crawl.name())
-                .build());
-        crawl.script(EventEnum.before_session, ScriptDefinition.of(FileEvents.BeforeSession.class)
-                .variable(variableName, variableValue + EventEnum.before_session.name())
-                .build());
-        crawl.script(EventEnum.after_session, ScriptDefinition.of(FileEvents.AfterSession.class)
-                .variable(variableName, variableValue + EventEnum.after_session.name())
-                .build());
+        crawl.variable(RandomUtils.alphanumeric(5), RandomUtils.alphanumeric(6));
+        crawl.crawlCollectorFactoryClass(FileCrawlCollectorFactoryTest.class);
         remote.runSession(sessionName, crawl.build());
-        CommonEvent.crawlWait(sessionName, remote);
-        Assert.assertEquals(9, FileEvents.feedbacks.get(EventEnum.before_crawl).count());
-        Assert.assertEquals(7, FileEvents.feedbacks.get(EventEnum.after_crawl).count());
-        Assert.assertEquals(1, FileEvents.feedbacks.get(EventEnum.before_session).count());
-        Assert.assertEquals(1, FileEvents.feedbacks.get(EventEnum.after_session).count());
-        for (EventEnum eventEnum : EventEnum.values())
-            Assert.assertEquals(variableValue + eventEnum.name(),
-                    FileEvents.feedbacks.get(eventEnum).variable(variableName));
+        CrawlHelpers.crawlWait(sessionName, remote);
 
-        CommonEvent.Feedback<FileCrawlDefinition, FileCurrentPath> afterFeedback =
-                FileEvents.feedbacks.get(EventEnum.after_crawl);
-        Assert.assertEquals(0, afterFeedback.crawlDepth("src" + File.separator + "test" + File.separator + "file_crawl" + File.separator), 0);
-        Assert.assertEquals(1, afterFeedback.crawlDepth("src" + File.separator + "test" + File.separator + "file_crawl" + File.separator + "file0.txt"), 0);
-        Assert.assertEquals(1, afterFeedback.crawlDepth("src" + File.separator + "test" + File.separator + "file_crawl" + File.separator + "dir1" + File.separator), 0);
-        Assert.assertEquals(2, afterFeedback.crawlDepth("src" + File.separator + "test" + File.separator + "file_crawl" + File.separator + "dir1" + File.separator + "subdir" + File.separator), 0);
-        Assert.assertEquals(3, afterFeedback.crawlDepth("src" + File.separator + "test" + File.separator + "file_crawl" + File.separator + "dir1" + File.separator + "subdir" + File.separator + "file1.txt"), 0);
-        Assert.assertEquals(1, afterFeedback.crawlDepth("src" + File.separator + "test" + File.separator + "file_crawl" + File.separator + "dir2" + File.separator), 0);
-        Assert.assertEquals(2, afterFeedback.crawlDepth("src" + File.separator + "test" + File.separator + "file_crawl" + File.separator + "dir2" + File.separator + "file2.txt"), 0);
-        CommonEvent.Feedback<FileCrawlDefinition, FileCurrentPath> beforeFeedback =
-                FileEvents.feedbacks.get(EventEnum.before_crawl);
-        Assert.assertEquals(2, beforeFeedback.crawlDepth("src" + File.separator + "test" + File.separator + "file_crawl" + File.separator + "dir2" + File.separator + "ignore.txt"), 0);
-        Assert.assertEquals(1, beforeFeedback.crawlDepth("src" + File.separator + "test" + File.separator + "file_crawl" + File.separator + "ignore" + File.separator), 0);
+        Assert.assertEquals(crawl.build(), FileCrawlCollectorFactoryTest.definition.get());
+
+        assertThat(CrawlCollectorTest.count.size(), equalTo(9));
+        assertThat(CrawlCollectorTest.crawled.size(), equalTo(7));
+        assertThat(CrawlCollectorTest.ignored.size(), equalTo(2));
+        assertThat(CrawlCollectorTest.inExclusion.size(), equalTo(2));
+        assertThat(CrawlCollectorTest.inInclusion.size(), equalTo(9));
+
+        final LinkedHashMap<Path, Integer> result = new LinkedHashMap<>();
+        result.put(Path.of("src/test/file_crawl"), 0);
+        result.put(Path.of("src/test/file_crawl/file0.txt"), 1);
+        result.put(Path.of("src/test/file_crawl/dir2"), 1);
+        result.put(Path.of("src/test/file_crawl/dir2/file2.txt"), 2);
+        result.put(Path.of("src/test/file_crawl/dir2/ignore.txt"), 2);
+        result.put(Path.of("src/test/file_crawl/ignore"), 1);
+        result.put(Path.of("src/test/file_crawl/dir1"), 1);
+        result.put(Path.of("src/test/file_crawl/dir1/subdir"), 2);
+        result.put(Path.of("src/test/file_crawl/dir1/subdir/file1.txt"), 3);
+        assertThat(FileCrawlCollectorFactoryTest.pathDepth, equalTo(result));
     }
 
 }

@@ -17,19 +17,18 @@ package com.qwazr.crawler.web.driver;
 
 import com.qwazr.crawler.web.WebCrawlDefinition;
 import com.qwazr.crawler.web.WebRequestDefinition;
-import org.junit.Assert;
-import org.junit.Test;
-
 import java.io.IOException;
+import org.junit.Assert;
+import org.junit.jupiter.api.Test;
 
 public class DriverInterfaceTest {
 
-	@Test
-	public void test() throws IOException {
-		final DriverInterface driver = DriverInterface.of(WebCrawlDefinition.of().build());
-		final WebRequestDefinition request = WebRequestDefinition.of("http://www.opensearchserver.com/").build();
-		try (final DriverInterface.Body body = driver.body(request)) {
-			Assert.assertNotNull(body);
-		}
-	}
+    @Test
+    public void test() throws IOException {
+        final DriverInterface driver = DriverInterface.of(WebCrawlDefinition.of().build());
+        final WebRequestDefinition request = WebRequestDefinition.of("http://www.opensearchserver.com/").build();
+        try (final DriverInterface.Body body = driver.body(request)) {
+            Assert.assertNotNull(body);
+        }
+    }
 }

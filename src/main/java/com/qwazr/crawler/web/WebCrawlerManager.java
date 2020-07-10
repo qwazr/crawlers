@@ -17,7 +17,6 @@ package com.qwazr.crawler.web;
 
 import com.qwazr.cluster.ClusterManager;
 import com.qwazr.crawler.common.CrawlManager;
-import com.qwazr.scripts.ScriptManager;
 import com.qwazr.utils.LoggerUtils;
 import com.qwazr.utils.TimeTracker;
 import java.io.IOException;
@@ -34,17 +33,15 @@ public class WebCrawlerManager extends CrawlManager
 
     public WebCrawlerManager(final Path crawlerRootDirectory,
                              final String myAddress,
-                             final ScriptManager scriptManager,
                              final ExecutorService executor) throws IOException {
-        super(crawlerRootDirectory, myAddress, scriptManager, executor, LOGGER, WebCrawlStatus.class);
+        super(crawlerRootDirectory, myAddress, executor, LOGGER, WebCrawlStatus.class);
         service = new WebCrawlerServiceImpl(this);
     }
 
     public WebCrawlerManager(final Path crawlerRootDirectory,
                              final ClusterManager clusterManager,
-                             final ScriptManager scriptManager,
                              final ExecutorService executorService) throws IOException {
-        this(crawlerRootDirectory, clusterManager.getService().getStatus().me, scriptManager, executorService);
+        this(crawlerRootDirectory, clusterManager.getService().getStatus().me, executorService);
     }
 
     public WebCrawlerServiceInterface getService() {

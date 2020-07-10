@@ -15,7 +15,9 @@
  */
 package com.qwazr.crawler.common;
 
-public interface CrawlItem {
+public interface CrawlItem<ITEM> {
+
+    ITEM getItem();
 
     /**
      * @return the depth of the current URL

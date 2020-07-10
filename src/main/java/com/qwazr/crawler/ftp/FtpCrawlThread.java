@@ -67,6 +67,12 @@ public class FtpCrawlThread extends CrawlThread
                     (code, msg) -> "Cannot login as " + crawlDefinition.username + " - " + msg + " (" + code + ')');
 
             // Let crawl the current directory
+            // Change directory
+            checkTransferMode();
+            if (!StringUtils.isBlank(crawlDefinition.entryPath))
+                checkPositiveReply(() -> ftp.changeWorkingDirectory(crawlDefinition.entryPath),
+                        (code, msg) -> "Cannot change the directory to " + crawlDefinition.entryPath + " - : " + msg + " (" + code + ')');
+
             listCurrentDirectory(crawlDefinition.entryPath, 0);
 
             // Finished, we logout
@@ -96,37 +102,36 @@ public class FtpCrawlThread extends CrawlThread
         if (session.isAborting())
             return;
 
-        // Change directory
-        checkTransferMode();
-        if (!StringUtils.isBlank(currentPath))
-            checkPositiveReply(() -> ftp.changeWorkingDirectory(currentPath),
-                    (code, msg) -> "Cannot change the directory to " + currentPath + " - : " + msg + " (" + code + ')');
-
         final FTPFile[] ftpFiles = ftp.listFiles();
         if (ftpFiles == null || ftpFiles.length == 0)
             return;
 
-        final FtpCrawlItem.Builder currentBuilder = new FtpCrawlItem.Builder(currentPath, depth);
-        checkPassInclusionExclusion(currentBuilder, currentPath);
-        if (currentBuilder.build().isIgnored())
-            return;
-
         // First pass we only want files
-        for (FTPFile ftpFile : ftpFiles)
-            if (ftpFile.isFile())
-                crawlFile(ftpFile, currentBuilder);
+        for (final FTPFile ftpFile : ftpFiles) {
+            if (ftpFile.isFile()) {
+                final String filePath = '/' + StringUtils.joinWithSeparator('/', currentPath, ftpFile.getName());
+                crawlFile(ftpFile, new FtpCrawlItem.Builder(filePath, currentPath, depth));
+            }
+        }
 
         // Second pass, we manage the directories
         final int nextDepth = depth + 1;
-        for (FTPFile ftpFile : ftpFiles) {
+        for (final FTPFile ftpFile : ftpFiles) {
             if (".".equals(ftpFile.getName()) || "..".equals(ftpFile.getName()))
                 continue;
             if (ftpFile.isDirectory()) {
                 final String directoryName = ftpFile.getName();
+                final String nextPath = '/' + StringUtils.joinWithSeparator('/', currentPath, directoryName) + '/';
+                final FtpCrawlItem.Builder nextBuilder = new FtpCrawlItem.Builder(nextPath, currentPath, depth);
+                if (!checkPassInclusionExclusion(nextBuilder, nextPath)) {
+                    logger.info("Ignore FTP directory: " + nextBuilder.item);
+                    continue;
+                }
+
                 checkPositiveReply(() -> ftp.changeWorkingDirectory(directoryName),
                         (code, msg) -> "Cannot change the directory to " + directoryName + " - : " + msg + " (" + code +
                                 ')');
-                listCurrentDirectory(currentPath + '/' + directoryName, nextDepth);
+                listCurrentDirectory(nextPath, nextDepth);
                 ftp.changeToParentDirectory();
             }
         }
@@ -140,11 +145,15 @@ public class FtpCrawlThread extends CrawlThread
 
         final FtpCrawlItem currentCrawl = builder.build();
 
-        checkPassInclusionExclusion(builder, currentCrawl.getPath());
-        if (!builder.build().isIgnored()) {
-            session.collect(currentCrawl);
+        if (!checkPassInclusionExclusion(builder, currentCrawl.getItem())) {
+            logger.info("Ignore FTP file: " + builder.item);
+            session.incIgnoredCount();
+            session.collect(builder.build());
             return;
         }
+
+        logger.info("Download FTP file: " + builder.item);
+
         checkTransferMode();
         final Path tmpFile = Files.createTempFile("ftpCrawler-", ftpFile.getName());
         try {
@@ -158,6 +167,7 @@ public class FtpCrawlThread extends CrawlThread
                 builder.error(e);
                 throw e;
             }
+            session.incCrawledCount();
             session.collect(builder.build());
         } finally {
             Files.deleteIfExists(tmpFile);

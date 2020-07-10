@@ -241,25 +241,25 @@ public class WebCrawlThread extends CrawlThread
         session.setCurrentCrawl(crawlUnit.currentBuilder.uriString, crawlUnit.currentBuilder.depth);
 
         // Check if it has been already crawled
-        final String uriString = crawlUnit.currentBuilder.uri.toASCIIString();
-        if (session.isCrawled(uriString))
+        if (session.isCrawled(crawlUnit.currentBuilder.uriString))
             return;
 
-        session.setCrawled(uriString);
+        session.setCrawled(crawlUnit.currentBuilder.uriString);
 
         // Check the SCHEME, we only accept http or https
-        final String scheme = crawlUnit.currentBuilder.uri.getScheme();
+        final String scheme = crawlUnit.currentBuilder.item.getScheme();
         if (!"http".equalsIgnoreCase(scheme) && !"https".equalsIgnoreCase(scheme))
             applyIgnore(crawlUnit.currentBuilder.uriString, "Unsupported protocol: " + scheme, crawlUnit);
 
         // Check the inclusion/exclusion rules
-        if (!checkPassInclusionExclusion(crawlUnit.currentBuilder.uriString, crawlUnit.currentBuilder::inInclusion,
+        if (!checkPassInclusionExclusion(crawlUnit.currentBuilder.uriString,
+                crawlUnit.currentBuilder::inInclusion,
                 crawlUnit.currentBuilder::inExclusion))
             applyIgnore(crawlUnit.currentBuilder.uriString, "inclusion/exclusion", crawlUnit);
 
         // Check the robotsTxt status
         try {
-            final RobotsTxt.Status robotsTxtStatus = checkRobotsTxt(crawlUnit.driver, crawlUnit.currentBuilder.uri);
+            final RobotsTxt.Status robotsTxtStatus = checkRobotsTxt(crawlUnit.driver, crawlUnit.currentBuilder.item);
             if (robotsTxtStatus != null && !robotsTxtStatus.isCrawlable) {
                 crawlUnit.currentBuilder.robotsTxtDisallow(true);
                 applyIgnore(crawlUnit.currentBuilder.uriString, "robotstxt", crawlUnit);

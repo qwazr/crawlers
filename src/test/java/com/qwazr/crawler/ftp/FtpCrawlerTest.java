@@ -15,25 +15,22 @@
  */
 package com.qwazr.crawler.ftp;
 
-import com.qwazr.crawler.common.EventEnum;
-import com.qwazr.crawler.common.ScriptDefinition;
-import com.qwazr.scripts.ScriptManager;
+import com.qwazr.crawler.common.CrawlHelpers;
+import com.qwazr.crawler.common.CrawlStatus;
 import com.qwazr.utils.FileUtils;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import static org.hamcrest.MatcherAssert.assertThat;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
-import java.nio.file.Paths;
-import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.MatcherAssert.assertThat;
+import org.hamcrest.Matchers;
+import org.junit.Assert;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class FtpCrawlerTest {
 
@@ -42,34 +39,37 @@ public class FtpCrawlerTest {
     private Path dataDir;
     private static final Object attributeTest = new Object();
 
-    @Before
+    @BeforeEach
     public void setup() throws IOException {
         dataDir = Files.createTempDirectory("ftptest_data");
         executorService = Executors.newCachedThreadPool();
-        ScriptManager scriptManager = new ScriptManager(executorService, Paths.get("."));
-        FtpCrawlerManager ftpCrawlerManager = new FtpCrawlerManager(dataDir, scriptManager, executorService);
+        FtpCrawlerManager ftpCrawlerManager = new FtpCrawlerManager(dataDir, executorService);
         ftpCrawlerManager.setAttribute("attributeTest", attributeTest, Object.class);
         ftpCrawler = ftpCrawlerManager.getService();
     }
 
     @Test
-    public void test() {
+    public void test() throws InterruptedException {
         FtpCrawlDefinition ftpCrawlDefinition = FtpCrawlDefinition.of()
                 .hostname("ftp.mirrorservice.org")
                 .entryPath("/sites/ftp.apache.org/commons/")
                 .passive(true)
                 .username("anonymous")
                 .password("contact@qwazr.com")
-                .addInclusionPattern("/sites/ftp.apache.org/commons")
-                .addInclusionPattern("/sites/ftp.apache.org/commons/*")
-                .addInclusionPattern("/sites/ftp.apache.org/commons/*/binaries/*")
-                .addInclusionPattern("/sites/ftp.apache.org/commons/*/binaries/*/*.zip")
-                .script(EventEnum.after_crawl, ScriptDefinition.of(FtpCrawl.class).build())
+                .setMaxDepth(2)
+                .addInclusionPattern("/sites/ftp.apache.org/commons/")
+                .addInclusionPattern("/sites/ftp.apache.org/commons/crypto/")
+                .addInclusionPattern("/sites/ftp.apache.org/commons/*/*.html")
                 .build();
         ftpCrawler.runSession("apache", ftpCrawlDefinition);
+        final CrawlStatus<?> status = CrawlHelpers.crawlWait("apache", ftpCrawler);
+        assertThat(status.crawled, equalTo(2));
+        assertThat(status.ignored, Matchers.greaterThanOrEqualTo(3));
+        Assert.assertEquals(0, status.error);
+        Assert.assertNull(status.lastError);
     }
 
-    @After
+    @AfterEach
     public void cleanup() throws InterruptedException, IOException {
         if (executorService != null) {
             executorService.shutdown();
@@ -79,13 +79,4 @@ public class FtpCrawlerTest {
         FileUtils.deleteDirectory(dataDir);
     }
 
-    public static class FtpCrawl extends FtpCrawlScriptEvent {
-
-        @Override
-        protected boolean run(final FtpCrawlSession session, final FtpCurrentCrawl crawl,
-                              final Map<String, ?> attributes) {
-            assertThat(session.getAttribute("attributeTest", Object.class), equalTo(attributeTest));
-            return true;
-        }
-    }
 }

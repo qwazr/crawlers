@@ -16,8 +16,6 @@
 package com.qwazr.crawler.common;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.qwazr.scripts.ScriptManager;
-import com.qwazr.scripts.ScriptServiceInterface;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.ObjectMappers;
 import com.qwazr.utils.WaitFor;
@@ -59,13 +57,11 @@ public abstract class CrawlManager<
     private final Logger logger;
 
     protected final String myAddress;
-    protected final ScriptServiceInterface scriptService;
     private final DB database;
     protected final Path sessionsDirectory;
 
     protected CrawlManager(final Path crawlerRootDirectory,
                            final String myAddress,
-                           final ScriptManager scriptManager,
                            final ExecutorService executorService,
                            final Logger logger,
                            final Class<STATUS> statusClass) throws IOException {
@@ -77,7 +73,6 @@ public abstract class CrawlManager<
         if (!Files.exists(sessionsDirectory))
             Files.createDirectory(sessionsDirectory);
         this.currentCrawlThreads = new ConcurrentHashMap<>();
-        this.scriptService = scriptManager == null ? null : scriptManager.getService();
         this.myAddress = myAddress;
         this.executorService = executorService;
         this.logger = logger;

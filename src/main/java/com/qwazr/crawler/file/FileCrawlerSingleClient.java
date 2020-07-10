@@ -17,7 +17,6 @@ package com.qwazr.crawler.file;
 
 import com.qwazr.crawler.common.CrawlerSingleClient;
 import com.qwazr.server.RemoteService;
-
 import java.io.IOException;
 
 public class FileCrawlerSingleClient extends CrawlerSingleClient<FileCrawlDefinition, FileCrawlStatus>

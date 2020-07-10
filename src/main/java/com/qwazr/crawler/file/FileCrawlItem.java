@@ -19,22 +19,13 @@ import com.qwazr.crawler.common.CrawlItemBase;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 
-final public class FileCrawlItem extends CrawlItemBase {
+final public class FileCrawlItem extends CrawlItemBase<Path> {
 
-    private final Path path;
     private final BasicFileAttributes attributes;
 
     FileCrawlItem(final Builder builder) {
         super(builder);
-        this.path = builder.path;
         this.attributes = builder.attributes;
-    }
-
-    /**
-     * @return the current path
-     */
-    public Path getPath() {
-        return path;
     }
 
     /**
@@ -44,15 +35,18 @@ final public class FileCrawlItem extends CrawlItemBase {
         return attributes;
     }
 
-    final static class Builder extends BaseBuilder<Builder> {
+    final static class Builder extends BaseBuilder<Path, Builder> {
 
-        final Path path;
         final BasicFileAttributes attributes;
 
         Builder(final int depth, final Path path, final BasicFileAttributes attributes) {
-            super(Builder.class, depth);
-            this.path = path;
+            super(path, depth);
             this.attributes = attributes;
+        }
+
+        @Override
+        protected Builder me() {
+            return this;
         }
 
         FileCrawlItem build() {

@@ -17,18 +17,17 @@ package com.qwazr.crawler.file;
 
 import com.qwazr.utils.FileUtils;
 import com.qwazr.utils.RandomUtils;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
-import java.io.File;
 import java.nio.file.Paths;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import org.junit.Assert;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 public class FileCrawlManagerTest {
 
@@ -36,14 +35,14 @@ public class FileCrawlManagerTest {
     private static FileCrawlerManager crawlerManager;
     private static Path dataDir;
 
-    @BeforeClass
+    @BeforeAll
     public static void setup() throws IOException {
         executorService = Executors.newCachedThreadPool();
         dataDir = Files.createTempDirectory("ftptest_data");
-        crawlerManager = new FileCrawlerManager(dataDir, null, executorService);
+        crawlerManager = new FileCrawlerManager(dataDir, executorService);
     }
 
-    @AfterClass
+    @AfterAll
     public static void cleanup() throws IOException {
         if (executorService != null)
             executorService.shutdown();

@@ -17,7 +17,6 @@ package com.qwazr.crawler.file;
 
 import com.qwazr.cluster.ClusterManager;
 import com.qwazr.crawler.common.CrawlManager;
-import com.qwazr.scripts.ScriptManager;
 import com.qwazr.utils.LoggerUtils;
 import com.qwazr.utils.TimeTracker;
 
@@ -34,24 +33,21 @@ public class FileCrawlerManager extends CrawlManager
 
     public FileCrawlerManager(final Path crawlerRootDirectory,
                               final String myAddress,
-                              final ScriptManager scriptManager,
                               final ExecutorService executorService) throws IOException {
-        super(crawlerRootDirectory, myAddress, scriptManager, executorService,
+        super(crawlerRootDirectory, myAddress, executorService,
                 LOGGER, FileCrawlStatus.class);
         service = new FileCrawlerServiceImpl(this);
     }
 
     public FileCrawlerManager(final Path crawlerRootDirectory,
                               final ClusterManager clusterManager,
-                              final ScriptManager scriptManager,
                               final ExecutorService executorService) throws IOException {
-        this(crawlerRootDirectory, clusterManager.getService().getStatus().me, scriptManager, executorService);
+        this(crawlerRootDirectory, clusterManager.getService().getStatus().me, executorService);
     }
 
     public FileCrawlerManager(final Path crawlerRootDirectory,
-                              final ScriptManager scriptManager,
                               final ExecutorService executorService) throws IOException {
-        this(crawlerRootDirectory, (String) null, scriptManager, executorService);
+        this(crawlerRootDirectory, (String) null, executorService);
     }
 
     public FileCrawlerServiceInterface getService() {

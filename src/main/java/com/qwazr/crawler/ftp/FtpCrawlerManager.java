@@ -18,7 +18,6 @@ package com.qwazr.crawler.ftp;
 import com.qwazr.cluster.ClusterManager;
 import com.qwazr.crawler.common.CrawlManager;
 import com.qwazr.crawler.file.FileCrawlerManager;
-import com.qwazr.scripts.ScriptManager;
 import com.qwazr.utils.LoggerUtils;
 import com.qwazr.utils.TimeTracker;
 import java.io.IOException;
@@ -35,24 +34,21 @@ public class FtpCrawlerManager extends CrawlManager
 
     public FtpCrawlerManager(final Path crawlerRootDirectory,
                              final String myAddress,
-                             final ScriptManager scriptManager,
                              final ExecutorService executorService) throws IOException {
-        super(crawlerRootDirectory, myAddress, scriptManager, executorService,
+        super(crawlerRootDirectory, myAddress, executorService,
                 LOGGER, FtpCrawlStatus.class);
         service = new FtpCrawlerServiceImpl(this);
     }
 
     public FtpCrawlerManager(final Path crawlerRootDirectory,
                              final ClusterManager clusterManager,
-                             final ScriptManager scriptManager,
                              final ExecutorService executorService) throws IOException {
-        this(crawlerRootDirectory, clusterManager.getService().getStatus().me, scriptManager, executorService);
+        this(crawlerRootDirectory, clusterManager.getService().getStatus().me, executorService);
     }
 
     public FtpCrawlerManager(final Path crawlerRootDirectory,
-                             final ScriptManager scriptManager,
                              final ExecutorService executorService) throws IOException {
-        this(crawlerRootDirectory, (String) null, scriptManager, executorService);
+        this(crawlerRootDirectory, (String) null, executorService);
     }
 
     public FtpCrawlerServiceInterface getService() {

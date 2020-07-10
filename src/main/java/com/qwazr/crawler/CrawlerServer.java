@@ -27,7 +27,6 @@ import com.qwazr.crawler.web.WebCrawlerServiceBuilder;
 import com.qwazr.crawler.web.WebCrawlerServiceInterface;
 import com.qwazr.library.LibraryManager;
 import com.qwazr.library.LibraryServiceInterface;
-import com.qwazr.scripts.ScriptManager;
 import com.qwazr.server.ApplicationBuilder;
 import com.qwazr.server.BaseServer;
 import com.qwazr.server.GenericServer;
@@ -72,18 +71,12 @@ public class CrawlerServer implements BaseServer {
         builder.shutdownListener(server -> libraryManager.close());
         webServices.singletons(libraryManager.getService());
 
-        final ScriptManager scriptManager =
-                new ScriptManager(executorService, clusterManager, libraryManager.getService(),
-                        configuration.dataDirectory);
-        webServices.singletons(scriptManager.getService());
-
-
         final Path webCrawlerDirectory = configuration.dataDirectory.resolve("webcrawler");
         if (!Files.exists(webCrawlerDirectory))
             Files.createDirectory(webCrawlerDirectory);
 
         final WebCrawlerManager webCrawlerManager = new WebCrawlerManager(
-                webCrawlerDirectory, clusterManager, scriptManager, executorService);
+                webCrawlerDirectory, clusterManager, executorService);
         builder.shutdownListener(server -> webCrawlerManager.close());
         webServices.singletons(webCrawlerManager.getService());
         webCrawlerServiceBuilder = new WebCrawlerServiceBuilder(executorService, clusterManager, webCrawlerManager);
@@ -93,7 +86,7 @@ public class CrawlerServer implements BaseServer {
             Files.createDirectory(fileCrawlerDirectory);
 
         final FileCrawlerManager fileCrawlerManager = new FileCrawlerManager(
-                fileCrawlerDirectory, clusterManager, scriptManager, executorService);
+                fileCrawlerDirectory, clusterManager, executorService);
         builder.shutdownListener(server -> fileCrawlerManager.close());
         webServices.singletons(fileCrawlerManager.getService());
         fileCrawlerServiceBuilder = new FileCrawlerServiceBuilder(clusterManager, fileCrawlerManager);
@@ -103,7 +96,7 @@ public class CrawlerServer implements BaseServer {
             Files.createDirectory(ftpCrawlerDirectory);
 
         final FtpCrawlerManager ftpCrawlerManager = new FtpCrawlerManager(
-                ftpCrawlerDirectory, clusterManager, scriptManager, executorService);
+                ftpCrawlerDirectory, clusterManager, executorService);
         builder.shutdownListener(server -> ftpCrawlerManager.close());
         webServices.singletons(ftpCrawlerManager.getService());
         ftpCrawlerServiceBuilder = new FtpCrawlerServiceBuilder(clusterManager, ftpCrawlerManager);

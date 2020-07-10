@@ -16,24 +16,23 @@
 package com.qwazr.crawler.web;
 
 import com.qwazr.utils.IOUtils;
-import org.junit.Assert;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import org.junit.Assert;
+import org.junit.jupiter.api.Test;
 
 public class WebCrawlerDefinitionTest {
 
-	@Test
-	public void webCrawlDefinitionTest() throws IOException {
-		final WebCrawlDefinition webCrawlDefJson = WebCrawlDefinition.newInstance(
-				IOUtils.toString(WebCrawlerDefinitionTest.class.getResourceAsStream("web_crawl.json"),
-						StandardCharsets.UTF_8));
-		Assert.assertNotNull(webCrawlDefJson);
-		final WebCrawlDefinition webCrawlDef = WebCrawlDefinition.of(webCrawlDefJson).build();
-		// Check that they are not the same reference
-		Assert.assertTrue(webCrawlDef != webCrawlDefJson);
-		// Check that they are equals
-		Assert.assertEquals(webCrawlDef, webCrawlDefJson);
-	}
+    @Test
+    public void webCrawlDefinitionTest() throws IOException {
+        final WebCrawlDefinition webCrawlDefJson = WebCrawlDefinition.newInstance(
+                IOUtils.toString(WebCrawlerDefinitionTest.class.getResourceAsStream("web_crawl.json"),
+                        StandardCharsets.UTF_8));
+        Assert.assertNotNull(webCrawlDefJson);
+        final WebCrawlDefinition webCrawlDef = WebCrawlDefinition.of(webCrawlDefJson).build();
+        // Check that they are not the same reference
+        Assert.assertTrue(webCrawlDef != webCrawlDefJson);
+        // Check that they are equals
+        Assert.assertEquals(webCrawlDef, webCrawlDefJson);
+    }
 }

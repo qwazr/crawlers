@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2018 Emmanuel Keller / QWAZR
+ * Copyright 2016-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,24 +16,28 @@
 package com.qwazr.crawler.web;
 
 import com.qwazr.crawler.CrawlerServer;
-import com.qwazr.crawler.common.CommonEvent;
+import com.qwazr.crawler.common.CrawlCollectorTest;
+import com.qwazr.crawler.common.CrawlHelpers;
 import com.qwazr.crawler.common.CrawlStatus;
-import com.qwazr.crawler.common.EventEnum;
-import com.qwazr.crawler.common.ScriptDefinition;
-import com.qwazr.crawler.web.driver.DriverInterface;
 import com.qwazr.utils.FileUtils;
 import com.qwazr.utils.RandomUtils;
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
+import java.util.Map;
 import java.util.SortedMap;
-import org.junit.AfterClass;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.MatcherAssert.assertThat;
 import org.junit.Assert;
-import org.junit.FixMethodOrder;
-import org.junit.Test;
-import org.junit.runners.MethodSorters;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public abstract class WebCrawlerTestAbstract {
 
     static WebCrawlerServiceInterface service;
@@ -46,7 +50,7 @@ public abstract class WebCrawlerTestAbstract {
         WebAppTestServer.start();
     }
 
-    @AfterClass
+    @AfterAll
     public static void cleanup() throws InterruptedException, IOException {
         WebAppTestServer.stop();
         CrawlerServer.shutdown();
@@ -57,6 +61,7 @@ public abstract class WebCrawlerTestAbstract {
     }
 
     @Test
+    @Order(200)
     public void test200emptySessions() {
         SortedMap<String, WebCrawlStatus> sessions = service.getSessions();
         Assert.assertNotNull(sessions);
@@ -71,15 +76,16 @@ public abstract class WebCrawlerTestAbstract {
         webCrawl.addAcceptedContentType("image/vnd.microsoft.icon");
         webCrawl.setRobotsTxtEnabled(true);
         webCrawl.setDisableSslCheck(false);
+        webCrawl.variable(RandomUtils.alphanumeric(5), RandomUtils.alphanumeric(6));
         webCrawl.setMaxDepth(2);
         return webCrawl;
     }
 
-    private CrawlStatus crawlTest(WebCrawlDefinition webCrawl, int crawled, int ignored, int error)
+    private CrawlStatus<?> crawlTest(WebCrawlDefinition webCrawl, int crawled, int ignored, int error)
             throws InterruptedException {
         final String sessionName = RandomUtils.alphanumeric(10);
         service.runSession(sessionName, webCrawl);
-        final CrawlStatus status = CommonEvent.crawlWait(sessionName, service);
+        final CrawlStatus<?> status = CrawlHelpers.crawlWait(sessionName, service);
         Assert.assertEquals(crawled, status.crawled);
         Assert.assertEquals(ignored, status.ignored);
         Assert.assertEquals(error, status.error);
@@ -88,11 +94,13 @@ public abstract class WebCrawlerTestAbstract {
     }
 
     @Test
+    @Order(300)
     public void test300SimpleCrawl() throws InterruptedException {
         crawlTest(getNewWebCrawl().setEntryUrl(WebAppTestServer.URL).build(), 5, 1, 1);
     }
 
     @Test
+    @Order(350)
     public void test350CrawlGetWebRequest() throws InterruptedException {
         crawlTest(getNewWebCrawl().setEntryRequest(
                 WebRequestDefinition.of(WebAppTestServer.URL).httpMethod(WebRequestDefinition.HttpMethod.GET).build())
@@ -107,64 +115,45 @@ public abstract class WebCrawlerTestAbstract {
     }
 
     @Test
+    @Order(400)
     public void test400CrawlEvent() throws InterruptedException {
-        WebEvents.feedbacks.clear();
+        WebCrawlCollectorFactoryTest.resetCounters();
+
         final String sessionName = RandomUtils.alphanumeric(10);
         final WebCrawlDefinition.Builder webCrawl = getNewWebCrawl().setEntryUrl(WebAppTestServer.URL);
-        final String variableName = RandomUtils.alphanumeric(5);
-        final String variableValue = RandomUtils.alphanumeric(6);
+        webCrawl.crawlCollectorFactoryClass(WebCrawlCollectorFactoryTest.class);
 
-        webCrawl.script(EventEnum.before_crawl, ScriptDefinition.of(WebEvents.BeforeCrawl.class)
-                .variable(variableName, variableValue + EventEnum.before_crawl.name())
-                .build());
-        webCrawl.script(EventEnum.after_crawl, ScriptDefinition.of(WebEvents.AfterCrawl.class)
-                .variable(variableName, variableValue + EventEnum.after_crawl.name())
-                .build());
-        webCrawl.script(EventEnum.before_session, ScriptDefinition.of(WebEvents.BeforeSession.class)
-                .variable(variableName, variableValue + EventEnum.before_session.name())
-                .build());
-        webCrawl.script(EventEnum.after_session, ScriptDefinition.of(WebEvents.AfterSession.class)
-                .variable(variableName, variableValue + EventEnum.after_session.name())
-                .build());
         webCrawl.userAgent("QWAZR_BOT");
         service.runSession(sessionName, webCrawl.build());
-        final CrawlStatus<?> status = CommonEvent.crawlWait(sessionName, service);
+        final CrawlStatus<?> status = CrawlHelpers.crawlWait(sessionName, service);
 
-        Assert.assertEquals(4, status.crawled);
+        Assert.assertEquals(5, status.crawled);
         Assert.assertEquals(1, status.ignored);
         Assert.assertEquals(1, status.redirect);
         Assert.assertEquals(1, status.error);
 
-        Assert.assertEquals(1, WebEvents.feedbacks.get(EventEnum.before_session).count());
-        Assert.assertEquals(7, WebEvents.feedbacks.get(EventEnum.before_crawl).count());
-        Assert.assertEquals(6, WebEvents.feedbacks.get(EventEnum.after_crawl).count());
-        Assert.assertEquals(1, WebEvents.feedbacks.get(EventEnum.after_session).count());
-        for (EventEnum eventEnum : EventEnum.values())
-            Assert.assertEquals(variableValue + eventEnum.name(),
-                    WebEvents.feedbacks.get(eventEnum).variable(variableName));
-        WebEvents.feedbacks.get(EventEnum.after_crawl).currentCrawls.forEach((id, current) -> {
-            final DriverInterface.Body body = current.getBody();
-            if (current.isCrawled()) {
-                Assert.assertNotNull(body);
-                Assert.assertEquals(Integer.valueOf(200), current.getStatusCode());
-                Assert.assertNotNull(current.getContentType());
-                Assert.assertNotNull(body.getContentType());
-                Assert.assertEquals(current.getContentType(), body.getContentType());
-                Assert.assertEquals(current.getContentType(), body.getContent().getContentType());
-                Assert.assertNotNull(body.getContent().getContentLength());
-                Assert.assertTrue(body.getContent().isClosed());
-            }
-            if (current.getRedirect() != null) {
-                Assert.assertEquals(Integer.valueOf(302), current.getStatusCode());
-            }
-            if (current.getError() != null) {
-                Assert.assertEquals(Integer.valueOf(404), current.getStatusCode());
-            }
-            if (current.isIgnored()) {
-                Assert.assertNull(current.getStatusCode());
-                Assert.assertNull(current.getContentType());
-            }
-        });
+        assertThat(CrawlCollectorTest.count.size(), equalTo(8));
+        assertThat(CrawlCollectorTest.crawled.size(), equalTo(5));
+        assertThat(CrawlCollectorTest.ignored.size(), equalTo(1));
+        assertThat(CrawlCollectorTest.inExclusion.size(), equalTo(0));
+        assertThat(CrawlCollectorTest.inInclusion.size(), equalTo(0));
+
+        WebCrawlCollectorFactoryTest.checkUri("http://localhost:9190", 0, 302, null);
+        WebCrawlCollectorFactoryTest.checkUri("http://localhost:9190/index.html", 0, 200, 436);
+        WebCrawlCollectorFactoryTest.checkUri("http://localhost:9190/private.html", 1, null, null);
+        WebCrawlCollectorFactoryTest.checkUri("http://localhost:9190/page1.html", 1, 200, 45);
+        WebCrawlCollectorFactoryTest.checkUri("http://localhost:9190/page2.html", 1, 200, 45);
+        WebCrawlCollectorFactoryTest.checkUri("http://localhost:9190/favicon.ico", 1, 200, 22382);
+        WebCrawlCollectorFactoryTest.checkUri("http://localhost:9190/page404.html", 1, 404, null);
+        WebCrawlCollectorFactoryTest.checkUri("http://localhost:9190/favicon.ico?query=with+space", 1, 200, 22382);
+
+        assertThat(WebCrawlCollectorFactoryTest.redirects,
+                equalTo(Map.of(
+                        URI.create("http://localhost:9190"),
+                        URI.create("http://localhost:9190/index.html"))));
+
+        assertThat(WebCrawlCollectorFactoryTest.robotsTxtRejected,
+                equalTo(List.of(URI.create("http://localhost:9190/private.html"))));
     }
 
 }
