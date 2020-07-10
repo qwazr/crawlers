@@ -22,14 +22,10 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.crawler.common.CrawlDefinition;
-import com.qwazr.crawler.common.EventEnum;
-import com.qwazr.crawler.common.ScriptDefinition;
 import com.qwazr.utils.ObjectMappers;
-
 import java.io.IOException;
 import java.util.Collection;
 import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.Objects;
 
 @JsonInclude(Include.NON_EMPTY)
@@ -47,14 +43,15 @@ public class FileCrawlDefinition extends CrawlDefinition<FileCrawlDefinition> {
     final public String entryPath;
 
     @JsonCreator
-    protected FileCrawlDefinition(@JsonProperty("entry_path") String entryPath,
-                                  @JsonProperty("max_depth") Integer maxDepth,
-                                  @JsonProperty("inclusion_patterns") Collection<String> inclusionPatterns,
-                                  @JsonProperty("exclusion_patterns") Collection<String> exclusionPatterns,
-                                  @JsonProperty("crawl_wait_ms") Integer crawlWaitMs,
-                                  @JsonProperty("variables") LinkedHashMap<String, String> variables,
-                                  @JsonProperty("scripts") Map<EventEnum, ScriptDefinition> scripts) {
-        super(FileCrawlDefinition.class, variables, scripts, inclusionPatterns, exclusionPatterns, maxDepth, crawlWaitMs);
+    protected FileCrawlDefinition(final @JsonProperty("entry_path") String entryPath,
+                                  final @JsonProperty("max_depth") Integer maxDepth,
+                                  final @JsonProperty("inclusion_patterns") Collection<String> inclusionPatterns,
+                                  final @JsonProperty("exclusion_patterns") Collection<String> exclusionPatterns,
+                                  final @JsonProperty("crawl_wait_ms") Integer crawlWaitMs,
+                                  final @JsonProperty("crawl_collector_factory") String crawlCollectorFactoryClass,
+                                  final @JsonProperty("variables") LinkedHashMap<String, Object> variables) {
+        super(FileCrawlDefinition.class, crawlCollectorFactoryClass, variables,
+                inclusionPatterns, exclusionPatterns, maxDepth, crawlWaitMs);
         this.entryPath = entryPath;
     }
 
@@ -107,8 +104,8 @@ public class FileCrawlDefinition extends CrawlDefinition<FileCrawlDefinition> {
 
         @Override
         public FileCrawlDefinition build() {
-            return new FileCrawlDefinition(entryPath, maxDepth, inclusionPatterns, exclusionPatterns, crawlWaitMs,
-                    variables, scripts);
+            return new FileCrawlDefinition(entryPath, maxDepth, inclusionPatterns, exclusionPatterns,
+                    crawlWaitMs, crawlCollectorFactoryClass, variables);
         }
     }
 

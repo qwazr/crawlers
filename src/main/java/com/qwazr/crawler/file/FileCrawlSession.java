@@ -20,15 +20,17 @@ import com.qwazr.utils.TimeTracker;
 import java.util.Map;
 
 public class FileCrawlSession extends CrawlSessionBase
-        <FileCrawlSession, FileCrawlThread, FileCrawlerManager, FileCrawlDefinition,
-                FileCrawlStatus, FileCrawlStatus.Builder> {
+        <FileCrawlSession, FileCrawlThread, FileCrawlerManager, FileCrawlDefinition, FileCrawlStatus, FileCrawlItem> {
 
     FileCrawlSession(final String sessionName,
                      final FileCrawlerManager fileCrawlerManager,
                      final TimeTracker timeTracker,
                      final FileCrawlDefinition crawlDefinition,
                      final Map<String, Object> attributes,
-                     final FileCrawlStatus.Builder crawlStatusBuilder) {
-        super(sessionName, fileCrawlerManager, timeTracker, crawlDefinition, attributes, crawlStatusBuilder);
+                     final FileCrawlStatus.Builder crawlStatusBuilder,
+                     final FileCrawlCollectorFactory fileCollectorFactory) {
+        super(sessionName, fileCrawlerManager, timeTracker, crawlDefinition, attributes, crawlStatusBuilder, fileCollectorFactory);
     }
+
+
 }

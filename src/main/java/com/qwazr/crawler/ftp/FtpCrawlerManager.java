@@ -28,7 +28,7 @@ import java.util.logging.Logger;
 
 public class FtpCrawlerManager extends CrawlManager
         <FtpCrawlerManager, FtpCrawlThread, FtpCrawlSession, FtpCrawlDefinition,
-                FtpCrawlStatus, FtpCrawlStatus.Builder> {
+                FtpCrawlStatus, FtpCrawlItem> {
 
     private static final Logger LOGGER = LoggerUtils.getLogger(FileCrawlerManager.class);
     private final FtpCrawlerServiceInterface service;
@@ -38,7 +38,7 @@ public class FtpCrawlerManager extends CrawlManager
                              final ScriptManager scriptManager,
                              final ExecutorService executorService) throws IOException {
         super(crawlerRootDirectory, myAddress, scriptManager, executorService,
-                LOGGER, FtpCrawlStatus.class, FtpCrawlDefinition.class);
+                LOGGER, FtpCrawlStatus.class);
         service = new FtpCrawlerServiceImpl(this);
     }
 
@@ -63,7 +63,8 @@ public class FtpCrawlerManager extends CrawlManager
     protected FtpCrawlThread newCrawlThread(String sessionName, FtpCrawlDefinition crawlDefinition) {
         final TimeTracker timeTracker = TimeTracker.withDurations();
         final FtpCrawlStatus.Builder crawlStatusBuilder = FtpCrawlStatus.of(myAddress, timeTracker);
-        final FtpCrawlSession session = new FtpCrawlSession(sessionName, this, timeTracker, crawlDefinition, attributes, crawlStatusBuilder);
+        final FtpCrawlCollectorFactory collectorFactory = newCrawlCollectorFactory(crawlDefinition, FtpCrawlCollectorFactory.class);
+        final FtpCrawlSession session = new FtpCrawlSession(sessionName, this, timeTracker, crawlDefinition, attributes, crawlStatusBuilder, collectorFactory);
         return new FtpCrawlThread(this, session, LOGGER);
     }
 }

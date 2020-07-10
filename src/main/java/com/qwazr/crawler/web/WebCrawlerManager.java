@@ -26,8 +26,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.logging.Logger;
 
 public class WebCrawlerManager extends CrawlManager
-        <WebCrawlerManager, WebCrawlThread, WebCrawlSession, WebCrawlDefinition,
-                WebCrawlStatus, WebCrawlStatus.Builder> {
+        <WebCrawlerManager, WebCrawlThread, WebCrawlSession, WebCrawlDefinition, WebCrawlStatus, WebCrawlItem> {
 
     private static final Logger LOGGER = LoggerUtils.getLogger(WebCrawlerManager.class);
 
@@ -37,8 +36,7 @@ public class WebCrawlerManager extends CrawlManager
                              final String myAddress,
                              final ScriptManager scriptManager,
                              final ExecutorService executor) throws IOException {
-        super(crawlerRootDirectory, myAddress, scriptManager, executor,
-                LOGGER, WebCrawlStatus.class, WebCrawlDefinition.class);
+        super(crawlerRootDirectory, myAddress, scriptManager, executor, LOGGER, WebCrawlStatus.class);
         service = new WebCrawlerServiceImpl(this);
     }
 
@@ -55,12 +53,13 @@ public class WebCrawlerManager extends CrawlManager
 
     @Override
     protected WebCrawlThread newCrawlThread(final String sessionName,
-                                            final WebCrawlDefinition webCrawlDefinition) {
+                                            final WebCrawlDefinition crawlDefinition) {
         final TimeTracker timeTracker = TimeTracker.withDurations();
         final WebCrawlStatus.Builder crawlStatusBuilder = WebCrawlStatus.of(myAddress, timeTracker);
-        final WebCrawlSession session = new WebCrawlSession(sessionName, this,
-                timeTracker, webCrawlDefinition, attributes, crawlStatusBuilder);
-        return new WebCrawlThread(this, session, webCrawlDefinition);
+        final WebCrawlCollectorFactory collectorFactory = newCrawlCollectorFactory(crawlDefinition, WebCrawlCollectorFactory.class);
+        final WebCrawlSession session = new WebCrawlSession(sessionName, this, timeTracker,
+                crawlDefinition, attributes, crawlStatusBuilder, collectorFactory);
+        return new WebCrawlThread(this, session, crawlDefinition);
     }
 
 }

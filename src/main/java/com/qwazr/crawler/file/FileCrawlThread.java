@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2018 Emmanuel Keller / QWAZR
+ * Copyright 2017-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,8 @@
 package com.qwazr.crawler.file;
 
 import com.qwazr.crawler.common.CrawlThread;
-import com.qwazr.crawler.common.EventEnum;
+import com.qwazr.utils.StringUtils;
+import java.io.File;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.IOException;
@@ -31,7 +32,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class FileCrawlThread extends CrawlThread
-        <FileCrawlThread, FileCrawlDefinition, FileCrawlStatus, FileCrawlStatus.Builder, FileCrawlerManager, FileCrawlSession>
+        <FileCrawlThread, FileCrawlDefinition, FileCrawlStatus,
+                FileCrawlerManager, FileCrawlSession, FileCrawlItem>
         implements FileVisitor<Path> {
 
     private final FileCrawlDefinition crawlDefinition;
@@ -55,43 +57,36 @@ public class FileCrawlThread extends CrawlThread
 
     @Override
     protected void runner() throws Exception {
-        script(EventEnum.before_session, null);
-        try {
-            if (!Files.exists(startPath)) {
-                logger.warning(() -> "The path does not exists: " + startPath.toAbsolutePath());
-                return;
-            }
-            Files.walkFileTree(startPath, Collections.emptySet(),
-                    crawlDefinition.maxDepth == null ? Integer.MAX_VALUE : crawlDefinition.maxDepth, this);
-        } finally {
-            script(EventEnum.after_session, null);
+        if (!Files.exists(startPath)) {
+            logger.warning(() -> "The path does not exists: " + startPath.toAbsolutePath());
+            return;
         }
+        Files.walkFileTree(startPath, Collections.emptySet(),
+                crawlDefinition.maxDepth == null ? Integer.MAX_VALUE : crawlDefinition.maxDepth, this);
     }
 
     @Override
     public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
         if (session.isAborting())
             return FileVisitResult.TERMINATE;
-        final FileCurrentPath.Builder builder = new FileCurrentPath.Builder(computeDepth(dir), dir, attrs);
-        final FileCurrentPath current = crawl(builder);
+        final FileCrawlItem.Builder builder = new FileCrawlItem.Builder(computeDepth(dir), dir, attrs);
+        final FileCrawlItem current = crawl(builder);
         if (current.isIgnored())
             return FileVisitResult.SKIP_SUBTREE;
         return FileVisitResult.CONTINUE;
     }
 
-    private FileCurrentPath crawl(final FileCurrentPath.Builder builder) {
-        FileCurrentPath current = builder.build();
-        if (!script(EventEnum.before_crawl, current))
-            return current;
-        checkPassInclusionExclusion(builder, builder.pathString);
-        current = builder.build();
-        if (current.isIgnored())
-            return current;
+    private FileCrawlItem crawl(final FileCrawlItem.Builder builder) {
+        final String currentPathString = builder.attributes.isDirectory() ?
+                StringUtils.ensureSuffix(builder.path.toString(), File.separator) :
+                builder.path.toString();
+        checkPassInclusionExclusion(builder, currentPathString);
+        final FileCrawlItem current = builder.build();
         try {
-            script(EventEnum.after_crawl, current);
+            session.collect(current);
             return current;
         } catch (Exception e) {
-            final String err = "File crawling error on " + current.pathString;
+            final String err = "File crawling error on " + currentPathString;
             logger.log(Level.WARNING, err, e);
             session.incErrorCount(err + ": " + ExceptionUtils.getRootCauseMessage(e));
             return current;
@@ -104,7 +99,7 @@ public class FileCrawlThread extends CrawlThread
             return FileVisitResult.TERMINATE;
         if (crawlDefinition.crawlWaitMs != null)
             session.sleep(crawlDefinition.crawlWaitMs);
-        crawl(new FileCurrentPath.Builder(computeDepth(file), file, attrs));
+        crawl(new FileCrawlItem.Builder(computeDepth(file), file, attrs));
         return FileVisitResult.CONTINUE;
     }
 

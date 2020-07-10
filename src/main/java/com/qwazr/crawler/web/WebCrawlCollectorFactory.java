@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2017-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,28 +12,10 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */
-package com.qwazr.crawler.common;
+ **/
+package com.qwazr.crawler.web;
 
-public enum EventEnum {
+import com.qwazr.crawler.common.CrawlCollectorFactory;
 
-	/**
-	 * Executed before the crawl session start
-	 */
-	before_session,
-
-	/**
-	 * Executed after the crawl session ends
-	 */
-	after_session,
-
-	/**
-	 * Executed before crawling an item
-	 */
-	before_crawl,
-
-	/**
-	 * Executed after an item has been crawled
-	 */
-	after_crawl
+public interface WebCrawlCollectorFactory extends CrawlCollectorFactory<WebCrawlItem, WebCrawlDefinition> {
 }

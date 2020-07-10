@@ -15,14 +15,14 @@
  */
 package com.qwazr.crawler.web;
 
-import com.qwazr.crawler.common.CurrentCrawl;
+import com.qwazr.crawler.common.CrawlItem;
 import com.qwazr.crawler.web.driver.DriverInterface;
 import java.net.URI;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public interface WebCurrentCrawl extends CurrentCrawl {
+public interface WebCrawlItem extends CrawlItem {
 
     /**
      * The initial URI and the final URI may be different if any redirection was followed

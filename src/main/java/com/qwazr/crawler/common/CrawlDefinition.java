@@ -26,7 +26,6 @@ import com.qwazr.utils.StringUtils;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -40,17 +39,19 @@ import java.util.Objects;
         isGetterVisibility = JsonAutoDetect.Visibility.NONE,
         fieldVisibility = JsonAutoDetect.Visibility.PUBLIC_ONLY)
 public abstract class CrawlDefinition<
-        DEFINITION extends CrawlDefinition<DEFINITION>> extends Equalizer.Immutable<DEFINITION> {
+        DEFINITION extends CrawlDefinition<DEFINITION>
+        > extends Equalizer.Immutable<DEFINITION> {
+
+    /**
+     * The name of the crawlCollectorFactory class
+     */
+    @JsonProperty("crawl_collector_factory")
+    final public String crawlCollectorFactoryClass;
 
     /**
      * The users variables shared by all the scripts.
      */
-    final public Map<String, String> variables;
-
-    /**
-     * A list of scripts paths mapped with the events which fire the scripts.
-     */
-    final public Map<EventEnum, ScriptDefinition> scripts;
+    final public Map<String, Object> variables;
 
     /**
      * A list of regular expression patterns. An item may be crawled only if it
@@ -79,15 +80,15 @@ public abstract class CrawlDefinition<
     final public Integer crawlWaitMs;
 
     protected CrawlDefinition(final Class<DEFINITION> crawldefinitionClass,
-                              final @JsonProperty("variables") LinkedHashMap<String, String> variables,
-                              final @JsonProperty("scripts") Map<EventEnum, ScriptDefinition> scripts,
+                              final @JsonProperty("crawl_collector_factory") String crawlCollectorFactoryClass,
+                              final @JsonProperty("variables") LinkedHashMap<String, Object> variables,
                               final @JsonProperty("inclusion_patterns") Collection<String> inclusionPatterns,
                               final @JsonProperty("exclusion_patterns") Collection<String> exclusionPatterns,
                               final @JsonProperty("max_depth") Integer maxDepth,
                               final @JsonProperty("crawl_wait_ms") Integer crawlWaitMs) {
         super(crawldefinitionClass);
-        this.variables = variables == null ? null : Collections.unmodifiableMap(variables);
-        this.scripts = scripts == null ? null : Collections.unmodifiableMap(scripts);
+        this.crawlCollectorFactoryClass = crawlCollectorFactoryClass;
+        this.variables = variables == null ? null : Map.copyOf(variables);
         this.inclusionPatterns =
                 inclusionPatterns == null ? null : List.copyOf(inclusionPatterns);
         this.exclusionPatterns =
@@ -99,8 +100,8 @@ public abstract class CrawlDefinition<
     protected CrawlDefinition(final Class<DEFINITION> crawldefinitionClass,
                               final AbstractBuilder<DEFINITION, ?> builder) {
         this(crawldefinitionClass,
+                builder.crawlCollectorFactoryClass,
                 builder.variables,
-                builder.scripts,
                 builder.inclusionPatterns,
                 builder.exclusionPatterns,
                 builder.maxDepth,
@@ -108,12 +109,12 @@ public abstract class CrawlDefinition<
 
     }
 
-    final public Map<String, String> getVariables() {
-        return variables;
+    final public String getCrawlCollectorFactoryClass() {
+        return crawlCollectorFactoryClass;
     }
 
-    final public Map<EventEnum, ScriptDefinition> getScripts() {
-        return scripts;
+    final public Map<String, Object> getVariables() {
+        return variables;
     }
 
     final public Collection<String> getInclusionPatterns() {
@@ -134,24 +135,26 @@ public abstract class CrawlDefinition<
 
     @Override
     protected int computeHashCode() {
-        return Objects.hash(variables, scripts, inclusionPatterns, exclusionPatterns, maxDepth, crawlWaitMs);
+        return Objects.hash(variables, inclusionPatterns, exclusionPatterns, maxDepth, crawlWaitMs);
     }
 
     @Override
     protected boolean isEqual(final DEFINITION c) {
-        return CollectionsUtils.equals(variables, c.variables) && CollectionsUtils.equals(scripts, c.scripts) &&
-                CollectionsUtils.equals(inclusionPatterns, c.inclusionPatterns) &&
-                CollectionsUtils.equals(exclusionPatterns, c.exclusionPatterns) &&
-                Objects.equals(maxDepth, c.maxDepth) && Objects.equals(crawlWaitMs, c.crawlWaitMs);
+        return Objects.equals(crawlCollectorFactoryClass, c.crawlCollectorFactoryClass)
+                && CollectionsUtils.equals(variables, c.variables)
+                && CollectionsUtils.equals(inclusionPatterns, c.inclusionPatterns)
+                && CollectionsUtils.equals(exclusionPatterns, c.exclusionPatterns)
+                && Objects.equals(maxDepth, c.maxDepth)
+                && Objects.equals(crawlWaitMs, c.crawlWaitMs);
     }
 
     public static abstract class AbstractBuilder<
             DEFINITION extends CrawlDefinition<DEFINITION>,
             BUILDER extends AbstractBuilder<DEFINITION, BUILDER>> {
 
-        protected LinkedHashMap<String, String> variables;
+        protected String crawlCollectorFactoryClass;
 
-        protected Map<EventEnum, ScriptDefinition> scripts;
+        protected LinkedHashMap<String, Object> variables;
 
         protected LinkedHashSet<String> inclusionPatterns;
         protected LinkedHashSet<String> exclusionPatterns;
@@ -169,7 +172,6 @@ public abstract class CrawlDefinition<
         protected AbstractBuilder(final Class<BUILDER> builderClass, DEFINITION src) {
             this(builderClass);
             variables = src.variables == null ? null : new LinkedHashMap<>(src.variables);
-            scripts = src.scripts == null ? null : new LinkedHashMap<>(src.scripts);
             inclusionPatterns = src.inclusionPatterns == null || src.inclusionPatterns.isEmpty() ?
                     null :
                     new LinkedHashSet<>(src.inclusionPatterns);
@@ -180,17 +182,15 @@ public abstract class CrawlDefinition<
 
         protected abstract BUILDER me();
 
+        public BUILDER crawlCollectorFactoryClass(final Class<? extends CrawlCollectorFactory<?, DEFINITION>> crawlCollectorFactoryClass) {
+            this.crawlCollectorFactoryClass = crawlCollectorFactoryClass.getName();
+            return me();
+        }
+
         public BUILDER variable(final String name, final String value) {
             if (variables == null)
                 variables = new LinkedHashMap<>();
             variables.put(name, value);
-            return me();
-        }
-
-        public BUILDER script(final EventEnum event, final ScriptDefinition script) {
-            if (scripts == null)
-                scripts = new LinkedHashMap<>();
-            scripts.put(event, script);
             return me();
         }
 

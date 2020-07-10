@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2018 Emmanuel Keller / QWAZR
+ * Copyright 2016-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +18,6 @@ package com.qwazr.crawler.file;
 import com.qwazr.crawler.CrawlerServer;
 import com.qwazr.crawler.common.CommonEvent;
 import com.qwazr.crawler.common.CrawlStatus;
-import com.qwazr.crawler.common.EventEnum;
-import com.qwazr.crawler.common.ScriptDefinition;
 import com.qwazr.server.RemoteService;
 import com.qwazr.utils.FileUtils;
 import com.qwazr.utils.RandomUtils;

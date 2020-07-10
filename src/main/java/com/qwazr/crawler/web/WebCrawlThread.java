@@ -16,7 +16,6 @@
 package com.qwazr.crawler.web;
 
 import com.qwazr.crawler.common.CrawlThread;
-import com.qwazr.crawler.common.EventEnum;
 import com.qwazr.crawler.web.driver.DriverInterface;
 import com.qwazr.crawler.web.robotstxt.RobotsTxt;
 import com.qwazr.server.ServerException;
@@ -48,8 +47,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
 public class WebCrawlThread extends CrawlThread
-        <WebCrawlThread, WebCrawlDefinition, WebCrawlStatus, WebCrawlStatus.Builder,
-                WebCrawlerManager, WebCrawlSession> {
+        <WebCrawlThread, WebCrawlDefinition, WebCrawlStatus, WebCrawlerManager, WebCrawlSession, WebCrawlItem> {
 
     private static final Logger LOGGER = LoggerUtils.getLogger(WebCrawlThread.class);
 
@@ -210,7 +208,7 @@ public class WebCrawlThread extends CrawlThread
         return body;
     }
 
-    private boolean checkPassContentType(final String contentType, final WebCurrentCrawlImpl.Builder currentBuilder) {
+    private boolean checkPassContentType(final String contentType, final WebCrawlItemImpl.Builder currentBuilder) {
         final boolean accepted = acceptedContentType == null || acceptedContentType.contains(contentType);
         currentBuilder.contentType(contentType, !accepted);
         return accepted;
@@ -274,14 +272,14 @@ public class WebCrawlThread extends CrawlThread
         }
 
         // Call the before_crawl process:
-        final WebCurrentCrawl beforeCrawlCurrent = crawlUnit.currentBuilder.build();
-        if (!script(EventEnum.before_crawl, beforeCrawlCurrent))
-            return;
+        final WebCrawlItem beforeCrawlCurrent = crawlUnit.currentBuilder.build();
 
-        if (beforeCrawlCurrent.isIgnored() || beforeCrawlCurrent.getError() != null)
+        if (beforeCrawlCurrent.isIgnored() || beforeCrawlCurrent.getError() != null) {
+            session.collect(beforeCrawlCurrent);
             return;
+        }
 
-        final WebCurrentCrawl afterCrawlCurrent;
+        final WebCrawlItem afterCrawlCurrent;
 
         try (final DriverInterface.Body body = crawl(crawlUnit)) {
 
@@ -295,7 +293,7 @@ public class WebCrawlThread extends CrawlThread
             }
 
             // Give the hand to the "crawl" event scripts
-            script(EventEnum.after_crawl, afterCrawlCurrent);
+            session.collect(afterCrawlCurrent);
         } catch (IOException e) {
             LOGGER.log(Level.WARNING, e, e::getMessage);
             return;
@@ -336,8 +334,6 @@ public class WebCrawlThread extends CrawlThread
 
     protected void runner() throws URISyntaxException, IOException, ServerException, InterruptedException {
         try (final DriverInterface driver = DriverInterface.of(crawlDefinition)) {
-            registerScriptGlobalObject("driver", driver);
-            script(EventEnum.before_session, null);
             if (crawlDefinition.preUrl != null && !crawlDefinition.preUrl.isEmpty())
                 driver.body(WebRequestDefinition.of(crawlDefinition.preUrl).build()).close();
             if (crawlDefinition.urls != null && !crawlDefinition.urls.isEmpty())
@@ -348,8 +344,6 @@ public class WebCrawlThread extends CrawlThread
                 else if (crawlDefinition.entryRequest != null)
                     crawlStart(crawlUnit(driver, crawlDefinition.entryRequest));
             }
-        } finally {
-            script(EventEnum.after_session, null);
         }
     }
 
@@ -373,14 +367,14 @@ public class WebCrawlThread extends CrawlThread
 
     abstract class CrawlUnit {
 
-        final WebCurrentCrawlImpl.Builder currentBuilder;
+        final WebCrawlItemImpl.Builder currentBuilder;
         final DriverInterface driver;
         final WebRequestDefinition request;
 
         CrawlUnit(final DriverInterface driver, final WebRequestDefinition request, final int depth)
                 throws URISyntaxException {
             this.driver = driver;
-            this.currentBuilder = new WebCurrentCrawlImpl.Builder(new URI(request.url), depth);
+            this.currentBuilder = new WebCrawlItemImpl.Builder(new URI(request.url), depth);
             this.request = request;
         }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2018 Emmanuel Keller / QWAZR
+ * Copyright 2014-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,9 +15,8 @@
  */
 package com.qwazr.crawler.web;
 
-import com.qwazr.crawler.common.CurrentCrawlImpl;
+import com.qwazr.crawler.common.CrawlItemBase;
 import com.qwazr.crawler.web.driver.DriverInterface;
-
 import java.net.URI;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -26,7 +25,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
-final class WebCurrentCrawlImpl extends CurrentCrawlImpl implements WebCurrentCrawl {
+final class WebCrawlItemImpl extends CrawlItemBase implements WebCrawlItem {
 
     private final URI uri;
     private final URI redirect;
@@ -38,7 +37,7 @@ final class WebCurrentCrawlImpl extends CurrentCrawlImpl implements WebCurrentCr
     private final Boolean rejectedContentType;
     private final DriverInterface.Body body;
 
-    WebCurrentCrawlImpl(Builder builder) {
+    WebCrawlItemImpl(Builder builder) {
         super(builder);
         this.uri = builder.uri;
         this.redirect = builder.redirect;
@@ -161,8 +160,8 @@ final class WebCurrentCrawlImpl extends CurrentCrawlImpl implements WebCurrentCr
             return this;
         }
 
-        WebCurrentCrawl build() {
-            return new WebCurrentCrawlImpl(this);
+        WebCrawlItem build() {
+            return new WebCrawlItemImpl(this);
         }
 
     }

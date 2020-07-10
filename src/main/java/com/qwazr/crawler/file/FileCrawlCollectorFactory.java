@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2018 Emmanuel Keller / QWAZR
+ * Copyright 2017-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,15 +12,10 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */
+ **/
 package com.qwazr.crawler.file;
 
-import com.qwazr.crawler.common.CrawlScriptEvents;
+import com.qwazr.crawler.common.CrawlCollectorFactory;
 
-public abstract class FileCrawlScriptEvent
-		extends CrawlScriptEvents<FileCrawlDefinition, FileCrawlSession, FileCurrentPath> {
-
-	protected FileCrawlScriptEvent() {
-		super(FileCrawlSession.class, FileCurrentPath.class);
-	}
+public interface FileCrawlCollectorFactory extends CrawlCollectorFactory<FileCrawlItem, FileCrawlDefinition> {
 }

@@ -16,7 +16,6 @@
 package com.qwazr.crawler.ftp;
 
 import com.qwazr.crawler.common.CrawlThread;
-import com.qwazr.crawler.common.EventEnum;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.concurrent.RunnableEx;
 import com.qwazr.utils.concurrent.SupplierEx;
@@ -36,8 +35,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class FtpCrawlThread extends CrawlThread
-        <FtpCrawlThread, FtpCrawlDefinition, FtpCrawlStatus, FtpCrawlStatus.Builder,
-                FtpCrawlerManager, FtpCrawlSession> {
+        <FtpCrawlThread, FtpCrawlDefinition, FtpCrawlStatus, FtpCrawlerManager, FtpCrawlSession, FtpCrawlItem> {
 
     private final FtpCrawlDefinition crawlDefinition;
     private final FTPClient ftp;
@@ -54,16 +52,7 @@ public class FtpCrawlThread extends CrawlThread
     }
 
     @Override
-    protected void runner() throws Exception {
-        script(EventEnum.before_session, null);
-        try {
-            crawl();
-        } finally {
-            script(EventEnum.after_session, null);
-        }
-    }
-
-    private void crawl() throws IOException {
+    protected void runner() throws IOException {
         Objects.requireNonNull(crawlDefinition.hostname, "The host name of the server is missing");
         try {
 
@@ -117,7 +106,7 @@ public class FtpCrawlThread extends CrawlThread
         if (ftpFiles == null || ftpFiles.length == 0)
             return;
 
-        final FtpCurrentCrawl.Builder currentBuilder = new FtpCurrentCrawl.Builder(currentPath, depth);
+        final FtpCrawlItem.Builder currentBuilder = new FtpCrawlItem.Builder(currentPath, depth);
         checkPassInclusionExclusion(currentBuilder, currentPath);
         if (currentBuilder.build().isIgnored())
             return;
@@ -143,34 +132,33 @@ public class FtpCrawlThread extends CrawlThread
         }
     }
 
-    private void crawlFile(final FTPFile ftpFile, final FtpCurrentCrawl.Builder builder) throws IOException {
+    private void crawlFile(final FTPFile ftpFile, final FtpCrawlItem.Builder builder) throws IOException {
         if (session.isAborting())
             return;
 
         builder.ftpFile(ftpFile);
 
-        final FtpCurrentCrawl currentCrawl = builder.build();
-
-        if (!script(EventEnum.before_crawl, currentCrawl))
-            return;
+        final FtpCrawlItem currentCrawl = builder.build();
 
         checkPassInclusionExclusion(builder, currentCrawl.getPath());
-        if (builder.build().isIgnored())
+        if (!builder.build().isIgnored()) {
+            session.collect(currentCrawl);
             return;
-
+        }
         checkTransferMode();
-
         final Path tmpFile = Files.createTempFile("ftpCrawler-", ftpFile.getName());
         try {
-            try (final OutputStream output = new BufferedOutputStream(Files.newOutputStream(tmpFile))) {
-                ftp.retrieveFile(ftpFile.getName(), output);
+            try {
+                try (final OutputStream output = new BufferedOutputStream(Files.newOutputStream(tmpFile))) {
+                    ftp.retrieveFile(ftpFile.getName(), output);
+                }
+                builder.localFilePath(tmpFile);
+                builder.crawled(true);
+            } catch (RuntimeException | IOException e) {
+                builder.error(e);
+                throw e;
             }
-            builder.crawled(true);
-            script(EventEnum.after_crawl, builder.build());
-        } catch (RuntimeException | IOException e) {
-            builder.error(e);
-            script(EventEnum.after_crawl, builder.build());
-            throw e;
+            session.collect(builder.build());
         } finally {
             Files.deleteIfExists(tmpFile);
         }

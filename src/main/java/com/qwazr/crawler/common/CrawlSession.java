@@ -19,7 +19,9 @@ import com.qwazr.utils.TimeTracker;
 
 public interface CrawlSession<
         DEFINITION extends CrawlDefinition<DEFINITION>,
-        STATUS extends CrawlStatus<STATUS>> extends AttributesInterface, AutoCloseable {
+        STATUS extends CrawlStatus<STATUS>,
+        ITEM extends CrawlItem
+        > extends AttributesInterface, AutoCloseable {
 
     /**
      * @return the current crawl status
@@ -31,12 +33,7 @@ public interface CrawlSession<
      */
     DEFINITION getCrawlDefinition();
 
-    /**
-     * @param name the name of the variable
-     * @param <V>  the type of the variable
-     * @return the value of the variable
-     */
-    <V> V getVariable(String name, Class<? extends V> variableClass);
+    void collect(ITEM crawlItem);
 
     /**
      * Causes the currently executing thread to sleep

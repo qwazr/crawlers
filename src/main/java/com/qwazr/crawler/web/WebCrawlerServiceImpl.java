@@ -23,8 +23,7 @@ import java.util.TreeMap;
 import java.util.logging.Logger;
 
 class WebCrawlerServiceImpl extends CrawlerServiceImpl
-        <WebCrawlSession, WebCrawlThread, WebCrawlerManager, WebCrawlDefinition,
-                WebCrawlStatus, WebCrawlStatus.Builder>
+        <WebCrawlSession, WebCrawlThread, WebCrawlerManager, WebCrawlDefinition, WebCrawlStatus, WebCrawlItem>
         implements WebCrawlerServiceInterface {
 
     private static final Logger LOGGER = LoggerUtils.getLogger(WebCrawlerServiceImpl.class);

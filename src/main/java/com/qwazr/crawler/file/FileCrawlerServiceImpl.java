@@ -22,8 +22,7 @@ import java.io.IOException;
 import java.util.logging.Logger;
 
 class FileCrawlerServiceImpl extends CrawlerServiceImpl
-        <FileCrawlSession, FileCrawlThread, FileCrawlerManager, FileCrawlDefinition,
-                FileCrawlStatus, FileCrawlStatus.Builder>
+        <FileCrawlSession, FileCrawlThread, FileCrawlerManager, FileCrawlDefinition, FileCrawlStatus, FileCrawlItem>
         implements FileCrawlerServiceInterface {
 
     private static final Logger LOGGER = LoggerUtils.getLogger(FileCrawlerServiceImpl.class);

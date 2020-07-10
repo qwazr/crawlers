@@ -22,8 +22,7 @@ import java.io.IOException;
 import java.util.logging.Logger;
 
 class FtpCrawlerServiceImpl extends CrawlerServiceImpl
-        <FtpCrawlSession, FtpCrawlThread, FtpCrawlerManager, FtpCrawlDefinition,
-                FtpCrawlStatus, FtpCrawlStatus.Builder>
+        <FtpCrawlSession, FtpCrawlThread, FtpCrawlerManager, FtpCrawlDefinition, FtpCrawlStatus, FtpCrawlItem>
         implements FtpCrawlerServiceInterface {
 
     private static final Logger LOGGER = LoggerUtils.getLogger(FtpCrawlerServiceImpl.class);

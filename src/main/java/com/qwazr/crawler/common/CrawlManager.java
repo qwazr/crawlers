@@ -38,13 +38,13 @@ import org.mapdb.HTreeMap;
 import org.mapdb.Serializer;
 
 public abstract class CrawlManager<
-        MANAGER extends CrawlManager<MANAGER, THREAD, SESSION, DEFINITION, STATUS, BUILDER>,
-        THREAD extends CrawlThread<THREAD, DEFINITION, STATUS, BUILDER, MANAGER, SESSION>,
-        SESSION extends CrawlSessionBase<SESSION, THREAD, MANAGER, DEFINITION, STATUS, BUILDER>,
+        MANAGER extends CrawlManager<MANAGER, THREAD, SESSION, DEFINITION, STATUS, ITEM>,
+        THREAD extends CrawlThread<THREAD, DEFINITION, STATUS, MANAGER, SESSION, ITEM>,
+        SESSION extends CrawlSessionBase<SESSION, THREAD, MANAGER, DEFINITION, STATUS, ITEM>,
         DEFINITION extends CrawlDefinition<DEFINITION>,
         STATUS extends CrawlStatus<STATUS>,
-        BUILDER extends CrawlStatus.AbstractBuilder<STATUS, BUILDER>>
-        extends AttributesBase implements AutoCloseable {
+        ITEM extends CrawlItem
+        > extends AttributesBase implements AutoCloseable {
 
     public final static String CRAWL_DB_NAME = "crawler.db";
     public final static String MAP_SESSION_NAME = "sessions";
@@ -52,7 +52,6 @@ public abstract class CrawlManager<
 
     private final ConcurrentHashMap<String, THREAD> currentCrawlThreads;
     private final Class<STATUS> statusClass;
-    private final Class<DEFINITION> definitionClass;
     private final HTreeMap<String, byte[]> crawlStatusMap;
     private final HTreeMap<String, byte[]> crawlDefinitionMap;
 
@@ -69,8 +68,7 @@ public abstract class CrawlManager<
                            final ScriptManager scriptManager,
                            final ExecutorService executorService,
                            final Logger logger,
-                           final Class<STATUS> statusClass,
-                           final Class<DEFINITION> definitionClass) throws IOException {
+                           final Class<STATUS> statusClass) throws IOException {
         this.database = DBMaker
                 .fileDB(crawlerRootDirectory.resolve(CRAWL_DB_NAME).toFile())
                 .transactionEnable()
@@ -84,7 +82,6 @@ public abstract class CrawlManager<
         this.executorService = executorService;
         this.logger = logger;
         this.statusClass = statusClass;
-        this.definitionClass = definitionClass;
         this.crawlStatusMap = database.hashMap(MAP_SESSION_NAME)
                 .keySerializer(Serializer.STRING)
                 .valueSerializer(Serializer.BYTE_ARRAY)
@@ -129,6 +126,20 @@ public abstract class CrawlManager<
 
     protected abstract THREAD newCrawlThread(final String sessionName,
                                              final DEFINITION crawlDefinition);
+
+    protected <COLLECTOR_FACTORY extends CrawlCollectorFactory<ITEM, DEFINITION>> COLLECTOR_FACTORY newCrawlCollectorFactory(final DEFINITION crawlDefinition,
+                                                                                                                             final Class<? extends COLLECTOR_FACTORY> factoryClass) {
+        if (crawlDefinition.crawlCollectorFactoryClass == null)
+            return null;
+        try {
+            return factoryClass.cast(Class
+                    .forName(crawlDefinition.crawlCollectorFactoryClass)
+                    .getConstructor()
+                    .newInstance());
+        } catch (ReflectiveOperationException e) {
+            throw new InternalServerErrorException("Can't create the factory: " + crawlDefinition.crawlCollectorFactoryClass, e);
+        }
+    }
 
     public STATUS runSession(final String sessionName,
                              final DEFINITION crawlDefinition) {

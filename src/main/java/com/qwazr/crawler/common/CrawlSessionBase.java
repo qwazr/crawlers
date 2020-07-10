@@ -16,7 +16,6 @@
 package com.qwazr.crawler.common;
 
 import com.qwazr.utils.TimeTracker;
-import java.net.URI;
 import java.util.Map;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -25,20 +24,21 @@ import org.mapdb.DB;
 import org.mapdb.DBMaker;
 
 public abstract class CrawlSessionBase<
-        SESSION extends CrawlSessionBase<SESSION, THREAD, MANAGER, DEFINITION, STATUS, BUILDER>,
-        THREAD extends CrawlThread<THREAD, DEFINITION, STATUS, BUILDER, MANAGER, SESSION>,
-        MANAGER extends CrawlManager<MANAGER, THREAD, SESSION, DEFINITION, STATUS, BUILDER>,
+        SESSION extends CrawlSessionBase<SESSION, THREAD, MANAGER, DEFINITION, STATUS, ITEM>,
+        THREAD extends CrawlThread<THREAD, DEFINITION, STATUS, MANAGER, SESSION, ITEM>,
+        MANAGER extends CrawlManager<MANAGER, THREAD, SESSION, DEFINITION, STATUS, ITEM>,
         DEFINITION extends CrawlDefinition<DEFINITION>,
         STATUS extends CrawlStatus<STATUS>,
-        BUILDER extends CrawlStatus.AbstractBuilder<STATUS, BUILDER>>
-        extends AttributesBase implements CrawlSession<DEFINITION, STATUS> {
+        ITEM extends CrawlItem
+        > extends AttributesBase implements CrawlSession<DEFINITION, STATUS, ITEM> {
 
     private final MANAGER crawlManager;
     private final DEFINITION crawlDefinition;
     private final String name;
     private final AtomicBoolean abort;
     private final TimeTracker timeTracker;
-    private final BUILDER crawlStatusBuilder;
+    private final CrawlStatus.AbstractBuilder<STATUS, ?> crawlStatusBuilder;
+    private final CrawlCollector<ITEM> crawlCollector;
     private volatile STATUS crawlStatus;
     protected final DB sessionDB;
 
@@ -47,7 +47,8 @@ public abstract class CrawlSessionBase<
                                final TimeTracker timeTracker,
                                final DEFINITION crawlDefinition,
                                final Map<String, Object> attributes,
-                               final BUILDER crawlStatusBuilder) {
+                               final CrawlStatus.AbstractBuilder<STATUS, ?> crawlStatusBuilder,
+                               final CrawlCollectorFactory<ITEM, DEFINITION> collectorFactory) {
         super(attributes);
         this.sessionDB = DBMaker
                 .fileDB(crawlManager.sessionsDirectory.resolve(sessionName).toFile())
@@ -59,6 +60,8 @@ public abstract class CrawlSessionBase<
         this.crawlDefinition = crawlDefinition;
         this.name = sessionName;
         abort = new AtomicBoolean(false);
+        crawlCollector = collectorFactory == null ? crawlItem -> {
+        } : collectorFactory.createCrawlCollector(crawlDefinition);
         buildStatus();
     }
 
@@ -73,10 +76,8 @@ public abstract class CrawlSessionBase<
     }
 
     @Override
-    public <V> V getVariable(final String name, final Class<? extends V> variableClass) {
-        return crawlDefinition != null && crawlDefinition.variables != null ?
-                variableClass.cast(crawlDefinition.variables.get(name)) :
-                null;
+    public void collect(ITEM crawlItem) {
+        crawlCollector.collect(crawlItem);
     }
 
     @Override

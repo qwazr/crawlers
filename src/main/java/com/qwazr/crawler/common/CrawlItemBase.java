@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,9 +15,10 @@
  */
 package com.qwazr.crawler.common;
 
+import java.nio.file.Path;
 import org.apache.commons.lang3.StringUtils;
 
-public class CurrentCrawlImpl implements CurrentCrawl {
+public class CrawlItemBase implements CrawlItem {
 
     final private int depth;
     final private boolean isIgnored;
@@ -26,7 +27,7 @@ public class CurrentCrawlImpl implements CurrentCrawl {
     final private Boolean isInExclusion;
     final private String error;
 
-    protected CurrentCrawlImpl(BaseBuilder<?> builder) {
+    protected CrawlItemBase(final BaseBuilder<?> builder) {
         this.depth = builder.depth;
         this.isIgnored = builder.isIgnored;
         this.isCrawled = builder.isCrawled;

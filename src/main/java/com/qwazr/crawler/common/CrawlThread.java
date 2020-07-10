@@ -15,28 +15,22 @@
  */
 package com.qwazr.crawler.common;
 
-import com.qwazr.scripts.ScriptRunThread;
-import com.qwazr.server.ServerException;
 import com.qwazr.utils.TimeTracker;
 import com.qwazr.utils.WildcardMatcher;
-
-import javax.annotation.Nullable;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 
 public abstract class CrawlThread<
-        THREAD extends CrawlThread<THREAD, DEFINITION, STATUS, BUILDER, MANAGER, SESSION>,
+        THREAD extends CrawlThread<THREAD, DEFINITION, STATUS, MANAGER, SESSION, ITEM>,
         DEFINITION extends CrawlDefinition<DEFINITION>,
         STATUS extends CrawlStatus<STATUS>,
-        BUILDER extends CrawlStatus.AbstractBuilder<STATUS, BUILDER>,
-        MANAGER extends CrawlManager<MANAGER, THREAD, SESSION, DEFINITION, STATUS, BUILDER>,
-        SESSION extends CrawlSessionBase<SESSION, THREAD, MANAGER, DEFINITION, STATUS, BUILDER>>
-        implements Runnable {
+        MANAGER extends CrawlManager<MANAGER, THREAD, SESSION, DEFINITION, STATUS, ITEM>,
+        SESSION extends CrawlSessionBase<SESSION, THREAD, MANAGER, DEFINITION, STATUS, ITEM>,
+        ITEM extends CrawlItem
+        > implements Runnable {
 
     private final CrawlDefinition<DEFINITION> crawlDefinition;
     private final TimeTracker timeTracker;
@@ -45,7 +39,6 @@ public abstract class CrawlThread<
     protected final Logger logger;
     private final List<WildcardMatcher> exclusionMatcherList;
     private final List<WildcardMatcher> inclusionMatcherList;
-    private final Map<String, Object> scriptGlobalObjects;
 
     protected CrawlThread(final MANAGER manager,
                           final SESSION session,
@@ -57,54 +50,13 @@ public abstract class CrawlThread<
         this.logger = logger;
         this.exclusionMatcherList = WildcardMatcher.getList(crawlDefinition.exclusionPatterns);
         this.inclusionMatcherList = WildcardMatcher.getList(crawlDefinition.inclusionPatterns);
-        this.scriptGlobalObjects = new HashMap<>();
     }
 
     public String getSessionName() {
         return session.getName();
     }
 
-    protected void registerScriptGlobalObject(String key, Object object) {
-        scriptGlobalObjects.put(key, object);
-    }
-
     protected abstract void runner() throws Exception;
-
-    /**
-     * Execute the scripts related to the passed event.
-     *
-     * @param event        the expected event
-     * @param currentCrawl the current crawl item
-     * @throws ServerException if the execution of the scripts failed
-     */
-    protected boolean script(final EventEnum event, final CurrentCrawl currentCrawl) {
-        if (crawlDefinition.scripts == null)
-            return true;
-        final ScriptDefinition script = crawlDefinition.scripts.get(event);
-        if (script == null)
-            return true;
-        timeTracker.next(null);
-        try {
-            final Map<String, Object> attributes = new HashMap<>(scriptGlobalObjects);
-            attributes.put(CrawlScriptEvents.SESSION_ATTRIBUTE, session);
-            if (currentCrawl != null)
-                attributes.put(CrawlScriptEvents.CURRENT_ATTRIBUTE, currentCrawl);
-            if (script.variables != null)
-                attributes.putAll(script.variables);
-            final ScriptRunThread<?>
-                    scriptRunThread = manager.scriptService.runSync(script.name, Collections.unmodifiableMap(attributes));
-            if (scriptRunThread.getException() != null)
-                throw ServerException.of(scriptRunThread.getException());
-            final Object result = scriptRunThread.getResult();
-            if (result == null)
-                return false;
-            if (result instanceof Boolean)
-                return (Boolean) result;
-            return Boolean.parseBoolean(result.toString());
-        } finally {
-            timeTracker.next("Event: " + event.name());
-        }
-    }
 
     /**
      * Check the matching list. Returns null if the matching list is empty.
@@ -134,7 +86,7 @@ public abstract class CrawlThread<
         return (inInclusion == null || inInclusion) && (inExclusion == null || !inExclusion);
     }
 
-    protected void checkPassInclusionExclusion(CurrentCrawlImpl.BaseBuilder<?> current, String itemText) {
+    protected void checkPassInclusionExclusion(CrawlItemBase.BaseBuilder<?> current, String itemText) {
         if (!checkPassInclusionExclusion(itemText, current::inInclusion, current::inExclusion)) {
             current.ignored(true);
             session.incIgnoredCount();

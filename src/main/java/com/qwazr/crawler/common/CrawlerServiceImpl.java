@@ -23,13 +23,13 @@ import java.util.TreeMap;
 import java.util.logging.Logger;
 
 public abstract class CrawlerServiceImpl<
-        SESSION extends CrawlSessionBase<SESSION, THREAD, MANAGER, DEFINITION, STATUS, BUILDER>,
-        THREAD extends CrawlThread<THREAD, DEFINITION, STATUS, BUILDER, MANAGER, SESSION>,
-        MANAGER extends CrawlManager<MANAGER, THREAD, SESSION, DEFINITION, STATUS, BUILDER>,
+        SESSION extends CrawlSessionBase<SESSION, THREAD, MANAGER, DEFINITION, STATUS, ITEM>,
+        THREAD extends CrawlThread<THREAD, DEFINITION, STATUS, MANAGER, SESSION, ITEM>,
+        MANAGER extends CrawlManager<MANAGER, THREAD, SESSION, DEFINITION, STATUS, ITEM>,
         DEFINITION extends CrawlDefinition<DEFINITION>,
         STATUS extends CrawlStatus<STATUS>,
-        BUILDER extends CrawlStatus.AbstractBuilder<STATUS, BUILDER>>
-        extends AbstractServiceImpl implements CrawlerServiceInterface<DEFINITION, STATUS> {
+        ITEM extends CrawlItem
+        > extends AbstractServiceImpl implements CrawlerServiceInterface<DEFINITION, STATUS> {
 
     protected final Logger logger;
 

@@ -22,14 +22,10 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.crawler.common.CrawlDefinition;
-import com.qwazr.crawler.common.EventEnum;
-import com.qwazr.crawler.common.ScriptDefinition;
 import com.qwazr.utils.ObjectMappers;
-
 import java.io.IOException;
 import java.util.Collection;
 import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.Objects;
 
 @JsonInclude(Include.NON_EMPTY)
@@ -77,16 +73,19 @@ public class FtpCrawlDefinition extends CrawlDefinition<FtpCrawlDefinition> {
     final public Boolean isPassive;
 
     @JsonCreator
-    protected FtpCrawlDefinition(@JsonProperty("max_depth") Integer maxDepth,
-                                 @JsonProperty("inclusion_patterns") Collection<String> inclusionPatterns,
-                                 @JsonProperty("exclusion_patterns") Collection<String> exclusionPatterns,
-                                 @JsonProperty("crawl_wait_ms") Integer crawlWaitMs,
-                                 @JsonProperty("variables") LinkedHashMap<String, String> variables,
-                                 @JsonProperty("scripts") Map<EventEnum, ScriptDefinition> scripts,
-                                 @JsonProperty("hostname") String hostname, @JsonProperty("entry_path") String entryPath,
-                                 @JsonProperty("username") String username, @JsonProperty("password") String password,
-                                 @JsonProperty("is_ssl") Boolean isSsl, @JsonProperty("is_passive") Boolean isPassive) {
-        super(FtpCrawlDefinition.class, variables, scripts, inclusionPatterns, exclusionPatterns, maxDepth, crawlWaitMs);
+    protected FtpCrawlDefinition(final @JsonProperty("max_depth") Integer maxDepth,
+                                 final @JsonProperty("inclusion_patterns") Collection<String> inclusionPatterns,
+                                 final @JsonProperty("exclusion_patterns") Collection<String> exclusionPatterns,
+                                 final @JsonProperty("crawl_wait_ms") Integer crawlWaitMs,
+                                 final @JsonProperty("crawl_collector_factory") String crawlCollectorFactoryClass,
+                                 final @JsonProperty("variables") LinkedHashMap<String, Object> variables,
+                                 final @JsonProperty("hostname") String hostname,
+                                 final @JsonProperty("entry_path") String entryPath,
+                                 final @JsonProperty("username") String username,
+                                 final @JsonProperty("password") String password,
+                                 final @JsonProperty("is_ssl") Boolean isSsl,
+                                 final @JsonProperty("is_passive") Boolean isPassive) {
+        super(FtpCrawlDefinition.class, crawlCollectorFactoryClass, variables, inclusionPatterns, exclusionPatterns, maxDepth, crawlWaitMs);
         this.hostname = hostname;
         this.entryPath = entryPath;
         this.username = username;

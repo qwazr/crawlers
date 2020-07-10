@@ -22,11 +22,8 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.crawler.common.CrawlDefinition;
-import com.qwazr.crawler.common.EventEnum;
-import com.qwazr.crawler.common.ScriptDefinition;
 import com.qwazr.utils.CollectionsUtils;
 import com.qwazr.utils.ObjectMappers;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -134,28 +131,28 @@ public class WebCrawlDefinition extends CrawlDefinition<WebCrawlDefinition> {
     final public Integer timeOutSecs;
 
     @JsonCreator
-    protected WebCrawlDefinition(@JsonProperty("max_depth") Integer maxDepth,
-                                 @JsonProperty("inclusion_patterns") Collection<String> inclusionPatterns,
-                                 @JsonProperty("exclusion_patterns") Collection<String> exclusionPatterns,
-                                 @JsonProperty("crawl_wait_ms") Integer crawlWaitMs,
-                                 @JsonProperty("variables") LinkedHashMap<String, String> variables,
-                                 @JsonProperty("scripts") Map<EventEnum, ScriptDefinition> scripts,
-                                 @JsonProperty("pre_url") String preUrl,
-                                 @JsonProperty("entry_url") String entryUrl,
-                                 @JsonProperty("entry_request") WebRequestDefinition entryRequest,
-                                 @JsonProperty("urls") Map<String, Integer> urls,
-                                 @JsonProperty("max_url_number") Integer maxUrlNumber,
-                                 @JsonProperty("accepted_content_type") List<String> acceptedContentType,
-                                 @JsonProperty("parameters_patterns") List<String> parametersPatterns,
-                                 @JsonProperty("path_cleaner_patterns") List<String> pathCleanerPatterns,
-                                 @JsonProperty("remove_fragments") Boolean removeFragments,
-                                 @JsonProperty("cookie") Map<String, String> cookies,
-                                 @JsonProperty("proxies") List<ProxyDefinition> proxies,
-                                 @JsonProperty("robots_txt_enabled") Boolean robotsTxtEnabled,
-                                 @JsonProperty("user_agent") String userAgent,
-                                 @JsonProperty("disable_ssl_check") Boolean disableSslCheck,
-                                 @JsonProperty("time_out_sec") Integer timeOutSecs) {
-        super(WebCrawlDefinition.class, variables, scripts, inclusionPatterns, exclusionPatterns, maxDepth, crawlWaitMs);
+    protected WebCrawlDefinition(final @JsonProperty("max_depth") Integer maxDepth,
+                                 final @JsonProperty("inclusion_patterns") Collection<String> inclusionPatterns,
+                                 final @JsonProperty("exclusion_patterns") Collection<String> exclusionPatterns,
+                                 final @JsonProperty("crawl_wait_ms") Integer crawlWaitMs,
+                                 final @JsonProperty("crawl_collector_factory") String crawlCollectorFactoryClass,
+                                 final @JsonProperty("variables") LinkedHashMap<String, Object> variables,
+                                 final @JsonProperty("pre_url") String preUrl,
+                                 final @JsonProperty("entry_url") String entryUrl,
+                                 final @JsonProperty("entry_request") WebRequestDefinition entryRequest,
+                                 final @JsonProperty("urls") Map<String, Integer> urls,
+                                 final @JsonProperty("max_url_number") Integer maxUrlNumber,
+                                 final @JsonProperty("accepted_content_type") List<String> acceptedContentType,
+                                 final @JsonProperty("parameters_patterns") List<String> parametersPatterns,
+                                 final @JsonProperty("path_cleaner_patterns") List<String> pathCleanerPatterns,
+                                 final @JsonProperty("remove_fragments") Boolean removeFragments,
+                                 final @JsonProperty("cookie") Map<String, String> cookies,
+                                 final @JsonProperty("proxies") List<ProxyDefinition> proxies,
+                                 final @JsonProperty("robots_txt_enabled") Boolean robotsTxtEnabled,
+                                 final @JsonProperty("user_agent") String userAgent,
+                                 final @JsonProperty("disable_ssl_check") Boolean disableSslCheck,
+                                 final @JsonProperty("time_out_sec") Integer timeOutSecs) {
+        super(WebCrawlDefinition.class, crawlCollectorFactoryClass, variables, inclusionPatterns, exclusionPatterns, maxDepth, crawlWaitMs);
         this.preUrl = preUrl;
         this.entryUrl = entryUrl;
         this.entryRequest = entryRequest;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,15 +12,16 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */
-package com.qwazr.crawler.ftp;
+ **/
+package com.qwazr.crawler.common;
 
-import com.qwazr.crawler.common.CrawlScriptEvents;
+import javax.validation.constraints.NotNull;
 
-public abstract class FtpCrawlScriptEvent
-		extends CrawlScriptEvents<FtpCrawlDefinition, FtpCrawlSession, FtpCurrentCrawl> {
+public interface CrawlCollectorFactory<
+        ITEM extends CrawlItem,
+        DEFINITION extends CrawlDefinition<DEFINITION>> {
 
-	protected FtpCrawlScriptEvent() {
-		super(FtpCrawlSession.class, FtpCurrentCrawl.class);
-	}
+    @NotNull
+    CrawlCollector<ITEM> createCrawlCollector(DEFINITION crawlDefinition);
+
 }
