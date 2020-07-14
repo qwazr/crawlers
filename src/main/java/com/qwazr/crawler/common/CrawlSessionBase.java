@@ -16,6 +16,7 @@
 package com.qwazr.crawler.common;
 
 import com.qwazr.utils.TimeTracker;
+import java.net.URI;
 import java.util.Map;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -29,7 +30,7 @@ public abstract class CrawlSessionBase<
         MANAGER extends CrawlManager<MANAGER, THREAD, SESSION, DEFINITION, STATUS, ITEM>,
         DEFINITION extends CrawlDefinition<DEFINITION>,
         STATUS extends CrawlStatus<STATUS>,
-        ITEM extends CrawlItem
+        ITEM extends CrawlItem<?>
         > extends AttributesBase implements CrawlSession<DEFINITION, STATUS, ITEM> {
 
     private final MANAGER crawlManager;
@@ -104,8 +105,8 @@ public abstract class CrawlSessionBase<
         return abort.get();
     }
 
-    public void incIgnoredCount() {
-        crawlStatusBuilder.incIgnored();
+    public void incRejectedCount() {
+        crawlStatusBuilder.incRejected();
         buildStatus();
     }
 

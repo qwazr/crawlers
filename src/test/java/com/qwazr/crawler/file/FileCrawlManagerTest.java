@@ -15,6 +15,7 @@
  */
 package com.qwazr.crawler.file;
 
+import com.qwazr.crawler.common.WildcardFilter;
 import com.qwazr.utils.FileUtils;
 import com.qwazr.utils.RandomUtils;
 import java.io.File;
@@ -53,10 +54,10 @@ public class FileCrawlManagerTest {
     FileCrawlDefinition.Builder getFileCrawlDefinition() {
         return FileCrawlDefinition.of()
                 .entryPath(Paths.get("src", "test", "file_crawl").toString())
-                .addInclusionPattern("*" + File.separator)
-                .addInclusionPattern("*.txt")
-                .addExclusionPattern("*" + File.separator + "ignore.*")
-                .addExclusionPattern("*" + File.separator + "ignore" + File.separator);
+                .addFilter("*" + File.separator, WildcardFilter.Status.accept)
+                .addFilter("*.txt", WildcardFilter.Status.accept)
+                .addFilter("*" + File.separator + "ignore.*", WildcardFilter.Status.reject)
+                .addFilter("*" + File.separator + "ignore" + File.separator, WildcardFilter.Status.reject);
     }
 
     void crawlTest(final FileCrawlDefinition.Builder fileCrawlDefinitionBuilder,
@@ -71,7 +72,7 @@ public class FileCrawlManagerTest {
             Thread.sleep(500);
         }
         Assert.assertEquals(expectedCrawled, crawlStatus.crawled);
-        Assert.assertEquals(expectedIgnored, crawlStatus.ignored);
+        Assert.assertEquals(expectedIgnored, crawlStatus.rejected);
         Assert.assertEquals(expectedError, crawlStatus.error);
         Assert.assertNotNull(crawlStatus.threadDone);
 
@@ -84,7 +85,7 @@ public class FileCrawlManagerTest {
 
     @Test
     public void crawlFullTest() throws InterruptedException {
-        crawlTest(getFileCrawlDefinition(), 7, 2, 0);
+        crawlTest(getFileCrawlDefinition(), 9, 2, 0);
     }
 
     @Test

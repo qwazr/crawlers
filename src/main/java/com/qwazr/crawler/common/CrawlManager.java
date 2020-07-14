@@ -41,7 +41,7 @@ public abstract class CrawlManager<
         SESSION extends CrawlSessionBase<SESSION, THREAD, MANAGER, DEFINITION, STATUS, ITEM>,
         DEFINITION extends CrawlDefinition<DEFINITION>,
         STATUS extends CrawlStatus<STATUS>,
-        ITEM extends CrawlItem
+        ITEM extends CrawlItem<?>
         > extends AttributesBase implements AutoCloseable {
 
     public final static String CRAWL_DB_NAME = "crawler.db";

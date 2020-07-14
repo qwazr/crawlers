@@ -22,9 +22,9 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.crawler.common.CrawlDefinition;
+import com.qwazr.crawler.common.WildcardFilter;
 import com.qwazr.utils.ObjectMappers;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Objects;
 
@@ -45,13 +45,13 @@ public class FileCrawlDefinition extends CrawlDefinition<FileCrawlDefinition> {
     @JsonCreator
     protected FileCrawlDefinition(final @JsonProperty("entry_path") String entryPath,
                                   final @JsonProperty("max_depth") Integer maxDepth,
-                                  final @JsonProperty("inclusion_patterns") Collection<String> inclusionPatterns,
-                                  final @JsonProperty("exclusion_patterns") Collection<String> exclusionPatterns,
+                                  final @JsonProperty("filters") LinkedHashMap<String, WildcardFilter.Status> filters,
+                                  final @JsonProperty("filter_policy") WildcardFilter.Status filterPolicy,
                                   final @JsonProperty("crawl_wait_ms") Integer crawlWaitMs,
                                   final @JsonProperty("crawl_collector_factory") String crawlCollectorFactoryClass,
                                   final @JsonProperty("variables") LinkedHashMap<String, Object> variables) {
         super(FileCrawlDefinition.class, crawlCollectorFactoryClass, variables,
-                inclusionPatterns, exclusionPatterns, maxDepth, crawlWaitMs);
+                filters, filterPolicy, maxDepth, crawlWaitMs);
         this.entryPath = entryPath;
     }
 
@@ -104,7 +104,7 @@ public class FileCrawlDefinition extends CrawlDefinition<FileCrawlDefinition> {
 
         @Override
         public FileCrawlDefinition build() {
-            return new FileCrawlDefinition(entryPath, maxDepth, inclusionPatterns, exclusionPatterns,
+            return new FileCrawlDefinition(entryPath, maxDepth, filters, filterPolicy,
                     crawlWaitMs, crawlCollectorFactoryClass, variables);
         }
     }

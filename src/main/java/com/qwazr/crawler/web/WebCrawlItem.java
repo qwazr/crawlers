@@ -25,11 +25,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 public interface WebCrawlItem extends CrawlItem<URI> {
 
     /**
-     * @return true if the Robots.txt disallow the current URI
-     */
-    Boolean isRobotsTxtDisallow();
-
-    /**
      * Check if the URL has been redirected
      *
      * @return the redirect URL
@@ -49,13 +44,6 @@ public interface WebCrawlItem extends CrawlItem<URI> {
      * @return a content-type
      */
     String getContentType();
-
-    /**
-     * Tells if the content-type has been rejected (not present in the accepted_content_type list)
-     *
-     * @return
-     */
-    Boolean isRejectedContentType();
 
     /**
      * Get next level links

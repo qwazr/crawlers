@@ -69,6 +69,17 @@ public class WebCrawlSession extends CrawlSessionBase
         }
     }
 
+    void addUrltoCrawl(final URI uri, final Integer depth) {
+        if (uri == null)
+            return;
+        synchronized (urlDatabaseLock) {
+            final String uriString = uri.toASCIIString();
+            if (!crawledUrls.contains(uri))
+                toCrawlUrls.put(uriString, depth);
+        }
+    }
+
+
     void addUrlsToCrawl(final Map<String, Integer> links) {
         if (links == null || links.isEmpty())
             return;

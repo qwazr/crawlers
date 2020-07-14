@@ -25,28 +25,10 @@ public interface CrawlItem<ITEM> {
     int getDepth();
 
     /**
-     * @return true if the item matches an inclusion item
+     * @return the reason why the item has been rejected
      */
-    Boolean isInInclusion();
+    Rejected getRejected();
 
-    /**
-     * @return true if the item matches an exclusion item
-     */
-    Boolean isInExclusion();
-
-    /**
-     * Check if the URL is ignored. An ignored URL is not crawled
-     *
-     * @return true if the URL is ignored
-     */
-    boolean isIgnored();
-
-    /**
-     * Check if the URL has been crawled
-     *
-     * @return true if the URL has been crawled
-     */
-    boolean isCrawled();
 
     /**
      * @return the error message if any

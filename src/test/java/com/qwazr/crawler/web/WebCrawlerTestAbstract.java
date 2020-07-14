@@ -25,8 +25,8 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.SortedMap;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -81,13 +81,13 @@ public abstract class WebCrawlerTestAbstract {
         return webCrawl;
     }
 
-    private CrawlStatus<?> crawlTest(WebCrawlDefinition webCrawl, int crawled, int ignored, int error)
+    private CrawlStatus<?> crawlTest(WebCrawlDefinition webCrawl, int crawled, int rejected, int error)
             throws InterruptedException {
         final String sessionName = RandomUtils.alphanumeric(10);
         service.runSession(sessionName, webCrawl);
         final CrawlStatus<?> status = CrawlHelpers.crawlWait(sessionName, service);
         Assert.assertEquals(crawled, status.crawled);
-        Assert.assertEquals(ignored, status.ignored);
+        Assert.assertEquals(rejected, status.rejected);
         Assert.assertEquals(error, status.error);
         Assert.assertNotNull(status.threadDone);
         return status;
@@ -128,15 +128,13 @@ public abstract class WebCrawlerTestAbstract {
         final CrawlStatus<?> status = CrawlHelpers.crawlWait(sessionName, service);
 
         Assert.assertEquals(5, status.crawled);
-        Assert.assertEquals(1, status.ignored);
+        Assert.assertEquals(1, status.rejected);
         Assert.assertEquals(1, status.redirect);
         Assert.assertEquals(1, status.error);
 
         assertThat(CrawlCollectorTest.count.size(), equalTo(8));
         assertThat(CrawlCollectorTest.crawled.size(), equalTo(5));
-        assertThat(CrawlCollectorTest.ignored.size(), equalTo(1));
-        assertThat(CrawlCollectorTest.inExclusion.size(), equalTo(0));
-        assertThat(CrawlCollectorTest.inInclusion.size(), equalTo(0));
+        assertThat(CrawlCollectorTest.rejected.size(), equalTo(1));
 
         WebCrawlCollectorFactoryTest.checkUri("http://localhost:9190", 0, 302, null);
         WebCrawlCollectorFactoryTest.checkUri("http://localhost:9190/index.html", 0, 200, 436);
@@ -152,8 +150,8 @@ public abstract class WebCrawlerTestAbstract {
                         URI.create("http://localhost:9190"),
                         URI.create("http://localhost:9190/index.html"))));
 
-        assertThat(WebCrawlCollectorFactoryTest.robotsTxtRejected,
-                equalTo(List.of(URI.create("http://localhost:9190/private.html"))));
+        assertThat(WebCrawlCollectorFactoryTest.uriRejected.keySet(),
+                equalTo(Set.of(URI.create("http://localhost:9190/private.html"))));
     }
 
 }

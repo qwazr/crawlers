@@ -17,6 +17,7 @@ package com.qwazr.crawler.web;
 
 import com.qwazr.crawler.common.CrawlCollector;
 import com.qwazr.crawler.common.CrawlCollectorTest;
+import com.qwazr.crawler.common.Rejected;
 import com.qwazr.utils.IOUtils;
 import java.io.IOException;
 import java.net.URI;
@@ -41,7 +42,7 @@ public class WebCrawlCollectorFactoryTest implements WebCrawlCollectorFactory {
     public static final Map<URI, Integer> statusCodes = new LinkedHashMap<>();
     public static final Map<URI, Integer> contentSizes = new LinkedHashMap<>();
     public static final Map<URI, URI> redirects = new LinkedHashMap<>();
-    public static final List<URI> robotsTxtRejected = new ArrayList<>();
+    public static final Map<URI, Rejected> uriRejected = new LinkedHashMap<>();
 
     public static void resetCounters() {
         definition.set(null);
@@ -52,7 +53,7 @@ public class WebCrawlCollectorFactoryTest implements WebCrawlCollectorFactory {
         statusCodes.clear();
         contentSizes.clear();
         redirects.clear();
-        robotsTxtRejected.clear();
+        uriRejected.clear();
     }
 
     public static void checkUri(final String uriString, Integer depth, Integer statusCode, Integer contentSize) {
@@ -99,8 +100,8 @@ public class WebCrawlCollectorFactoryTest implements WebCrawlCollectorFactory {
             }
             if (crawlItem.getRedirect() != null)
                 redirects.put(uri, crawlItem.getRedirect());
-            if (Boolean.TRUE == crawlItem.isRobotsTxtDisallow())
-                robotsTxtRejected.add(uri);
+            if (crawlItem.getRejected() != null)
+                uriRejected.put(uri, crawlItem.getRejected());
         }
 
     }

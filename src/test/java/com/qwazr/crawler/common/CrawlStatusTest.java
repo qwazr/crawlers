@@ -44,8 +44,8 @@ public class CrawlStatusTest {
                 .incCrawled()
                 .incCrawled()
                 .incCrawled()
-                .incIgnored()
-                .incIgnored()
+                .incRejected()
+                .incRejected()
                 .incRedirect()
                 .done()
                 .build();
@@ -58,7 +58,7 @@ public class CrawlStatusTest {
         Assert.assertEquals(abortingReason, status.getAbortingReason());
         Assert.assertEquals(true, status.getAborting());
         Assert.assertEquals(3, status.getCrawled());
-        Assert.assertEquals(2, status.getIgnored());
+        Assert.assertEquals(2, status.getRejected());
         Assert.assertEquals(1, status.getRedirect());
         Assert.assertEquals(1, status.getError());
         Assert.assertNotNull(status.getStartTime());

@@ -30,7 +30,7 @@ public class FileCrawlerStatusTest {
         final FileCrawlStatus status = FileCrawlStatus.of("test", TimeTracker.withDurations())
                 .incRedirect()
                 .incCrawled()
-                .incIgnored()
+                .incRejected()
                 .lastError(RandomUtils.alphanumeric(8))
                 .crawl("test", 5)
                 .build();

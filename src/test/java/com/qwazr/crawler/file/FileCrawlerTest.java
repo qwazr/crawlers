@@ -19,6 +19,7 @@ import com.qwazr.crawler.CrawlerServer;
 import com.qwazr.crawler.common.CrawlCollectorTest;
 import com.qwazr.crawler.common.CrawlHelpers;
 import com.qwazr.crawler.common.CrawlStatus;
+import com.qwazr.crawler.common.WildcardFilter;
 import com.qwazr.server.RemoteService;
 import com.qwazr.utils.FileUtils;
 import com.qwazr.utils.RandomUtils;
@@ -78,10 +79,10 @@ public class FileCrawlerTest {
     private FileCrawlDefinition.Builder getNewCrawl() {
         return FileCrawlDefinition.of()
                 .entryPath(Paths.get("src", "test", "file_crawl").toString())
-                .addInclusionPattern("*" + File.separator)
-                .addInclusionPattern("*.txt")
-                .addExclusionPattern("*" + File.separator + "ignore" + File.separator)
-                .addExclusionPattern("*" + File.separator + "ignore.*")
+                .addFilter("*" + File.separator, WildcardFilter.Status.accept)
+                .addFilter("*.txt", WildcardFilter.Status.accept)
+                .addFilter("*" + File.separator + "ignore" + File.separator, WildcardFilter.Status.reject)
+                .addFilter("*" + File.separator + "ignore.*", WildcardFilter.Status.reject)
                 .setCrawlWaitMs(10)
                 .setMaxDepth(10);
     }
@@ -93,7 +94,7 @@ public class FileCrawlerTest {
         remote.runSession(sessionName, getNewCrawl().build());
         final CrawlStatus<?> status = CrawlHelpers.crawlWait(sessionName, remote);
         Assert.assertEquals(7, status.crawled);
-        Assert.assertEquals(2, status.ignored);
+        Assert.assertEquals(2, status.rejected);
         Assert.assertEquals(0, status.error);
         Assert.assertNull(status.lastError);
     }
@@ -113,9 +114,7 @@ public class FileCrawlerTest {
 
         assertThat(CrawlCollectorTest.count.size(), equalTo(9));
         assertThat(CrawlCollectorTest.crawled.size(), equalTo(7));
-        assertThat(CrawlCollectorTest.ignored.size(), equalTo(2));
-        assertThat(CrawlCollectorTest.inExclusion.size(), equalTo(2));
-        assertThat(CrawlCollectorTest.inInclusion.size(), equalTo(9));
+        assertThat(CrawlCollectorTest.rejected.size(), equalTo(11));
 
         final LinkedHashMap<Path, Integer> result = new LinkedHashMap<>();
         result.put(Path.of("src/test/file_crawl"), 0);

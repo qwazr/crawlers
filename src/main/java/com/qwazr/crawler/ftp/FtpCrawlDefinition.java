@@ -22,9 +22,9 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.crawler.common.CrawlDefinition;
+import com.qwazr.crawler.common.WildcardFilter;
 import com.qwazr.utils.ObjectMappers;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Objects;
 
@@ -74,8 +74,8 @@ public class FtpCrawlDefinition extends CrawlDefinition<FtpCrawlDefinition> {
 
     @JsonCreator
     protected FtpCrawlDefinition(final @JsonProperty("max_depth") Integer maxDepth,
-                                 final @JsonProperty("inclusion_patterns") Collection<String> inclusionPatterns,
-                                 final @JsonProperty("exclusion_patterns") Collection<String> exclusionPatterns,
+                                 final @JsonProperty("filters") LinkedHashMap<String, WildcardFilter.Status> filters,
+                                 final @JsonProperty("filter_policy") WildcardFilter.Status filterPolicy,
                                  final @JsonProperty("crawl_wait_ms") Integer crawlWaitMs,
                                  final @JsonProperty("crawl_collector_factory") String crawlCollectorFactoryClass,
                                  final @JsonProperty("variables") LinkedHashMap<String, Object> variables,
@@ -85,7 +85,7 @@ public class FtpCrawlDefinition extends CrawlDefinition<FtpCrawlDefinition> {
                                  final @JsonProperty("password") String password,
                                  final @JsonProperty("is_ssl") Boolean isSsl,
                                  final @JsonProperty("is_passive") Boolean isPassive) {
-        super(FtpCrawlDefinition.class, crawlCollectorFactoryClass, variables, inclusionPatterns, exclusionPatterns, maxDepth, crawlWaitMs);
+        super(FtpCrawlDefinition.class, crawlCollectorFactoryClass, variables, filters, filterPolicy, maxDepth, crawlWaitMs);
         this.hostname = hostname;
         this.entryPath = entryPath;
         this.username = username;

@@ -23,12 +23,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.utils.CollectionsUtils;
 import com.qwazr.utils.Equalizer;
 import com.qwazr.utils.StringUtils;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -53,19 +48,19 @@ public abstract class CrawlDefinition<
      */
     final public Map<String, Object> variables;
 
-    /**
-     * A list of regular expression patterns. An item may be crawled only if it
-     * matches any pattern.
-     */
-    @JsonProperty("inclusion_patterns")
-    final public Collection<String> inclusionPatterns;
 
     /**
-     * A list of regular expression patterns. An item may not be crawled if it
-     * matches any pattern.
+     * A list of wildcard patterns. An item may be crawled only if it
+     * matches any pattern with a FilterStatus sets to 'accept'.
      */
-    @JsonProperty("exclusion_patterns")
-    final public Collection<String> exclusionPatterns;
+    @JsonProperty("filters")
+    final public Map<String, WildcardFilter.Status> filters;
+
+    /**
+     * The status applied if no filter matched.
+     */
+    @JsonProperty("filter_policy")
+    final public WildcardFilter.Status filterPolicy;
 
     /**
      * The maximum number of directory levels to visit.
@@ -82,17 +77,15 @@ public abstract class CrawlDefinition<
     protected CrawlDefinition(final Class<DEFINITION> crawldefinitionClass,
                               final @JsonProperty("crawl_collector_factory") String crawlCollectorFactoryClass,
                               final @JsonProperty("variables") LinkedHashMap<String, Object> variables,
-                              final @JsonProperty("inclusion_patterns") Collection<String> inclusionPatterns,
-                              final @JsonProperty("exclusion_patterns") Collection<String> exclusionPatterns,
+                              final @JsonProperty("filters") LinkedHashMap<String, WildcardFilter.Status> filters,
+                              final @JsonProperty("filter_policy") WildcardFilter.Status filterPolicy,
                               final @JsonProperty("max_depth") Integer maxDepth,
                               final @JsonProperty("crawl_wait_ms") Integer crawlWaitMs) {
         super(crawldefinitionClass);
         this.crawlCollectorFactoryClass = crawlCollectorFactoryClass;
         this.variables = variables == null ? null : Map.copyOf(variables);
-        this.inclusionPatterns =
-                inclusionPatterns == null ? null : List.copyOf(inclusionPatterns);
-        this.exclusionPatterns =
-                exclusionPatterns == null ? null : List.copyOf(new ArrayList<>(exclusionPatterns));
+        this.filters = filters == null ? null : Map.copyOf(filters);
+        this.filterPolicy = filterPolicy;
         this.maxDepth = maxDepth;
         this.crawlWaitMs = crawlWaitMs;
     }
@@ -102,13 +95,14 @@ public abstract class CrawlDefinition<
         this(crawldefinitionClass,
                 builder.crawlCollectorFactoryClass,
                 builder.variables,
-                builder.inclusionPatterns,
-                builder.exclusionPatterns,
+                builder.filters,
+                builder.filterPolicy,
                 builder.maxDepth,
                 builder.crawlWaitMs);
 
     }
 
+    @JsonIgnore
     final public String getCrawlCollectorFactoryClass() {
         return crawlCollectorFactoryClass;
     }
@@ -117,12 +111,8 @@ public abstract class CrawlDefinition<
         return variables;
     }
 
-    final public Collection<String> getInclusionPatterns() {
-        return inclusionPatterns;
-    }
-
-    final public Collection<String> getExclusionPatterns() {
-        return exclusionPatterns;
+    final public Map<String, WildcardFilter.Status> getFilters() {
+        return filters;
     }
 
     final public Integer getMaxDepth() {
@@ -135,15 +125,14 @@ public abstract class CrawlDefinition<
 
     @Override
     protected int computeHashCode() {
-        return Objects.hash(variables, inclusionPatterns, exclusionPatterns, maxDepth, crawlWaitMs);
+        return Objects.hash(variables, filters, maxDepth, crawlWaitMs);
     }
 
     @Override
     protected boolean isEqual(final DEFINITION c) {
         return Objects.equals(crawlCollectorFactoryClass, c.crawlCollectorFactoryClass)
                 && CollectionsUtils.equals(variables, c.variables)
-                && CollectionsUtils.equals(inclusionPatterns, c.inclusionPatterns)
-                && CollectionsUtils.equals(exclusionPatterns, c.exclusionPatterns)
+                && CollectionsUtils.equals(filters, c.filters)
                 && Objects.equals(maxDepth, c.maxDepth)
                 && Objects.equals(crawlWaitMs, c.crawlWaitMs);
     }
@@ -156,8 +145,9 @@ public abstract class CrawlDefinition<
 
         protected LinkedHashMap<String, Object> variables;
 
-        protected LinkedHashSet<String> inclusionPatterns;
-        protected LinkedHashSet<String> exclusionPatterns;
+        protected LinkedHashMap<String, WildcardFilter.Status> filters;
+
+        protected WildcardFilter.Status filterPolicy;
 
         protected Integer maxDepth;
 
@@ -172,12 +162,8 @@ public abstract class CrawlDefinition<
         protected AbstractBuilder(final Class<BUILDER> builderClass, DEFINITION src) {
             this(builderClass);
             variables = src.variables == null ? null : new LinkedHashMap<>(src.variables);
-            inclusionPatterns = src.inclusionPatterns == null || src.inclusionPatterns.isEmpty() ?
-                    null :
-                    new LinkedHashSet<>(src.inclusionPatterns);
-            exclusionPatterns = src.exclusionPatterns == null || src.exclusionPatterns.isEmpty() ?
-                    null :
-                    new LinkedHashSet<>(src.exclusionPatterns);
+            filters = src.filters == null || src.filters.isEmpty() ? null : new LinkedHashMap<>(src.filters);
+            filterPolicy = src.filterPolicy;
         }
 
         protected abstract BUILDER me();
@@ -194,61 +180,17 @@ public abstract class CrawlDefinition<
             return me();
         }
 
-        public BUILDER setInclusionPatterns(final Collection<String> inclusionPatterns) {
-            this.inclusionPatterns = inclusionPatterns == null || inclusionPatterns.isEmpty() ?
-                    null :
-                    new LinkedHashSet<>(inclusionPatterns);
-            return me();
-        }
-
-        public BUILDER setInclusionPatterns(final String inclusionPatternText) throws IOException {
-            if (StringUtils.isBlank(inclusionPatternText)) {
-                inclusionPatterns = null;
-                return builderClass.cast(this);
-            }
-            if (inclusionPatterns != null)
-                inclusionPatterns.clear();
-            else
-                inclusionPatterns = new LinkedHashSet<>();
-            StringUtils.linesCollector(inclusionPatternText, false, inclusionPatterns);
-            return me();
-        }
-
-        public BUILDER addInclusionPattern(final String inclusionPattern) {
-            if (StringUtils.isBlank(inclusionPattern))
-                return builderClass.cast(this);
-            if (inclusionPatterns == null)
-                inclusionPatterns = new LinkedHashSet<>();
-            inclusionPatterns.add(inclusionPattern);
-            return me();
-        }
-
-        public BUILDER setExclusionPatterns(final Collection<String> exclusionPatterns) {
-            this.exclusionPatterns = exclusionPatterns == null || exclusionPatterns.isEmpty() ?
-                    null :
-                    new LinkedHashSet<>(exclusionPatterns);
-            return me();
-        }
-
-        public BUILDER setExclusionPatterns(final String exclusionPatternText) throws IOException {
-            if (StringUtils.isBlank(exclusionPatternText)) {
-                exclusionPatterns = null;
+        public BUILDER addFilter(final String filterPattern, final WildcardFilter.Status filterStatus) {
+            if (StringUtils.isBlank(filterPattern) || filterStatus == null)
                 return me();
-            }
-            if (exclusionPatterns != null)
-                exclusionPatterns.clear();
-            else
-                exclusionPatterns = new LinkedHashSet<>();
-            StringUtils.linesCollector(exclusionPatternText, false, exclusionPatterns);
+            if (filters == null)
+                filters = new LinkedHashMap<>();
+            filters.put(filterPattern, filterStatus);
             return me();
         }
 
-        public BUILDER addExclusionPattern(final String exclusionPattern) {
-            if (StringUtils.isBlank(exclusionPattern))
-                return me();
-            if (exclusionPatterns == null)
-                exclusionPatterns = new LinkedHashSet<>();
-            exclusionPatterns.add(exclusionPattern);
+        public BUILDER setFilterPolicy(final WildcardFilter.Status filterPolicy) {
+            this.filterPolicy = filterPolicy;
             return me();
         }
 

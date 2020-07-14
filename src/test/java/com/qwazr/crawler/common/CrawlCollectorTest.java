@@ -20,35 +20,25 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-public class CrawlCollectorTest<ITEM extends CrawlItem> implements CrawlCollector<ITEM> {
+public class CrawlCollectorTest<ITEM extends CrawlItem<?>> implements CrawlCollector<ITEM> {
 
-    public static final List<CrawlItem> count = new ArrayList<>();
-    public static final List<CrawlItem> crawled = new ArrayList<>();
-    public static final List<CrawlItem> ignored = new ArrayList<>();
-    public static final List<CrawlItem> inInclusion = new ArrayList<>();
-    public static final List<CrawlItem> inExclusion = new ArrayList<>();
-    public static final Map<Integer, List<CrawlItem>> depths = new LinkedHashMap<>();
+    public static final List<CrawlItem<?>> count = new ArrayList<>();
+    public static final List<CrawlItem<?>> crawled = new ArrayList<>();
+    public static final List<CrawlItem<?>> rejected = new ArrayList<>();
+    public static final Map<Integer, List<CrawlItem<?>>> depths = new LinkedHashMap<>();
 
     public static void resetCounters() {
         count.clear();
         crawled.clear();
-        ignored.clear();
-        inInclusion.clear();
-        inExclusion.clear();
+        rejected.clear();
         depths.clear();
     }
 
     @Override
     public void collect(final ITEM crawlItem) {
         count.add(crawlItem);
-        if (crawlItem.isCrawled())
-            crawled.add(crawlItem);
-        if (crawlItem.isIgnored())
-            ignored.add(crawlItem);
-        if (Boolean.TRUE == crawlItem.isInExclusion())
-            inExclusion.add(crawlItem);
-        if (Boolean.TRUE == crawlItem.isInInclusion())
-            inInclusion.add(crawlItem);
+        if (crawlItem.getRejected() != null)
+            rejected.add(crawlItem);
         depths.computeIfAbsent(crawlItem.getDepth(), d -> new ArrayList<>()).add(crawlItem);
     }
 

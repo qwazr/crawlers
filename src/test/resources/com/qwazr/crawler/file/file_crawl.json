@@ -1,12 +1,10 @@
 {
   "entry_path": "/usr/share/docs",
   "max_depth": 16,
-  "inclusion_patterns": [
-    "*.md",
-    "*.txt"
-  ],
-  "exclusion_patterns": [
-    "*/.*"
-  ],
+  "filters": {
+    "*.md": "accept",
+    "*.txt": "accept",
+    "*/.*": "reject"
+  },
   "crawl_wait_ms": 100
 }

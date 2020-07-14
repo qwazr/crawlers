@@ -15,6 +15,7 @@
  **/
 package com.qwazr.crawler.common;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -24,7 +25,12 @@ import com.qwazr.utils.TimeTracker;
 import java.util.Objects;
 import java.util.concurrent.Future;
 
-@JsonInclude(Include.NON_NULL)
+@JsonInclude(Include.NON_EMPTY)
+@JsonAutoDetect(setterVisibility = JsonAutoDetect.Visibility.NONE,
+        getterVisibility = JsonAutoDetect.Visibility.NONE,
+        creatorVisibility = JsonAutoDetect.Visibility.NONE,
+        isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+        fieldVisibility = JsonAutoDetect.Visibility.PUBLIC_ONLY)
 public abstract class CrawlStatus<STATUS extends CrawlStatus<STATUS>> extends Equalizer.Immutable<STATUS> {
 
     /**
@@ -50,9 +56,9 @@ public abstract class CrawlStatus<STATUS extends CrawlStatus<STATUS>> extends Eq
     final public int crawled;
 
     /**
-     * The number of ignored crawl items
+     * The number of rejected crawl items
      */
-    final public int ignored;
+    final public int rejected;
 
     /**
      * The number of redirect (or alias)
@@ -99,7 +105,7 @@ public abstract class CrawlStatus<STATUS extends CrawlStatus<STATUS>> extends Eq
                           final @JsonProperty("aborting_reason") String abortingReason,
                           final @JsonProperty("timer") TimeTracker.Status timer,
                           final @JsonProperty("crawled") Integer crawled,
-                          final @JsonProperty("ignored") Integer ignored,
+                          final @JsonProperty("rejected") Integer rejected,
                           final @JsonProperty("redirect") Integer redirect,
                           final @JsonProperty("error") Integer error,
                           final @JsonProperty("last_error") String lastError,
@@ -115,7 +121,7 @@ public abstract class CrawlStatus<STATUS extends CrawlStatus<STATUS>> extends Eq
         this.aborting = aborting;
         this.abortingReason = abortingReason;
         this.crawled = crawled == null ? 0 : crawled;
-        this.ignored = ignored == null ? 0 : ignored;
+        this.rejected = rejected == null ? 0 : rejected;
         this.redirect = redirect == null ? 0 : redirect;
         this.error = error == null ? 0 : error;
         this.lastError = lastError;
@@ -135,7 +141,7 @@ public abstract class CrawlStatus<STATUS extends CrawlStatus<STATUS>> extends Eq
         this.aborting = builder.aborting;
         this.abortingReason = builder.abortingReason;
         this.crawled = builder.crawled;
-        this.ignored = builder.ignored;
+        this.rejected = builder.rejected;
         this.redirect = builder.redirect;
         this.error = builder.error;
         this.lastError = builder.lastError;
@@ -183,10 +189,10 @@ public abstract class CrawlStatus<STATUS extends CrawlStatus<STATUS>> extends Eq
     }
 
     /**
-     * @return The number of ignored crawl items
+     * @return The number of rejected crawl items
      */
-    public int getIgnored() {
-        return ignored;
+    public int getRejected() {
+        return rejected;
     }
 
     /**
@@ -261,7 +267,7 @@ public abstract class CrawlStatus<STATUS extends CrawlStatus<STATUS>> extends Eq
                 + " " + aborting
                 + " " + abortingReason
                 + " " + crawled
-                + " " + ignored
+                + " " + rejected
                 + " " + error
                 + " " + lastError
                 + " " + currentCrawl
@@ -278,7 +284,7 @@ public abstract class CrawlStatus<STATUS extends CrawlStatus<STATUS>> extends Eq
                 && Objects.equals(startTime, s.startTime)
                 && Objects.equals(aborting, s.aborting)
                 && Objects.equals(abortingReason, s.abortingReason)
-                && crawled == s.crawled && ignored == s.ignored && error == s.error
+                && crawled == s.crawled && rejected == s.rejected && error == s.error
                 && Objects.equals(lastError, s.lastError)
                 && Objects.equals(currentCrawl, s.currentCrawl)
                 && Objects.equals(currentDepth, s.currentDepth)
@@ -299,7 +305,7 @@ public abstract class CrawlStatus<STATUS extends CrawlStatus<STATUS>> extends Eq
         private Boolean aborting;
         private String abortingReason;
         private int crawled;
-        private int ignored;
+        private int rejected;
         private int redirect;
         private int error;
         private String lastError;
@@ -328,8 +334,8 @@ public abstract class CrawlStatus<STATUS extends CrawlStatus<STATUS>> extends Eq
             return me();
         }
 
-        public BUILDER incIgnored() {
-            ignored++;
+        public BUILDER incRejected() {
+            rejected++;
             return me();
         }
 

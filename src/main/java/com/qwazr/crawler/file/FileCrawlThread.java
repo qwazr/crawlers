@@ -16,10 +16,9 @@
 package com.qwazr.crawler.file;
 
 import com.qwazr.crawler.common.CrawlThread;
+import com.qwazr.crawler.common.Rejected;
 import com.qwazr.utils.StringUtils;
 import java.io.File;
-import org.apache.commons.lang3.exception.ExceptionUtils;
-
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
@@ -30,6 +29,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collections;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 
 public class FileCrawlThread extends CrawlThread
         <FileCrawlThread, FileCrawlDefinition, FileCrawlStatus,
@@ -66,12 +66,12 @@ public class FileCrawlThread extends CrawlThread
     }
 
     @Override
-    public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
+    public FileVisitResult preVisitDirectory(final Path dir, final BasicFileAttributes attrs) {
         if (session.isAborting())
             return FileVisitResult.TERMINATE;
         final FileCrawlItem.Builder builder = new FileCrawlItem.Builder(computeDepth(dir), dir, attrs);
         final FileCrawlItem current = crawl(builder);
-        if (current.isIgnored())
+        if (current.getRejected() != null)
             return FileVisitResult.SKIP_SUBTREE;
         return FileVisitResult.CONTINUE;
     }
@@ -80,13 +80,16 @@ public class FileCrawlThread extends CrawlThread
         final String currentPathString = builder.attributes.isDirectory() ?
                 StringUtils.ensureSuffix(builder.item.toString(), File.separator) :
                 builder.item.toString();
-        if (!checkPassInclusionExclusion(builder, currentPathString))
-            session.incIgnoredCount();
-        else
-            session.incCrawledCount();
+
+        final Rejected rejected = checkWildcardFilters(currentPathString);
+        if (rejected != null) {
+            builder.rejected(rejected);
+            session.incRejectedCount();
+        }
         try {
             final FileCrawlItem current = builder.build();
             session.collect(current);
+            session.incCrawledCount();
             return current;
         } catch (Exception e) {
             final String err = "File crawling error on " + currentPathString;

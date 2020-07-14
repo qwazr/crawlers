@@ -16,11 +16,10 @@
 package com.qwazr.crawler.common;
 
 import com.qwazr.utils.WildcardMatcher;
-import java.util.List;
-import java.util.function.Consumer;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.annotation.Nullable;
+import javax.validation.constraints.NotNull;
 
 public abstract class CrawlThread<
         THREAD extends CrawlThread<THREAD, DEFINITION, STATUS, MANAGER, SESSION, ITEM>,
@@ -28,14 +27,16 @@ public abstract class CrawlThread<
         STATUS extends CrawlStatus<STATUS>,
         MANAGER extends CrawlManager<MANAGER, THREAD, SESSION, DEFINITION, STATUS, ITEM>,
         SESSION extends CrawlSessionBase<SESSION, THREAD, MANAGER, DEFINITION, STATUS, ITEM>,
-        ITEM extends CrawlItem
+        ITEM extends CrawlItem<?>
         > implements Runnable {
 
     protected final MANAGER manager;
     protected final SESSION session;
     protected final Logger logger;
-    private final List<WildcardMatcher> exclusionMatcherList;
-    private final List<WildcardMatcher> inclusionMatcherList;
+    @NotNull
+    private final Map<WildcardMatcher, WildcardFilter.Status> filters;
+    @NotNull
+    private final WildcardFilter.Status filterPolicy;
 
     protected CrawlThread(final MANAGER manager,
                           final SESSION session,
@@ -44,8 +45,8 @@ public abstract class CrawlThread<
         this.session = session;
         final DEFINITION crawlDefinition = session.getCrawlDefinition();
         this.logger = logger;
-        this.exclusionMatcherList = WildcardMatcher.getList(crawlDefinition.exclusionPatterns);
-        this.inclusionMatcherList = WildcardMatcher.getList(crawlDefinition.inclusionPatterns);
+        this.filters = WildcardFilter.compileFilters(crawlDefinition.filters);
+        this.filterPolicy = WildcardFilter.definePolicy(crawlDefinition.filterPolicy, filters);
     }
 
     public String getSessionName() {
@@ -54,43 +55,8 @@ public abstract class CrawlThread<
 
     protected abstract void runner() throws Exception;
 
-    /**
-     * Check the matching list. Returns null if the matching list is empty.
-     *
-     * @param text     the text to check
-     * @param matchers a list of wildcard patterns
-     * @return true if a pattern matched the text
-     **/
-    @Nullable
-    protected static Boolean matches(String text, List<WildcardMatcher> matchers) {
-        if (matchers == null || matchers.isEmpty())
-            return null;
-        return WildcardMatcher.anyMatch(text, matchers);
-    }
-
-    protected boolean checkPassInclusionExclusion(final String itemText,
-                                                  final Consumer<Boolean> inclusionConsumer,
-                                                  final Consumer<Boolean> exclusionConsumer) {
-
-        // We check the inclusion/exclusion.
-        final Boolean inInclusion = matches(itemText, inclusionMatcherList);
-        final Boolean inExclusion = matches(itemText, exclusionMatcherList);
-        if (inclusionConsumer != null)
-            inclusionConsumer.accept(inInclusion);
-        if (exclusionConsumer != null)
-            exclusionConsumer.accept(inExclusion);
-
-        return (inInclusion == null || inInclusion) && (inExclusion == null || !inExclusion);
-    }
-
-    protected boolean checkPassInclusionExclusion(CrawlItemBase.BaseBuilder<?, ?> current, String itemText) {
-        if (!checkPassInclusionExclusion(itemText, current::inInclusion, current::inExclusion)) {
-            current.ignored(true);
-            return false;
-        } else {
-            current.crawled(true);
-            return true;
-        }
+    protected Rejected checkWildcardFilters(final String itemText) {
+        return WildcardFilter.match(itemText, filters, filterPolicy);
     }
 
     @Override

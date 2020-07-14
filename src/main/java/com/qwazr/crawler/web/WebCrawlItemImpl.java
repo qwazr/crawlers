@@ -30,26 +30,22 @@ final class WebCrawlItemImpl extends CrawlItemBase<URI> implements WebCrawlItem 
     private final URI redirect;
     private final Map<URI, AtomicInteger> links;
     private final Set<URI> filteredLinks;
-    private final Boolean isRobotsTxtDisallow;
     private final Integer statusCode;
     private final String contentType;
-    private final Boolean rejectedContentType;
     private final DriverInterface.Body body;
 
     WebCrawlItemImpl(final Builder builder) {
         super(builder);
         this.redirect = builder.redirect;
-        this.isRobotsTxtDisallow = builder.isRobotsTxtDisallow;
         this.statusCode = builder.statusCode;
         this.contentType = builder.contentType;
-        this.rejectedContentType = builder.rejectedContentType;
         this.links = builder.links == null ? Collections.emptyMap() : Collections.unmodifiableMap(builder.links);
         this.filteredLinks = builder.filteredLinks == null ?
                 Collections.emptySet() :
                 Collections.unmodifiableSet(builder.filteredLinks);
         this.body = builder.body;
     }
-
+    
     @Override
     public URI getRedirect() {
         return redirect;
@@ -63,16 +59,6 @@ final class WebCrawlItemImpl extends CrawlItemBase<URI> implements WebCrawlItem 
     @Override
     public String getContentType() {
         return contentType;
-    }
-
-    @Override
-    public Boolean isRejectedContentType() {
-        return rejectedContentType;
-    }
-
-    @Override
-    public Boolean isRobotsTxtDisallow() {
-        return isRobotsTxtDisallow;
     }
 
     @Override
@@ -94,10 +80,8 @@ final class WebCrawlItemImpl extends CrawlItemBase<URI> implements WebCrawlItem 
 
         final String uriString;
         private URI redirect;
-        private Boolean isRobotsTxtDisallow;
         private Integer statusCode;
         private String contentType;
-        private Boolean rejectedContentType;
         private LinkedHashMap<URI, AtomicInteger> links;
         private LinkedHashSet<URI> filteredLinks;
         private DriverInterface.Body body;
@@ -117,19 +101,13 @@ final class WebCrawlItemImpl extends CrawlItemBase<URI> implements WebCrawlItem 
             return this;
         }
 
-        public Builder robotsTxtDisallow(Boolean isRobotsTxtDisallow) {
-            this.isRobotsTxtDisallow = isRobotsTxtDisallow;
-            return this;
-        }
-
         public Builder statusCode(Integer statusCode) {
             this.statusCode = statusCode;
             return this;
         }
 
-        public Builder contentType(String contentType, boolean rejected) {
+        public Builder contentType(String contentType) {
             this.contentType = contentType;
-            this.rejectedContentType = rejected;
             return this;
         }
 

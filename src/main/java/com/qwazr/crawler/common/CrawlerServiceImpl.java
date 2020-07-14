@@ -28,7 +28,7 @@ public abstract class CrawlerServiceImpl<
         MANAGER extends CrawlManager<MANAGER, THREAD, SESSION, DEFINITION, STATUS, ITEM>,
         DEFINITION extends CrawlDefinition<DEFINITION>,
         STATUS extends CrawlStatus<STATUS>,
-        ITEM extends CrawlItem
+        ITEM extends CrawlItem<?>
         > extends AbstractServiceImpl implements CrawlerServiceInterface<DEFINITION, STATUS> {
 
     protected final Logger logger;

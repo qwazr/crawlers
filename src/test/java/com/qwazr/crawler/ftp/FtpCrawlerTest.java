@@ -17,6 +17,7 @@ package com.qwazr.crawler.ftp;
 
 import com.qwazr.crawler.common.CrawlHelpers;
 import com.qwazr.crawler.common.CrawlStatus;
+import com.qwazr.crawler.common.WildcardFilter;
 import com.qwazr.utils.FileUtils;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -57,14 +58,14 @@ public class FtpCrawlerTest {
                 .username("anonymous")
                 .password("contact@qwazr.com")
                 .setMaxDepth(2)
-                .addInclusionPattern("/sites/ftp.apache.org/commons/")
-                .addInclusionPattern("/sites/ftp.apache.org/commons/crypto/")
-                .addInclusionPattern("/sites/ftp.apache.org/commons/*/*.html")
+                .addFilter("/sites/ftp.apache.org/commons/", WildcardFilter.Status.accept)
+                .addFilter("/sites/ftp.apache.org/commons/crypto/", WildcardFilter.Status.accept)
+                .addFilter("/sites/ftp.apache.org/commons/*/*.html", WildcardFilter.Status.accept)
                 .build();
         ftpCrawler.runSession("apache", ftpCrawlDefinition);
         final CrawlStatus<?> status = CrawlHelpers.crawlWait("apache", ftpCrawler);
         assertThat(status.crawled, equalTo(2));
-        assertThat(status.ignored, Matchers.greaterThanOrEqualTo(3));
+        assertThat(status.rejected, Matchers.greaterThanOrEqualTo(3));
         Assert.assertEquals(0, status.error);
         Assert.assertNull(status.lastError);
     }

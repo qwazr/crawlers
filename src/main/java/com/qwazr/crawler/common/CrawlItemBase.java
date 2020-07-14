@@ -21,19 +21,13 @@ public abstract class CrawlItemBase<ITEM> implements CrawlItem<ITEM> {
 
     final protected ITEM item;
     final protected int depth;
-    final protected boolean isIgnored;
-    final protected boolean isCrawled;
-    final protected Boolean isInInclusion;
-    final protected Boolean isInExclusion;
+    final protected Rejected rejected;
     final protected String error;
 
     protected CrawlItemBase(final BaseBuilder<ITEM, ?> builder) {
         this.item = builder.item;
         this.depth = builder.depth;
-        this.isIgnored = builder.isIgnored;
-        this.isCrawled = builder.isCrawled;
-        this.isInInclusion = builder.isInInclusion;
-        this.isInExclusion = builder.isInExclusion;
+        this.rejected = builder.rejected;
         this.error = builder.error;
     }
 
@@ -48,23 +42,8 @@ public abstract class CrawlItemBase<ITEM> implements CrawlItem<ITEM> {
     }
 
     @Override
-    public Boolean isInInclusion() {
-        return isInInclusion;
-    }
-
-    @Override
-    public Boolean isInExclusion() {
-        return isInExclusion;
-    }
-
-    @Override
-    public boolean isIgnored() {
-        return isIgnored;
-    }
-
-    @Override
-    public boolean isCrawled() {
-        return isCrawled;
+    public Rejected getRejected() {
+        return rejected;
     }
 
     @Override
@@ -76,10 +55,7 @@ public abstract class CrawlItemBase<ITEM> implements CrawlItem<ITEM> {
 
         public final ITEM item;
         public final int depth;
-        private boolean isIgnored;
-        private boolean isCrawled;
-        private Boolean isInInclusion;
-        private Boolean isInExclusion;
+        private Rejected rejected;
         private String error;
 
         protected BaseBuilder(ITEM item, int depth) {
@@ -89,23 +65,8 @@ public abstract class CrawlItemBase<ITEM> implements CrawlItem<ITEM> {
 
         protected abstract BUILDER me();
 
-        public BUILDER ignored(boolean isIgnored) {
-            this.isIgnored = isIgnored;
-            return me();
-        }
-
-        public BUILDER crawled(boolean isCrawled) {
-            this.isCrawled = isCrawled;
-            return me();
-        }
-
-        public BUILDER inInclusion(Boolean isInInclusion) {
-            this.isInInclusion = isInInclusion;
-            return me();
-        }
-
-        public BUILDER inExclusion(Boolean isInExclusion) {
-            this.isInExclusion = isInExclusion;
+        public BUILDER rejected(Rejected rejected) {
+            this.rejected = rejected;
             return me();
         }
 

@@ -1,11 +1,9 @@
 {
   "entry_url": "https://www.qwazr.com",
-  "inclusion_patterns": [
-    "https://www.qwazr.com/*"
-  ],
-  "exclusion_patterns": [
-    "https://www.qwazr.com/search"
-  ],
+  "filters": {
+    "https://www.qwazr.com/*": "accept",
+    "https://www.qwazr.com/search": "reject"
+  },
   "accepted_content_type": [
     "text/html"
   ],

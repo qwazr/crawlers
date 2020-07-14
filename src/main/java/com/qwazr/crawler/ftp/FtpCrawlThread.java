@@ -16,14 +16,10 @@
 package com.qwazr.crawler.ftp;
 
 import com.qwazr.crawler.common.CrawlThread;
+import com.qwazr.crawler.common.Rejected;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.concurrent.RunnableEx;
 import com.qwazr.utils.concurrent.SupplierEx;
-import org.apache.commons.net.ftp.FTPClient;
-import org.apache.commons.net.ftp.FTPFile;
-import org.apache.commons.net.ftp.FTPReply;
-import org.apache.commons.net.ftp.FTPSClient;
-
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -33,6 +29,10 @@ import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.commons.net.ftp.FTPClient;
+import org.apache.commons.net.ftp.FTPFile;
+import org.apache.commons.net.ftp.FTPReply;
+import org.apache.commons.net.ftp.FTPSClient;
 
 public class FtpCrawlThread extends CrawlThread
         <FtpCrawlThread, FtpCrawlDefinition, FtpCrawlStatus, FtpCrawlerManager, FtpCrawlSession, FtpCrawlItem> {
@@ -123,7 +123,7 @@ public class FtpCrawlThread extends CrawlThread
                 final String directoryName = ftpFile.getName();
                 final String nextPath = '/' + StringUtils.joinWithSeparator('/', currentPath, directoryName) + '/';
                 final FtpCrawlItem.Builder nextBuilder = new FtpCrawlItem.Builder(nextPath, currentPath, depth);
-                if (!checkPassInclusionExclusion(nextBuilder, nextPath)) {
+                if (checkWildcardFilters(nextPath) != null) {
                     logger.info("Ignore FTP directory: " + nextBuilder.item);
                     continue;
                 }
@@ -145,9 +145,11 @@ public class FtpCrawlThread extends CrawlThread
 
         final FtpCrawlItem currentCrawl = builder.build();
 
-        if (!checkPassInclusionExclusion(builder, currentCrawl.getItem())) {
+        final Rejected rejected = checkWildcardFilters(currentCrawl.getItem());
+        if (rejected != null) {
+            builder.rejected(rejected);
             logger.info("Ignore FTP file: " + builder.item);
-            session.incIgnoredCount();
+            session.incRejectedCount();
             session.collect(builder.build());
             return;
         }
@@ -162,7 +164,6 @@ public class FtpCrawlThread extends CrawlThread
                     ftp.retrieveFile(ftpFile.getName(), output);
                 }
                 builder.localFilePath(tmpFile);
-                builder.crawled(true);
             } catch (RuntimeException | IOException e) {
                 builder.error(e);
                 throw e;

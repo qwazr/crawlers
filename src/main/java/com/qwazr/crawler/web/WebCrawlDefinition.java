@@ -22,6 +22,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.crawler.common.CrawlDefinition;
+import com.qwazr.crawler.common.WildcardFilter;
 import com.qwazr.utils.CollectionsUtils;
 import com.qwazr.utils.ObjectMappers;
 import java.io.IOException;
@@ -41,12 +42,6 @@ import java.util.Objects;
         isGetterVisibility = JsonAutoDetect.Visibility.NONE,
         fieldVisibility = JsonAutoDetect.Visibility.PUBLIC_ONLY)
 public class WebCrawlDefinition extends CrawlDefinition<WebCrawlDefinition> {
-
-    /**
-     * URL called before a crawl session starts
-     */
-    @JsonProperty("pre_url")
-    final public String preUrl;
 
     /**
      * The entry point URL of the crawl.
@@ -132,12 +127,11 @@ public class WebCrawlDefinition extends CrawlDefinition<WebCrawlDefinition> {
 
     @JsonCreator
     protected WebCrawlDefinition(final @JsonProperty("max_depth") Integer maxDepth,
-                                 final @JsonProperty("inclusion_patterns") Collection<String> inclusionPatterns,
-                                 final @JsonProperty("exclusion_patterns") Collection<String> exclusionPatterns,
+                                 final @JsonProperty("filters") LinkedHashMap<String, WildcardFilter.Status> filters,
+                                 final @JsonProperty("filter_policy") WildcardFilter.Status filterPolicy,
                                  final @JsonProperty("crawl_wait_ms") Integer crawlWaitMs,
                                  final @JsonProperty("crawl_collector_factory") String crawlCollectorFactoryClass,
                                  final @JsonProperty("variables") LinkedHashMap<String, Object> variables,
-                                 final @JsonProperty("pre_url") String preUrl,
                                  final @JsonProperty("entry_url") String entryUrl,
                                  final @JsonProperty("entry_request") WebRequestDefinition entryRequest,
                                  final @JsonProperty("urls") Map<String, Integer> urls,
@@ -152,8 +146,7 @@ public class WebCrawlDefinition extends CrawlDefinition<WebCrawlDefinition> {
                                  final @JsonProperty("user_agent") String userAgent,
                                  final @JsonProperty("disable_ssl_check") Boolean disableSslCheck,
                                  final @JsonProperty("time_out_sec") Integer timeOutSecs) {
-        super(WebCrawlDefinition.class, crawlCollectorFactoryClass, variables, inclusionPatterns, exclusionPatterns, maxDepth, crawlWaitMs);
-        this.preUrl = preUrl;
+        super(WebCrawlDefinition.class, crawlCollectorFactoryClass, variables, filters, filterPolicy, maxDepth, crawlWaitMs);
         this.entryUrl = entryUrl;
         this.entryRequest = entryRequest;
         this.urls = urls;
@@ -172,7 +165,6 @@ public class WebCrawlDefinition extends CrawlDefinition<WebCrawlDefinition> {
 
     protected WebCrawlDefinition(Builder builder) {
         super(WebCrawlDefinition.class, builder);
-        preUrl = builder.preUrl;
         entryUrl = builder.entryUrl;
         entryRequest = builder.entryRequest;
         urls = builder.urls == null ? null : Collections.unmodifiableMap(new LinkedHashMap<>(builder.urls));
@@ -193,11 +185,6 @@ public class WebCrawlDefinition extends CrawlDefinition<WebCrawlDefinition> {
         proxies = builder.proxies == null ? null : List.copyOf(new ArrayList<>(builder.proxies));
         disableSslCheck = builder.disableSslCheck;
         timeOutSecs = builder.timeOutSecs;
-    }
-
-    @JsonIgnore
-    public String getPreUrl() {
-        return this.preUrl;
     }
 
     @JsonIgnore
@@ -270,7 +257,6 @@ public class WebCrawlDefinition extends CrawlDefinition<WebCrawlDefinition> {
     @Override
     protected boolean isEqual(WebCrawlDefinition w) {
         return super.isEqual(w) &&
-                Objects.equals(preUrl, w.preUrl) &&
                 Objects.equals(entryUrl, w.entryUrl) &&
                 Objects.equals(entryRequest, w.entryRequest) &&
                 CollectionsUtils.equals(urls, w.urls) &&
@@ -301,7 +287,6 @@ public class WebCrawlDefinition extends CrawlDefinition<WebCrawlDefinition> {
 
     public static class Builder extends AbstractBuilder<WebCrawlDefinition, Builder> {
 
-        private String preUrl;
         private String entryUrl;
         private WebRequestDefinition entryRequest;
         private LinkedHashMap<String, Integer> urls;
@@ -323,7 +308,6 @@ public class WebCrawlDefinition extends CrawlDefinition<WebCrawlDefinition> {
 
         protected Builder(WebCrawlDefinition src) {
             super(Builder.class, src);
-            this.preUrl = src.preUrl;
             this.entryUrl = src.entryUrl;
             this.entryRequest = src.entryRequest;
             this.urls = src.urls == null ? null : new LinkedHashMap<>(src.urls);
@@ -347,11 +331,6 @@ public class WebCrawlDefinition extends CrawlDefinition<WebCrawlDefinition> {
 
         public Builder setUrls(final LinkedHashMap<String, Integer> urls) {
             this.urls = urls;
-            return this;
-        }
-
-        public Builder setPreUrl(final String preUrl) {
-            this.preUrl = preUrl;
             return this;
         }
 
