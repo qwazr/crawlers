@@ -96,7 +96,7 @@ public abstract class WebCrawlerTestAbstract {
     @Test
     @Order(300)
     public void test300SimpleCrawl() throws InterruptedException {
-        crawlTest(getNewWebCrawl().setEntryUrl(WebAppTestServer.URL).build(), 5, 1, 1);
+        crawlTest(getNewWebCrawl().setEntryUrl(WebAppTestServer.URL).build(), 7, 1, 1);
     }
 
     @Test
@@ -104,14 +104,14 @@ public abstract class WebCrawlerTestAbstract {
     public void test350CrawlGetWebRequest() throws InterruptedException {
         crawlTest(getNewWebCrawl().setEntryRequest(
                 WebRequestDefinition.of(WebAppTestServer.URL).httpMethod(WebRequestDefinition.HttpMethod.GET).build())
-                .build(), 5, 1, 1);
+                .build(), 7, 1, 1);
     }
 
     @Test
     public void test360CrawlPostWebRequest() throws InterruptedException {
         crawlTest(getNewWebCrawl().setEntryRequest(
                 WebRequestDefinition.of(WebAppTestServer.URL).httpMethod(WebRequestDefinition.HttpMethod.POST).build())
-                .build(), 0, 0, 1);
+                .build(), 1, 0, 1);
     }
 
     @Test
@@ -127,7 +127,7 @@ public abstract class WebCrawlerTestAbstract {
         service.runSession(sessionName, webCrawl.build());
         final CrawlSessionStatus<?> status = CrawlHelpers.crawlWait(sessionName, service);
 
-        Assert.assertEquals(5, status.crawled);
+        Assert.assertEquals(7, status.crawled);
         Assert.assertEquals(1, status.rejected);
         Assert.assertEquals(1, status.redirect);
         Assert.assertEquals(1, status.error);

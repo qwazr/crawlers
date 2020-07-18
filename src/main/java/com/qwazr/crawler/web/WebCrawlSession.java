@@ -74,7 +74,7 @@ public class WebCrawlSession extends CrawlSessionBase
             return;
         synchronized (urlDatabaseLock) {
             final String uriString = uri.toASCIIString();
-            if (!crawledUrls.contains(uri))
+            if (!crawledUrls.contains(uriString))
                 toCrawlUrls.put(uriString, depth);
         }
     }
