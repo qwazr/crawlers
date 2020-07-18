@@ -25,7 +25,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.logging.Logger;
 
 public class WebCrawlerManager extends CrawlManager
-        <WebCrawlerManager, WebCrawlThread, WebCrawlSession, WebCrawlDefinition, WebCrawlStatus, WebCrawlItem> {
+        <WebCrawlerManager, WebCrawlThread, WebCrawlSession, WebCrawlDefinition, WebCrawlSessionStatus, WebCrawlItem> {
 
     private static final Logger LOGGER = LoggerUtils.getLogger(WebCrawlerManager.class);
 
@@ -34,7 +34,7 @@ public class WebCrawlerManager extends CrawlManager
     public WebCrawlerManager(final Path crawlerRootDirectory,
                              final String myAddress,
                              final ExecutorService executor) throws IOException {
-        super(crawlerRootDirectory, myAddress, executor, LOGGER, WebCrawlStatus.class);
+        super(crawlerRootDirectory, myAddress, executor, LOGGER, WebCrawlSessionStatus.class);
         service = new WebCrawlerServiceImpl(this);
     }
 
@@ -52,7 +52,7 @@ public class WebCrawlerManager extends CrawlManager
     protected WebCrawlThread newCrawlThread(final String sessionName,
                                             final WebCrawlDefinition crawlDefinition) {
         final TimeTracker timeTracker = TimeTracker.withDurations();
-        final WebCrawlStatus.Builder crawlStatusBuilder = WebCrawlStatus.of(myAddress, timeTracker);
+        final WebCrawlSessionStatus.Builder crawlStatusBuilder = WebCrawlSessionStatus.of(myAddress, timeTracker);
         final WebCrawlCollectorFactory collectorFactory = newCrawlCollectorFactory(crawlDefinition, WebCrawlCollectorFactory.class);
         final WebCrawlSession session = new WebCrawlSession(sessionName, this, timeTracker,
                 crawlDefinition, attributes, crawlStatusBuilder, collectorFactory);

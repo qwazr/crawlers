@@ -18,7 +18,7 @@ package com.qwazr.crawler.ftp;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.qwazr.crawler.common.CrawlStatus;
+import com.qwazr.crawler.common.CrawlSessionStatus;
 import com.qwazr.utils.TimeTracker;
 
 @JsonAutoDetect(setterVisibility = JsonAutoDetect.Visibility.NONE,
@@ -26,38 +26,38 @@ import com.qwazr.utils.TimeTracker;
         creatorVisibility = JsonAutoDetect.Visibility.NONE,
         isGetterVisibility = JsonAutoDetect.Visibility.NONE,
         fieldVisibility = JsonAutoDetect.Visibility.PROTECTED_AND_PUBLIC)
-public class FtpCrawlStatus extends CrawlStatus<FtpCrawlStatus> {
+public class FtpCrawlSessionStatus extends CrawlSessionStatus<FtpCrawlSessionStatus> {
 
     @JsonCreator
-    FtpCrawlStatus(@JsonProperty("node_address") String nodeAddress,
-                   @JsonProperty("aborting") Boolean aborting,
-                   @JsonProperty("aborting_reason") String abortingReason,
-                   @JsonProperty("timer") TimeTracker.Status timer,
-                   @JsonProperty("crawled") Integer crawled,
-                   @JsonProperty("ignored") Integer ignored,
-                   @JsonProperty("redirect") Integer redirect,
-                   @JsonProperty("error") Integer error,
-                   @JsonProperty("last_error") String lastError,
-                   @JsonProperty("current_crawl") String currentCrawl,
-                   @JsonProperty("start_time") final Long startTime,
-                   @JsonProperty("end_time") final Long endTime,
-                   @JsonProperty("current_depth") Integer currentDepth,
-                   @JsonProperty("thread_cancelled") Boolean threadCancelled,
-                   @JsonProperty("thread_done") Boolean threadDone) {
-        super(FtpCrawlStatus.class, nodeAddress, aborting, abortingReason, timer,
+    FtpCrawlSessionStatus(final @JsonProperty("node_address") String nodeAddress,
+                          final @JsonProperty("aborting") Boolean aborting,
+                          final @JsonProperty("aborting_reason") String abortingReason,
+                          final @JsonProperty("timer") TimeTracker.Status timer,
+                          final @JsonProperty("crawled") Integer crawled,
+                          final @JsonProperty("ignored") Integer ignored,
+                          final @JsonProperty("redirect") Integer redirect,
+                          final @JsonProperty("error") Integer error,
+                          final @JsonProperty("last_error") String lastError,
+                          final @JsonProperty("current_crawl") String currentCrawl,
+                          final @JsonProperty("start_time") Long startTime,
+                          final @JsonProperty("end_time") Long endTime,
+                          final @JsonProperty("current_depth") Integer currentDepth,
+                          final @JsonProperty("thread_cancelled") Boolean threadCancelled,
+                          final @JsonProperty("thread_done") Boolean threadDone) {
+        super(FtpCrawlSessionStatus.class, nodeAddress, aborting, abortingReason, timer,
                 crawled, ignored, redirect, error, lastError, currentCrawl,
                 startTime, endTime, currentDepth, threadCancelled, threadDone);
     }
 
-    private FtpCrawlStatus(Builder builder) {
-        super(FtpCrawlStatus.class, builder);
+    private FtpCrawlSessionStatus(Builder builder) {
+        super(FtpCrawlSessionStatus.class, builder);
     }
 
     public static Builder of(String nodeAddress, TimeTracker timeTracker) {
         return new Builder(nodeAddress, timeTracker);
     }
 
-    public static class Builder extends AbstractBuilder<FtpCrawlStatus, Builder> {
+    public static class Builder extends AbstractBuilder<FtpCrawlSessionStatus, Builder> {
 
         private Builder(String nodeAddress, TimeTracker timeTracker) {
             super(nodeAddress, timeTracker);
@@ -69,8 +69,8 @@ public class FtpCrawlStatus extends CrawlStatus<FtpCrawlStatus> {
         }
 
         @Override
-        public FtpCrawlStatus build() {
-            return new FtpCrawlStatus(this);
+        public FtpCrawlSessionStatus build() {
+            return new FtpCrawlSessionStatus(this);
         }
     }
 

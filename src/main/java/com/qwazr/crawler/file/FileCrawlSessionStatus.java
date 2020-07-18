@@ -18,7 +18,7 @@ package com.qwazr.crawler.file;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.qwazr.crawler.common.CrawlStatus;
+import com.qwazr.crawler.common.CrawlSessionStatus;
 import com.qwazr.utils.TimeTracker;
 
 @JsonAutoDetect(setterVisibility = JsonAutoDetect.Visibility.NONE,
@@ -26,10 +26,10 @@ import com.qwazr.utils.TimeTracker;
         creatorVisibility = JsonAutoDetect.Visibility.NONE,
         isGetterVisibility = JsonAutoDetect.Visibility.NONE,
         fieldVisibility = JsonAutoDetect.Visibility.PROTECTED_AND_PUBLIC)
-public class FileCrawlStatus extends CrawlStatus<FileCrawlStatus> {
+public class FileCrawlSessionStatus extends CrawlSessionStatus<FileCrawlSessionStatus> {
 
     @JsonCreator
-    public FileCrawlStatus(final @JsonProperty("node_address") String nodeAddress,
+    FileCrawlSessionStatus(final @JsonProperty("node_address") String nodeAddress,
                            final @JsonProperty("aborting") Boolean aborting,
                            final @JsonProperty("aborting_reason") String abortingReason,
                            final @JsonProperty("timer") TimeTracker.Status timer,
@@ -44,19 +44,19 @@ public class FileCrawlStatus extends CrawlStatus<FileCrawlStatus> {
                            final @JsonProperty("current_depth") Integer currentDepth,
                            final @JsonProperty("thread_cancelled") Boolean threadCancelled,
                            final @JsonProperty("thread_done") Boolean threadDone) {
-        super(FileCrawlStatus.class, nodeAddress, aborting, abortingReason, timer, crawled, ignored, redirect,
+        super(FileCrawlSessionStatus.class, nodeAddress, aborting, abortingReason, timer, crawled, ignored, redirect,
                 error, lastError, currentCrawl, startTime, endTime, currentDepth, threadCancelled, threadDone);
     }
 
-    private FileCrawlStatus(Builder builder) {
-        super(FileCrawlStatus.class, builder);
+    private FileCrawlSessionStatus(Builder builder) {
+        super(FileCrawlSessionStatus.class, builder);
     }
 
     public static Builder of(String nodeAddress, TimeTracker timeTracker) {
         return new Builder(nodeAddress, timeTracker);
     }
 
-    public static class Builder extends AbstractBuilder<FileCrawlStatus, Builder> {
+    public static class Builder extends AbstractBuilder<FileCrawlSessionStatus, Builder> {
 
         private Builder(String nodeAddress, TimeTracker timeTracker) {
             super(nodeAddress, timeTracker);
@@ -68,8 +68,8 @@ public class FileCrawlStatus extends CrawlStatus<FileCrawlStatus> {
         }
 
         @Override
-        public FileCrawlStatus build() {
-            return new FileCrawlStatus(this);
+        public FileCrawlSessionStatus build() {
+            return new FileCrawlSessionStatus(this);
         }
     }
 

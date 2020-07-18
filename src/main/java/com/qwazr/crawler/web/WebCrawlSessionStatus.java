@@ -18,7 +18,7 @@ package com.qwazr.crawler.web;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.qwazr.crawler.common.CrawlStatus;
+import com.qwazr.crawler.common.CrawlSessionStatus;
 import com.qwazr.utils.TimeTracker;
 
 @JsonAutoDetect(setterVisibility = JsonAutoDetect.Visibility.NONE,
@@ -26,31 +26,31 @@ import com.qwazr.utils.TimeTracker;
         creatorVisibility = JsonAutoDetect.Visibility.NONE,
         isGetterVisibility = JsonAutoDetect.Visibility.NONE,
         fieldVisibility = JsonAutoDetect.Visibility.PROTECTED_AND_PUBLIC)
-public class WebCrawlStatus extends CrawlStatus<WebCrawlStatus> {
+public class WebCrawlSessionStatus extends CrawlSessionStatus<WebCrawlSessionStatus> {
 
     @JsonCreator
-    WebCrawlStatus(@JsonProperty("node_address") String nodeAddress, @JsonProperty("aborting") Boolean aborting,
-                   @JsonProperty("aborting_reason") String abortingReason, @JsonProperty("timer") TimeTracker.Status timer,
-                   @JsonProperty("crawled") Integer crawled, @JsonProperty("ignored") Integer ignored,
-                   @JsonProperty("redirect") Integer redirect, @JsonProperty("error") Integer error,
-                   @JsonProperty("last_error") String lastError, @JsonProperty("current_crawl") String currentCrawl,
-                   @JsonProperty("start_time") final Long startTime, @JsonProperty("end_time") final Long endTime,
-                   @JsonProperty("current_depth") Integer currentDepth,
-                   @JsonProperty("thread_cancelled") Boolean threadCancelled,
-                   @JsonProperty("thread_done") Boolean threadDone) {
-        super(WebCrawlStatus.class, nodeAddress, aborting, abortingReason, timer, crawled, ignored, redirect, error, lastError, currentCrawl,
+    WebCrawlSessionStatus(@JsonProperty("node_address") String nodeAddress, @JsonProperty("aborting") Boolean aborting,
+                          @JsonProperty("aborting_reason") String abortingReason, @JsonProperty("timer") TimeTracker.Status timer,
+                          @JsonProperty("crawled") Integer crawled, @JsonProperty("ignored") Integer ignored,
+                          @JsonProperty("redirect") Integer redirect, @JsonProperty("error") Integer error,
+                          @JsonProperty("last_error") String lastError, @JsonProperty("current_crawl") String currentCrawl,
+                          @JsonProperty("start_time") final Long startTime, @JsonProperty("end_time") final Long endTime,
+                          @JsonProperty("current_depth") Integer currentDepth,
+                          @JsonProperty("thread_cancelled") Boolean threadCancelled,
+                          @JsonProperty("thread_done") Boolean threadDone) {
+        super(WebCrawlSessionStatus.class, nodeAddress, aborting, abortingReason, timer, crawled, ignored, redirect, error, lastError, currentCrawl,
                 startTime, endTime, currentDepth, threadCancelled, threadDone);
     }
 
-    private WebCrawlStatus(Builder builder) {
-        super(WebCrawlStatus.class, builder);
+    private WebCrawlSessionStatus(Builder builder) {
+        super(WebCrawlSessionStatus.class, builder);
     }
 
     public static Builder of(String nodeAddress, TimeTracker timeTracker) {
         return new Builder(nodeAddress, timeTracker);
     }
 
-    public static class Builder extends AbstractBuilder<WebCrawlStatus, Builder> {
+    public static class Builder extends AbstractBuilder<WebCrawlSessionStatus, Builder> {
 
         private Builder(String nodeAddress, TimeTracker timeTracker) {
             super(nodeAddress, timeTracker);
@@ -62,8 +62,8 @@ public class WebCrawlStatus extends CrawlStatus<WebCrawlStatus> {
         }
 
         @Override
-        public WebCrawlStatus build() {
-            return new WebCrawlStatus(this);
+        public WebCrawlSessionStatus build() {
+            return new WebCrawlSessionStatus(this);
         }
     }
 

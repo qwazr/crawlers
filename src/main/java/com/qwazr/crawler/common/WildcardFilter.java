@@ -16,6 +16,7 @@
 package com.qwazr.crawler.common;
 
 import com.qwazr.utils.WildcardMatcher;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
@@ -45,16 +46,15 @@ public interface WildcardFilter {
             return Map.of();
         final LinkedHashMap<WildcardMatcher, Status> compiledFilters = new LinkedHashMap<>();
         filters.forEach((pattern, status) -> compiledFilters.put(new WildcardMatcher(pattern), status));
-        return compiledFilters;
+        return Collections.synchronizedMap(compiledFilters);
     }
 
     static Rejected match(@NotNull final String text,
                           @NotNull final Map<WildcardMatcher, Status> matchers,
                           @NotNull final Status defaultPolicy) {
-        for (final Map.Entry<WildcardMatcher, Status> entry : matchers.entrySet()) {
+        for (final Map.Entry<WildcardMatcher, Status> entry : matchers.entrySet())
             if (entry.getKey().match(text))
                 return entry.getValue().rejected;
-        }
         return defaultPolicy.rejected;
     }
 

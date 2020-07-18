@@ -18,7 +18,7 @@ package com.qwazr.crawler.common;
 import javax.validation.constraints.NotNull;
 
 public interface CrawlCollectorFactory<
-        ITEM extends CrawlItem,
+        ITEM extends CrawlItem<?>,
         DEFINITION extends CrawlDefinition<DEFINITION>> {
 
     @NotNull

@@ -19,6 +19,8 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qwazr.utils.Equalizer;
+import java.util.Objects;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonAutoDetect(setterVisibility = JsonAutoDetect.Visibility.NONE,
@@ -26,7 +28,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
         creatorVisibility = JsonAutoDetect.Visibility.NONE,
         isGetterVisibility = JsonAutoDetect.Visibility.NONE,
         fieldVisibility = JsonAutoDetect.Visibility.PUBLIC_ONLY)
-public class Rejected {
+public class Rejected extends Equalizer.Immutable<Rejected> {
 
     public final int code;
     public final String reason;
@@ -34,11 +36,26 @@ public class Rejected {
     @JsonCreator
     public Rejected(@JsonProperty("code") final int code,
                     @JsonProperty("code") final String reason) {
+        super(Rejected.class);
         this.code = code;
         this.reason = reason;
     }
 
-    public final static Rejected WILDCARD_FILTER = new Rejected(1, "Wildcard filter");
+    @Override
+    protected int computeHashCode() {
+        return Objects.hash(code, reason);
+    }
 
+    @Override
+    protected boolean isEqual(final Rejected rejected) {
+        return code == rejected.code && Objects.equals(reason, rejected.reason);
+    }
+
+    @Override
+    public String toString() {
+        return code + " " + reason;
+    }
+
+    public final static Rejected WILDCARD_FILTER = new Rejected(1, "Wildcard filter");
 
 }

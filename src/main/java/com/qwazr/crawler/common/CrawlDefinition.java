@@ -22,6 +22,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.utils.CollectionsUtils;
 import com.qwazr.utils.Equalizer;
+import com.qwazr.utils.MapUtils;
 import com.qwazr.utils.StringUtils;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -83,8 +84,8 @@ public abstract class CrawlDefinition<
                               final @JsonProperty("crawl_wait_ms") Integer crawlWaitMs) {
         super(crawldefinitionClass);
         this.crawlCollectorFactoryClass = crawlCollectorFactoryClass;
-        this.variables = variables == null ? null : Map.copyOf(variables);
-        this.filters = filters == null ? null : Map.copyOf(filters);
+        this.variables = variables == null ? null : MapUtils.copyOf(variables);
+        this.filters = filters == null ? null : MapUtils.copyOf(filters);
         this.filterPolicy = filterPolicy;
         this.maxDepth = maxDepth;
         this.crawlWaitMs = crawlWaitMs;
@@ -153,14 +154,10 @@ public abstract class CrawlDefinition<
 
         protected Integer crawlWaitMs;
 
-        private final Class<BUILDER> builderClass;
-
-        protected AbstractBuilder(final Class<BUILDER> builderClass) {
-            this.builderClass = builderClass;
+        protected AbstractBuilder() {
         }
 
-        protected AbstractBuilder(final Class<BUILDER> builderClass, DEFINITION src) {
-            this(builderClass);
+        protected AbstractBuilder(DEFINITION src) {
             variables = src.variables == null ? null : new LinkedHashMap<>(src.variables);
             filters = src.filters == null || src.filters.isEmpty() ? null : new LinkedHashMap<>(src.filters);
             filterPolicy = src.filterPolicy;

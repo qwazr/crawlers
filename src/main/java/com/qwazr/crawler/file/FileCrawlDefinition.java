@@ -82,11 +82,10 @@ public class FileCrawlDefinition extends CrawlDefinition<FileCrawlDefinition> {
         private String entryPath;
 
         protected Builder() {
-            super(Builder.class);
         }
 
         protected Builder(FileCrawlDefinition crawlDefinition) {
-            super(Builder.class, crawlDefinition);
+            super(crawlDefinition);
             entryPath = crawlDefinition.entryPath;
             maxDepth = crawlDefinition.maxDepth;
             crawlWaitMs = crawlDefinition.crawlWaitMs;

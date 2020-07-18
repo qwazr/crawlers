@@ -18,7 +18,7 @@ package com.qwazr.crawler.file;
 import com.qwazr.crawler.CrawlerServer;
 import com.qwazr.crawler.common.CrawlCollectorTest;
 import com.qwazr.crawler.common.CrawlHelpers;
-import com.qwazr.crawler.common.CrawlStatus;
+import com.qwazr.crawler.common.CrawlSessionStatus;
 import com.qwazr.crawler.common.WildcardFilter;
 import com.qwazr.server.RemoteService;
 import com.qwazr.utils.FileUtils;
@@ -71,7 +71,7 @@ public class FileCrawlerTest {
     @Test
     @Order(200)
     public void test200emptySessions() {
-        SortedMap<String, FileCrawlStatus> sessions = remote.getSessions();
+        SortedMap<String, FileCrawlSessionStatus> sessions = remote.getSessions();
         Assert.assertNotNull(sessions);
         Assert.assertTrue(sessions.isEmpty());
     }
@@ -79,10 +79,10 @@ public class FileCrawlerTest {
     private FileCrawlDefinition.Builder getNewCrawl() {
         return FileCrawlDefinition.of()
                 .entryPath(Paths.get("src", "test", "file_crawl").toString())
-                .addFilter("*" + File.separator, WildcardFilter.Status.accept)
-                .addFilter("*.txt", WildcardFilter.Status.accept)
                 .addFilter("*" + File.separator + "ignore" + File.separator, WildcardFilter.Status.reject)
                 .addFilter("*" + File.separator + "ignore.*", WildcardFilter.Status.reject)
+                .addFilter("*" + File.separator, WildcardFilter.Status.accept)
+                .addFilter("*.txt", WildcardFilter.Status.accept)
                 .setCrawlWaitMs(10)
                 .setMaxDepth(10);
     }
@@ -92,8 +92,8 @@ public class FileCrawlerTest {
     public void test300SimpleCrawl() throws InterruptedException {
         final String sessionName = RandomUtils.alphanumeric(10);
         remote.runSession(sessionName, getNewCrawl().build());
-        final CrawlStatus<?> status = CrawlHelpers.crawlWait(sessionName, remote);
-        Assert.assertEquals(7, status.crawled);
+        final CrawlSessionStatus<?> status = CrawlHelpers.crawlWait(sessionName, remote);
+        Assert.assertEquals(9, status.crawled);
         Assert.assertEquals(2, status.rejected);
         Assert.assertEquals(0, status.error);
         Assert.assertNull(status.lastError);
@@ -112,9 +112,8 @@ public class FileCrawlerTest {
 
         Assert.assertEquals(crawl.build(), FileCrawlCollectorFactoryTest.definition.get());
 
-        assertThat(CrawlCollectorTest.count.size(), equalTo(9));
-        assertThat(CrawlCollectorTest.crawled.size(), equalTo(7));
-        assertThat(CrawlCollectorTest.rejected.size(), equalTo(11));
+        assertThat(CrawlCollectorTest.all.size(), equalTo(9));
+        assertThat(CrawlCollectorTest.rejecteds.size(), equalTo(2));
 
         final LinkedHashMap<Path, Integer> result = new LinkedHashMap<>();
         result.put(Path.of("src/test/file_crawl"), 0);

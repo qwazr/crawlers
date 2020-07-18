@@ -26,7 +26,7 @@ import java.util.SortedMap;
 
 abstract public class CrawlerSingleClient<
         DEFINITION extends CrawlDefinition<DEFINITION>,
-        STATUS extends CrawlStatus<STATUS>>
+        STATUS extends CrawlSessionStatus<STATUS>>
         extends JsonClient
         implements CrawlerServiceInterface<DEFINITION, STATUS> {
 

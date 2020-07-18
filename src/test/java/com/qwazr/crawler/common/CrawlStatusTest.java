@@ -15,8 +15,9 @@
  */
 package com.qwazr.crawler.common;
 
-import com.qwazr.crawler.file.FileCrawlStatus;
-import com.qwazr.crawler.web.WebCrawlStatus;
+import com.qwazr.crawler.file.FileCrawlSessionStatus;
+import com.qwazr.crawler.ftp.FtpCrawlSessionStatus;
+import com.qwazr.crawler.web.WebCrawlSessionStatus;
 import com.qwazr.utils.ObjectMappers;
 import com.qwazr.utils.RandomUtils;
 import com.qwazr.utils.TimeTracker;
@@ -26,8 +27,8 @@ import org.junit.jupiter.api.Test;
 
 public class CrawlStatusTest {
 
-    <STATUS extends CrawlStatus<STATUS>> void checkBuilderAndGetter(
-            final CrawlStatus.AbstractBuilder<STATUS, ?> crawlStatus,
+    <STATUS extends CrawlSessionStatus<STATUS>> void checkBuilderAndGetter(
+            final CrawlSessionStatus.AbstractBuilder<STATUS, ?> crawlStatus,
             final String nodeAddress,
             final TimeTracker timeTracker,
             final Class<STATUS> crawlStatusClass) throws IOException {
@@ -37,7 +38,7 @@ public class CrawlStatusTest {
         final Integer currentDepth = RandomUtils.nextInt(1, 100);
         final String abortingReason = RandomUtils.alphanumeric(25);
 
-        final CrawlStatus<STATUS> status = crawlStatus.incError()
+        final CrawlSessionStatus<STATUS> status = crawlStatus.incError()
                 .lastError(lastError)
                 .crawl(currentCrawl, currentDepth)
                 .abort(abortingReason)
@@ -64,25 +65,33 @@ public class CrawlStatusTest {
         Assert.assertNotNull(status.getStartTime());
         Assert.assertNotNull(status.getEndTime());
 
-        final CrawlStatus<STATUS> status2 =
+        final CrawlSessionStatus<STATUS> status2 =
                 ObjectMappers.JSON.readValue(ObjectMappers.JSON.writeValueAsString(status), crawlStatusClass);
         Assert.assertEquals(status, status2);
     }
 
     @Test
-    public void testWebCrawlStatus() throws IOException {
+    public void testWebCrawlSessionStatus() throws IOException {
         final String nodeAddress = RandomUtils.alphanumeric(10);
         final TimeTracker timeTracker = TimeTracker.withDurations();
-        checkBuilderAndGetter(WebCrawlStatus.of(nodeAddress, timeTracker),
-                nodeAddress, timeTracker, WebCrawlStatus.class);
+        checkBuilderAndGetter(WebCrawlSessionStatus.of(nodeAddress, timeTracker),
+                nodeAddress, timeTracker, WebCrawlSessionStatus.class);
     }
 
     @Test
-    public void testFileCrawlStatus() throws IOException {
+    public void testFileCrawlSessionStatus() throws IOException {
         final String nodeAddress = RandomUtils.alphanumeric(10);
         final TimeTracker timeTracker = TimeTracker.withDurations();
-        checkBuilderAndGetter(FileCrawlStatus.of(nodeAddress, timeTracker),
-                nodeAddress, timeTracker, FileCrawlStatus.class);
+        checkBuilderAndGetter(FileCrawlSessionStatus.of(nodeAddress, timeTracker),
+                nodeAddress, timeTracker, FileCrawlSessionStatus.class);
+    }
+
+    @Test
+    public void testFtpCrawlSessionStatus() throws IOException {
+        final String nodeAddress = RandomUtils.alphanumeric(10);
+        final TimeTracker timeTracker = TimeTracker.withDurations();
+        checkBuilderAndGetter(FtpCrawlSessionStatus.of(nodeAddress, timeTracker),
+                nodeAddress, timeTracker, FtpCrawlSessionStatus.class);
     }
 
 }

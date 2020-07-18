@@ -303,11 +303,11 @@ public class WebCrawlDefinition extends CrawlDefinition<WebCrawlDefinition> {
         private Integer timeOutSecs;
 
         protected Builder() {
-            super(Builder.class);
+            super();
         }
 
         protected Builder(WebCrawlDefinition src) {
-            super(Builder.class, src);
+            super(src);
             this.entryUrl = src.entryUrl;
             this.entryRequest = src.entryRequest;
             this.urls = src.urls == null ? null : new LinkedHashMap<>(src.urls);

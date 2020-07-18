@@ -23,23 +23,23 @@ import java.util.TreeMap;
 import java.util.logging.Logger;
 
 class WebCrawlerServiceImpl extends CrawlerServiceImpl
-        <WebCrawlSession, WebCrawlThread, WebCrawlerManager, WebCrawlDefinition, WebCrawlStatus, WebCrawlItem>
+        <WebCrawlSession, WebCrawlThread, WebCrawlerManager, WebCrawlDefinition, WebCrawlSessionStatus, WebCrawlItem>
         implements WebCrawlerServiceInterface {
 
     private static final Logger LOGGER = LoggerUtils.getLogger(WebCrawlerServiceImpl.class);
 
-    WebCrawlerServiceImpl(WebCrawlerManager webrawlerManager) {
+    WebCrawlerServiceImpl(final WebCrawlerManager webrawlerManager) {
         super(LOGGER, webrawlerManager);
     }
 
     @Override
-    public TreeMap<String, WebCrawlStatus> getSessions() {
-        final TreeMap<String, WebCrawlStatus> map = new TreeMap<>();
+    public TreeMap<String, WebCrawlSessionStatus> getSessions() {
+        final TreeMap<String, WebCrawlSessionStatus> map = new TreeMap<>();
         crawlManager.forEachLiveSession(map::put);
         return map;
     }
 
-    public WebCrawlStatus runSession(final String sessionName, final String jsonCrawlDefinition) throws IOException {
+    public WebCrawlSessionStatus runSession(final String sessionName, final String jsonCrawlDefinition) throws IOException {
         return runSession(sessionName, WebCrawlDefinition.newInstance(jsonCrawlDefinition));
     }
 

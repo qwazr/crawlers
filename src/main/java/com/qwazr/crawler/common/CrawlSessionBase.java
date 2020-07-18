@@ -16,7 +16,6 @@
 package com.qwazr.crawler.common;
 
 import com.qwazr.utils.TimeTracker;
-import java.net.URI;
 import java.util.Map;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -29,7 +28,7 @@ public abstract class CrawlSessionBase<
         THREAD extends CrawlThread<THREAD, DEFINITION, STATUS, MANAGER, SESSION, ITEM>,
         MANAGER extends CrawlManager<MANAGER, THREAD, SESSION, DEFINITION, STATUS, ITEM>,
         DEFINITION extends CrawlDefinition<DEFINITION>,
-        STATUS extends CrawlStatus<STATUS>,
+        STATUS extends CrawlSessionStatus<STATUS>,
         ITEM extends CrawlItem<?>
         > extends AttributesBase implements CrawlSession<DEFINITION, STATUS, ITEM> {
 
@@ -38,7 +37,7 @@ public abstract class CrawlSessionBase<
     private final String name;
     private final AtomicBoolean abort;
     private final TimeTracker timeTracker;
-    private final CrawlStatus.AbstractBuilder<STATUS, ?> crawlStatusBuilder;
+    private final CrawlSessionStatus.AbstractBuilder<STATUS, ?> crawlStatusBuilder;
     private final CrawlCollector<ITEM> crawlCollector;
     private volatile STATUS crawlStatus;
     protected final DB sessionDB;
@@ -48,7 +47,7 @@ public abstract class CrawlSessionBase<
                                final TimeTracker timeTracker,
                                final DEFINITION crawlDefinition,
                                final Map<String, Object> attributes,
-                               final CrawlStatus.AbstractBuilder<STATUS, ?> crawlStatusBuilder,
+                               final CrawlSessionStatus.AbstractBuilder<STATUS, ?> crawlStatusBuilder,
                                final CrawlCollectorFactory<ITEM, DEFINITION> collectorFactory) {
         super(attributes);
         this.sessionDB = DBMaker

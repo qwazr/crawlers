@@ -22,11 +22,11 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class CrawlHelpers {
 
-    public static CrawlStatus<?> crawlWait(final String sessionName, final CrawlerServiceInterface<?, ?> service)
+    public static CrawlSessionStatus<?> crawlWait(final String sessionName, final CrawlerServiceInterface<?, ?> service)
             throws InterruptedException {
-        final AtomicReference<CrawlStatus<?>> statusRef = new AtomicReference<>();
+        final AtomicReference<CrawlSessionStatus<?>> statusRef = new AtomicReference<>();
         WaitFor.of().timeOut(TimeUnit.MINUTES, 2).until(() -> {
-            final CrawlStatus<?> status = ErrorWrapper.bypass(() -> service.getSession(sessionName), 404);
+            final CrawlSessionStatus<?> status = ErrorWrapper.bypass(() -> service.getSession(sessionName), 404);
             statusRef.set(status);
             return status != null && status.endTime != null;
         });

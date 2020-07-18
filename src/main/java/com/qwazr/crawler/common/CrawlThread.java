@@ -24,7 +24,7 @@ import javax.validation.constraints.NotNull;
 public abstract class CrawlThread<
         THREAD extends CrawlThread<THREAD, DEFINITION, STATUS, MANAGER, SESSION, ITEM>,
         DEFINITION extends CrawlDefinition<DEFINITION>,
-        STATUS extends CrawlStatus<STATUS>,
+        STATUS extends CrawlSessionStatus<STATUS>,
         MANAGER extends CrawlManager<MANAGER, THREAD, SESSION, DEFINITION, STATUS, ITEM>,
         SESSION extends CrawlSessionBase<SESSION, THREAD, MANAGER, DEFINITION, STATUS, ITEM>,
         ITEM extends CrawlItem<?>

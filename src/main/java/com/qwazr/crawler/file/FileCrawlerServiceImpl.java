@@ -22,7 +22,7 @@ import java.io.IOException;
 import java.util.logging.Logger;
 
 class FileCrawlerServiceImpl extends CrawlerServiceImpl
-        <FileCrawlSession, FileCrawlThread, FileCrawlerManager, FileCrawlDefinition, FileCrawlStatus, FileCrawlItem>
+        <FileCrawlSession, FileCrawlThread, FileCrawlerManager, FileCrawlDefinition, FileCrawlSessionStatus, FileCrawlItem>
         implements FileCrawlerServiceInterface {
 
     private static final Logger LOGGER = LoggerUtils.getLogger(FileCrawlerServiceImpl.class);
@@ -31,7 +31,7 @@ class FileCrawlerServiceImpl extends CrawlerServiceImpl
         super(LOGGER, crawlerManager);
     }
 
-    public FileCrawlStatus runSession(final String sessionName, final String jsonCrawlDefinition) throws IOException {
+    public FileCrawlSessionStatus runSession(final String sessionName, final String jsonCrawlDefinition) throws IOException {
         return runSession(sessionName, FileCrawlDefinition.newInstance(jsonCrawlDefinition));
     }
 

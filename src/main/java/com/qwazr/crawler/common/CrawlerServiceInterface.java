@@ -31,7 +31,7 @@ import java.util.SortedMap;
 
 public interface CrawlerServiceInterface<
         DEFINITION extends CrawlDefinition<DEFINITION>,
-        STATUS extends CrawlStatus<STATUS>> extends ServiceInterface {
+        STATUS extends CrawlSessionStatus<STATUS>> extends ServiceInterface {
 
     @GET
     @Path("/sessions")

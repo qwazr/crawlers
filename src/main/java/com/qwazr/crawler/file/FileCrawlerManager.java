@@ -26,7 +26,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.logging.Logger;
 
 public class FileCrawlerManager extends CrawlManager
-        <FileCrawlerManager, FileCrawlThread, FileCrawlSession, FileCrawlDefinition, FileCrawlStatus, FileCrawlItem> {
+        <FileCrawlerManager, FileCrawlThread, FileCrawlSession, FileCrawlDefinition, FileCrawlSessionStatus, FileCrawlItem> {
 
     private static final Logger LOGGER = LoggerUtils.getLogger(FileCrawlerManager.class);
     private final FileCrawlerServiceInterface service;
@@ -35,7 +35,7 @@ public class FileCrawlerManager extends CrawlManager
                               final String myAddress,
                               final ExecutorService executorService) throws IOException {
         super(crawlerRootDirectory, myAddress, executorService,
-                LOGGER, FileCrawlStatus.class);
+                LOGGER, FileCrawlSessionStatus.class);
         service = new FileCrawlerServiceImpl(this);
     }
 
@@ -58,7 +58,7 @@ public class FileCrawlerManager extends CrawlManager
     protected FileCrawlThread newCrawlThread(final String sessionName, final FileCrawlDefinition crawlDefinition) {
         final TimeTracker timeTracker = TimeTracker.withDurations();
         final FileCrawlCollectorFactory collectorFactory = newCrawlCollectorFactory(crawlDefinition, FileCrawlCollectorFactory.class);
-        final FileCrawlStatus.Builder crawlStatusBuilder = FileCrawlStatus.of(myAddress, timeTracker);
+        final FileCrawlSessionStatus.Builder crawlStatusBuilder = FileCrawlSessionStatus.of(myAddress, timeTracker);
         final FileCrawlSession session = new FileCrawlSession(sessionName, this,
                 timeTracker, crawlDefinition, attributes, crawlStatusBuilder, collectorFactory);
         return new FileCrawlThread(this, session, LOGGER);

@@ -20,14 +20,14 @@ import com.qwazr.utils.TimeTracker;
 import java.util.Map;
 
 public class FtpCrawlSession extends CrawlSessionBase
-        <FtpCrawlSession, FtpCrawlThread, FtpCrawlerManager, FtpCrawlDefinition, FtpCrawlStatus, FtpCrawlItem> {
+        <FtpCrawlSession, FtpCrawlThread, FtpCrawlerManager, FtpCrawlDefinition, FtpCrawlSessionStatus, FtpCrawlItem> {
 
     FtpCrawlSession(final String sessionName,
                     final FtpCrawlerManager ftpCrawlerManager,
                     final TimeTracker timeTracker,
                     final FtpCrawlDefinition crawlDefinition,
                     final Map<String, Object> attributes,
-                    final FtpCrawlStatus.Builder crawlStatusBuilder,
+                    final FtpCrawlSessionStatus.Builder crawlStatusBuilder,
                     final FtpCrawlCollectorFactory crawlCollectorFactory) {
         super(sessionName, ftpCrawlerManager, timeTracker, crawlDefinition, attributes, crawlStatusBuilder, crawlCollectorFactory);
     }

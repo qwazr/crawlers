@@ -22,7 +22,7 @@ import java.io.IOException;
 import java.util.logging.Logger;
 
 class FtpCrawlerServiceImpl extends CrawlerServiceImpl
-        <FtpCrawlSession, FtpCrawlThread, FtpCrawlerManager, FtpCrawlDefinition, FtpCrawlStatus, FtpCrawlItem>
+        <FtpCrawlSession, FtpCrawlThread, FtpCrawlerManager, FtpCrawlDefinition, FtpCrawlSessionStatus, FtpCrawlItem>
         implements FtpCrawlerServiceInterface {
 
     private static final Logger LOGGER = LoggerUtils.getLogger(FtpCrawlerServiceImpl.class);
@@ -31,7 +31,7 @@ class FtpCrawlerServiceImpl extends CrawlerServiceImpl
         super(LOGGER, crawlerManager);
     }
 
-    public FtpCrawlStatus runSession(final String sessionName, final String jsonCrawlDefinition) throws IOException {
+    public FtpCrawlSessionStatus runSession(final String sessionName, final String jsonCrawlDefinition) throws IOException {
         return runSession(sessionName, FtpCrawlDefinition.newInstance(jsonCrawlDefinition));
     }
 

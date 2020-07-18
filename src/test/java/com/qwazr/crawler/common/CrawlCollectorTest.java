@@ -15,31 +15,37 @@
  */
 package com.qwazr.crawler.common;
 
+import com.qwazr.utils.IfNotNull;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class CrawlCollectorTest<ITEM extends CrawlItem<?>> implements CrawlCollector<ITEM> {
 
-    public static final List<CrawlItem<?>> count = new ArrayList<>();
-    public static final List<CrawlItem<?>> crawled = new ArrayList<>();
-    public static final List<CrawlItem<?>> rejected = new ArrayList<>();
-    public static final Map<Integer, List<CrawlItem<?>>> depths = new LinkedHashMap<>();
+    public static final List<CrawlItem<?>> all = new ArrayList<>();
+    public static final Map<Object, Rejected> rejecteds = new HashMap<>();
+    public static final Map<Object, String> errors = new HashMap<>();
+    public static final Map<Integer, List<Object>> depths = new LinkedHashMap<>();
 
     public static void resetCounters() {
-        count.clear();
-        crawled.clear();
-        rejected.clear();
+        all.clear();
+        rejecteds.clear();
         depths.clear();
     }
 
     @Override
     public void collect(final ITEM crawlItem) {
-        count.add(crawlItem);
-        if (crawlItem.getRejected() != null)
-            rejected.add(crawlItem);
-        depths.computeIfAbsent(crawlItem.getDepth(), d -> new ArrayList<>()).add(crawlItem);
+        all.add(crawlItem);
+        IfNotNull.apply(crawlItem.getRejected(), r -> rejecteds.put(crawlItem.getItem(), r));
+        IfNotNull.apply(crawlItem.getError(), e -> errors.put(crawlItem.getItem(), e));
+        depths.computeIfAbsent(crawlItem.getDepth(), d -> new ArrayList<>()).add(crawlItem.getItem());
+    }
+
+    public static <T> List<T> getAll(Class<T> itemClass) {
+        return all.stream().map(crawlItem -> itemClass.cast(crawlItem.getItem())).collect(Collectors.toList());
     }
 
 }

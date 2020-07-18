@@ -20,16 +20,16 @@ import com.qwazr.server.RemoteService;
 
 import java.io.IOException;
 
-public class WebCrawlerSingleClient extends CrawlerSingleClient<WebCrawlDefinition, WebCrawlStatus>
+public class WebCrawlerSingleClient extends CrawlerSingleClient<WebCrawlDefinition, WebCrawlSessionStatus>
 		implements WebCrawlerServiceInterface {
 
 	public WebCrawlerSingleClient(final RemoteService remote) {
-		super(remote, WebCrawlerServiceInterface.SERVICE_PATH, WebCrawlStatus.class,
+		super(remote, WebCrawlerServiceInterface.SERVICE_PATH, WebCrawlSessionStatus.class,
 				WebCrawlerServiceInterface.sortedMapStringCrawlType);
 	}
 
 	@Override
-	public WebCrawlStatus runSession(final String sessionSame, final String jsonCrawlDefinition) throws IOException {
+	public WebCrawlSessionStatus runSession(final String sessionSame, final String jsonCrawlDefinition) throws IOException {
 		return runSession(sessionSame, WebCrawlDefinition.newInstance(jsonCrawlDefinition));
 	}
 

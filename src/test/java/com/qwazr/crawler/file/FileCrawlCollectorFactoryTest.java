@@ -28,7 +28,7 @@ import org.junit.Assert;
 
 public class FileCrawlCollectorFactoryTest implements FileCrawlCollectorFactory {
 
-    public static final AtomicReference<FileCrawlDefinition> definition = new AtomicReference<FileCrawlDefinition>();
+    public static final AtomicReference<FileCrawlDefinition> definition = new AtomicReference<>();
     public static final List<Path> paths = new ArrayList<>();
     public static final Map<Path, Integer> pathDepth = new LinkedHashMap<>();
     public static final Map<Path, String> pathError = new LinkedHashMap<>();

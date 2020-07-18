@@ -27,7 +27,7 @@ import org.mapdb.HTreeMap;
 import org.mapdb.Serializer;
 
 public class WebCrawlSession extends CrawlSessionBase
-        <WebCrawlSession, WebCrawlThread, WebCrawlerManager, WebCrawlDefinition, WebCrawlStatus, WebCrawlItem> {
+        <WebCrawlSession, WebCrawlThread, WebCrawlerManager, WebCrawlDefinition, WebCrawlSessionStatus, WebCrawlItem> {
 
     private final HTreeMap.KeySet<String> crawledUrls;
     private final HTreeMap<String, Integer> toCrawlUrls;
@@ -39,7 +39,7 @@ public class WebCrawlSession extends CrawlSessionBase
                     final TimeTracker timeTracker,
                     final WebCrawlDefinition crawlDefinition,
                     final Map<String, Object> attributes,
-                    final WebCrawlStatus.Builder crawlStatusBuilder,
+                    final WebCrawlSessionStatus.Builder crawlStatusBuilder,
                     final WebCrawlCollectorFactory crawlCollectorFactory) {
         super(sessionName, webCrawlerManager, timeTracker, crawlDefinition, attributes, crawlStatusBuilder, crawlCollectorFactory);
         crawledUrls = sessionDB.hashSet("crawled")
@@ -113,7 +113,8 @@ public class WebCrawlSession extends CrawlSessionBase
         }
     }
 
-    void setCrawled(final String uriString) {
+    void setCrawled(final String uriString, final int depth) {
+        setCurrentCrawl(uriString, depth);
         synchronized (urlDatabaseLock) {
             toCrawlUrls.remove(uriString);
             crawledUrls.add(uriString);

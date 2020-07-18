@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,12 +24,12 @@ import java.util.SortedMap;
 
 @RolesAllowed(FileCrawlerServiceInterface.SERVICE_NAME)
 @Path(FileCrawlerServiceInterface.SERVICE_PATH)
-public interface FileCrawlerServiceInterface extends CrawlerServiceInterface<FileCrawlDefinition, FileCrawlStatus> {
+public interface FileCrawlerServiceInterface extends CrawlerServiceInterface<FileCrawlDefinition, FileCrawlSessionStatus> {
 
     String SERVICE_PATH = "/crawler/file";
     String SERVICE_NAME = "filecrawler";
 
-    GenericType<SortedMap<String, FileCrawlStatus>> sortedMapStringCrawlType =
+    GenericType<SortedMap<String, FileCrawlSessionStatus>> sortedMapStringCrawlType =
             new GenericType<>() {
             };
 }

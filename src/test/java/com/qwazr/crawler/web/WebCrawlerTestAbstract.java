@@ -18,7 +18,7 @@ package com.qwazr.crawler.web;
 import com.qwazr.crawler.CrawlerServer;
 import com.qwazr.crawler.common.CrawlCollectorTest;
 import com.qwazr.crawler.common.CrawlHelpers;
-import com.qwazr.crawler.common.CrawlStatus;
+import com.qwazr.crawler.common.CrawlSessionStatus;
 import com.qwazr.utils.FileUtils;
 import com.qwazr.utils.RandomUtils;
 import java.io.IOException;
@@ -63,7 +63,7 @@ public abstract class WebCrawlerTestAbstract {
     @Test
     @Order(200)
     public void test200emptySessions() {
-        SortedMap<String, WebCrawlStatus> sessions = service.getSessions();
+        SortedMap<String, WebCrawlSessionStatus> sessions = service.getSessions();
         Assert.assertNotNull(sessions);
         Assert.assertTrue(sessions.isEmpty());
     }
@@ -81,11 +81,11 @@ public abstract class WebCrawlerTestAbstract {
         return webCrawl;
     }
 
-    private CrawlStatus<?> crawlTest(WebCrawlDefinition webCrawl, int crawled, int rejected, int error)
+    private CrawlSessionStatus<?> crawlTest(WebCrawlDefinition webCrawl, int crawled, int rejected, int error)
             throws InterruptedException {
         final String sessionName = RandomUtils.alphanumeric(10);
         service.runSession(sessionName, webCrawl);
-        final CrawlStatus<?> status = CrawlHelpers.crawlWait(sessionName, service);
+        final CrawlSessionStatus<?> status = CrawlHelpers.crawlWait(sessionName, service);
         Assert.assertEquals(crawled, status.crawled);
         Assert.assertEquals(rejected, status.rejected);
         Assert.assertEquals(error, status.error);
@@ -125,16 +125,16 @@ public abstract class WebCrawlerTestAbstract {
 
         webCrawl.userAgent("QWAZR_BOT");
         service.runSession(sessionName, webCrawl.build());
-        final CrawlStatus<?> status = CrawlHelpers.crawlWait(sessionName, service);
+        final CrawlSessionStatus<?> status = CrawlHelpers.crawlWait(sessionName, service);
 
         Assert.assertEquals(5, status.crawled);
         Assert.assertEquals(1, status.rejected);
         Assert.assertEquals(1, status.redirect);
         Assert.assertEquals(1, status.error);
 
-        assertThat(CrawlCollectorTest.count.size(), equalTo(8));
-        assertThat(CrawlCollectorTest.crawled.size(), equalTo(5));
-        assertThat(CrawlCollectorTest.rejected.size(), equalTo(1));
+        assertThat(CrawlCollectorTest.all.size(), equalTo(8));
+        assertThat(CrawlCollectorTest.errors.size(), equalTo(1));
+        assertThat(CrawlCollectorTest.rejecteds.size(), equalTo(1));
 
         WebCrawlCollectorFactoryTest.checkUri("http://localhost:9190", 0, 302, null);
         WebCrawlCollectorFactoryTest.checkUri("http://localhost:9190/index.html", 0, 200, 436);

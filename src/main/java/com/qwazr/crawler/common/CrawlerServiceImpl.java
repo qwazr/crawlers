@@ -27,7 +27,7 @@ public abstract class CrawlerServiceImpl<
         THREAD extends CrawlThread<THREAD, DEFINITION, STATUS, MANAGER, SESSION, ITEM>,
         MANAGER extends CrawlManager<MANAGER, THREAD, SESSION, DEFINITION, STATUS, ITEM>,
         DEFINITION extends CrawlDefinition<DEFINITION>,
-        STATUS extends CrawlStatus<STATUS>,
+        STATUS extends CrawlSessionStatus<STATUS>,
         ITEM extends CrawlItem<?>
         > extends AbstractServiceImpl implements CrawlerServiceInterface<DEFINITION, STATUS> {
 

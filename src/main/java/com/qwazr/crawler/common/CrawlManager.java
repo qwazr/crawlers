@@ -40,7 +40,7 @@ public abstract class CrawlManager<
         THREAD extends CrawlThread<THREAD, DEFINITION, STATUS, MANAGER, SESSION, ITEM>,
         SESSION extends CrawlSessionBase<SESSION, THREAD, MANAGER, DEFINITION, STATUS, ITEM>,
         DEFINITION extends CrawlDefinition<DEFINITION>,
-        STATUS extends CrawlStatus<STATUS>,
+        STATUS extends CrawlSessionStatus<STATUS>,
         ITEM extends CrawlItem<?>
         > extends AttributesBase implements AutoCloseable {
 
@@ -48,7 +48,7 @@ public abstract class CrawlManager<
     public final static String MAP_SESSION_NAME = "sessions";
     public final static String SESSION_DIRECTORY_NAME = "sessions";
 
-    private final ConcurrentHashMap<String, THREAD> currentCrawlThreads;
+    private final ConcurrentHashMap<String, THREAD> liveCrawlThreads;
     private final Class<STATUS> statusClass;
     private final HTreeMap<String, byte[]> crawlStatusMap;
     private final HTreeMap<String, byte[]> crawlDefinitionMap;
@@ -72,7 +72,7 @@ public abstract class CrawlManager<
         this.sessionsDirectory = crawlerRootDirectory.resolve(SESSION_DIRECTORY_NAME);
         if (!Files.exists(sessionsDirectory))
             Files.createDirectory(sessionsDirectory);
-        this.currentCrawlThreads = new ConcurrentHashMap<>();
+        this.liveCrawlThreads = new ConcurrentHashMap<>();
         this.myAddress = myAddress;
         this.executorService = executorService;
         this.logger = logger;
@@ -89,7 +89,7 @@ public abstract class CrawlManager<
     }
 
     public void forEachLiveSession(final BiConsumer<String, STATUS> consumer) {
-        currentCrawlThreads.forEach((key, crawl) -> consumer.accept(key, crawl.getStatus()));
+        liveCrawlThreads.forEach((key, crawl) -> consumer.accept(key, crawl.getStatus()));
     }
 
     public STATUS getSessionStatus(final String sessionName) {
@@ -101,7 +101,7 @@ public abstract class CrawlManager<
         }
     }
 
-    void setSessionStatus(final String sessionName, STATUS status) {
+    void setSessionStatus(final String sessionName, final STATUS status) {
         try {
             crawlStatusMap.put(sessionName, ObjectMappers.SMILE.writeValueAsBytes(status));
             database.commit();
@@ -112,7 +112,7 @@ public abstract class CrawlManager<
 
 
     public void abortSession(final String sessionName, final String abortingReason) {
-        final THREAD crawlThread = currentCrawlThreads.get(sessionName);
+        final THREAD crawlThread = liveCrawlThreads.get(sessionName);
         if (crawlThread == null)
             throw new ServerException(Response.Status.NOT_FOUND, "The crawl session was not running: " + sessionName);
         logger.info(() -> "Aborting crawl session: " + sessionName + " - " + abortingReason);
@@ -139,7 +139,7 @@ public abstract class CrawlManager<
     public STATUS runSession(final String sessionName,
                              final DEFINITION crawlDefinition) {
 
-        currentCrawlThreads.compute(sessionName, (key, currentCrawl) -> {
+        liveCrawlThreads.compute(sessionName, (key, currentCrawl) -> {
             if (currentCrawl != null)
                 throw new ServerException(Response.Status.CONFLICT, "The session already exists: " + sessionName);
             try {
@@ -158,14 +158,14 @@ public abstract class CrawlManager<
 
     void removeSession(final String sessionName) {
         logger.info(() -> "Remove session: " + sessionName);
-        currentCrawlThreads.remove(sessionName).abort("Session removed by the user");
+        liveCrawlThreads.remove(sessionName).abort("Session removed by the user");
     }
 
     @Override
     public void close() {
-        currentCrawlThreads.forEach((name, thread) -> thread.session.close());
+        liveCrawlThreads.forEach((name, thread) -> thread.session.close());
         try {
-            WaitFor.of().timeOut(TimeUnit.HOURS, 1).pauseTime(TimeUnit.SECONDS, 1).until(currentCrawlThreads::isEmpty);
+            WaitFor.of().timeOut(TimeUnit.HOURS, 1).pauseTime(TimeUnit.SECONDS, 1).until(liveCrawlThreads::isEmpty);
         } catch (final InterruptedException e) {
             logger.log(Level.SEVERE, e, () -> "Cannot stop the crawl session");
         }

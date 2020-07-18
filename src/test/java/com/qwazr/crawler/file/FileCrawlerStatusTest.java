@@ -27,7 +27,7 @@ public class FileCrawlerStatusTest {
 
     @Test
     public void serializationTest() throws IOException {
-        final FileCrawlStatus status = FileCrawlStatus.of("test", TimeTracker.withDurations())
+        final FileCrawlSessionStatus status = FileCrawlSessionStatus.of("test", TimeTracker.withDurations())
                 .incRedirect()
                 .incCrawled()
                 .incRejected()
@@ -35,7 +35,7 @@ public class FileCrawlerStatusTest {
                 .crawl("test", 5)
                 .build();
         final byte[] bytes = ObjectMappers.SMILE.writeValueAsBytes(status);
-        final FileCrawlStatus status2 = ObjectMappers.SMILE.readValue(bytes, FileCrawlStatus.class);
+        final FileCrawlSessionStatus status2 = ObjectMappers.SMILE.readValue(bytes, FileCrawlSessionStatus.class);
         assertThat(status, equalTo(status2));
     }
 }

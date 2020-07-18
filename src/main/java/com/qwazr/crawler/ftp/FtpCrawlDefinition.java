@@ -170,11 +170,10 @@ public class FtpCrawlDefinition extends CrawlDefinition<FtpCrawlDefinition> {
         private Boolean isPassive;
 
         protected Builder() {
-            super(Builder.class);
         }
 
         protected Builder(FtpCrawlDefinition crawlDefinition) {
-            super(Builder.class, crawlDefinition);
+            super(crawlDefinition);
             entryPath = crawlDefinition.entryPath;
             maxDepth = crawlDefinition.maxDepth;
             crawlWaitMs = crawlDefinition.crawlWaitMs;

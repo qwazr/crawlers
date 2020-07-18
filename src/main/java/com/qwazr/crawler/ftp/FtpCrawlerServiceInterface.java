@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2018 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,12 +24,12 @@ import java.util.SortedMap;
 
 @RolesAllowed(FtpCrawlerServiceInterface.SERVICE_NAME)
 @Path(FtpCrawlerServiceInterface.SERVICE_PATH)
-public interface FtpCrawlerServiceInterface extends CrawlerServiceInterface<FtpCrawlDefinition, FtpCrawlStatus> {
+public interface FtpCrawlerServiceInterface extends CrawlerServiceInterface<FtpCrawlDefinition, FtpCrawlSessionStatus> {
 
     String SERVICE_PATH = "/crawler/ftp";
     String SERVICE_NAME = "ftpcrawler";
 
-    GenericType<SortedMap<String, FtpCrawlStatus>> sortedMapStringCrawlType =
+    GenericType<SortedMap<String, FtpCrawlSessionStatus>> sortedMapStringCrawlType =
             new GenericType<>() {
             };
 }

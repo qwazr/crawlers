@@ -48,7 +48,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
 public class WebCrawlThread extends CrawlThread
-        <WebCrawlThread, WebCrawlDefinition, WebCrawlStatus, WebCrawlerManager, WebCrawlSession, WebCrawlItem> {
+        <WebCrawlThread, WebCrawlDefinition, WebCrawlSessionStatus, WebCrawlerManager, WebCrawlSession, WebCrawlItem> {
 
     private static final Logger LOGGER = LoggerUtils.getLogger(WebCrawlThread.class);
 
@@ -328,7 +328,7 @@ public class WebCrawlThread extends CrawlThread
         // Check if it has been already crawled
         if (session.isCrawled(builder.uriString))
             return;
-        session.setCrawled(builder.uriString);
+        session.setCrawled(builder.uriString, builder.depth);
         WebCrawlItem crawlItem = null;
         final AtomicBoolean collected = new AtomicBoolean(false);
         try {

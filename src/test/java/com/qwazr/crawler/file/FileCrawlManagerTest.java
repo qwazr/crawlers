@@ -15,6 +15,8 @@
  */
 package com.qwazr.crawler.file;
 
+import com.qwazr.crawler.common.CrawlCollectorTest;
+import com.qwazr.crawler.common.Rejected;
 import com.qwazr.crawler.common.WildcardFilter;
 import com.qwazr.utils.FileUtils;
 import com.qwazr.utils.RandomUtils;
@@ -23,8 +25,12 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.MatcherAssert.assertThat;
 import org.junit.Assert;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -54,10 +60,11 @@ public class FileCrawlManagerTest {
     FileCrawlDefinition.Builder getFileCrawlDefinition() {
         return FileCrawlDefinition.of()
                 .entryPath(Paths.get("src", "test", "file_crawl").toString())
-                .addFilter("*" + File.separator, WildcardFilter.Status.accept)
-                .addFilter("*.txt", WildcardFilter.Status.accept)
+                .crawlCollectorFactoryClass(FileCrawlCollectorFactoryTest.class)
                 .addFilter("*" + File.separator + "ignore.*", WildcardFilter.Status.reject)
-                .addFilter("*" + File.separator + "ignore" + File.separator, WildcardFilter.Status.reject);
+                .addFilter("*" + File.separator + "ignore" + File.separator, WildcardFilter.Status.reject)
+                .addFilter("*" + File.separator, WildcardFilter.Status.accept)
+                .addFilter("*.txt", WildcardFilter.Status.accept);
     }
 
     void crawlTest(final FileCrawlDefinition.Builder fileCrawlDefinitionBuilder,
@@ -65,16 +72,16 @@ public class FileCrawlManagerTest {
                    final int expectedIgnored,
                    final int expectedError) throws InterruptedException {
         final String crawlSession = RandomUtils.alphanumeric(5);
-        FileCrawlStatus crawlStatus = crawlerManager.runSession(crawlSession, fileCrawlDefinitionBuilder.build());
+        FileCrawlSessionStatus crawlStatus = crawlerManager.runSession(crawlSession, fileCrawlDefinitionBuilder.build());
         Assert.assertNotNull(crawlStatus);
         while (crawlStatus.endTime == null) {
-            crawlStatus = crawlerManager.getSessionStatus(crawlSession);
             Thread.sleep(500);
+            crawlStatus = crawlerManager.getSessionStatus(crawlSession);
         }
-        Assert.assertEquals(expectedCrawled, crawlStatus.crawled);
-        Assert.assertEquals(expectedIgnored, crawlStatus.rejected);
-        Assert.assertEquals(expectedError, crawlStatus.error);
-        Assert.assertNotNull(crawlStatus.threadDone);
+        Assert.assertEquals(crawlStatus.toString(), expectedCrawled, crawlStatus.crawled);
+        Assert.assertEquals(crawlStatus.toString(), expectedIgnored, crawlStatus.rejected);
+        Assert.assertEquals(crawlStatus.toString(), expectedError, crawlStatus.error);
+        Assert.assertNotNull(crawlStatus.toString(), crawlStatus.threadDone);
 
         if (expectedError == 0)
             Assert.assertNull(crawlStatus.lastError);
@@ -86,12 +93,25 @@ public class FileCrawlManagerTest {
     @Test
     public void crawlFullTest() throws InterruptedException {
         crawlTest(getFileCrawlDefinition(), 9, 2, 0);
+        assertThat(CrawlCollectorTest.getAll(Path.class), equalTo(List.of(
+                Path.of("src/test/file_crawl"),
+                Path.of("src/test/file_crawl/file0.txt"),
+                Path.of("src/test/file_crawl/dir2"),
+                Path.of("src/test/file_crawl/dir2/file2.txt"),
+                Path.of("src/test/file_crawl/dir2/ignore.txt"),
+                Path.of("src/test/file_crawl/ignore"),
+                Path.of("src/test/file_crawl/dir1"),
+                Path.of("src/test/file_crawl/dir1/subdir"),
+                Path.of("src/test/file_crawl/dir1/subdir/file1.txt"))));
+        assertThat(CrawlCollectorTest.rejecteds, equalTo(Map.of(
+                Path.of("src/test/file_crawl/dir2/ignore.txt"), Rejected.WILDCARD_FILTER,
+                Path.of("src/test/file_crawl/ignore"), Rejected.WILDCARD_FILTER)));
     }
 
     @Test
     public void crawlDepth() throws InterruptedException {
-        crawlTest(getFileCrawlDefinition().setMaxDepth(1), 4, 1, 0);
-        crawlTest(getFileCrawlDefinition().setMaxDepth(2), 6, 2, 0);
+        crawlTest(getFileCrawlDefinition().setMaxDepth(1), 5, 1, 0);
+        crawlTest(getFileCrawlDefinition().setMaxDepth(2), 8, 2, 0);
         crawlTest(getFileCrawlDefinition().setMaxDepth(0), 1, 0, 0);
     }
 }

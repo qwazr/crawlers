@@ -31,7 +31,7 @@ import java.util.concurrent.Future;
         creatorVisibility = JsonAutoDetect.Visibility.NONE,
         isGetterVisibility = JsonAutoDetect.Visibility.NONE,
         fieldVisibility = JsonAutoDetect.Visibility.PUBLIC_ONLY)
-public abstract class CrawlStatus<STATUS extends CrawlStatus<STATUS>> extends Equalizer.Immutable<STATUS> {
+public abstract class CrawlSessionStatus<STATUS extends CrawlSessionStatus<STATUS>> extends Equalizer.Immutable<STATUS> {
 
     /**
      * The identifier of the current node
@@ -99,22 +99,22 @@ public abstract class CrawlStatus<STATUS extends CrawlStatus<STATUS>> extends Eq
 
     final public TimeTracker.Status timer;
 
-    protected CrawlStatus(final Class<STATUS> statusClass,
-                          final @JsonProperty("node_address") String nodeAddress,
-                          final @JsonProperty("aborting") Boolean aborting,
-                          final @JsonProperty("aborting_reason") String abortingReason,
-                          final @JsonProperty("timer") TimeTracker.Status timer,
-                          final @JsonProperty("crawled") Integer crawled,
-                          final @JsonProperty("rejected") Integer rejected,
-                          final @JsonProperty("redirect") Integer redirect,
-                          final @JsonProperty("error") Integer error,
-                          final @JsonProperty("last_error") String lastError,
-                          final @JsonProperty("current_crawl") String currentCrawl,
-                          final @JsonProperty("start_time") Long startTime,
-                          final @JsonProperty("end_time") Long endTime,
-                          final @JsonProperty("current_depth") Integer currentDepth,
-                          final @JsonProperty("thread_cancelled") Boolean threadCancelled,
-                          final @JsonProperty("thread_done") Boolean threadDone) {
+    protected CrawlSessionStatus(final Class<STATUS> statusClass,
+                                 final @JsonProperty("node_address") String nodeAddress,
+                                 final @JsonProperty("aborting") Boolean aborting,
+                                 final @JsonProperty("aborting_reason") String abortingReason,
+                                 final @JsonProperty("timer") TimeTracker.Status timer,
+                                 final @JsonProperty("crawled") Integer crawled,
+                                 final @JsonProperty("rejected") Integer rejected,
+                                 final @JsonProperty("redirect") Integer redirect,
+                                 final @JsonProperty("error") Integer error,
+                                 final @JsonProperty("last_error") String lastError,
+                                 final @JsonProperty("current_crawl") String currentCrawl,
+                                 final @JsonProperty("start_time") Long startTime,
+                                 final @JsonProperty("end_time") Long endTime,
+                                 final @JsonProperty("current_depth") Integer currentDepth,
+                                 final @JsonProperty("thread_cancelled") Boolean threadCancelled,
+                                 final @JsonProperty("thread_done") Boolean threadDone) {
         super(statusClass);
         this.nodeAddress = nodeAddress;
         this.timer = timer;
@@ -133,8 +133,8 @@ public abstract class CrawlStatus<STATUS extends CrawlStatus<STATUS>> extends Eq
         this.threadDone = threadDone;
     }
 
-    protected CrawlStatus(final Class<STATUS> statusClass,
-                          final AbstractBuilder<STATUS, ?> builder) {
+    protected CrawlSessionStatus(final Class<STATUS> statusClass,
+                                 final AbstractBuilder<STATUS, ?> builder) {
         super(statusClass);
         this.nodeAddress = builder.nodeAddress;
         this.timer = builder.timeTracker == null ? null : builder.timeTracker.getStatus();
@@ -262,20 +262,20 @@ public abstract class CrawlStatus<STATUS extends CrawlStatus<STATUS>> extends Eq
 
     @Override
     public String toString() {
-        return nodeAddress
-                + " " + startTime
-                + " " + aborting
-                + " " + abortingReason
-                + " " + crawled
-                + " " + rejected
-                + " " + error
-                + " " + lastError
-                + " " + currentCrawl
-                + " " + currentDepth
-                + " " + endTime
-                + " " + timer
-                + " " + threadCancelled
-                + " " + threadDone;
+        return "Addr: " + nodeAddress
+                + " - startTime: " + startTime
+                + " - aborting: " + aborting
+                + " - abortingReason: " + abortingReason
+                + " - crawled: " + crawled
+                + " - rejected: " + rejected
+                + " - error: " + error
+                + " - lastError: " + lastError
+                + " - currentCrawl: " + currentCrawl
+                + " - currentDepth: " + currentDepth
+                + " - endTime: " + endTime
+                + " - timer: " + timer
+                + " - threadCancelled: " + threadCancelled
+                + " - threadDone: " + threadDone;
     }
 
     @Override
@@ -295,7 +295,7 @@ public abstract class CrawlStatus<STATUS extends CrawlStatus<STATUS>> extends Eq
     }
 
     public abstract static class AbstractBuilder<
-            STATUS extends CrawlStatus<STATUS>,
+            STATUS extends CrawlSessionStatus<STATUS>,
             BUILDER extends AbstractBuilder<STATUS, BUILDER>> {
 
         private final String nodeAddress;
@@ -324,48 +324,57 @@ public abstract class CrawlStatus<STATUS extends CrawlStatus<STATUS>> extends Eq
         protected abstract BUILDER me();
 
         public BUILDER abort(String abortingReason) {
+            assert endTime == null;
             this.aborting = true;
             this.abortingReason = abortingReason;
             return me();
         }
 
         public BUILDER incCrawled() {
+            assert endTime == null;
             crawled++;
             return me();
         }
 
         public BUILDER incRejected() {
+            assert endTime == null;
             rejected++;
             return me();
         }
 
         public BUILDER incRedirect() {
+            assert endTime == null;
             redirect++;
             return me();
         }
 
         public BUILDER incError() {
+            assert endTime == null;
             error++;
             return me();
         }
 
         public BUILDER lastError(String errorMessage) {
+            assert endTime == null;
             this.lastError = errorMessage;
             return me();
         }
 
         public BUILDER crawl(String currentCrawl, Integer currentDepth) {
+            assert endTime == null;
             this.currentCrawl = currentCrawl;
             this.currentDepth = currentDepth;
             return me();
         }
 
         public BUILDER done() {
+            assert endTime == null;
             this.endTime = System.currentTimeMillis();
             return me();
         }
 
         BUILDER future(Future<?> future) {
+            assert endTime == null;
             this.future = future;
             return me();
         }

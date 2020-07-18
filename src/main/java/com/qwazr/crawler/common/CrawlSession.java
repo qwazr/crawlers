@@ -19,8 +19,8 @@ import com.qwazr.utils.TimeTracker;
 
 public interface CrawlSession<
         DEFINITION extends CrawlDefinition<DEFINITION>,
-        STATUS extends CrawlStatus<STATUS>,
-        ITEM extends CrawlItem
+        STATUS extends CrawlSessionStatus<STATUS>,
+        ITEM extends CrawlItem<?>
         > extends AttributesInterface, AutoCloseable {
 
     /**

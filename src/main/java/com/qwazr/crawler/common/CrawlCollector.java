@@ -16,7 +16,7 @@
 package com.qwazr.crawler.common;
 
 @FunctionalInterface
-public interface CrawlCollector<ITEM extends CrawlItem> {
+public interface CrawlCollector<ITEM extends CrawlItem<?>> {
 
     void collect(ITEM crawlItem);
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2018 Emmanuel Keller / QWAZR
+ * Copyright 2017-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,7 +35,7 @@ import org.apache.commons.net.ftp.FTPReply;
 import org.apache.commons.net.ftp.FTPSClient;
 
 public class FtpCrawlThread extends CrawlThread
-        <FtpCrawlThread, FtpCrawlDefinition, FtpCrawlStatus, FtpCrawlerManager, FtpCrawlSession, FtpCrawlItem> {
+        <FtpCrawlThread, FtpCrawlDefinition, FtpCrawlSessionStatus, FtpCrawlerManager, FtpCrawlSession, FtpCrawlItem> {
 
     private final FtpCrawlDefinition crawlDefinition;
     private final FTPClient ftp;

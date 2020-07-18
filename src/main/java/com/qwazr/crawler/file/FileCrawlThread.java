@@ -32,7 +32,7 @@ import java.util.logging.Logger;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
 public class FileCrawlThread extends CrawlThread
-        <FileCrawlThread, FileCrawlDefinition, FileCrawlStatus,
+        <FileCrawlThread, FileCrawlDefinition, FileCrawlSessionStatus,
                 FileCrawlerManager, FileCrawlSession, FileCrawlItem>
         implements FileVisitor<Path> {
 
@@ -80,7 +80,7 @@ public class FileCrawlThread extends CrawlThread
         final String currentPathString = builder.attributes.isDirectory() ?
                 StringUtils.ensureSuffix(builder.item.toString(), File.separator) :
                 builder.item.toString();
-
+        session.setCurrentCrawl(currentPathString, builder.depth);
         final Rejected rejected = checkWildcardFilters(currentPathString);
         if (rejected != null) {
             builder.rejected(rejected);

@@ -16,7 +16,7 @@
 package com.qwazr.crawler.ftp;
 
 import com.qwazr.crawler.common.CrawlHelpers;
-import com.qwazr.crawler.common.CrawlStatus;
+import com.qwazr.crawler.common.CrawlSessionStatus;
 import com.qwazr.crawler.common.WildcardFilter;
 import com.qwazr.utils.FileUtils;
 import java.io.IOException;
@@ -51,7 +51,7 @@ public class FtpCrawlerTest {
 
     @Test
     public void test() throws InterruptedException {
-        FtpCrawlDefinition ftpCrawlDefinition = FtpCrawlDefinition.of()
+        final FtpCrawlDefinition ftpCrawlDefinition = FtpCrawlDefinition.of()
                 .hostname("ftp.mirrorservice.org")
                 .entryPath("/sites/ftp.apache.org/commons/")
                 .passive(true)
@@ -63,7 +63,7 @@ public class FtpCrawlerTest {
                 .addFilter("/sites/ftp.apache.org/commons/*/*.html", WildcardFilter.Status.accept)
                 .build();
         ftpCrawler.runSession("apache", ftpCrawlDefinition);
-        final CrawlStatus<?> status = CrawlHelpers.crawlWait("apache", ftpCrawler);
+        final CrawlSessionStatus<?> status = CrawlHelpers.crawlWait("apache", ftpCrawler);
         assertThat(status.crawled, equalTo(2));
         assertThat(status.rejected, Matchers.greaterThanOrEqualTo(3));
         Assert.assertEquals(0, status.error);

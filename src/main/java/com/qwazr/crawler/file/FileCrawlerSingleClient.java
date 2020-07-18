@@ -19,17 +19,17 @@ import com.qwazr.crawler.common.CrawlerSingleClient;
 import com.qwazr.server.RemoteService;
 import java.io.IOException;
 
-public class FileCrawlerSingleClient extends CrawlerSingleClient<FileCrawlDefinition, FileCrawlStatus>
-		implements FileCrawlerServiceInterface {
+public class FileCrawlerSingleClient extends CrawlerSingleClient<FileCrawlDefinition, FileCrawlSessionStatus>
+        implements FileCrawlerServiceInterface {
 
-	public FileCrawlerSingleClient(final RemoteService remote) {
-		super(remote, FileCrawlerServiceInterface.SERVICE_PATH, FileCrawlStatus.class,
-				FileCrawlerServiceInterface.sortedMapStringCrawlType);
-	}
+    public FileCrawlerSingleClient(final RemoteService remote) {
+        super(remote, FileCrawlerServiceInterface.SERVICE_PATH, FileCrawlSessionStatus.class,
+                FileCrawlerServiceInterface.sortedMapStringCrawlType);
+    }
 
-	@Override
-	public FileCrawlStatus runSession(final String sessionSame, final String jsonCrawlDefinition) throws IOException {
-		return runSession(sessionSame, FileCrawlDefinition.newInstance(jsonCrawlDefinition));
-	}
+    @Override
+    public FileCrawlSessionStatus runSession(final String sessionSame, final String jsonCrawlDefinition) throws IOException {
+        return runSession(sessionSame, FileCrawlDefinition.newInstance(jsonCrawlDefinition));
+    }
 
 }
