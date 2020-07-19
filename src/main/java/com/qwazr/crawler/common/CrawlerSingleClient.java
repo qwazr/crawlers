@@ -18,10 +18,12 @@ package com.qwazr.crawler.common;
 import com.qwazr.server.RemoteService;
 import com.qwazr.server.client.JsonClient;
 import java.util.LinkedHashMap;
+import java.util.function.IntConsumer;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 abstract public class CrawlerSingleClient<
         DEFINITION extends CrawlDefinition<DEFINITION>,
@@ -50,13 +52,15 @@ abstract public class CrawlerSingleClient<
     @Override
     public LinkedHashMap<String, STATUS> getSessions(final String wildcardQuery,
                                                      final Integer start,
-                                                     final Integer rows) {
-        return sessionsTarget.path("/")
-                .queryParam("query", wildcardQuery)
+                                                     final Integer rows,
+                                                     final IntConsumer totalConsumer) {
+        try (final Response response = sessionsTarget.path("/").queryParam("query", wildcardQuery)
                 .queryParam("start", start)
                 .queryParam("rows", rows)
-                .request(MediaType.APPLICATION_JSON)
-                .get(mapStatusType);
+                .request(MediaType.APPLICATION_JSON).get()) {
+            totalConsumer.accept(Integer.parseInt(response.getHeaderString(X_PAGES_HEADER)));
+            return response.readEntity(mapStatusType);
+        }
     }
 
     @Override

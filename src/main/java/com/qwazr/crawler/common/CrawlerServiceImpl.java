@@ -18,6 +18,7 @@ package com.qwazr.crawler.common;
 import com.qwazr.server.AbstractServiceImpl;
 import com.qwazr.server.ServerException;
 import java.util.LinkedHashMap;
+import java.util.function.IntConsumer;
 import java.util.logging.Logger;
 import javax.ws.rs.NotFoundException;
 
@@ -42,9 +43,10 @@ public abstract class CrawlerServiceImpl<
     @Override
     public LinkedHashMap<String, STATUS> getSessions(final String wildcardPattern,
                                                      final Integer start,
-                                                     final Integer rows) {
+                                                     final Integer rows,
+                                                     final IntConsumer totalConsumer) {
         try {
-            return crawlManager.getSessions(wildcardPattern, start == null ? 0 : start, rows == null ? 10 : rows);
+            return crawlManager.getSessions(wildcardPattern, start == null ? 0 : start, rows == null ? 10 : rows, totalConsumer);
         } catch (Exception e) {
             throw ServerException.getJsonException(logger, e);
         }

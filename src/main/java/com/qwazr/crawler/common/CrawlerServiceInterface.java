@@ -17,6 +17,8 @@ package com.qwazr.crawler.common;
 
 import com.qwazr.server.ServiceInterface;
 import java.util.LinkedHashMap;
+import java.util.function.IntConsumer;
+import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -25,17 +27,29 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
 
 public interface CrawlerServiceInterface<
         DEFINITION extends CrawlDefinition<DEFINITION>,
         STATUS extends CrawlSessionStatus<STATUS>> extends ServiceInterface {
 
+    String X_PAGES_HEADER = "X-pages";
+
     @GET
     @Path("/sessions")
     @Produces(ServiceInterface.APPLICATION_JSON_UTF8)
-    LinkedHashMap<String, STATUS> getSessions(final @QueryParam("query") String wildcardQuery,
-                                              final @QueryParam("start") Integer start,
-                                              final @QueryParam("rows") Integer rows);
+    default LinkedHashMap<String, STATUS> getSessions(final @Context HttpServletResponse servletResponse,
+                                                      final @QueryParam("query") String wildcardQuery,
+                                                      final @QueryParam("start") Integer start,
+                                                      final @QueryParam("rows") Integer rows) {
+        return getSessions(wildcardQuery, start, rows,
+                total -> servletResponse.addHeader(X_PAGES_HEADER, Integer.toString(total)));
+    }
+
+    LinkedHashMap<String, STATUS> getSessions(final String wildcardQuery,
+                                              final Integer start,
+                                              final Integer rows,
+                                              final IntConsumer totalConsumer);
 
     @GET
     @Path("/sessions/{session_name}")

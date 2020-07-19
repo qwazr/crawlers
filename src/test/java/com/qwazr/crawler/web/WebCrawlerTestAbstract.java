@@ -63,7 +63,8 @@ public abstract class WebCrawlerTestAbstract {
     @Test
     @Order(200)
     public void test200emptySessions() {
-        final Map<String, WebCrawlSessionStatus> sessions = service.getSessions(null, null, null);
+        final Map<String, WebCrawlSessionStatus> sessions = service.getSessions(null, null, null,
+                total -> assertThat(total, equalTo(0)));
         Assert.assertNotNull(sessions);
         assertThat(sessions.size(), equalTo(0));
     }

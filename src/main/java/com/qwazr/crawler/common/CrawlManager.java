@@ -31,6 +31,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.function.IntConsumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ws.rs.InternalServerErrorException;
@@ -103,9 +104,11 @@ public abstract class CrawlManager<
 
     public LinkedHashMap<String, STATUS> getSessions(final String wildcardPattern,
                                                      final int start,
-                                                     final int rows) {
+                                                     final int rows,
+                                                     final IntConsumer totalNumber) {
         return mapLock.read(() -> {
             final LinkedHashMap<String, STATUS> sessionStatuses = new LinkedHashMap<>();
+            int t = 0;
             int s = start;
             final Iterator<String> sessionNamesIterator = crawlStatusMap.getKeys().iterator();
             while (s != 0 && sessionNamesIterator.hasNext()) {
@@ -117,10 +120,14 @@ public abstract class CrawlManager<
             while (r != 0 && sessionNamesIterator.hasNext()) {
                 final String sessionName = sessionNamesIterator.next();
                 if (wildcardMatcher == null || wildcardMatcher.match(sessionName)) {
-                    sessionStatuses.put(sessionName, readSessionStatus(sessionName));
-                    r--;
+                    if (r > 0) {
+                        sessionStatuses.put(sessionName, readSessionStatus(sessionName));
+                        r--;
+                    }
+                    t++;
                 }
             }
+            totalNumber.accept(t);
             return sessionStatuses;
         });
     }

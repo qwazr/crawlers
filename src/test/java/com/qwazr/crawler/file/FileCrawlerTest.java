@@ -44,7 +44,6 @@ import org.junit.jupiter.api.TestMethodOrder;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class FileCrawlerTest {
 
-    private static FileCrawlerServiceInterface local;
     private static FileCrawlerServiceInterface remote;
     private static Path tempDatDir;
 
@@ -54,9 +53,9 @@ public class FileCrawlerTest {
         System.setProperty("QWAZR_DATA", tempDatDir.toAbsolutePath().toString());
         CrawlerServer.main();
 
-        local = CrawlerServer.getInstance().getFileCrawlerServiceBuilder().local();
-        Assert.assertNotNull(local);
-        remote = new FileCrawlerSingleClient(RemoteService.of("http://localhost:9091").build());
+        final FileCrawlerServiceBuilder serviceBuilder = CrawlerServer.getInstance().getFileCrawlerServiceBuilder();
+        Assert.assertNotNull(serviceBuilder.local());
+        remote = serviceBuilder.remote(RemoteService.of("http://localhost:9091").build());
         Assert.assertNotNull(remote);
     }
 
@@ -72,7 +71,8 @@ public class FileCrawlerTest {
     @Test
     @Order(200)
     public void test200emptySessions() {
-        final Map<String, FileCrawlSessionStatus> sessions = remote.getSessions(null, null, null);
+        final Map<String, FileCrawlSessionStatus> sessions = remote.getSessions(null, null, null,
+                total -> assertThat(total, equalTo(0)));
         Assert.assertNotNull(sessions);
         assertThat(sessions.size(), equalTo(0));
     }
@@ -135,25 +135,48 @@ public class FileCrawlerTest {
 
     @Test
     @Order(500)
-    public void test500DeleteSession() {
+    public void test600GetSessions() {
+        final Map<String, FileCrawlSessionStatus> sessions = remote.getSessions(null, null, null,
+                total -> assertThat(total, equalTo(2)));
+        assertThat(sessions, notNullValue());
+        assertThat(sessions.size(), equalTo(2));
+
+        remote.getSessions(sessions.keySet().iterator().next(), null, null, total -> assertThat(total, equalTo(1)));
+
+        remote.getSessions(null, 0, 1, total -> assertThat(total, equalTo(1)));
+        remote.getSessions(null, 1, null, total -> assertThat(total, equalTo(1)));
+        remote.getSessions(null, 2, 0, total -> assertThat(total, equalTo(0)));
+        remote.getSessions(null, 100, 100, total -> assertThat(total, equalTo(0)));
+    }
+
+    @Test
+    @Order(600)
+    public void test600DeleteSession() {
         {
-            final Map<String, FileCrawlSessionStatus> sessions = remote.getSessions(null, null, null);
+            final Map<String, FileCrawlSessionStatus> sessions = remote.getSessions(null, null, null,
+                    total -> assertThat(total, equalTo(2)));
             assertThat(sessions, notNullValue());
             assertThat(sessions.size(), equalTo(2));
             remote.removeSession(sessions.keySet().iterator().next());
+
+            remote.getSessions(null, 0, 1, total -> assertThat(total, equalTo(1)));
+            remote.getSessions(null, 1, null, total -> assertThat(total, equalTo(0)));
+            remote.getSessions(null, 2, 0, total -> assertThat(total, equalTo(0)));
+            remote.getSessions(null, 100, 100, total -> assertThat(total, equalTo(0)));
         }
 
         {
-            final Map<String, FileCrawlSessionStatus> sessions = remote.getSessions(null, null, null);
+            final Map<String, FileCrawlSessionStatus> sessions = remote.getSessions(null, null, null,
+                    total -> assertThat(total, equalTo(1)));
             assertThat(sessions, notNullValue());
             assertThat(sessions.size(), equalTo(1));
             remote.removeSession(sessions.keySet().iterator().next());
-        }
 
-        {
-            final Map<String, FileCrawlSessionStatus> sessions = remote.getSessions(null, null, null);
-            assertThat(sessions, notNullValue());
-            assertThat(sessions.size(), equalTo(0));
+            remote.getSessions(null, 0, 1, total -> assertThat(total, equalTo(0)));
+            remote.getSessions(null, 1, null, total -> assertThat(total, equalTo(0)));
+            remote.getSessions(null, 2, 0, total -> assertThat(total, equalTo(0)));
+            remote.getSessions(null, 100, 100, total -> assertThat(total, equalTo(0)));
+            remote.getSessions(null, null, null, total -> assertThat(total, equalTo(0)));
         }
 
     }
