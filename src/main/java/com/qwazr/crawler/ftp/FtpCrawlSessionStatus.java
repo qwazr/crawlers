@@ -17,15 +17,17 @@ package com.qwazr.crawler.ftp;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.crawler.common.CrawlSessionStatus;
 import com.qwazr.utils.TimeTracker;
 
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonAutoDetect(setterVisibility = JsonAutoDetect.Visibility.NONE,
         getterVisibility = JsonAutoDetect.Visibility.NONE,
         creatorVisibility = JsonAutoDetect.Visibility.NONE,
         isGetterVisibility = JsonAutoDetect.Visibility.NONE,
-        fieldVisibility = JsonAutoDetect.Visibility.PROTECTED_AND_PUBLIC)
+        fieldVisibility = JsonAutoDetect.Visibility.PUBLIC_ONLY)
 public class FtpCrawlSessionStatus extends CrawlSessionStatus<FtpCrawlSessionStatus> {
 
     @JsonCreator
