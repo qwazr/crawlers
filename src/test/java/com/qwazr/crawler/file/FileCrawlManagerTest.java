@@ -25,8 +25,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -71,6 +71,7 @@ public class FileCrawlManagerTest {
                    final int expectedCrawled,
                    final int expectedIgnored,
                    final int expectedError) throws InterruptedException {
+        FileCrawlCollectorFactoryTest.resetCounters();
         final String crawlSession = RandomUtils.alphanumeric(5);
         FileCrawlSessionStatus crawlStatus = crawlerManager.runSession(crawlSession, fileCrawlDefinitionBuilder.build());
         Assert.assertNotNull(crawlStatus);
@@ -93,7 +94,7 @@ public class FileCrawlManagerTest {
     @Test
     public void crawlFullTest() throws InterruptedException {
         crawlTest(getFileCrawlDefinition(), 9, 2, 0);
-        assertThat(CrawlCollectorTest.getAll(Path.class), equalTo(List.of(
+        assertThat(CrawlCollectorTest.getAll(Path.class), equalTo(Set.of(
                 Path.of("src/test/file_crawl"),
                 Path.of("src/test/file_crawl/file0.txt"),
                 Path.of("src/test/file_crawl/dir2"),

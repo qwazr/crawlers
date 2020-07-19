@@ -133,6 +133,7 @@ public abstract class WebCrawlerTestAbstract {
         Assert.assertEquals(1, status.error);
 
         assertThat(CrawlCollectorTest.all.size(), equalTo(8));
+        assertThat(CrawlCollectorTest.getAll(URI.class).size(), equalTo(8));
         assertThat(CrawlCollectorTest.errors.size(), equalTo(1));
         assertThat(CrawlCollectorTest.rejecteds.size(), equalTo(1));
 

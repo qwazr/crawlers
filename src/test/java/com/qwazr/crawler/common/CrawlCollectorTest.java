@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class CrawlCollectorTest<ITEM extends CrawlItem<?>> implements CrawlCollector<ITEM> {
@@ -33,6 +34,7 @@ public class CrawlCollectorTest<ITEM extends CrawlItem<?>> implements CrawlColle
     public static void resetCounters() {
         all.clear();
         rejecteds.clear();
+        errors.clear();
         depths.clear();
     }
 
@@ -44,8 +46,8 @@ public class CrawlCollectorTest<ITEM extends CrawlItem<?>> implements CrawlColle
         depths.computeIfAbsent(crawlItem.getDepth(), d -> new ArrayList<>()).add(crawlItem.getItem());
     }
 
-    public static <T> List<T> getAll(Class<T> itemClass) {
-        return all.stream().map(crawlItem -> itemClass.cast(crawlItem.getItem())).collect(Collectors.toList());
+    public static <T> Set<T> getAll(Class<T> itemClass) {
+        return all.stream().map(crawlItem -> itemClass.cast(crawlItem.getItem())).collect(Collectors.toSet());
     }
 
 }

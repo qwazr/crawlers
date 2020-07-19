@@ -28,7 +28,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.LinkedHashMap;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.SortedMap;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -112,10 +113,10 @@ public class FileCrawlerTest {
 
         Assert.assertEquals(crawl.build(), FileCrawlCollectorFactoryTest.definition.get());
 
-        assertThat(CrawlCollectorTest.all.size(), equalTo(9));
+        assertThat(CrawlCollectorTest.getAll(Path.class).size(), equalTo(9));
         assertThat(CrawlCollectorTest.rejecteds.size(), equalTo(2));
 
-        final LinkedHashMap<Path, Integer> result = new LinkedHashMap<>();
+        final Map<Path, Integer> result = new HashMap<>();
         result.put(Path.of("src/test/file_crawl"), 0);
         result.put(Path.of("src/test/file_crawl/file0.txt"), 1);
         result.put(Path.of("src/test/file_crawl/dir2"), 1);
