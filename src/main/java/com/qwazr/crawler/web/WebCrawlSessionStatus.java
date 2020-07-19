@@ -31,17 +31,21 @@ import com.qwazr.utils.TimeTracker;
 public class WebCrawlSessionStatus extends CrawlSessionStatus<WebCrawlSessionStatus> {
 
     @JsonCreator
-    WebCrawlSessionStatus(@JsonProperty("node_address") String nodeAddress, @JsonProperty("aborting") Boolean aborting,
-                          @JsonProperty("aborting_reason") String abortingReason, @JsonProperty("timer") TimeTracker.Status timer,
-                          @JsonProperty("crawled") Integer crawled, @JsonProperty("ignored") Integer ignored,
-                          @JsonProperty("redirect") Integer redirect, @JsonProperty("error") Integer error,
-                          @JsonProperty("last_error") String lastError, @JsonProperty("current_crawl") String currentCrawl,
-                          @JsonProperty("start_time") final Long startTime, @JsonProperty("end_time") final Long endTime,
-                          @JsonProperty("current_depth") Integer currentDepth,
-                          @JsonProperty("thread_cancelled") Boolean threadCancelled,
-                          @JsonProperty("thread_done") Boolean threadDone) {
+    WebCrawlSessionStatus(final @JsonProperty("node_address") String nodeAddress,
+                          final @JsonProperty("aborting") Boolean aborting,
+                          final @JsonProperty("aborting_reason") String abortingReason,
+                          final @JsonProperty("timer") TimeTracker.Status timer,
+                          final @JsonProperty("crawled") Integer crawled,
+                          final @JsonProperty("ignored") Integer ignored,
+                          final @JsonProperty("redirect") Integer redirect,
+                          final @JsonProperty("error") Integer error,
+                          final @JsonProperty("last_error") String lastError,
+                          final @JsonProperty("current_crawl") String currentCrawl,
+                          final @JsonProperty("start_time") Long startTime,
+                          final @JsonProperty("end_time") Long endTime,
+                          final @JsonProperty("current_depth") Integer currentDepth) {
         super(WebCrawlSessionStatus.class, nodeAddress, aborting, abortingReason, timer, crawled, ignored, redirect, error, lastError, currentCrawl,
-                startTime, endTime, currentDepth, threadCancelled, threadDone);
+                startTime, endTime, currentDepth);
     }
 
     private WebCrawlSessionStatus(Builder builder) {

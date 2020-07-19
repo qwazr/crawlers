@@ -16,7 +16,7 @@
 package com.qwazr.crawler.common;
 
 import com.qwazr.server.ServiceInterface;
-
+import java.util.SortedMap;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -26,8 +26,6 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-import java.io.IOException;
-import java.util.SortedMap;
 
 public interface CrawlerServiceInterface<
         DEFINITION extends CrawlDefinition<DEFINITION>,
@@ -41,18 +39,27 @@ public interface CrawlerServiceInterface<
     @GET
     @Path("/sessions/{session_name}")
     @Produces(ServiceInterface.APPLICATION_JSON_UTF8)
-    STATUS getSession(@PathParam("session_name") String sessionName);
+    STATUS getSessionStatus(@PathParam("session_name") String sessionName);
+
+    @GET
+    @Path("/sessions/{session_name}/definition")
+    @Produces(ServiceInterface.APPLICATION_JSON_UTF8)
+    DEFINITION getSessionDefinition(@PathParam("session_name") String sessionName);
 
     @DELETE
     @Path("/sessions/{session_name}")
     @Produces({ServiceInterface.APPLICATION_JSON_UTF8, MediaType.TEXT_PLAIN})
-    boolean abortSession(@PathParam("session_name") String sessionName, @QueryParam("reason") String abortingReason);
+    void stopSession(@PathParam("session_name") String sessionName,
+                     @QueryParam("reason") String abortingReason);
+
+    @DELETE
+    @Path("/sessions/{session_name}/definition")
+    @Produces(ServiceInterface.APPLICATION_JSON_UTF8)
+    void removeSession(@PathParam("session_name") String sessionName);
 
     @POST
     @Path("/sessions/{session_name}")
     @Consumes(ServiceInterface.APPLICATION_JSON_UTF8)
     @Produces(ServiceInterface.APPLICATION_JSON_UTF8)
     STATUS runSession(@PathParam("session_name") String sessionName, DEFINITION crawlDefinition);
-
-    STATUS runSession(String sessionName, String jsonCrawlDefinition) throws IOException;
 }

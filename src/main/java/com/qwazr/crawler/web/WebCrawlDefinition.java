@@ -255,7 +255,7 @@ public class WebCrawlDefinition extends CrawlDefinition<WebCrawlDefinition> {
     }
 
     @Override
-    protected boolean isEqual(WebCrawlDefinition w) {
+    protected boolean isEqual(final WebCrawlDefinition w) {
         return super.isEqual(w) &&
                 Objects.equals(entryUrl, w.entryUrl) &&
                 Objects.equals(entryRequest, w.entryRequest) &&
@@ -281,7 +281,7 @@ public class WebCrawlDefinition extends CrawlDefinition<WebCrawlDefinition> {
         return new Builder();
     }
 
-    public static Builder of(WebCrawlDefinition webCrawlDefinition) {
+    public static Builder of(final WebCrawlDefinition webCrawlDefinition) {
         return new Builder(webCrawlDefinition);
     }
 

@@ -26,7 +26,8 @@ public class CrawlHelpers {
             throws InterruptedException {
         final AtomicReference<CrawlSessionStatus<?>> statusRef = new AtomicReference<>();
         WaitFor.of().timeOut(TimeUnit.MINUTES, 2).until(() -> {
-            final CrawlSessionStatus<?> status = ErrorWrapper.bypass(() -> service.getSession(sessionName), 404);
+            final CrawlSessionStatus<?> status = ErrorWrapper.bypass(
+                    () -> service.getSessionStatus(sessionName), 404);
             statusRef.set(status);
             return status != null && status.endTime != null;
         });

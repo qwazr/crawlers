@@ -68,16 +68,12 @@ public abstract class CrawlThread<
             session.error(e);
         } finally {
             session.done();
-            manager.removeSession(session.getName());
+            session.close();
         }
     }
 
     protected final STATUS getStatus() {
         return session.getCrawlStatus();
-    }
-
-    protected void start() {
-        session.setFuture(manager.executorService.submit(this));
     }
 
     protected void abort(final String abortingReason) {

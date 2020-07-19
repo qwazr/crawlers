@@ -34,7 +34,8 @@ public class WebCrawlerManager extends CrawlManager
     public WebCrawlerManager(final Path crawlerRootDirectory,
                              final String myAddress,
                              final ExecutorService executor) throws IOException {
-        super(crawlerRootDirectory, myAddress, executor, LOGGER, WebCrawlSessionStatus.class);
+        super(crawlerRootDirectory, myAddress, executor, LOGGER,
+                WebCrawlSessionStatus.class, WebCrawlDefinition.class);
         service = new WebCrawlerServiceImpl(this);
     }
 

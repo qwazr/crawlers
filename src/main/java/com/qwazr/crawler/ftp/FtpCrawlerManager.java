@@ -36,7 +36,7 @@ public class FtpCrawlerManager extends CrawlManager
                              final String myAddress,
                              final ExecutorService executorService) throws IOException {
         super(crawlerRootDirectory, myAddress, executorService,
-                LOGGER, FtpCrawlSessionStatus.class);
+                LOGGER, FtpCrawlSessionStatus.class, FtpCrawlDefinition.class);
         service = new FtpCrawlerServiceImpl(this);
     }
 

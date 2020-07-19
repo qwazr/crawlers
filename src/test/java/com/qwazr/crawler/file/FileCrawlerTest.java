@@ -20,6 +20,7 @@ import com.qwazr.crawler.common.CrawlCollectorTest;
 import com.qwazr.crawler.common.CrawlHelpers;
 import com.qwazr.crawler.common.CrawlSessionStatus;
 import com.qwazr.crawler.common.WildcardFilter;
+import com.qwazr.crawler.ftp.FtpCrawlDefinition;
 import com.qwazr.server.RemoteService;
 import com.qwazr.utils.FileUtils;
 import com.qwazr.utils.RandomUtils;
@@ -32,6 +33,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.SortedMap;
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import org.junit.Assert;
 import org.junit.jupiter.api.AfterAll;
@@ -92,7 +94,11 @@ public class FileCrawlerTest {
     @Order(300)
     public void test300SimpleCrawl() throws InterruptedException {
         final String sessionName = RandomUtils.alphanumeric(10);
-        remote.runSession(sessionName, getNewCrawl().build());
+        final FileCrawlDefinition fileCrawl = getNewCrawl().build();
+        final FileCrawlSessionStatus initialStatus = remote.runSession(sessionName, fileCrawl);
+        assertThat(initialStatus, notNullValue());
+        final FileCrawlDefinition initialDef = remote.getSessionDefinition(sessionName);
+        assertThat(initialDef, equalTo(fileCrawl));
         final CrawlSessionStatus<?> status = CrawlHelpers.crawlWait(sessionName, remote);
         Assert.assertEquals(9, status.crawled);
         Assert.assertEquals(2, status.rejected);

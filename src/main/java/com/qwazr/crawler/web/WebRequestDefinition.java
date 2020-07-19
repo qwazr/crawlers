@@ -21,12 +21,15 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import com.qwazr.utils.CollectionsUtils;
+import com.qwazr.utils.Equalizer;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonAutoDetect(setterVisibility = JsonAutoDetect.Visibility.NONE,
@@ -34,7 +37,7 @@ import java.util.Map;
         creatorVisibility = JsonAutoDetect.Visibility.NONE,
         isGetterVisibility = JsonAutoDetect.Visibility.NONE,
         fieldVisibility = JsonAutoDetect.Visibility.PUBLIC_ONLY)
-public class WebRequestDefinition {
+public class WebRequestDefinition extends Equalizer.Immutable<WebRequestDefinition> {
 
     public final String url;
 
@@ -49,6 +52,20 @@ public class WebRequestDefinition {
     @JsonProperty("form_encoding_type")
     public final FormEncodingType formEncodingType;
 
+    @Override
+    protected int computeHashCode() {
+        return Objects.hash(url, charset, headers, parameters, method);
+    }
+
+    @Override
+    protected boolean isEqual(final WebRequestDefinition o) {
+        return Objects.equals(url, o.url)
+                && Objects.equals(charset, o.charset)
+                && CollectionsUtils.equals(headers, o.headers)
+                && CollectionsUtils.equals(parameters, o.parameters)
+                && Objects.equals(method, o.method);
+    }
+
     public enum FormEncodingType {
         URL_ENCODED, MULTIPART
     }
@@ -58,12 +75,13 @@ public class WebRequestDefinition {
     }
 
     @JsonCreator
-    public WebRequestDefinition(@JsonProperty("url") final String url,
-                                @JsonProperty("charset") final String charset,
-                                @JsonProperty("headers") final Map<String, String> headers,
-                                @JsonProperty("parameters") Map<String, List<String>> parameters,
-                                @JsonProperty("method") final HttpMethod method,
-                                @JsonProperty("form_encoding_type") final FormEncodingType formEncodingType) {
+    public WebRequestDefinition(final @JsonProperty("url") String url,
+                                final @JsonProperty("charset") String charset,
+                                final @JsonProperty("headers") Map<String, String> headers,
+                                final @JsonProperty("parameters") Map<String, List<String>> parameters,
+                                final @JsonProperty("method") HttpMethod method,
+                                final @JsonProperty("form_encoding_type") FormEncodingType formEncodingType) {
+        super(WebRequestDefinition.class);
         this.url = url;
         this.charset = charset;
         this.headers = headers;

@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import org.junit.Assert;
 import org.junit.jupiter.api.AfterAll;
@@ -84,12 +85,14 @@ public abstract class WebCrawlerTestAbstract {
     private CrawlSessionStatus<?> crawlTest(WebCrawlDefinition webCrawl, int crawled, int rejected, int error)
             throws InterruptedException {
         final String sessionName = RandomUtils.alphanumeric(10);
-        service.runSession(sessionName, webCrawl);
+        final WebCrawlSessionStatus initialStatus = service.runSession(sessionName, webCrawl);
+        assertThat(initialStatus, notNullValue());
+        final WebCrawlDefinition initialDef = service.getSessionDefinition(sessionName);
+        assertThat(initialDef, equalTo(webCrawl));
         final CrawlSessionStatus<?> status = CrawlHelpers.crawlWait(sessionName, service);
         Assert.assertEquals(crawled, status.crawled);
         Assert.assertEquals(rejected, status.rejected);
         Assert.assertEquals(error, status.error);
-        Assert.assertNotNull(status.threadDone);
         return status;
     }
 

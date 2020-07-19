@@ -17,10 +17,9 @@ package com.qwazr.crawler.common;
 
 import com.qwazr.server.AbstractServiceImpl;
 import com.qwazr.server.ServerException;
-
-import javax.ws.rs.core.Response.Status;
 import java.util.TreeMap;
 import java.util.logging.Logger;
+import javax.ws.rs.NotFoundException;
 
 public abstract class CrawlerServiceImpl<
         SESSION extends CrawlSessionBase<SESSION, THREAD, MANAGER, DEFINITION, STATUS, ITEM>,
@@ -47,27 +46,49 @@ public abstract class CrawlerServiceImpl<
         return map;
     }
 
-    public STATUS getSession(final String sessionName) {
+    @Override
+    public STATUS getSessionStatus(final String sessionName) {
         try {
             final STATUS status = crawlManager.getSessionStatus(sessionName);
             if (status != null)
                 return status;
-            throw new ServerException(Status.NOT_FOUND, "Session not found");
+            throw new NotFoundException("Session not found");
         } catch (Exception e) {
             throw ServerException.getJsonException(logger, e);
         }
     }
 
     @Override
-    public boolean abortSession(final String sessionName, final String reason) {
+    public DEFINITION getSessionDefinition(final String sessionName) {
+        try {
+            final DEFINITION definition = crawlManager.getSessionDefinition(sessionName);
+            if (definition != null)
+                return definition;
+            throw new NotFoundException("Definition not found");
+        } catch (Exception e) {
+            throw ServerException.getJsonException(logger, e);
+        }
+    }
+
+    @Override
+    public void stopSession(final String sessionName, final String reason) {
         try {
             crawlManager.abortSession(sessionName, reason);
-            return true;
         } catch (Exception e) {
             throw ServerException.getTextException(logger, e);
         }
     }
 
+    @Override
+    public void removeSession(final String sessionName) {
+        try {
+            crawlManager.removeSession(sessionName);
+        } catch (Exception e) {
+            throw ServerException.getTextException(logger, e);
+        }
+    }
+
+    @Override
     public STATUS runSession(final String sessionName, final DEFINITION crawlDefinition) {
         try {
             return crawlManager.runSession(sessionName, crawlDefinition);

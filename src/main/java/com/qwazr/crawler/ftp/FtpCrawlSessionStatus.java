@@ -43,12 +43,10 @@ public class FtpCrawlSessionStatus extends CrawlSessionStatus<FtpCrawlSessionSta
                           final @JsonProperty("current_crawl") String currentCrawl,
                           final @JsonProperty("start_time") Long startTime,
                           final @JsonProperty("end_time") Long endTime,
-                          final @JsonProperty("current_depth") Integer currentDepth,
-                          final @JsonProperty("thread_cancelled") Boolean threadCancelled,
-                          final @JsonProperty("thread_done") Boolean threadDone) {
+                          final @JsonProperty("current_depth") Integer currentDepth) {
         super(FtpCrawlSessionStatus.class, nodeAddress, aborting, abortingReason, timer,
                 crawled, ignored, redirect, error, lastError, currentCrawl,
-                startTime, endTime, currentDepth, threadCancelled, threadDone);
+                startTime, endTime, currentDepth);
     }
 
     private FtpCrawlSessionStatus(Builder builder) {

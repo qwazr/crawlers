@@ -20,8 +20,6 @@ import com.qwazr.server.RemoteService;
 import com.qwazr.server.client.MultiClient;
 import com.qwazr.server.client.MultiWebApplicationException;
 import com.qwazr.utils.LoggerUtils;
-
-import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.SortedMap;
@@ -63,24 +61,35 @@ public class WebCrawlerMultiClient extends MultiClient<WebCrawlerSingleClient> i
     }
 
     @Override
-    public WebCrawlSessionStatus getSession(final String sessionName) {
-        return firstRandomSuccess(c -> c.getSession(sessionName), logger);
+    public WebCrawlSessionStatus getSessionStatus(final String sessionName) {
+        return firstRandomSuccess(c -> c.getSessionStatus(sessionName), logger);
     }
 
     @Override
-    public boolean abortSession(final String sessionName, final String reason) {
-        return firstRandomSuccess(c -> c.abortSession(sessionName, reason), logger);
+    public WebCrawlDefinition getSessionDefinition(final String sessionName) {
+        return firstRandomSuccess(c -> c.getSessionDefinition(sessionName), logger);
+    }
+
+    @Override
+    public void stopSession(final String sessionName, final String reason) {
+        firstRandomSuccess(c -> {
+            c.stopSession(sessionName, reason);
+            return null;
+        }, logger);
+    }
+
+    @Override
+    public void removeSession(final String sessionName) {
+        firstRandomSuccess(c -> {
+            c.removeSession(sessionName);
+            return null;
+        }, logger);
     }
 
     @Override
     public WebCrawlSessionStatus runSession(final String sessionName, final WebCrawlDefinition crawlDefinition) {
         return firstRandomSuccess(c -> c.runSession(sessionName, crawlDefinition), logger);
 
-    }
-
-    @Override
-    public WebCrawlSessionStatus runSession(final String session_name, final String jsonCrawlDefinition) throws IOException {
-        return runSession(session_name, WebCrawlDefinition.newInstance(jsonCrawlDefinition));
     }
 
 }

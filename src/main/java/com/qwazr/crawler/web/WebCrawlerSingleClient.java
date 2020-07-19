@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,19 +18,12 @@ package com.qwazr.crawler.web;
 import com.qwazr.crawler.common.CrawlerSingleClient;
 import com.qwazr.server.RemoteService;
 
-import java.io.IOException;
-
 public class WebCrawlerSingleClient extends CrawlerSingleClient<WebCrawlDefinition, WebCrawlSessionStatus>
-		implements WebCrawlerServiceInterface {
+        implements WebCrawlerServiceInterface {
 
-	public WebCrawlerSingleClient(final RemoteService remote) {
-		super(remote, WebCrawlerServiceInterface.SERVICE_PATH, WebCrawlSessionStatus.class,
-				WebCrawlerServiceInterface.sortedMapStringCrawlType);
-	}
-
-	@Override
-	public WebCrawlSessionStatus runSession(final String sessionSame, final String jsonCrawlDefinition) throws IOException {
-		return runSession(sessionSame, WebCrawlDefinition.newInstance(jsonCrawlDefinition));
-	}
+    public WebCrawlerSingleClient(final RemoteService remote) {
+        super(remote, WebCrawlerServiceInterface.SERVICE_PATH, WebCrawlSessionStatus.class,
+                WebCrawlDefinition.class, WebCrawlerServiceInterface.sortedMapStringCrawlType);
+    }
 
 }

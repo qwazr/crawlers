@@ -19,9 +19,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.ObjectMappers;
 import com.qwazr.utils.WaitFor;
+import com.qwazr.utils.concurrent.ReadWriteLock;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -29,6 +31,8 @@ import java.util.function.BiConsumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ws.rs.InternalServerErrorException;
+import javax.ws.rs.NotAcceptableException;
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.Response;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
@@ -45,13 +49,16 @@ public abstract class CrawlManager<
         > extends AttributesBase implements AutoCloseable {
 
     public final static String CRAWL_DB_NAME = "crawler.db";
-    public final static String MAP_SESSION_NAME = "sessions";
+    public final static String MAP_SESSION_STATUS_NAME = "status";
+    public final static String MAP_SESSION_DEFINITION_NAME = "definition";
     public final static String SESSION_DIRECTORY_NAME = "sessions";
 
     private final ConcurrentHashMap<String, THREAD> liveCrawlThreads;
     private final Class<STATUS> statusClass;
+    private final Class<DEFINITION> definitionClass;
     private final HTreeMap<String, byte[]> crawlStatusMap;
     private final HTreeMap<String, byte[]> crawlDefinitionMap;
+    private final ReadWriteLock mapLock;
 
     protected final ExecutorService executorService;
     private final Logger logger;
@@ -64,7 +71,8 @@ public abstract class CrawlManager<
                            final String myAddress,
                            final ExecutorService executorService,
                            final Logger logger,
-                           final Class<STATUS> statusClass) throws IOException {
+                           final Class<STATUS> statusClass,
+                           final Class<DEFINITION> definitionClass) throws IOException {
         this.database = DBMaker
                 .fileDB(crawlerRootDirectory.resolve(CRAWL_DB_NAME).toFile())
                 .transactionEnable()
@@ -77,11 +85,13 @@ public abstract class CrawlManager<
         this.executorService = executorService;
         this.logger = logger;
         this.statusClass = statusClass;
-        this.crawlStatusMap = database.hashMap(MAP_SESSION_NAME)
+        this.definitionClass = definitionClass;
+        this.mapLock = ReadWriteLock.reentrant(true);
+        this.crawlStatusMap = database.hashMap(MAP_SESSION_STATUS_NAME)
                 .keySerializer(Serializer.STRING)
                 .valueSerializer(Serializer.BYTE_ARRAY)
                 .createOrOpen();
-        this.crawlDefinitionMap = database.hashMap(MAP_SESSION_NAME)
+        this.crawlDefinitionMap = database.hashMap(MAP_SESSION_DEFINITION_NAME)
                 .keySerializer(Serializer.STRING)
                 .valueSerializer(Serializer.BYTE_ARRAY)
                 .createOrOpen();
@@ -89,41 +99,62 @@ public abstract class CrawlManager<
     }
 
     public void forEachLiveSession(final BiConsumer<String, STATUS> consumer) {
-        liveCrawlThreads.forEach((key, crawl) -> consumer.accept(key, crawl.getStatus()));
+        mapLock.read(() -> liveCrawlThreads.forEach((key, crawl) -> consumer.accept(key, crawl.getStatus())));
     }
 
     public STATUS getSessionStatus(final String sessionName) {
-        final byte[] bytes = crawlStatusMap.get(sessionName);
-        try {
-            return bytes == null ? null : ObjectMappers.SMILE.readValue(bytes, statusClass);
-        } catch (IOException e) {
-            throw new ServerException(Response.Status.INTERNAL_SERVER_ERROR, "Error while reading the status of " + sessionName + " : " + e.getMessage(), e);
-        }
+        return mapLock.read(() -> {
+            final byte[] bytes = crawlStatusMap.get(sessionName);
+            try {
+                return bytes == null ? null : ObjectMappers.SMILE.readValue(bytes, statusClass);
+            } catch (IOException e) {
+                throw new InternalServerErrorException(
+                        "Error while reading the status of " + sessionName + " : " + e.getMessage(), e);
+            }
+        });
+    }
+
+    public DEFINITION getSessionDefinition(final String sessionName) {
+        return mapLock.read(() -> {
+            final byte[] bytes = crawlDefinitionMap.get(sessionName);
+            try {
+                return bytes == null ? null : ObjectMappers.SMILE.readValue(bytes, definitionClass);
+            } catch (IOException e) {
+                throw new InternalServerErrorException(
+                        "Error while reading the definition of " + sessionName + " : " + e.getMessage(), e);
+            }
+        });
     }
 
     void setSessionStatus(final String sessionName, final STATUS status) {
-        try {
-            crawlStatusMap.put(sessionName, ObjectMappers.SMILE.writeValueAsBytes(status));
-            database.commit();
-        } catch (JsonProcessingException e) {
-            throw new ServerException(Response.Status.INTERNAL_SERVER_ERROR, "Error while reading writing status of " + sessionName + " : " + e.getMessage(), e);
-        }
+        mapLock.read(() -> {
+            try {
+                crawlStatusMap.put(sessionName, ObjectMappers.SMILE.writeValueAsBytes(status));
+                database.commit();
+            } catch (JsonProcessingException e) {
+                throw new InternalServerErrorException(
+                        "Error while reading writing status of " + sessionName + " : " + e.getMessage(), e);
+            }
+        });
     }
 
 
     public void abortSession(final String sessionName, final String abortingReason) {
-        final THREAD crawlThread = liveCrawlThreads.get(sessionName);
-        if (crawlThread == null)
-            throw new ServerException(Response.Status.NOT_FOUND, "The crawl session was not running: " + sessionName);
-        logger.info(() -> "Aborting crawl session: " + sessionName + " - " + abortingReason);
-        crawlThread.abort(abortingReason);
+        mapLock.read(() -> {
+            final THREAD crawlThread = liveCrawlThreads.get(sessionName);
+            if (crawlThread == null)
+                throw new NotFoundException("The crawl session was not running: " + sessionName);
+            logger.info(() -> "Aborting crawl session: " + sessionName + " - " + abortingReason);
+            crawlThread.abort(abortingReason);
+        });
     }
 
     protected abstract THREAD newCrawlThread(final String sessionName,
                                              final DEFINITION crawlDefinition);
 
-    protected <COLLECTOR_FACTORY extends CrawlCollectorFactory<ITEM, DEFINITION>> COLLECTOR_FACTORY newCrawlCollectorFactory(final DEFINITION crawlDefinition,
-                                                                                                                             final Class<? extends COLLECTOR_FACTORY> factoryClass) {
+    protected <COLLECTOR_FACTORY extends CrawlCollectorFactory<ITEM, DEFINITION>>
+    COLLECTOR_FACTORY newCrawlCollectorFactory(final DEFINITION crawlDefinition,
+                                               final Class<? extends COLLECTOR_FACTORY> factoryClass) {
         if (crawlDefinition.crawlCollectorFactoryClass == null)
             return null;
         try {
@@ -139,37 +170,54 @@ public abstract class CrawlManager<
     public STATUS runSession(final String sessionName,
                              final DEFINITION crawlDefinition) {
 
-        liveCrawlThreads.compute(sessionName, (key, currentCrawl) -> {
-            if (currentCrawl != null)
-                throw new ServerException(Response.Status.CONFLICT, "The session already exists: " + sessionName);
-            try {
-                crawlDefinitionMap.put(sessionName, ObjectMappers.SMILE.writeValueAsBytes(crawlDefinition));
-                database.commit();
-            } catch (JsonProcessingException e) {
-                throw new InternalServerErrorException("Can't read the crawl definition: " + e.getMessage(), e);
-            }
-            logger.info(() -> "Create crawl session: " + sessionName);
-            final THREAD newCrawlThread = newCrawlThread(sessionName, crawlDefinition);
-            newCrawlThread.start();
-            return newCrawlThread;
+        return mapLock.write(() -> {
+            liveCrawlThreads.compute(sessionName, (key, currentCrawl) -> {
+                if (currentCrawl != null)
+                    throw new ServerException(Response.Status.CONFLICT, "The session already exists: " + sessionName);
+                try {
+                    crawlDefinitionMap.put(sessionName, ObjectMappers.SMILE.writeValueAsBytes(crawlDefinition));
+                    database.commit();
+                } catch (JsonProcessingException e) {
+                    throw new InternalServerErrorException("Can't read the crawl definition: " + e.getMessage(), e);
+                }
+                logger.info(() -> "Create crawl session: " + sessionName);
+                final THREAD newCrawlThread = newCrawlThread(sessionName, crawlDefinition);
+                CompletableFuture.runAsync(newCrawlThread, executorService).whenComplete((r, e) -> {
+                    liveCrawlThreads.remove(sessionName);
+                    if (e != null)
+                        logger.log(Level.SEVERE, e,
+                                () -> "Error on crawl session " + sessionName + ": " + e.getMessage());
+                });
+                return newCrawlThread;
+            });
+            return getSessionStatus(sessionName);
         });
-        return getSessionStatus(sessionName);
     }
 
     void removeSession(final String sessionName) {
-        logger.info(() -> "Remove session: " + sessionName);
-        liveCrawlThreads.remove(sessionName).abort("Session removed by the user");
+        mapLock.write(() -> {
+            if (liveCrawlThreads.containsKey(sessionName))
+                throw new NotAcceptableException("The session is currently running.");
+            crawlStatusMap.remove(sessionName);
+            crawlDefinitionMap.remove(sessionName);
+            database.commit();
+        });
     }
 
     @Override
     public void close() {
-        liveCrawlThreads.forEach((name, thread) -> thread.session.close());
-        try {
-            WaitFor.of().timeOut(TimeUnit.HOURS, 1).pauseTime(TimeUnit.SECONDS, 1).until(liveCrawlThreads::isEmpty);
-        } catch (final InterruptedException e) {
-            logger.log(Level.SEVERE, e, () -> "Cannot stop the crawl session");
-        }
-        database.close();
+        mapLock.write(() -> {
+            liveCrawlThreads.forEach((name, thread) -> thread.session.abort(null));
+            try {
+                WaitFor.of()
+                        .timeOut(TimeUnit.HOURS, 1)
+                        .pauseTime(TimeUnit.SECONDS, 1)
+                        .until(liveCrawlThreads::isEmpty);
+            } catch (final InterruptedException e) {
+                logger.log(Level.SEVERE, e, () -> "Cannot stop the crawl session");
+            }
+            database.close();
+        });
     }
 
 }

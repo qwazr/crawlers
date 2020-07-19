@@ -31,16 +31,19 @@ abstract public class CrawlerSingleClient<
         implements CrawlerServiceInterface<DEFINITION, STATUS> {
 
     private final Class<STATUS> crawlStatusClass;
+    private final Class<DEFINITION> crawlDefinitionClass;
     private final GenericType<SortedMap<String, STATUS>> mapStatusType;
     private final WebTarget sessionsTarget;
 
     protected CrawlerSingleClient(final RemoteService remote,
                                   final String pathPrefix,
                                   final Class<STATUS> crawlStatusClass,
+                                  final Class<DEFINITION> crawlDefinitionClass,
                                   final GenericType<SortedMap<String, STATUS>> mapStatusType) {
         super(remote);
         this.sessionsTarget = client.target(remote.serviceAddress).path(pathPrefix).path("sessions");
         this.crawlStatusClass = crawlStatusClass;
+        this.crawlDefinitionClass = crawlDefinitionClass;
         this.mapStatusType = mapStatusType;
 
     }
@@ -51,16 +54,37 @@ abstract public class CrawlerSingleClient<
     }
 
     @Override
-    public STATUS getSession(final String sessionName) {
-        return sessionsTarget.path(sessionName).request(MediaType.APPLICATION_JSON).get(crawlStatusClass);
+    public STATUS getSessionStatus(final String sessionName) {
+        return sessionsTarget
+                .path(sessionName)
+                .request(MediaType.APPLICATION_JSON)
+                .get(crawlStatusClass);
     }
 
     @Override
-    public boolean abortSession(final String sessionName, final String reason) {
-        WebTarget target = sessionsTarget.path(sessionName);
+    public DEFINITION getSessionDefinition(final String sessionName) {
+        return sessionsTarget
+                .path(sessionName)
+                .path("definition")
+                .request(MediaType.APPLICATION_JSON)
+                .get(crawlDefinitionClass);
+    }
+
+    @Override
+    public void stopSession(final String sessionName, final String reason) {
+        final WebTarget target = sessionsTarget.path(sessionName);
         if (reason != null)
             target.queryParam("reason", reason);
-        return target.request(MediaType.TEXT_PLAIN).delete(boolean.class);
+        target.request(MediaType.TEXT_PLAIN).delete();
+    }
+
+    @Override
+    public void removeSession(final String sessionName) {
+        sessionsTarget
+                .path(sessionName)
+                .path("definition").
+                request(MediaType.TEXT_PLAIN)
+                .delete();
     }
 
     @Override

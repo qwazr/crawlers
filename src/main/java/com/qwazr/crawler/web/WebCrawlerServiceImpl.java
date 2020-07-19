@@ -17,8 +17,6 @@ package com.qwazr.crawler.web;
 
 import com.qwazr.crawler.common.CrawlerServiceImpl;
 import com.qwazr.utils.LoggerUtils;
-
-import java.io.IOException;
 import java.util.TreeMap;
 import java.util.logging.Logger;
 
@@ -38,9 +36,4 @@ class WebCrawlerServiceImpl extends CrawlerServiceImpl
         crawlManager.forEachLiveSession(map::put);
         return map;
     }
-
-    public WebCrawlSessionStatus runSession(final String sessionName, final String jsonCrawlDefinition) throws IOException {
-        return runSession(sessionName, WebCrawlDefinition.newInstance(jsonCrawlDefinition));
-    }
-
 }

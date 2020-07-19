@@ -26,6 +26,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
@@ -62,7 +63,10 @@ public class FtpCrawlerTest {
                 .addFilter("/sites/ftp.apache.org/commons/crypto/", WildcardFilter.Status.accept)
                 .addFilter("/sites/ftp.apache.org/commons/*/*.html", WildcardFilter.Status.accept)
                 .build();
-        ftpCrawler.runSession("apache", ftpCrawlDefinition);
+        final FtpCrawlSessionStatus initialStatus = ftpCrawler.runSession("apache", ftpCrawlDefinition);
+        assertThat(initialStatus, notNullValue());
+        final FtpCrawlDefinition initialDef = ftpCrawler.getSessionDefinition("apache");
+        assertThat(initialDef, equalTo(ftpCrawlDefinition));
         final CrawlSessionStatus<?> status = CrawlHelpers.crawlWait("apache", ftpCrawler);
         assertThat(status.crawled, equalTo(2));
         assertThat(status.rejected, Matchers.greaterThanOrEqualTo(3));

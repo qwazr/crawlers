@@ -17,8 +17,6 @@ package com.qwazr.crawler.ftp;
 
 import com.qwazr.crawler.common.CrawlerServiceImpl;
 import com.qwazr.utils.LoggerUtils;
-
-import java.io.IOException;
 import java.util.logging.Logger;
 
 class FtpCrawlerServiceImpl extends CrawlerServiceImpl
@@ -29,10 +27,6 @@ class FtpCrawlerServiceImpl extends CrawlerServiceImpl
 
     FtpCrawlerServiceImpl(FtpCrawlerManager crawlerManager) {
         super(LOGGER, crawlerManager);
-    }
-
-    public FtpCrawlSessionStatus runSession(final String sessionName, final String jsonCrawlDefinition) throws IOException {
-        return runSession(sessionName, FtpCrawlDefinition.newInstance(jsonCrawlDefinition));
     }
 
 }

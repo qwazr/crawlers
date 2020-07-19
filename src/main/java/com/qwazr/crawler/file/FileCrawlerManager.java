@@ -35,7 +35,7 @@ public class FileCrawlerManager extends CrawlManager
                               final String myAddress,
                               final ExecutorService executorService) throws IOException {
         super(crawlerRootDirectory, myAddress, executorService,
-                LOGGER, FileCrawlSessionStatus.class);
+                LOGGER, FileCrawlSessionStatus.class, FileCrawlDefinition.class);
         service = new FileCrawlerServiceImpl(this);
     }
 
