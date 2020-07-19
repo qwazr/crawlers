@@ -46,17 +46,4 @@ public class WebCrawlerTests {
         }
     }
 
-    public static class Remotes extends WebCrawlerTestAbstract {
-
-        @BeforeAll
-        public static void setup() throws Exception {
-            WebCrawlerTestAbstract.setup();
-            service = CrawlerServer.getInstance()
-                    .getWebCrawlerServiceBuilder()
-                    .remotes(RemoteService.of(REMOTE_URL).build());
-            Assert.assertNotNull(service);
-            Assert.assertEquals(WebCrawlerMultiClient.class, service.getClass());
-        }
-    }
-
 }

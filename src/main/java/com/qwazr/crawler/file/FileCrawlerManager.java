@@ -60,7 +60,7 @@ public class FileCrawlerManager extends CrawlManager
         final FileCrawlCollectorFactory collectorFactory = newCrawlCollectorFactory(crawlDefinition, FileCrawlCollectorFactory.class);
         final FileCrawlSessionStatus.Builder crawlStatusBuilder = FileCrawlSessionStatus.of(myAddress, timeTracker);
         final FileCrawlSession session = new FileCrawlSession(sessionName, this,
-                timeTracker, crawlDefinition, attributes, crawlStatusBuilder, collectorFactory);
+                timeTracker, crawlDefinition, crawlStatusBuilder, collectorFactory);
         return new FileCrawlThread(this, session, LOGGER);
     }
 

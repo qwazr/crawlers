@@ -16,11 +16,10 @@
 package com.qwazr.crawler.web;
 
 import com.qwazr.crawler.common.CrawlerServiceInterface;
-
+import java.util.LinkedHashMap;
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.GenericType;
-import java.util.SortedMap;
 
 @RolesAllowed(WebCrawlerServiceInterface.SERVICE_NAME)
 @Path(WebCrawlerServiceInterface.SERVICE_PATH)
@@ -29,8 +28,7 @@ public interface WebCrawlerServiceInterface extends CrawlerServiceInterface<WebC
     String SERVICE_NAME = "webcrawler";
     String SERVICE_PATH = "/crawler/web";
 
-    GenericType<SortedMap<String, WebCrawlSessionStatus>> sortedMapStringCrawlType =
-            new GenericType<>() {
-            };
+    GenericType<LinkedHashMap<String, WebCrawlSessionStatus>> mapStringCrawlType = new GenericType<>() {
+    };
 
 }

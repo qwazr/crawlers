@@ -21,7 +21,7 @@ public interface CrawlSession<
         DEFINITION extends CrawlDefinition<DEFINITION>,
         STATUS extends CrawlSessionStatus<STATUS>,
         ITEM extends CrawlItem<?>
-        > extends AttributesInterface, AutoCloseable {
+        > extends AutoCloseable {
 
     /**
      * @return the current crawl status

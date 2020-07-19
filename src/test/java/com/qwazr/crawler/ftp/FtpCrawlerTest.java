@@ -39,14 +39,12 @@ public class FtpCrawlerTest {
     private FtpCrawlerServiceInterface ftpCrawler;
     private ExecutorService executorService;
     private Path dataDir;
-    private static final Object attributeTest = new Object();
 
     @BeforeEach
     public void setup() throws IOException {
         dataDir = Files.createTempDirectory("ftptest_data");
         executorService = Executors.newCachedThreadPool();
         FtpCrawlerManager ftpCrawlerManager = new FtpCrawlerManager(dataDir, executorService);
-        ftpCrawlerManager.setAttribute("attributeTest", attributeTest, Object.class);
         ftpCrawler = ftpCrawlerManager.getService();
     }
 

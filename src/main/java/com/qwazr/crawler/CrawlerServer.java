@@ -79,7 +79,7 @@ public class CrawlerServer implements BaseServer {
                 webCrawlerDirectory, clusterManager, executorService);
         builder.shutdownListener(server -> webCrawlerManager.close());
         webServices.singletons(webCrawlerManager.getService());
-        webCrawlerServiceBuilder = new WebCrawlerServiceBuilder(executorService, clusterManager, webCrawlerManager);
+        webCrawlerServiceBuilder = new WebCrawlerServiceBuilder(clusterManager, webCrawlerManager);
 
         final Path fileCrawlerDirectory = configuration.dataDirectory.resolve("filecrawler");
         if (!Files.exists(fileCrawlerDirectory))

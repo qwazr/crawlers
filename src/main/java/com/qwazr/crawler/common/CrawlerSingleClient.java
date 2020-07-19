@@ -17,12 +17,11 @@ package com.qwazr.crawler.common;
 
 import com.qwazr.server.RemoteService;
 import com.qwazr.server.client.JsonClient;
-
+import java.util.LinkedHashMap;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
-import java.util.SortedMap;
 
 abstract public class CrawlerSingleClient<
         DEFINITION extends CrawlDefinition<DEFINITION>,
@@ -32,14 +31,14 @@ abstract public class CrawlerSingleClient<
 
     private final Class<STATUS> crawlStatusClass;
     private final Class<DEFINITION> crawlDefinitionClass;
-    private final GenericType<SortedMap<String, STATUS>> mapStatusType;
+    private final GenericType<LinkedHashMap<String, STATUS>> mapStatusType;
     private final WebTarget sessionsTarget;
 
     protected CrawlerSingleClient(final RemoteService remote,
                                   final String pathPrefix,
                                   final Class<STATUS> crawlStatusClass,
                                   final Class<DEFINITION> crawlDefinitionClass,
-                                  final GenericType<SortedMap<String, STATUS>> mapStatusType) {
+                                  final GenericType<LinkedHashMap<String, STATUS>> mapStatusType) {
         super(remote);
         this.sessionsTarget = client.target(remote.serviceAddress).path(pathPrefix).path("sessions");
         this.crawlStatusClass = crawlStatusClass;
@@ -49,8 +48,15 @@ abstract public class CrawlerSingleClient<
     }
 
     @Override
-    public SortedMap<String, STATUS> getSessions() {
-        return sessionsTarget.request(MediaType.APPLICATION_JSON).get(mapStatusType);
+    public LinkedHashMap<String, STATUS> getSessions(final String wildcardQuery,
+                                                     final Integer start,
+                                                     final Integer rows) {
+        return sessionsTarget.path("/")
+                .queryParam("query", wildcardQuery)
+                .queryParam("start", start)
+                .queryParam("rows", rows)
+                .request(MediaType.APPLICATION_JSON)
+                .get(mapStatusType);
     }
 
     @Override
@@ -82,8 +88,8 @@ abstract public class CrawlerSingleClient<
     public void removeSession(final String sessionName) {
         sessionsTarget
                 .path(sessionName)
-                .path("definition").
-                request(MediaType.TEXT_PLAIN)
+                .path("definition")
+                .request()
                 .delete();
     }
 

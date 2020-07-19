@@ -23,7 +23,7 @@ public class WebCrawlerSingleClient extends CrawlerSingleClient<WebCrawlDefiniti
 
     public WebCrawlerSingleClient(final RemoteService remote) {
         super(remote, WebCrawlerServiceInterface.SERVICE_PATH, WebCrawlSessionStatus.class,
-                WebCrawlDefinition.class, WebCrawlerServiceInterface.sortedMapStringCrawlType);
+                WebCrawlDefinition.class, WebCrawlerServiceInterface.mapStringCrawlType);
     }
 
 }

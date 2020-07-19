@@ -18,16 +18,19 @@ package com.qwazr.crawler.common;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.ObjectMappers;
+import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.WaitFor;
+import com.qwazr.utils.WildcardMatcher;
 import com.qwazr.utils.concurrent.ReadWriteLock;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.function.BiConsumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ws.rs.InternalServerErrorException;
@@ -46,7 +49,7 @@ public abstract class CrawlManager<
         DEFINITION extends CrawlDefinition<DEFINITION>,
         STATUS extends CrawlSessionStatus<STATUS>,
         ITEM extends CrawlItem<?>
-        > extends AttributesBase implements AutoCloseable {
+        > implements AutoCloseable {
 
     public final static String CRAWL_DB_NAME = "crawler.db";
     public final static String MAP_SESSION_STATUS_NAME = "status";
@@ -98,19 +101,43 @@ public abstract class CrawlManager<
 
     }
 
-    public void forEachLiveSession(final BiConsumer<String, STATUS> consumer) {
-        mapLock.read(() -> liveCrawlThreads.forEach((key, crawl) -> consumer.accept(key, crawl.getStatus())));
+    public LinkedHashMap<String, STATUS> getSessions(final String wildcardPattern,
+                                                     final int start,
+                                                     final int rows) {
+        return mapLock.read(() -> {
+            final LinkedHashMap<String, STATUS> sessionStatuses = new LinkedHashMap<>();
+            int s = start;
+            final Iterator<String> sessionNamesIterator = crawlStatusMap.getKeys().iterator();
+            while (s != 0 && sessionNamesIterator.hasNext()) {
+                sessionNamesIterator.next();
+                s--;
+            }
+            final WildcardMatcher wildcardMatcher = StringUtils.isBlank(wildcardPattern) ? null : new WildcardMatcher(wildcardPattern);
+            int r = rows;
+            while (r != 0 && sessionNamesIterator.hasNext()) {
+                final String sessionName = sessionNamesIterator.next();
+                if (wildcardMatcher == null || wildcardMatcher.match(sessionName)) {
+                    sessionStatuses.put(sessionName, readSessionStatus(sessionName));
+                    r--;
+                }
+            }
+            return sessionStatuses;
+        });
+    }
+
+    private STATUS readSessionStatus(final String sessionName) {
+        final byte[] bytes = crawlStatusMap.get(sessionName);
+        try {
+            return bytes == null ? null : ObjectMappers.SMILE.readValue(bytes, statusClass);
+        } catch (IOException e) {
+            throw new InternalServerErrorException(
+                    "Error while reading the status of " + sessionName + " : " + e.getMessage(), e);
+        }
     }
 
     public STATUS getSessionStatus(final String sessionName) {
         return mapLock.read(() -> {
-            final byte[] bytes = crawlStatusMap.get(sessionName);
-            try {
-                return bytes == null ? null : ObjectMappers.SMILE.readValue(bytes, statusClass);
-            } catch (IOException e) {
-                throw new InternalServerErrorException(
-                        "Error while reading the status of " + sessionName + " : " + e.getMessage(), e);
-            }
+            return readSessionStatus(sessionName);
         });
     }
 

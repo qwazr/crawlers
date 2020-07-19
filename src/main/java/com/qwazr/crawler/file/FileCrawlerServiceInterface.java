@@ -16,11 +16,10 @@
 package com.qwazr.crawler.file;
 
 import com.qwazr.crawler.common.CrawlerServiceInterface;
-
+import java.util.LinkedHashMap;
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.GenericType;
-import java.util.SortedMap;
 
 @RolesAllowed(FileCrawlerServiceInterface.SERVICE_NAME)
 @Path(FileCrawlerServiceInterface.SERVICE_PATH)
@@ -29,7 +28,7 @@ public interface FileCrawlerServiceInterface extends CrawlerServiceInterface<Fil
     String SERVICE_PATH = "/crawler/file";
     String SERVICE_NAME = "filecrawler";
 
-    GenericType<SortedMap<String, FileCrawlSessionStatus>> sortedMapStringCrawlType =
+    GenericType<LinkedHashMap<String, FileCrawlSessionStatus>> sortedMapStringCrawlType =
             new GenericType<>() {
             };
 }

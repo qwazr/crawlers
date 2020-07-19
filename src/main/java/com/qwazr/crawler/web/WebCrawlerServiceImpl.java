@@ -17,7 +17,6 @@ package com.qwazr.crawler.web;
 
 import com.qwazr.crawler.common.CrawlerServiceImpl;
 import com.qwazr.utils.LoggerUtils;
-import java.util.TreeMap;
 import java.util.logging.Logger;
 
 class WebCrawlerServiceImpl extends CrawlerServiceImpl
@@ -30,10 +29,4 @@ class WebCrawlerServiceImpl extends CrawlerServiceImpl
         super(LOGGER, webrawlerManager);
     }
 
-    @Override
-    public TreeMap<String, WebCrawlSessionStatus> getSessions() {
-        final TreeMap<String, WebCrawlSessionStatus> map = new TreeMap<>();
-        crawlManager.forEachLiveSession(map::put);
-        return map;
-    }
 }

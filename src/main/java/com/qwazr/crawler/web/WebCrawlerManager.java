@@ -56,7 +56,7 @@ public class WebCrawlerManager extends CrawlManager
         final WebCrawlSessionStatus.Builder crawlStatusBuilder = WebCrawlSessionStatus.of(myAddress, timeTracker);
         final WebCrawlCollectorFactory collectorFactory = newCrawlCollectorFactory(crawlDefinition, WebCrawlCollectorFactory.class);
         final WebCrawlSession session = new WebCrawlSession(sessionName, this, timeTracker,
-                crawlDefinition, attributes, crawlStatusBuilder, collectorFactory);
+                crawlDefinition, crawlStatusBuilder, collectorFactory);
         return new WebCrawlThread(this, session, crawlDefinition);
     }
 

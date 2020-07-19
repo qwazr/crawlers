@@ -17,7 +17,6 @@ package com.qwazr.crawler.ftp;
 
 import com.qwazr.crawler.common.CrawlSessionBase;
 import com.qwazr.utils.TimeTracker;
-import java.util.Map;
 
 public class FtpCrawlSession extends CrawlSessionBase
         <FtpCrawlSession, FtpCrawlThread, FtpCrawlerManager, FtpCrawlDefinition, FtpCrawlSessionStatus, FtpCrawlItem> {
@@ -26,9 +25,8 @@ public class FtpCrawlSession extends CrawlSessionBase
                     final FtpCrawlerManager ftpCrawlerManager,
                     final TimeTracker timeTracker,
                     final FtpCrawlDefinition crawlDefinition,
-                    final Map<String, Object> attributes,
                     final FtpCrawlSessionStatus.Builder crawlStatusBuilder,
                     final FtpCrawlCollectorFactory crawlCollectorFactory) {
-        super(sessionName, ftpCrawlerManager, timeTracker, crawlDefinition, attributes, crawlStatusBuilder, crawlCollectorFactory);
+        super(sessionName, ftpCrawlerManager, timeTracker, crawlDefinition, crawlStatusBuilder, crawlCollectorFactory);
     }
 }

@@ -38,10 +38,9 @@ public class WebCrawlSession extends CrawlSessionBase
                     final WebCrawlerManager webCrawlerManager,
                     final TimeTracker timeTracker,
                     final WebCrawlDefinition crawlDefinition,
-                    final Map<String, Object> attributes,
                     final WebCrawlSessionStatus.Builder crawlStatusBuilder,
                     final WebCrawlCollectorFactory crawlCollectorFactory) {
-        super(sessionName, webCrawlerManager, timeTracker, crawlDefinition, attributes, crawlStatusBuilder, crawlCollectorFactory);
+        super(sessionName, webCrawlerManager, timeTracker, crawlDefinition, crawlStatusBuilder, crawlCollectorFactory);
         crawledUrls = sessionDB.hashSet("crawled")
                 .serializer(Serializer.STRING)
                 .createOrOpen();

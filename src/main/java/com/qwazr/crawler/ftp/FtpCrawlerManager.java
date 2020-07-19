@@ -60,7 +60,7 @@ public class FtpCrawlerManager extends CrawlManager
         final TimeTracker timeTracker = TimeTracker.withDurations();
         final FtpCrawlSessionStatus.Builder crawlStatusBuilder = FtpCrawlSessionStatus.of(myAddress, timeTracker);
         final FtpCrawlCollectorFactory collectorFactory = newCrawlCollectorFactory(crawlDefinition, FtpCrawlCollectorFactory.class);
-        final FtpCrawlSession session = new FtpCrawlSession(sessionName, this, timeTracker, crawlDefinition, attributes, crawlStatusBuilder, collectorFactory);
+        final FtpCrawlSession session = new FtpCrawlSession(sessionName, this, timeTracker, crawlDefinition, crawlStatusBuilder, collectorFactory);
         return new FtpCrawlThread(this, session, LOGGER);
     }
 }

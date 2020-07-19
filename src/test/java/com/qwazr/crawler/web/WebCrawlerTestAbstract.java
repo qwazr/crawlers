@@ -27,7 +27,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Set;
-import java.util.SortedMap;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -64,9 +63,9 @@ public abstract class WebCrawlerTestAbstract {
     @Test
     @Order(200)
     public void test200emptySessions() {
-        SortedMap<String, WebCrawlSessionStatus> sessions = service.getSessions();
+        final Map<String, WebCrawlSessionStatus> sessions = service.getSessions(null, null, null);
         Assert.assertNotNull(sessions);
-        Assert.assertTrue(sessions.isEmpty());
+        assertThat(sessions.size(), equalTo(0));
     }
 
     private WebCrawlDefinition.Builder getNewWebCrawl() {

@@ -17,7 +17,6 @@ package com.qwazr.crawler.file;
 
 import com.qwazr.crawler.common.CrawlSessionBase;
 import com.qwazr.utils.TimeTracker;
-import java.util.Map;
 
 public class FileCrawlSession extends CrawlSessionBase
         <FileCrawlSession, FileCrawlThread, FileCrawlerManager, FileCrawlDefinition, FileCrawlSessionStatus, FileCrawlItem> {
@@ -26,10 +25,9 @@ public class FileCrawlSession extends CrawlSessionBase
                      final FileCrawlerManager fileCrawlerManager,
                      final TimeTracker timeTracker,
                      final FileCrawlDefinition crawlDefinition,
-                     final Map<String, Object> attributes,
                      final FileCrawlSessionStatus.Builder crawlStatusBuilder,
                      final FileCrawlCollectorFactory fileCollectorFactory) {
-        super(sessionName, fileCrawlerManager, timeTracker, crawlDefinition, attributes, crawlStatusBuilder, fileCollectorFactory);
+        super(sessionName, fileCrawlerManager, timeTracker, crawlDefinition, crawlStatusBuilder, fileCollectorFactory);
     }
 
 

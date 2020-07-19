@@ -17,7 +17,7 @@ package com.qwazr.crawler.common;
 
 import com.qwazr.server.AbstractServiceImpl;
 import com.qwazr.server.ServerException;
-import java.util.TreeMap;
+import java.util.LinkedHashMap;
 import java.util.logging.Logger;
 import javax.ws.rs.NotFoundException;
 
@@ -40,10 +40,14 @@ public abstract class CrawlerServiceImpl<
     }
 
     @Override
-    public TreeMap<String, STATUS> getSessions() {
-        final TreeMap<String, STATUS> map = new TreeMap<>();
-        crawlManager.forEachLiveSession(map::put);
-        return map;
+    public LinkedHashMap<String, STATUS> getSessions(final String wildcardPattern,
+                                                     final Integer start,
+                                                     final Integer rows) {
+        try {
+            return crawlManager.getSessions(wildcardPattern, start == null ? 0 : start, rows == null ? 10 : rows);
+        } catch (Exception e) {
+            throw ServerException.getJsonException(logger, e);
+        }
     }
 
     @Override

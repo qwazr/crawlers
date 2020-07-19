@@ -16,7 +16,7 @@
 package com.qwazr.crawler.common;
 
 import com.qwazr.server.ServiceInterface;
-import java.util.SortedMap;
+import java.util.LinkedHashMap;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -25,7 +25,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
 
 public interface CrawlerServiceInterface<
         DEFINITION extends CrawlDefinition<DEFINITION>,
@@ -34,7 +33,9 @@ public interface CrawlerServiceInterface<
     @GET
     @Path("/sessions")
     @Produces(ServiceInterface.APPLICATION_JSON_UTF8)
-    SortedMap<String, STATUS> getSessions();
+    LinkedHashMap<String, STATUS> getSessions(final @QueryParam("query") String wildcardQuery,
+                                              final @QueryParam("start") Integer start,
+                                              final @QueryParam("rows") Integer rows);
 
     @GET
     @Path("/sessions/{session_name}")
@@ -48,7 +49,7 @@ public interface CrawlerServiceInterface<
 
     @DELETE
     @Path("/sessions/{session_name}")
-    @Produces({ServiceInterface.APPLICATION_JSON_UTF8, MediaType.TEXT_PLAIN})
+    @Produces({ServiceInterface.APPLICATION_JSON_UTF8})
     void stopSession(@PathParam("session_name") String sessionName,
                      @QueryParam("reason") String abortingReason);
 

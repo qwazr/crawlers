@@ -20,7 +20,6 @@ import com.qwazr.crawler.common.CrawlCollectorTest;
 import com.qwazr.crawler.common.CrawlHelpers;
 import com.qwazr.crawler.common.CrawlSessionStatus;
 import com.qwazr.crawler.common.WildcardFilter;
-import com.qwazr.crawler.ftp.FtpCrawlDefinition;
 import com.qwazr.server.RemoteService;
 import com.qwazr.utils.FileUtils;
 import com.qwazr.utils.RandomUtils;
@@ -31,7 +30,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.SortedMap;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -74,9 +72,9 @@ public class FileCrawlerTest {
     @Test
     @Order(200)
     public void test200emptySessions() {
-        SortedMap<String, FileCrawlSessionStatus> sessions = remote.getSessions();
+        final Map<String, FileCrawlSessionStatus> sessions = remote.getSessions(null, null, null);
         Assert.assertNotNull(sessions);
-        Assert.assertTrue(sessions.isEmpty());
+        assertThat(sessions.size(), equalTo(0));
     }
 
     private FileCrawlDefinition.Builder getNewCrawl() {
@@ -93,7 +91,7 @@ public class FileCrawlerTest {
     @Test
     @Order(300)
     public void test300SimpleCrawl() throws InterruptedException {
-        final String sessionName = RandomUtils.alphanumeric(10);
+        final String sessionName = RandomUtils.alphanumeric(9);
         final FileCrawlDefinition fileCrawl = getNewCrawl().build();
         final FileCrawlSessionStatus initialStatus = remote.runSession(sessionName, fileCrawl);
         assertThat(initialStatus, notNullValue());
@@ -135,4 +133,28 @@ public class FileCrawlerTest {
         assertThat(FileCrawlCollectorFactoryTest.pathDepth, equalTo(result));
     }
 
+    @Test
+    @Order(500)
+    public void test500DeleteSession() {
+        {
+            final Map<String, FileCrawlSessionStatus> sessions = remote.getSessions(null, null, null);
+            assertThat(sessions, notNullValue());
+            assertThat(sessions.size(), equalTo(2));
+            remote.removeSession(sessions.keySet().iterator().next());
+        }
+
+        {
+            final Map<String, FileCrawlSessionStatus> sessions = remote.getSessions(null, null, null);
+            assertThat(sessions, notNullValue());
+            assertThat(sessions.size(), equalTo(1));
+            remote.removeSession(sessions.keySet().iterator().next());
+        }
+
+        {
+            final Map<String, FileCrawlSessionStatus> sessions = remote.getSessions(null, null, null);
+            assertThat(sessions, notNullValue());
+            assertThat(sessions.size(), equalTo(0));
+        }
+
+    }
 }

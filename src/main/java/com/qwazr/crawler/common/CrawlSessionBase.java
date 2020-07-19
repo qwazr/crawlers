@@ -16,7 +16,6 @@
 package com.qwazr.crawler.common;
 
 import com.qwazr.utils.TimeTracker;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -30,7 +29,7 @@ public abstract class CrawlSessionBase<
         DEFINITION extends CrawlDefinition<DEFINITION>,
         STATUS extends CrawlSessionStatus<STATUS>,
         ITEM extends CrawlItem<?>
-        > extends AttributesBase implements CrawlSession<DEFINITION, STATUS, ITEM> {
+        > implements CrawlSession<DEFINITION, STATUS, ITEM> {
 
     private final MANAGER crawlManager;
     private final DEFINITION crawlDefinition;
@@ -47,10 +46,8 @@ public abstract class CrawlSessionBase<
                                final MANAGER crawlManager,
                                final TimeTracker timeTracker,
                                final DEFINITION crawlDefinition,
-                               final Map<String, Object> attributes,
                                final CrawlSessionStatus.AbstractBuilder<STATUS, ?> crawlStatusBuilder,
                                final CrawlCollectorFactory<ITEM, DEFINITION> collectorFactory) {
-        super(attributes);
         this.sessionDB = DBMaker
                 .fileDB(crawlManager.sessionsDirectory.resolve(sessionName).toFile())
                 .transactionEnable()
