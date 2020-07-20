@@ -72,10 +72,6 @@ public abstract class CrawlThread<
         }
     }
 
-    protected final STATUS getStatus() {
-        return session.getCrawlStatus();
-    }
-
     protected void abort(final String abortingReason) {
         session.abort(abortingReason);
     }

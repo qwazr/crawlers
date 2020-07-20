@@ -16,7 +16,6 @@
 package com.qwazr.crawler.common;
 
 import com.qwazr.utils.TimeTracker;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.mapdb.DB;
@@ -39,7 +38,6 @@ public abstract class CrawlSessionBase<
     private final CrawlSessionStatus.AbstractBuilder<STATUS, ?> crawlStatusBuilder;
     private final CrawlCollector<ITEM> crawlCollector;
     private volatile STATUS crawlStatus;
-    private CompletableFuture<?> future;
     protected final DB sessionDB;
 
     protected CrawlSessionBase(final String sessionName,
@@ -153,10 +151,8 @@ public abstract class CrawlSessionBase<
 
     @Override
     public void close() {
-        if (future != null) {
-            abort(null);
-            future.join();
-        }
+        if (!sessionDB.isClosed())
+            sessionDB.close();
     }
 
 }
