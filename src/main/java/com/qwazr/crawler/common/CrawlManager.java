@@ -235,6 +235,11 @@ public abstract class CrawlManager<
             crawlStatusMap.remove(sessionName);
             crawlDefinitionMap.remove(sessionName);
             database.commit();
+            try {
+                Files.deleteIfExists(sessionsDirectory.resolve(sessionName));
+            } catch (IOException e) {
+                throw new InternalServerErrorException("Error while removing session: " + sessionName, e);
+            }
         });
     }
 

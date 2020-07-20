@@ -16,6 +16,7 @@
 package com.qwazr.crawler.common;
 
 import com.qwazr.utils.TimeTracker;
+import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.mapdb.DB;
@@ -39,6 +40,7 @@ public abstract class CrawlSessionBase<
     private final CrawlCollector<ITEM> crawlCollector;
     private volatile STATUS crawlStatus;
     protected final DB sessionDB;
+    private final Path databaseFile;
 
     protected CrawlSessionBase(final String sessionName,
                                final MANAGER crawlManager,
@@ -46,8 +48,9 @@ public abstract class CrawlSessionBase<
                                final DEFINITION crawlDefinition,
                                final CrawlSessionStatus.AbstractBuilder<STATUS, ?> crawlStatusBuilder,
                                final CrawlCollectorFactory<ITEM, DEFINITION> collectorFactory) {
+        this.databaseFile = crawlManager.sessionsDirectory.resolve(sessionName);
         this.sessionDB = DBMaker
-                .fileDB(crawlManager.sessionsDirectory.resolve(sessionName).toFile())
+                .fileDB(databaseFile.toFile())
                 .transactionEnable()
                 .make();
         this.crawlManager = crawlManager;
@@ -154,5 +157,4 @@ public abstract class CrawlSessionBase<
         if (!sessionDB.isClosed())
             sessionDB.close();
     }
-
 }
