@@ -359,7 +359,6 @@ public class WebCrawlThread extends CrawlThread
             final Pair<String, Integer> nextUrl = session.nextUrlToCrawl();
             if (nextUrl == null)
                 break;
-            System.out.println("Next to crawl: " + nextUrl);
             crawlOne(driver, WebRequestDefinition.of(nextUrl.getKey()).build(), nextUrl.getValue());
         }
     }
