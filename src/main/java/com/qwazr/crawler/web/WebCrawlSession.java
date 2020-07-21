@@ -19,18 +19,21 @@ import com.qwazr.crawler.common.CrawlSessionBase;
 import com.qwazr.utils.TimeTracker;
 import java.net.URI;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.NavigableSet;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.commons.lang3.tuple.Pair;
 import org.mapdb.HTreeMap;
 import org.mapdb.Serializer;
+import org.mapdb.serializer.SerializerArrayTuple;
 
 public class WebCrawlSession extends CrawlSessionBase
         <WebCrawlSession, WebCrawlThread, WebCrawlerManager, WebCrawlDefinition, WebCrawlSessionStatus, WebCrawlItem> {
 
     private final HTreeMap.KeySet<String> crawledUrls;
-    private final HTreeMap<String, Integer> toCrawlUrls;
+    private final HTreeMap.KeySet<String> toCrawlUrls;
+    private final NavigableSet<Object[]> nextToCrawl;
 
     private final Object urlDatabaseLock;
 
@@ -44,9 +47,11 @@ public class WebCrawlSession extends CrawlSessionBase
         crawledUrls = sessionDB.hashSet("crawled")
                 .serializer(Serializer.STRING)
                 .createOrOpen();
-        toCrawlUrls = sessionDB.hashMap("tocrawl")
-                .keySerializer(Serializer.STRING)
-                .valueSerializer(Serializer.INTEGER)
+        toCrawlUrls = sessionDB.hashSet("tocrawl")
+                .serializer(Serializer.STRING)
+                .createOrOpen();
+        nextToCrawl = sessionDB.treeSet("nextToCrawl")
+                .serializer(new SerializerArrayTuple(Serializer.INTEGER, Serializer.STRING))
                 .createOrOpen();
         urlDatabaseLock = new Object();
     }
@@ -59,22 +64,30 @@ public class WebCrawlSession extends CrawlSessionBase
 
     Pair<String, Integer> nextUrlToCrawl() {
         synchronized (urlDatabaseLock) {
-            final Iterator<String> keyIterator = toCrawlUrls.keySet().iterator();
-            if (!keyIterator.hasNext())
+            final Iterator<Object[]> iterator = nextToCrawl.iterator();
+            if (!iterator.hasNext())
                 return null;
-            final String url = keyIterator.next();
-            final Integer depth = toCrawlUrls.get(url);
-            return Pair.of(url, depth);
+            final Object[] item = iterator.next();
+            return Pair.of((String) item[1], (Integer) item[0]);
         }
+    }
+
+    private void addUriStringToCrawl(final String uriString, final Integer depth, final AtomicBoolean needCommit) {
+        if (crawledUrls.contains(uriString) || toCrawlUrls.contains(uriString))
+            return;
+        toCrawlUrls.add(uriString);
+        nextToCrawl.add(new Object[]{depth, uriString});
+        needCommit.set(true);
     }
 
     void addUrltoCrawl(final URI uri, final Integer depth) {
         if (uri == null)
             return;
         synchronized (urlDatabaseLock) {
-            final String uriString = uri.toASCIIString();
-            if (!crawledUrls.contains(uriString))
-                toCrawlUrls.putIfAbsent(uriString, depth);
+            final AtomicBoolean needCommit = new AtomicBoolean(false);
+            addUriStringToCrawl(uri.toASCIIString(), depth, needCommit);
+            if (needCommit.get())
+                sessionDB.commit();
         }
     }
 
@@ -83,40 +96,30 @@ public class WebCrawlSession extends CrawlSessionBase
         if (links == null || links.isEmpty())
             return;
         synchronized (urlDatabaseLock) {
-            final Map<String, Integer> toAdd = new LinkedHashMap<>();
-            links.forEach((uri, depth) -> {
-                if (!crawledUrls.contains(uri) && !toCrawlUrls.containsKey(uri))
-                    toAdd.put(uri, depth);
-            });
-            if (!toAdd.isEmpty()) {
-                toCrawlUrls.putAll(toAdd);
+            final AtomicBoolean needCommit = new AtomicBoolean(false);
+            links.forEach((uri, depth) -> addUriStringToCrawl(uri, depth, needCommit));
+            if (needCommit.get())
                 sessionDB.commit();
-            }
         }
     }
 
-    void addUrlsToCrawl(final Set<URI> links, Integer depth) {
+    void addUrlsToCrawl(final Set<URI> links, final Integer depth) {
         if (links == null || links.isEmpty())
             return;
         synchronized (urlDatabaseLock) {
-            final Map<String, Integer> toAdd = new LinkedHashMap<>();
-            links.forEach(uri -> {
-                final String uriString = uri.toASCIIString();
-                if (!crawledUrls.contains(uriString))
-                    toAdd.put(uriString, depth);
-            });
-            if (!toAdd.isEmpty()) {
-                toCrawlUrls.putAll(toAdd);
+            final AtomicBoolean needCommit = new AtomicBoolean(false);
+            links.forEach(uri -> addUriStringToCrawl(uri.toASCIIString(), depth, needCommit));
+            if (needCommit.get())
                 sessionDB.commit();
-            }
         }
     }
 
-    void setCrawled(final String uriString, final int depth) {
+    void setCrawled(final String uriString, final Integer depth) {
         setCurrentCrawl(uriString, depth);
         synchronized (urlDatabaseLock) {
             toCrawlUrls.remove(uriString);
             crawledUrls.add(uriString);
+            nextToCrawl.remove(new Object[]{depth, uriString});
             sessionDB.commit();
         }
     }

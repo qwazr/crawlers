@@ -134,7 +134,7 @@ public abstract class CrawlSessionBase<
         return name;
     }
 
-    public void setCurrentCrawl(String currentCrawl, Integer currentDepth) {
+    public void setCurrentCrawl(final String currentCrawl, final Integer currentDepth) {
         crawlStatusBuilder.crawl(currentCrawl, currentDepth);
         buildStatus();
     }
