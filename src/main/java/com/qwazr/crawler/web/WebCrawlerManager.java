@@ -16,6 +16,7 @@
 package com.qwazr.crawler.web;
 
 import com.qwazr.cluster.ClusterManager;
+import com.qwazr.crawler.common.CrawlCollector;
 import com.qwazr.crawler.common.CrawlManager;
 import com.qwazr.utils.LoggerUtils;
 import com.qwazr.utils.TimeTracker;
@@ -54,9 +55,9 @@ public class WebCrawlerManager extends CrawlManager
                                             final WebCrawlDefinition crawlDefinition) {
         final TimeTracker timeTracker = TimeTracker.withDurations();
         final WebCrawlSessionStatus.Builder crawlStatusBuilder = WebCrawlSessionStatus.of(myAddress, timeTracker);
-        final WebCrawlCollectorFactory collectorFactory = newCrawlCollectorFactory(crawlDefinition, WebCrawlCollectorFactory.class);
+        final CrawlCollector<WebCrawlItem> crawlCollector = newCrawlCollector(crawlDefinition, WebCrawlCollectorFactory.class);
         final WebCrawlSession session = new WebCrawlSession(sessionName, this, timeTracker,
-                crawlDefinition, crawlStatusBuilder, collectorFactory);
+                crawlDefinition, crawlStatusBuilder, crawlCollector);
         return new WebCrawlThread(this, session, crawlDefinition);
     }
 

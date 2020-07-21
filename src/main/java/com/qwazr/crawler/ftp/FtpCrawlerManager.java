@@ -16,6 +16,7 @@
 package com.qwazr.crawler.ftp;
 
 import com.qwazr.cluster.ClusterManager;
+import com.qwazr.crawler.common.CrawlCollector;
 import com.qwazr.crawler.common.CrawlManager;
 import com.qwazr.crawler.file.FileCrawlerManager;
 import com.qwazr.utils.LoggerUtils;
@@ -59,8 +60,8 @@ public class FtpCrawlerManager extends CrawlManager
     protected FtpCrawlThread newCrawlThread(String sessionName, FtpCrawlDefinition crawlDefinition) {
         final TimeTracker timeTracker = TimeTracker.withDurations();
         final FtpCrawlSessionStatus.Builder crawlStatusBuilder = FtpCrawlSessionStatus.of(myAddress, timeTracker);
-        final FtpCrawlCollectorFactory collectorFactory = newCrawlCollectorFactory(crawlDefinition, FtpCrawlCollectorFactory.class);
-        final FtpCrawlSession session = new FtpCrawlSession(sessionName, this, timeTracker, crawlDefinition, crawlStatusBuilder, collectorFactory);
+        final CrawlCollector<FtpCrawlItem> crawlCollector = newCrawlCollector(crawlDefinition, FtpCrawlCollectorFactory.class);
+        final FtpCrawlSession session = new FtpCrawlSession(sessionName, this, timeTracker, crawlDefinition, crawlStatusBuilder, crawlCollector);
         return new FtpCrawlThread(this, session, LOGGER);
     }
 }

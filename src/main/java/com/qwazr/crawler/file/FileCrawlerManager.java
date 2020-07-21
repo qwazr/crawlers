@@ -16,6 +16,7 @@
 package com.qwazr.crawler.file;
 
 import com.qwazr.cluster.ClusterManager;
+import com.qwazr.crawler.common.CrawlCollector;
 import com.qwazr.crawler.common.CrawlManager;
 import com.qwazr.utils.LoggerUtils;
 import com.qwazr.utils.TimeTracker;
@@ -57,10 +58,10 @@ public class FileCrawlerManager extends CrawlManager
     @Override
     protected FileCrawlThread newCrawlThread(final String sessionName, final FileCrawlDefinition crawlDefinition) {
         final TimeTracker timeTracker = TimeTracker.withDurations();
-        final FileCrawlCollectorFactory collectorFactory = newCrawlCollectorFactory(crawlDefinition, FileCrawlCollectorFactory.class);
+        final CrawlCollector<FileCrawlItem> crawlCollector = newCrawlCollector(crawlDefinition, FileCrawlCollectorFactory.class);
         final FileCrawlSessionStatus.Builder crawlStatusBuilder = FileCrawlSessionStatus.of(myAddress, timeTracker);
         final FileCrawlSession session = new FileCrawlSession(sessionName, this,
-                timeTracker, crawlDefinition, crawlStatusBuilder, collectorFactory);
+                timeTracker, crawlDefinition, crawlStatusBuilder, crawlCollector);
         return new FileCrawlThread(this, session, LOGGER);
     }
 

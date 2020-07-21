@@ -15,6 +15,7 @@
  */
 package com.qwazr.crawler.ftp;
 
+import com.qwazr.crawler.common.CrawlCollector;
 import com.qwazr.crawler.common.CrawlSessionBase;
 import com.qwazr.utils.TimeTracker;
 
@@ -26,7 +27,7 @@ public class FtpCrawlSession extends CrawlSessionBase
                     final TimeTracker timeTracker,
                     final FtpCrawlDefinition crawlDefinition,
                     final FtpCrawlSessionStatus.Builder crawlStatusBuilder,
-                    final FtpCrawlCollectorFactory crawlCollectorFactory) {
-        super(sessionName, ftpCrawlerManager, timeTracker, crawlDefinition, crawlStatusBuilder, crawlCollectorFactory);
+                    final CrawlCollector<FtpCrawlItem> crawlCollector) {
+        super(sessionName, ftpCrawlerManager, timeTracker, crawlDefinition, crawlStatusBuilder, crawlCollector);
     }
 }

@@ -15,6 +15,7 @@
  */
 package com.qwazr.crawler.web;
 
+import com.qwazr.crawler.common.CrawlCollector;
 import com.qwazr.crawler.common.CrawlSessionBase;
 import com.qwazr.utils.TimeTracker;
 import java.net.URI;
@@ -42,8 +43,8 @@ public class WebCrawlSession extends CrawlSessionBase
                     final TimeTracker timeTracker,
                     final WebCrawlDefinition crawlDefinition,
                     final WebCrawlSessionStatus.Builder crawlStatusBuilder,
-                    final WebCrawlCollectorFactory crawlCollectorFactory) {
-        super(sessionName, webCrawlerManager, timeTracker, crawlDefinition, crawlStatusBuilder, crawlCollectorFactory);
+                    final CrawlCollector<WebCrawlItem> webCrawlCollector) {
+        super(sessionName, webCrawlerManager, timeTracker, crawlDefinition, crawlStatusBuilder, webCrawlCollector);
         crawledUrls = sessionDB.hashSet("crawled")
                 .serializer(Serializer.STRING)
                 .createOrOpen();

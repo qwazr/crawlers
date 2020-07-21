@@ -199,15 +199,16 @@ public abstract class CrawlManager<
                                              final DEFINITION crawlDefinition);
 
     protected <COLLECTOR_FACTORY extends CrawlCollectorFactory<ITEM, DEFINITION>>
-    COLLECTOR_FACTORY newCrawlCollectorFactory(final DEFINITION crawlDefinition,
-                                               final Class<? extends COLLECTOR_FACTORY> factoryClass) {
+    CrawlCollector<ITEM> newCrawlCollector(final DEFINITION crawlDefinition,
+                                           final Class<? extends COLLECTOR_FACTORY> factoryClass) {
         if (crawlDefinition.crawlCollectorFactoryClass == null)
             return null;
         try {
-            return factoryClass.cast(Class
+            COLLECTOR_FACTORY factory = factoryClass.cast(Class
                     .forName(crawlDefinition.crawlCollectorFactoryClass)
                     .getConstructor()
                     .newInstance());
+            return factory.createCrawlCollector(this, crawlDefinition);
         } catch (ReflectiveOperationException e) {
             throw new InternalServerErrorException("Can't create the factory: " + crawlDefinition.crawlCollectorFactoryClass, e);
         }

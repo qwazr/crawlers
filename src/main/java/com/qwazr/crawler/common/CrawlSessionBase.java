@@ -40,15 +40,14 @@ public abstract class CrawlSessionBase<
     private final CrawlCollector<ITEM> crawlCollector;
     private volatile STATUS crawlStatus;
     protected final DB sessionDB;
-    private final Path databaseFile;
 
     protected CrawlSessionBase(final String sessionName,
                                final MANAGER crawlManager,
                                final TimeTracker timeTracker,
                                final DEFINITION crawlDefinition,
                                final CrawlSessionStatus.AbstractBuilder<STATUS, ?> crawlStatusBuilder,
-                               final CrawlCollectorFactory<ITEM, DEFINITION> collectorFactory) {
-        this.databaseFile = crawlManager.sessionsDirectory.resolve(sessionName);
+                               final CrawlCollector<ITEM> crawlCollector) {
+        final Path databaseFile = crawlManager.sessionsDirectory.resolve(sessionName);
         this.sessionDB = DBMaker
                 .fileDB(databaseFile.toFile())
                 .transactionEnable()
@@ -59,8 +58,8 @@ public abstract class CrawlSessionBase<
         this.crawlDefinition = crawlDefinition;
         this.name = sessionName;
         abort = new AtomicBoolean(false);
-        crawlCollector = collectorFactory == null ? crawlItem -> {
-        } : collectorFactory.createCrawlCollector(crawlManager, crawlDefinition);
+        this.crawlCollector = crawlCollector == null ? crawlItem -> {
+        } : crawlCollector;
         buildStatus();
     }
 
