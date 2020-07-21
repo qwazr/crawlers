@@ -156,6 +156,8 @@ public abstract class WebCrawlerTestAbstract {
 
         assertThat(WebCrawlCollectorFactoryTest.uriRejected.keySet(),
                 equalTo(Set.of(URI.create("http://localhost:9190/private.html"))));
+
+        assertThat(CrawlCollectorTest.doneCalled.get(), equalTo(1));
     }
 
 }

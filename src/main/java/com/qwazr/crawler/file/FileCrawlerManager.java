@@ -20,7 +20,6 @@ import com.qwazr.crawler.common.CrawlCollector;
 import com.qwazr.crawler.common.CrawlManager;
 import com.qwazr.utils.LoggerUtils;
 import com.qwazr.utils.TimeTracker;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.concurrent.ExecutorService;
@@ -60,9 +59,20 @@ public class FileCrawlerManager extends CrawlManager
         final TimeTracker timeTracker = TimeTracker.withDurations();
         final CrawlCollector<FileCrawlItem> crawlCollector = newCrawlCollector(crawlDefinition, FileCrawlCollectorFactory.class);
         final FileCrawlSessionStatus.Builder crawlStatusBuilder = FileCrawlSessionStatus.of(myAddress, timeTracker);
-        final FileCrawlSession session = new FileCrawlSession(sessionName, this,
-                timeTracker, crawlDefinition, crawlStatusBuilder, crawlCollector);
+        final FileCrawlSession session = new FileCrawlSession(sessionName, this, timeTracker,
+                crawlDefinition, crawlStatusBuilder, crawlCollector == null ? doNothing : crawlCollector);
         return new FileCrawlThread(this, session, LOGGER);
     }
+
+    static final CrawlCollector<FileCrawlItem> doNothing = new CrawlCollector<>() {
+        @Override
+        public void collect(FileCrawlItem crawlItem) {
+        }
+
+        @Override
+        public void done() {
+        }
+    };
+
 
 }

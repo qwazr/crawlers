@@ -22,6 +22,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 public class CrawlCollectorTest<ITEM extends CrawlItem<?>> implements CrawlCollector<ITEM> {
@@ -30,12 +31,14 @@ public class CrawlCollectorTest<ITEM extends CrawlItem<?>> implements CrawlColle
     public static final Map<Object, Rejected> rejecteds = new HashMap<>();
     public static final Map<Object, String> errors = new HashMap<>();
     public static final Map<Integer, List<Object>> depths = new LinkedHashMap<>();
+    public static final AtomicInteger doneCalled = new AtomicInteger(0);
 
     public static void resetCounters() {
         all.clear();
         rejecteds.clear();
         errors.clear();
         depths.clear();
+        doneCalled.set(0);
     }
 
     @Override
@@ -44,6 +47,11 @@ public class CrawlCollectorTest<ITEM extends CrawlItem<?>> implements CrawlColle
         IfNotNull.apply(crawlItem.getRejected(), r -> rejecteds.put(crawlItem.getItem(), r));
         IfNotNull.apply(crawlItem.getError(), e -> errors.put(crawlItem.getItem(), e));
         depths.computeIfAbsent(crawlItem.getDepth(), d -> new ArrayList<>()).add(crawlItem.getItem());
+    }
+
+    @Override
+    public void done() {
+        doneCalled.incrementAndGet();
     }
 
     public static <T> Set<T> getAll(Class<T> itemClass) {

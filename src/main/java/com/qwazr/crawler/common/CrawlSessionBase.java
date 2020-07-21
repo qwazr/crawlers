@@ -17,6 +17,7 @@ package com.qwazr.crawler.common;
 
 import com.qwazr.utils.TimeTracker;
 import java.nio.file.Path;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.mapdb.DB;
@@ -58,8 +59,7 @@ public abstract class CrawlSessionBase<
         this.crawlDefinition = crawlDefinition;
         this.name = sessionName;
         abort = new AtomicBoolean(false);
-        this.crawlCollector = crawlCollector == null ? crawlItem -> {
-        } : crawlCollector;
+        this.crawlCollector = Objects.requireNonNull(crawlCollector);
         buildStatus();
     }
 
@@ -149,6 +149,7 @@ public abstract class CrawlSessionBase<
     void done() {
         crawlStatusBuilder.done();
         buildStatus();
+        crawlCollector.done();
     }
 
     @Override

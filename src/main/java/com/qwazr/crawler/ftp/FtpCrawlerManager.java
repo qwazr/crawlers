@@ -61,7 +61,18 @@ public class FtpCrawlerManager extends CrawlManager
         final TimeTracker timeTracker = TimeTracker.withDurations();
         final FtpCrawlSessionStatus.Builder crawlStatusBuilder = FtpCrawlSessionStatus.of(myAddress, timeTracker);
         final CrawlCollector<FtpCrawlItem> crawlCollector = newCrawlCollector(crawlDefinition, FtpCrawlCollectorFactory.class);
-        final FtpCrawlSession session = new FtpCrawlSession(sessionName, this, timeTracker, crawlDefinition, crawlStatusBuilder, crawlCollector);
+        final FtpCrawlSession session = new FtpCrawlSession(sessionName, this, timeTracker,
+                crawlDefinition, crawlStatusBuilder, crawlCollector == null ? doNothing : crawlCollector);
         return new FtpCrawlThread(this, session, LOGGER);
     }
+
+    static final CrawlCollector<FtpCrawlItem> doNothing = new CrawlCollector<>() {
+        @Override
+        public void collect(FtpCrawlItem crawlItem) {
+        }
+
+        @Override
+        public void done() {
+        }
+    };
 }
