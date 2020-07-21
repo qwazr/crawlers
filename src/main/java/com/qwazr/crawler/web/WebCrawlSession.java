@@ -74,7 +74,7 @@ public class WebCrawlSession extends CrawlSessionBase
         synchronized (urlDatabaseLock) {
             final String uriString = uri.toASCIIString();
             if (!crawledUrls.contains(uriString))
-                toCrawlUrls.put(uriString, depth);
+                toCrawlUrls.putIfAbsent(uriString, depth);
         }
     }
 
@@ -85,7 +85,7 @@ public class WebCrawlSession extends CrawlSessionBase
         synchronized (urlDatabaseLock) {
             final Map<String, Integer> toAdd = new LinkedHashMap<>();
             links.forEach((uri, depth) -> {
-                if (!crawledUrls.contains(uri))
+                if (!crawledUrls.contains(uri) && !toCrawlUrls.containsKey(uri))
                     toAdd.put(uri, depth);
             });
             if (!toAdd.isEmpty()) {
