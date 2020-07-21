@@ -27,6 +27,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -50,7 +51,7 @@ public abstract class CrawlManager<
         DEFINITION extends CrawlDefinition<DEFINITION>,
         STATUS extends CrawlSessionStatus<STATUS>,
         ITEM extends CrawlItem<?>
-        > implements AutoCloseable {
+        > implements Attributes, AutoCloseable {
 
     public final static String CRAWL_DB_NAME = "crawler.db";
     public final static String MAP_SESSION_STATUS_NAME = "status";
@@ -70,6 +71,8 @@ public abstract class CrawlManager<
     protected final String myAddress;
     private final DB database;
     protected final Path sessionsDirectory;
+
+    private final Map<String, Object> attributes;
 
     protected CrawlManager(final Path crawlerRootDirectory,
                            final String myAddress,
@@ -99,7 +102,16 @@ public abstract class CrawlManager<
                 .keySerializer(Serializer.STRING)
                 .valueSerializer(Serializer.BYTE_ARRAY)
                 .createOrOpen();
+        this.attributes = new ConcurrentHashMap<>();
+    }
 
+    public void registerAttribute(final String name, final Object instance) {
+        attributes.put(name, instance);
+    }
+
+    @Override
+    public <T> T getInstance(final String name, final Class<T> instanceClass) {
+        return instanceClass.cast(attributes.get(name));
     }
 
     public LinkedHashMap<String, STATUS> getSessions(final String wildcardPattern,

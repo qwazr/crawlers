@@ -25,11 +25,13 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Instant;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import org.junit.Assert;
 import org.junit.jupiter.api.AfterAll;
@@ -41,12 +43,15 @@ public class FileCrawlManagerTest {
     private static ExecutorService executorService;
     private static FileCrawlerManager crawlerManager;
     private static Path dataDir;
+    private static Instant instantAttribute;
 
     @BeforeAll
     public static void setup() throws IOException {
         executorService = Executors.newCachedThreadPool();
         dataDir = Files.createTempDirectory("ftptest_data");
         crawlerManager = new FileCrawlerManager(dataDir, executorService);
+        instantAttribute = Instant.now();
+        crawlerManager.registerAttribute("instant", instantAttribute);
     }
 
     @AfterAll
@@ -87,6 +92,9 @@ public class FileCrawlManagerTest {
             Assert.assertNull(crawlStatus.lastError);
         else
             Assert.assertNotNull(crawlStatus.lastError);
+        assertThat(FileCrawlCollectorFactoryTest.attributes.get(), notNullValue());
+        assertThat(FileCrawlCollectorFactoryTest.attributes.get().getInstance("instant", Instant.class),
+                equalTo(instantAttribute));
 
     }
 

@@ -60,7 +60,7 @@ public abstract class CrawlSessionBase<
         this.name = sessionName;
         abort = new AtomicBoolean(false);
         crawlCollector = collectorFactory == null ? crawlItem -> {
-        } : collectorFactory.createCrawlCollector(crawlDefinition);
+        } : collectorFactory.createCrawlCollector(crawlManager, crawlDefinition);
         buildStatus();
     }
 

@@ -15,6 +15,7 @@
  */
 package com.qwazr.crawler.file;
 
+import com.qwazr.crawler.common.Attributes;
 import com.qwazr.crawler.common.CrawlCollector;
 import com.qwazr.crawler.common.CrawlCollectorTest;
 import java.nio.file.Path;
@@ -28,6 +29,7 @@ import org.junit.Assert;
 
 public class FileCrawlCollectorFactoryTest implements FileCrawlCollectorFactory {
 
+    public static final AtomicReference<Attributes> attributes = new AtomicReference<>();
     public static final AtomicReference<FileCrawlDefinition> definition = new AtomicReference<>();
     public static final List<Path> paths = new ArrayList<>();
     public static final Map<Path, Integer> pathDepth = new LinkedHashMap<>();
@@ -42,7 +44,9 @@ public class FileCrawlCollectorFactoryTest implements FileCrawlCollectorFactory 
     }
 
     @Override
-    public @NotNull CrawlCollector<FileCrawlItem> createCrawlCollector(final FileCrawlDefinition crawlDefinition) {
+    public @NotNull CrawlCollector<FileCrawlItem> createCrawlCollector(final Attributes attributes,
+                                                                       final FileCrawlDefinition crawlDefinition) {
+        FileCrawlCollectorFactoryTest.attributes.set(attributes);
         definition.set(crawlDefinition);
         return new FileCrawlCollectorTest();
     }

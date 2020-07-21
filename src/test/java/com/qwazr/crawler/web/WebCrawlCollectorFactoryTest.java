@@ -15,6 +15,7 @@
  */
 package com.qwazr.crawler.web;
 
+import com.qwazr.crawler.common.Attributes;
 import com.qwazr.crawler.common.CrawlCollector;
 import com.qwazr.crawler.common.CrawlCollectorTest;
 import com.qwazr.crawler.common.Rejected;
@@ -73,7 +74,8 @@ public class WebCrawlCollectorFactoryTest implements WebCrawlCollectorFactory {
     }
 
     @Override
-    public @NotNull CrawlCollector<WebCrawlItem> createCrawlCollector(final WebCrawlDefinition crawlDefinition) {
+    public @NotNull CrawlCollector<WebCrawlItem> createCrawlCollector(final Attributes attributes,
+                                                                      final WebCrawlDefinition crawlDefinition) {
         definition.set(crawlDefinition);
         return new WebCrawlCollectorTest();
     }
