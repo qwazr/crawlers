@@ -4,7 +4,6 @@
 
   <artifactId>qwazr-crawlers</artifactId>
   <name>QWAZR Crawlers</name>
-  <version>1.5.1-SNAPSHOT</version>
   <description>Web and File Crawlers for QWAZR</description>
   <packaging>jar</packaging>
 
@@ -25,17 +24,17 @@
     <dependency>
       <groupId>com.qwazr</groupId>
       <artifactId>qwazr-cluster</artifactId>
-      <version>1.5.1-SNAPSHOT</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>com.qwazr</groupId>
       <artifactId>qwazr-server</artifactId>
-      <version>1.5.1-SNAPSHOT</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>com.qwazr</groupId>
       <artifactId>qwazr-library</artifactId>
-      <version>1.5.1-SNAPSHOT</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>
@@ -65,7 +64,7 @@
     <dependency>
       <groupId>com.qwazr</groupId>
       <artifactId>qwazr-webapps</artifactId>
-      <version>1.5.1-SNAPSHOT</version>
+      <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
