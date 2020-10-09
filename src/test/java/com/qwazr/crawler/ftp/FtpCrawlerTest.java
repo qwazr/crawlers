@@ -29,6 +29,7 @@ import org.apache.ftpserver.FtpServer;
 import org.apache.ftpserver.FtpServerFactory;
 import org.apache.ftpserver.ftplet.FtpException;
 import org.apache.ftpserver.ftplet.UserManager;
+import org.apache.ftpserver.listener.ListenerFactory;
 import org.apache.ftpserver.usermanager.PropertiesUserManagerFactory;
 import org.apache.ftpserver.usermanager.impl.BaseUser;
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -52,6 +53,10 @@ public class FtpCrawlerTest {
     @BeforeAll
     public static void startFtpServer() throws FtpException {
         final FtpServerFactory serverFactory = new FtpServerFactory();
+        final ListenerFactory listenerFactory = new ListenerFactory();
+        listenerFactory.setServerAddress("localhost");
+        listenerFactory.setPort(2221);
+        serverFactory.addListener("default", listenerFactory.createListener());
         final PropertiesUserManagerFactory userManagerFactory = new PropertiesUserManagerFactory();
         final UserManager userManager = userManagerFactory.createUserManager();
         final BaseUser user = new BaseUser();
@@ -83,6 +88,8 @@ public class FtpCrawlerTest {
     public void localFtpTest() throws InterruptedException {
         final FtpCrawlDefinition ftpCrawlDefinition = FtpCrawlDefinition.of()
                 .hostname("localhost")
+                .port(2221)
+                .ssl(false)
                 .entryPath(Path.of("src", "test", "java").toAbsolutePath().toString())
                 .passive(true)
                 .username("anonymous")

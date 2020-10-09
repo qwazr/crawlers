@@ -57,7 +57,7 @@ public class FtpCrawlThread extends CrawlThread
         try {
 
             // Connection
-            checkPositiveReply(() -> ftp.connect(crawlDefinition.hostname),
+            checkPositiveReply(() -> ftp.connect(crawlDefinition.hostname, crawlDefinition.port == null ? 21 : crawlDefinition.port),
                     (code, msg) -> "FTP server refused connection (" + code + "): " + msg);
 
             // Login

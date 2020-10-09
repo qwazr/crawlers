@@ -43,6 +43,12 @@ public class FtpCrawlDefinition extends CrawlDefinition<FtpCrawlDefinition> {
     final public String hostname;
 
     /**
+     * The port of the FTP server.
+     */
+    @JsonProperty("port")
+    final public Integer port;
+
+    /**
      * The entry point PATH of the crawl.
      */
     @JsonProperty("entry_path")
@@ -80,6 +86,7 @@ public class FtpCrawlDefinition extends CrawlDefinition<FtpCrawlDefinition> {
                                  final @JsonProperty("crawl_collector_factory") String crawlCollectorFactoryClass,
                                  final @JsonProperty("variables") LinkedHashMap<String, Object> variables,
                                  final @JsonProperty("hostname") String hostname,
+                                 final @JsonProperty("port") Integer port,
                                  final @JsonProperty("entry_path") String entryPath,
                                  final @JsonProperty("username") String username,
                                  final @JsonProperty("password") String password,
@@ -87,6 +94,7 @@ public class FtpCrawlDefinition extends CrawlDefinition<FtpCrawlDefinition> {
                                  final @JsonProperty("is_passive") Boolean isPassive) {
         super(FtpCrawlDefinition.class, crawlCollectorFactoryClass, variables, filters, filterPolicy, maxDepth, crawlWaitMs);
         this.hostname = hostname;
+        this.port = port;
         this.entryPath = entryPath;
         this.username = username;
         this.password = password;
@@ -97,6 +105,7 @@ public class FtpCrawlDefinition extends CrawlDefinition<FtpCrawlDefinition> {
     private FtpCrawlDefinition(Builder builder) {
         super(FtpCrawlDefinition.class, builder);
         this.hostname = builder.hostname;
+        this.port = builder.port;
         this.entryPath = builder.entryPath;
         this.username = builder.username;
         this.password = builder.password;
@@ -106,20 +115,29 @@ public class FtpCrawlDefinition extends CrawlDefinition<FtpCrawlDefinition> {
 
     @Override
     protected int computeHashCode() {
-        return Objects.hash(hostname, entryPath, super.computeHashCode());
+        return Objects.hash(hostname, port, entryPath);
     }
 
     @Override
     protected boolean isEqual(final FtpCrawlDefinition f) {
         return super.isEqual(f) &&
-                Objects.equals(hostname, f.hostname) && Objects.equals(entryPath, f.entryPath) &&
-                Objects.equals(username, f.username) && Objects.equals(password, f.password) &&
-                Objects.equals(isSsl, f.isSsl) && Objects.equals(isPassive, f.isPassive);
+                Objects.equals(hostname, f.hostname) &&
+                Objects.equals(port, f.port) &&
+                Objects.equals(entryPath, f.entryPath) &&
+                Objects.equals(username, f.username) &&
+                Objects.equals(password, f.password) &&
+                Objects.equals(isSsl, f.isSsl) &&
+                Objects.equals(isPassive, f.isPassive);
     }
 
     @JsonIgnore
     public String getHostName() {
         return this.hostname;
+    }
+
+    @JsonIgnore
+    public Integer getPort() {
+        return this.port;
     }
 
     @JsonIgnore
@@ -159,6 +177,8 @@ public class FtpCrawlDefinition extends CrawlDefinition<FtpCrawlDefinition> {
 
         private String hostname;
 
+        private Integer port;
+
         private String entryPath;
 
         private String username;
@@ -174,13 +194,22 @@ public class FtpCrawlDefinition extends CrawlDefinition<FtpCrawlDefinition> {
 
         protected Builder(FtpCrawlDefinition crawlDefinition) {
             super(crawlDefinition);
+            hostname = crawlDefinition.hostname;
+            port = crawlDefinition.port;
             entryPath = crawlDefinition.entryPath;
             maxDepth = crawlDefinition.maxDepth;
-            crawlWaitMs = crawlDefinition.crawlWaitMs;
+            username = crawlDefinition.username;
+            password = crawlDefinition.password;
+            isSsl = crawlDefinition.isSsl;
         }
 
         public Builder hostname(final String hostname) {
             this.hostname = hostname;
+            return this;
+        }
+
+        public Builder port(final Integer port) {
+            this.port = port;
             return this;
         }
 

@@ -159,6 +159,8 @@ public abstract class CrawlDefinition<
 
         protected AbstractBuilder(DEFINITION src) {
             variables = src.variables == null ? null : new LinkedHashMap<>(src.variables);
+            crawlWaitMs = src.crawlWaitMs;
+            maxDepth = src.maxDepth;
             filters = src.filters == null || src.filters.isEmpty() ? null : new LinkedHashMap<>(src.filters);
             filterPolicy = src.filterPolicy;
         }
