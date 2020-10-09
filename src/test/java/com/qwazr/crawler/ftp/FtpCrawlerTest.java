@@ -25,20 +25,51 @@ import java.nio.file.Path;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import org.apache.ftpserver.FtpServer;
+import org.apache.ftpserver.FtpServerFactory;
+import org.apache.ftpserver.ftplet.FtpException;
+import org.apache.ftpserver.ftplet.UserManager;
+import org.apache.ftpserver.usermanager.PropertiesUserManagerFactory;
+import org.apache.ftpserver.usermanager.impl.BaseUser;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import org.hamcrest.Matchers;
 import org.junit.Assert;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 public class FtpCrawlerTest {
 
+    private static FtpServer ftpServer;
+
     private FtpCrawlerServiceInterface ftpCrawler;
     private ExecutorService executorService;
     private Path dataDir;
+
+    @BeforeAll
+    public static void startFtpServer() throws FtpException {
+        final FtpServerFactory serverFactory = new FtpServerFactory();
+        final PropertiesUserManagerFactory userManagerFactory = new PropertiesUserManagerFactory();
+        final UserManager userManager = userManagerFactory.createUserManager();
+        final BaseUser user = new BaseUser();
+        user.setName("anonymous");
+        user.setPassword("contact@qwazr.com");
+        userManager.save(user);
+        serverFactory.setUserManager(userManager);
+        ftpServer = serverFactory.createServer();
+        ftpServer.start();
+    }
+
+    @AfterAll
+    public static void stopFtpServer() {
+        if (ftpServer != null && !ftpServer.isStopped()) {
+            ftpServer.stop();
+            ftpServer = null;
+        }
+    }
 
     @BeforeEach
     public void setup() throws IOException {
@@ -49,25 +80,25 @@ public class FtpCrawlerTest {
     }
 
     @Test
-    public void test() throws InterruptedException {
+    public void localFtpTest() throws InterruptedException {
         final FtpCrawlDefinition ftpCrawlDefinition = FtpCrawlDefinition.of()
-                .hostname("ftp.mirrorservice.org")
-                .entryPath("/sites/ftp.apache.org/commons/")
+                .hostname("localhost")
+                .entryPath(Path.of("src", "test", "java").toAbsolutePath().toString())
                 .passive(true)
                 .username("anonymous")
                 .password("contact@qwazr.com")
                 .setMaxDepth(2)
-                .addFilter("/sites/ftp.apache.org/commons/", WildcardFilter.Status.accept)
-                .addFilter("/sites/ftp.apache.org/commons/crypto/", WildcardFilter.Status.accept)
-                .addFilter("/sites/ftp.apache.org/commons/*/*.html", WildcardFilter.Status.accept)
+                .addFilter("*/src/test/java/com/", WildcardFilter.Status.accept)
+                .addFilter("*/src/test/java/com/*/", WildcardFilter.Status.accept)
+                .addFilter("*/src/test/java/com/qwazr/crawler/ftp/*.java", WildcardFilter.Status.accept)
                 .build();
-        final FtpCrawlSessionStatus initialStatus = ftpCrawler.runSession("apache", ftpCrawlDefinition);
+        final FtpCrawlSessionStatus initialStatus = ftpCrawler.runSession("localFtp", ftpCrawlDefinition);
         assertThat(initialStatus, notNullValue());
-        final FtpCrawlDefinition initialDef = ftpCrawler.getSessionDefinition("apache");
+        final FtpCrawlDefinition initialDef = ftpCrawler.getSessionDefinition("localFtp");
         assertThat(initialDef, equalTo(ftpCrawlDefinition));
-        final CrawlSessionStatus<?> status = CrawlHelpers.crawlWait("apache", ftpCrawler);
-        assertThat(status.crawled, equalTo(2));
-        assertThat(status.rejected, Matchers.greaterThanOrEqualTo(3));
+        final CrawlSessionStatus<?> status = CrawlHelpers.crawlWait("localFtp", ftpCrawler);
+        assertThat(status.crawled, equalTo(1));
+        assertThat(status.rejected, equalTo(15));
         Assert.assertEquals(0, status.error);
         Assert.assertNull(status.lastError);
     }
