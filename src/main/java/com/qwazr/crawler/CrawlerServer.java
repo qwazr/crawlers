@@ -37,6 +37,7 @@ import com.qwazr.server.configuration.ServerConfiguration;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -67,7 +68,7 @@ public class CrawlerServer implements BaseServer {
         webServices.singletons(clusterManager.getService());
 
         final LibraryManager libraryManager =
-                new LibraryManager(configuration.dataDirectory, configuration.getEtcFiles());
+                new LibraryManager(configuration.dataDirectory, Collections.emptyList());
         builder.shutdownListener(server -> libraryManager.close());
         webServices.singletons(libraryManager.getService());
 
@@ -131,7 +132,12 @@ public class CrawlerServer implements BaseServer {
 
     public static synchronized void main(final String... args) throws Exception {
         shutdown();
-        INSTANCE = new CrawlerServer(new ServerConfiguration(args));
+        INSTANCE = new CrawlerServer(
+                ServerConfiguration.of()
+                        .applyEnvironmentVariables()
+                        .applySystemProperties()
+                        .applyCommandLineArgs(args)
+                        .build());
         INSTANCE.start();
     }
 

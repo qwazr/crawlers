@@ -75,8 +75,7 @@ public class RobotsTxt {
      *
      * @param uri the reference URI
      * @return a Robots.txt URI
-     * @throws MalformedURLException if the URL is malformed
-     * @throws URISyntaxException    if the URI syntax is wrong
+     * @throws URISyntaxException if the URI syntax is wrong
      */
     public static URI getRobotsURI(final URI uri) throws URISyntaxException {
         StringBuilder sb = new StringBuilder();
@@ -97,7 +96,6 @@ public class RobotsTxt {
      * @param uri the URI to test against the Robots.txt rules
      * @return the robotsTxt status
      * @throws MalformedURLException if the URL is malformed
-     * @throws URISyntaxException    if the URI syntax is wrong
      */
     public final Status getStatus(final URI uri, final String userAgent)
             throws MalformedURLException {
