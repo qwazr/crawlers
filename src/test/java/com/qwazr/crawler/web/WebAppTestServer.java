@@ -15,18 +15,16 @@
  */
 package com.qwazr.crawler.web;
 
+import com.qwazr.server.GenericServer;
+import com.qwazr.server.GenericServerBuilder;
+import com.qwazr.server.configuration.ServerConfiguration;
 import com.qwazr.utils.WaitFor;
-import com.qwazr.utils.process.ProcessUtils;
-import com.qwazr.webapps.WebappServer;
-import java.io.File;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 import org.apache.commons.io.FileUtils;
@@ -35,23 +33,32 @@ public class WebAppTestServer {
 
     private final static Logger LOGGER = Logger.getLogger(WebAppTestServer.class.getName());
 
-    private static Process webAppProcess;
+    private static GenericServer server;
 
     public static String URL = "http://localhost:9190";
 
     public static synchronized void start() throws Exception {
-        if (webAppProcess != null)
+        if (server != null)
             return;
         final Path dataDir = Files.createTempDirectory("test");
         FileUtils.copyDirectoryToDirectory(Paths.get("src", "test", "statics").toFile(), dataDir.toFile());
-        Map<String, String> env = new HashMap<>();
-        env.put("QWAZR_DATA", dataDir.toAbsolutePath().toString());
-        env.put("PUBLIC_ADDR", "localhost");
-        env.put("LISTEN_ADDR", "localhost");
-        env.put("WEBAPP_PORT", "9190");
-        env.put("WEBSERVICE_PORT", "9191");
-        env.put("QWAZR_ETC_DIR", new File("src/test/etc").getAbsolutePath());
-        webAppProcess = ProcessUtils.java(WebappServer.class, env);
+        final GenericServerBuilder serverBuilder = GenericServer.of(
+                ServerConfiguration.of()
+                        .data(dataDir)
+                        .publicAddress("localhost")
+                        .listenAddress("localhost")
+                        .webAppPort(9190)
+                        .webServicePort(9191)
+                        .build());
+
+        serverBuilder.getWebAppContext()
+                .getWebappBuilder()
+                .registerDefaultFaviconServlet()
+                .registerStaticServlet("/*", dataDir.resolve("statics").resolve("html"));
+
+
+        server = serverBuilder.build();
+        server.start(true);
         Thread.sleep(1000);
 
         final URL url = new URL(URL);
@@ -67,11 +74,10 @@ public class WebAppTestServer {
         LOGGER.info(() -> "WebAppTestServer started");
     }
 
-    public static synchronized void stop() throws InterruptedException {
-        if (webAppProcess == null)
+    public static synchronized void stop() {
+        if (server == null)
             return;
-        webAppProcess.destroy();
-        webAppProcess.waitFor();
-        webAppProcess = null;
+        server.close();
+        server = null;
     }
 }
