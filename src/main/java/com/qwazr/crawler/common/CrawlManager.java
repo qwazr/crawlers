@@ -65,7 +65,8 @@ public abstract class CrawlManager<
     private final HTreeMap<String, byte[]> crawlDefinitionMap;
     private final ReadWriteLock mapLock;
 
-    protected final ExecutorService executorService;
+    private final ExecutorService sessionExecutorService;
+    protected final ExecutorService crawlExecutorService;
     private final Logger logger;
 
     protected final String myAddress;
@@ -76,7 +77,8 @@ public abstract class CrawlManager<
 
     protected CrawlManager(final Path crawlerRootDirectory,
                            final String myAddress,
-                           final ExecutorService executorService,
+                           final ExecutorService sessionExecutorService,
+                           final ExecutorService crawlExecutorService,
                            final Logger logger,
                            final Class<STATUS> statusClass,
                            final Class<DEFINITION> definitionClass) throws IOException {
@@ -89,7 +91,8 @@ public abstract class CrawlManager<
             Files.createDirectory(sessionsDirectory);
         this.liveCrawlThreads = new ConcurrentHashMap<>();
         this.myAddress = myAddress;
-        this.executorService = executorService;
+        this.sessionExecutorService = sessionExecutorService;
+        this.crawlExecutorService = crawlExecutorService;
         this.logger = logger;
         this.statusClass = statusClass;
         this.definitionClass = definitionClass;
@@ -229,7 +232,7 @@ public abstract class CrawlManager<
                 }
                 logger.info(() -> "Create crawl session: " + sessionName);
                 final THREAD newCrawlThread = newCrawlThread(sessionName, crawlDefinition);
-                CompletableFuture.runAsync(newCrawlThread, executorService).whenComplete((r, e) -> {
+                CompletableFuture.runAsync(newCrawlThread, sessionExecutorService).whenComplete((r, e) -> {
                     liveCrawlThreads.remove(sessionName);
                     if (e != null)
                         logger.log(Level.SEVERE, e,

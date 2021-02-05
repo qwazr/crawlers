@@ -34,6 +34,8 @@ import com.qwazr.server.GenericServerBuilder;
 import com.qwazr.server.RestApplication;
 import com.qwazr.server.WelcomeShutdownService;
 import com.qwazr.server.configuration.ServerConfiguration;
+import com.qwazr.utils.SystemUtils;
+import com.qwazr.utils.concurrent.BlockingExecutorService;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -50,8 +52,9 @@ public class CrawlerServer implements BaseServer {
     private final FileCrawlerServiceBuilder fileCrawlerServiceBuilder;
     private final FtpCrawlerServiceBuilder ftpCrawlerServiceBuilder;
 
-    private CrawlerServer(final ServerConfiguration configuration) throws IOException {
+    private CrawlerServer(final ServerConfiguration configuration, int crawlThreadPoolSize) throws IOException {
         final ExecutorService executorService = Executors.newCachedThreadPool();
+        final ExecutorService crawlExecutorService = new BlockingExecutorService(crawlThreadPoolSize);
         final GenericServerBuilder builder = GenericServer.of(configuration, executorService);
 
         final Set<String> services = new HashSet<>();
@@ -77,7 +80,7 @@ public class CrawlerServer implements BaseServer {
             Files.createDirectory(webCrawlerDirectory);
 
         final WebCrawlerManager webCrawlerManager = new WebCrawlerManager(
-                webCrawlerDirectory, clusterManager, executorService);
+                webCrawlerDirectory, clusterManager, executorService, crawlExecutorService);
         builder.shutdownListener(server -> webCrawlerManager.close());
         webServices.singletons(webCrawlerManager.getService());
         webCrawlerServiceBuilder = new WebCrawlerServiceBuilder(clusterManager, webCrawlerManager);
@@ -87,7 +90,7 @@ public class CrawlerServer implements BaseServer {
             Files.createDirectory(fileCrawlerDirectory);
 
         final FileCrawlerManager fileCrawlerManager = new FileCrawlerManager(
-                fileCrawlerDirectory, clusterManager, executorService);
+                fileCrawlerDirectory, clusterManager, executorService, crawlExecutorService);
         builder.shutdownListener(server -> fileCrawlerManager.close());
         webServices.singletons(fileCrawlerManager.getService());
         fileCrawlerServiceBuilder = new FileCrawlerServiceBuilder(clusterManager, fileCrawlerManager);
@@ -97,7 +100,7 @@ public class CrawlerServer implements BaseServer {
             Files.createDirectory(ftpCrawlerDirectory);
 
         final FtpCrawlerManager ftpCrawlerManager = new FtpCrawlerManager(
-                ftpCrawlerDirectory, clusterManager, executorService);
+                ftpCrawlerDirectory, clusterManager, executorService, crawlExecutorService);
         builder.shutdownListener(server -> ftpCrawlerManager.close());
         webServices.singletons(ftpCrawlerManager.getService());
         ftpCrawlerServiceBuilder = new FtpCrawlerServiceBuilder(clusterManager, ftpCrawlerManager);
@@ -137,7 +140,8 @@ public class CrawlerServer implements BaseServer {
                         .applyEnvironmentVariables()
                         .applySystemProperties()
                         .applyCommandLineArgs(args)
-                        .build());
+                        .build(),
+                SystemUtils.getIntegerProperty("CRAWL_THREAD_POOL_SIZE", Runtime.getRuntime().availableProcessors() * 2 + 1));
         INSTANCE.start();
     }
 

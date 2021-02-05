@@ -34,16 +34,18 @@ public class WebCrawlerManager extends CrawlManager
 
     public WebCrawlerManager(final Path crawlerRootDirectory,
                              final String myAddress,
-                             final ExecutorService executor) throws IOException {
-        super(crawlerRootDirectory, myAddress, executor, LOGGER,
+                             final ExecutorService sessionExecutorService,
+                             final ExecutorService crawlExecutorService) throws IOException {
+        super(crawlerRootDirectory, myAddress, sessionExecutorService, crawlExecutorService, LOGGER,
                 WebCrawlSessionStatus.class, WebCrawlDefinition.class);
         service = new WebCrawlerServiceImpl(this);
     }
 
     public WebCrawlerManager(final Path crawlerRootDirectory,
                              final ClusterManager clusterManager,
-                             final ExecutorService executorService) throws IOException {
-        this(crawlerRootDirectory, clusterManager.getService().getStatus().me, executorService);
+                             final ExecutorService sessionExecutorService,
+                             final ExecutorService crawlExecutorService) throws IOException {
+        this(crawlerRootDirectory, clusterManager.getService().getStatus().me, sessionExecutorService, crawlExecutorService);
     }
 
     public WebCrawlerServiceInterface getService() {

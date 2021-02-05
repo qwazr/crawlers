@@ -20,6 +20,8 @@ import com.qwazr.crawler.common.Rejected;
 import com.qwazr.crawler.common.WildcardFilter;
 import com.qwazr.utils.FileUtils;
 import com.qwazr.utils.RandomUtils;
+import com.qwazr.utils.concurrent.BlockingExecutorService;
+import com.qwazr.utils.concurrent.ExecutorUtils;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -30,6 +32,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -41,6 +44,7 @@ import org.junit.jupiter.api.Test;
 public class FileCrawlManagerTest {
 
     private static ExecutorService executorService;
+    private static ExecutorService crawlExecutorService;
     private static FileCrawlerManager crawlerManager;
     private static Path dataDir;
     private static Instant instantAttribute;
@@ -48,16 +52,19 @@ public class FileCrawlManagerTest {
     @BeforeAll
     public static void setup() throws IOException {
         executorService = Executors.newCachedThreadPool();
+        crawlExecutorService = new BlockingExecutorService(10);
         dataDir = Files.createTempDirectory("ftptest_data");
-        crawlerManager = new FileCrawlerManager(dataDir, executorService);
+        crawlerManager = new FileCrawlerManager(dataDir, executorService, crawlExecutorService);
         instantAttribute = Instant.now();
         crawlerManager.registerAttribute("instant", instantAttribute);
     }
 
     @AfterAll
-    public static void cleanup() throws IOException {
-        if (executorService != null)
-            executorService.shutdown();
+    public static void cleanup() throws IOException, InterruptedException {
+        ExecutorUtils.close(crawlExecutorService, 5, TimeUnit.MINUTES);
+        crawlExecutorService = null;
+        ExecutorUtils.close(executorService, 5, TimeUnit.MINUTES);
+        executorService = null;
         if (dataDir != null)
             FileUtils.deleteDirectory(dataDir);
     }

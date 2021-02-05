@@ -19,6 +19,8 @@ import com.qwazr.crawler.common.CrawlHelpers;
 import com.qwazr.crawler.common.CrawlSessionStatus;
 import com.qwazr.crawler.common.WildcardFilter;
 import com.qwazr.utils.FileUtils;
+import com.qwazr.utils.concurrent.BlockingExecutorService;
+import com.qwazr.utils.concurrent.ExecutorUtils;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -48,6 +50,7 @@ public class FtpCrawlerTest {
 
     private FtpCrawlerServiceInterface ftpCrawler;
     private ExecutorService executorService;
+    private ExecutorService crawlExecutorService;
     private Path dataDir;
 
     @BeforeAll
@@ -80,7 +83,8 @@ public class FtpCrawlerTest {
     public void setup() throws IOException {
         dataDir = Files.createTempDirectory("ftptest_data");
         executorService = Executors.newCachedThreadPool();
-        FtpCrawlerManager ftpCrawlerManager = new FtpCrawlerManager(dataDir, executorService);
+        crawlExecutorService = new BlockingExecutorService(5);
+        FtpCrawlerManager ftpCrawlerManager = new FtpCrawlerManager(dataDir, executorService, crawlExecutorService);
         ftpCrawler = ftpCrawlerManager.getService();
     }
 
@@ -112,12 +116,12 @@ public class FtpCrawlerTest {
 
     @AfterEach
     public void cleanup() throws InterruptedException, IOException {
-        if (executorService != null) {
-            executorService.shutdown();
-            executorService.awaitTermination(5, TimeUnit.MINUTES);
-            executorService = null;
-        }
-        FileUtils.deleteDirectory(dataDir);
+        ExecutorUtils.close(crawlExecutorService, 5, TimeUnit.MINUTES);
+        crawlExecutorService = null;
+        ExecutorUtils.close(executorService, 5, TimeUnit.MINUTES);
+        executorService = null;
+        if (dataDir != null)
+            FileUtils.deleteDirectory(dataDir);
     }
 
 }

@@ -35,21 +35,24 @@ public class FtpCrawlerManager extends CrawlManager
 
     public FtpCrawlerManager(final Path crawlerRootDirectory,
                              final String myAddress,
-                             final ExecutorService executorService) throws IOException {
-        super(crawlerRootDirectory, myAddress, executorService,
+                             final ExecutorService sessionExecutorService,
+                             final ExecutorService crawlExecutorService) throws IOException {
+        super(crawlerRootDirectory, myAddress, sessionExecutorService, crawlExecutorService,
                 LOGGER, FtpCrawlSessionStatus.class, FtpCrawlDefinition.class);
         service = new FtpCrawlerServiceImpl(this);
     }
 
     public FtpCrawlerManager(final Path crawlerRootDirectory,
                              final ClusterManager clusterManager,
-                             final ExecutorService executorService) throws IOException {
-        this(crawlerRootDirectory, clusterManager.getService().getStatus().me, executorService);
+                             final ExecutorService sessionExecutorService,
+                             final ExecutorService crawlExecutorService) throws IOException {
+        this(crawlerRootDirectory, clusterManager.getService().getStatus().me, sessionExecutorService, crawlExecutorService);
     }
 
     public FtpCrawlerManager(final Path crawlerRootDirectory,
-                             final ExecutorService executorService) throws IOException {
-        this(crawlerRootDirectory, (String) null, executorService);
+                             final ExecutorService sessionExecutorService,
+                             final ExecutorService crawlExecutorService) throws IOException {
+        this(crawlerRootDirectory, (String) null, sessionExecutorService, crawlExecutorService);
     }
 
     public FtpCrawlerServiceInterface getService() {
