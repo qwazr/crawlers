@@ -15,6 +15,7 @@
  **/
 package com.qwazr.crawler.file;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -43,12 +44,12 @@ public class FileCrawlDefinition extends CrawlDefinition<FileCrawlDefinition> {
     final public String entryPath;
 
     @JsonCreator
-    protected FileCrawlDefinition(final @JsonProperty("entry_path") String entryPath,
-                                  final @JsonProperty("max_depth") Integer maxDepth,
+    protected FileCrawlDefinition(final @JsonProperty("entry_path") @JsonAlias("entryPath") String entryPath,
+                                  final @JsonProperty("max_depth") @JsonAlias("maxDepth") Integer maxDepth,
                                   final @JsonProperty("filters") LinkedHashMap<String, WildcardFilter.Status> filters,
-                                  final @JsonProperty("filter_policy") WildcardFilter.Status filterPolicy,
-                                  final @JsonProperty("crawl_wait_ms") Integer crawlWaitMs,
-                                  final @JsonProperty("crawl_collector_factory") String crawlCollectorFactoryClass,
+                                  final @JsonProperty("filter_policy") @JsonAlias("filterPolicy") WildcardFilter.Status filterPolicy,
+                                  final @JsonProperty("crawl_wait_ms") @JsonAlias("crawlWaitMs") Integer crawlWaitMs,
+                                  final @JsonProperty("crawl_collector_factory") @JsonAlias("crawlCollectorFactory") String crawlCollectorFactoryClass,
                                   final @JsonProperty("variables") LinkedHashMap<String, Object> variables) {
         super(FileCrawlDefinition.class, crawlCollectorFactoryClass, variables,
                 filters, filterPolicy, maxDepth, crawlWaitMs);

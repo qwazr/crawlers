@@ -15,6 +15,7 @@
  */
 package com.qwazr.crawler.web;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -126,26 +127,26 @@ public class WebCrawlDefinition extends CrawlDefinition<WebCrawlDefinition> {
     final public Integer timeOutSecs;
 
     @JsonCreator
-    protected WebCrawlDefinition(final @JsonProperty("max_depth") Integer maxDepth,
+    protected WebCrawlDefinition(final @JsonProperty("max_depth") @JsonAlias("maxDepth") Integer maxDepth,
                                  final @JsonProperty("filters") LinkedHashMap<String, WildcardFilter.Status> filters,
-                                 final @JsonProperty("filter_policy") WildcardFilter.Status filterPolicy,
-                                 final @JsonProperty("crawl_wait_ms") Integer crawlWaitMs,
-                                 final @JsonProperty("crawl_collector_factory") String crawlCollectorFactoryClass,
+                                 final @JsonProperty("filter_policy") @JsonAlias("filterPolicy") WildcardFilter.Status filterPolicy,
+                                 final @JsonProperty("crawl_wait_ms") @JsonAlias("crawlWaitMs") Integer crawlWaitMs,
+                                 final @JsonProperty("crawl_collector_factory") @JsonAlias("crawlCollectorFactory") String crawlCollectorFactoryClass,
                                  final @JsonProperty("variables") LinkedHashMap<String, Object> variables,
-                                 final @JsonProperty("entry_url") String entryUrl,
-                                 final @JsonProperty("entry_request") WebRequestDefinition entryRequest,
+                                 final @JsonProperty("entry_url") @JsonAlias("entryUrl") String entryUrl,
+                                 final @JsonProperty("entry_request") @JsonAlias("entryRequest") WebRequestDefinition entryRequest,
                                  final @JsonProperty("urls") Map<String, Integer> urls,
-                                 final @JsonProperty("max_url_number") Integer maxUrlNumber,
-                                 final @JsonProperty("accepted_content_type") List<String> acceptedContentType,
-                                 final @JsonProperty("parameters_patterns") List<String> parametersPatterns,
-                                 final @JsonProperty("path_cleaner_patterns") List<String> pathCleanerPatterns,
-                                 final @JsonProperty("remove_fragments") Boolean removeFragments,
+                                 final @JsonProperty("max_url_number") @JsonAlias("maxUrlNumber") Integer maxUrlNumber,
+                                 final @JsonProperty("accepted_content_type") @JsonAlias("acceptedContentType") List<String> acceptedContentType,
+                                 final @JsonProperty("parameters_patterns") @JsonAlias("parametersPatterns") List<String> parametersPatterns,
+                                 final @JsonProperty("path_cleaner_patterns") @JsonAlias("pathCleanerPatterns") List<String> pathCleanerPatterns,
+                                 final @JsonProperty("remove_fragments") @JsonAlias("removeFragments") Boolean removeFragments,
                                  final @JsonProperty("cookie") Map<String, String> cookies,
                                  final @JsonProperty("proxies") List<ProxyDefinition> proxies,
-                                 final @JsonProperty("robots_txt_enabled") Boolean robotsTxtEnabled,
-                                 final @JsonProperty("user_agent") String userAgent,
-                                 final @JsonProperty("disable_ssl_check") Boolean disableSslCheck,
-                                 final @JsonProperty("time_out_sec") Integer timeOutSecs) {
+                                 final @JsonProperty("robots_txt_enabled") @JsonAlias("robotsTxtEnabled") Boolean robotsTxtEnabled,
+                                 final @JsonProperty("user_agent") @JsonAlias("userAgent") String userAgent,
+                                 final @JsonProperty("disable_ssl_check") @JsonAlias("disableSslCheck") Boolean disableSslCheck,
+                                 final @JsonProperty("time_out_sec") @JsonAlias("timeOutSec") Integer timeOutSecs) {
         super(WebCrawlDefinition.class, crawlCollectorFactoryClass, variables, filters, filterPolicy, maxDepth, crawlWaitMs);
         this.entryUrl = entryUrl;
         this.entryRequest = entryRequest;
