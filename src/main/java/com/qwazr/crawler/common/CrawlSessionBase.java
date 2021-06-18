@@ -40,6 +40,7 @@ public abstract class CrawlSessionBase<
     private final CrawlSessionStatus.AbstractBuilder<STATUS, ?> crawlStatusBuilder;
     private final CrawlCollector<ITEM> crawlCollector;
     private volatile STATUS crawlStatus;
+    private final Path databaseFile;
     protected final DB sessionDB;
 
     protected CrawlSessionBase(final String sessionName,
@@ -48,7 +49,7 @@ public abstract class CrawlSessionBase<
                                final DEFINITION crawlDefinition,
                                final CrawlSessionStatus.AbstractBuilder<STATUS, ?> crawlStatusBuilder,
                                final CrawlCollector<ITEM> crawlCollector) {
-        final Path databaseFile = crawlManager.sessionsDirectory.resolve(sessionName);
+        databaseFile = crawlManager.sessionsDirectory.resolve(sessionName);
         this.sessionDB = DBMaker
                 .fileDB(databaseFile.toFile())
                 .transactionEnable()

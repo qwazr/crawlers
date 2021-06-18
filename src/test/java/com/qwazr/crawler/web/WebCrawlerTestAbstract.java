@@ -74,7 +74,7 @@ public abstract class WebCrawlerTestAbstract {
         webCrawl.setTimeOutSecs(60);
         webCrawl.setMaxUrlNumber(10);
         webCrawl.addAcceptedContentType("text/html");
-        webCrawl.addAcceptedContentType("image/vnd.microsoft.icon");
+        webCrawl.addAcceptedContentType("   image/vnd.microsoft.icon");
         webCrawl.setRobotsTxtEnabled(true);
         webCrawl.setDisableSslCheck(false);
         webCrawl.variable(RandomUtils.alphanumeric(5), RandomUtils.alphanumeric(6));

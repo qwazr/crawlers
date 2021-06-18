@@ -18,6 +18,7 @@ package com.qwazr.crawler.common;
 import com.qwazr.utils.WildcardMatcher;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
 
@@ -41,11 +42,11 @@ public interface WildcardFilter {
         return filters.isEmpty() ? Status.accept : Status.reject;
     }
 
-    static Map<WildcardMatcher, Status> compileFilters(final Map<String, Status> filters) {
+    static Map<WildcardMatcher, Status> compileFilters(final List<CrawlDefinition.Filter> filters) {
         if (filters == null || filters.isEmpty())
             return Map.of();
         final LinkedHashMap<WildcardMatcher, Status> compiledFilters = new LinkedHashMap<>();
-        filters.forEach((pattern, status) -> compiledFilters.put(new WildcardMatcher(pattern), status));
+        filters.forEach(filter -> compiledFilters.put(new WildcardMatcher(filter.pattern), filter.status));
         return Collections.synchronizedMap(compiledFilters);
     }
 

@@ -158,9 +158,7 @@ public abstract class CrawlManager<
     }
 
     public STATUS getSessionStatus(final String sessionName) {
-        return mapLock.read(() -> {
-            return readSessionStatus(sessionName);
-        });
+        return mapLock.read(() -> readSessionStatus(sessionName));
     }
 
     public DEFINITION getSessionDefinition(final String sessionName) {

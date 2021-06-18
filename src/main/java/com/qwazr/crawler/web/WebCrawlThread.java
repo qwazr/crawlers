@@ -307,7 +307,7 @@ public class WebCrawlThread extends CrawlThread
 
         // Add the next level URIs
         final Map<URI, AtomicInteger> links = afterCrawlCurrent.getLinks();
-        if (links != null)
+        if (links != null && (crawlDefinition.maxDepth == null || builder.depth < crawlDefinition.maxDepth))
             session.addUrlsToCrawl(links.keySet(), builder.depth + 1);
     }
 

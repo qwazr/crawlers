@@ -1,10 +1,19 @@
 {
   "entry_path": "/usr/share/docs",
   "max_depth": 16,
-  "filters": {
-    "*.md": "accept",
-    "*.txt": "accept",
-    "*/.*": "reject"
-  },
+  "filters": [
+    {
+      "pattern": "*.md",
+      "status": "accept"
+    },
+    {
+      "pattern": "*.txt",
+      "status": "accept"
+    },
+    {
+      "pattern": "*/.*",
+      "status": "reject"
+    }
+  ],
   "crawl_wait_ms": 100
 }

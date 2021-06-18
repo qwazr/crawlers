@@ -16,24 +16,18 @@
 package com.qwazr.crawler.common;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.qwazr.utils.CollectionsUtils;
 import com.qwazr.utils.Equalizer;
-import com.qwazr.utils.MapUtils;
 import com.qwazr.utils.StringUtils;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
-@JsonInclude(Include.NON_EMPTY)
-@JsonAutoDetect(setterVisibility = JsonAutoDetect.Visibility.NONE,
-        getterVisibility = JsonAutoDetect.Visibility.NONE,
-        creatorVisibility = JsonAutoDetect.Visibility.NONE,
-        isGetterVisibility = JsonAutoDetect.Visibility.NONE,
-        fieldVisibility = JsonAutoDetect.Visibility.PUBLIC_ONLY)
+
 public abstract class CrawlDefinition<
         DEFINITION extends CrawlDefinition<DEFINITION>
         > extends Equalizer.Immutable<DEFINITION> {
@@ -44,18 +38,70 @@ public abstract class CrawlDefinition<
     @JsonProperty("crawl_collector_factory")
     final public String crawlCollectorFactoryClass;
 
+    @JsonInclude(Include.NON_EMPTY)
+    @JsonAutoDetect(setterVisibility = JsonAutoDetect.Visibility.NONE,
+            getterVisibility = JsonAutoDetect.Visibility.NONE,
+            creatorVisibility = JsonAutoDetect.Visibility.NONE,
+            isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+            fieldVisibility = JsonAutoDetect.Visibility.PUBLIC_ONLY)
+    final static public class Variable extends Equalizer<Variable> {
+        @JsonProperty
+        final public String key;
+        @JsonProperty
+        final public Object value;
+
+        @JsonCreator
+        public Variable(@JsonProperty("key") String key,
+                        @JsonProperty("value") Object value) {
+            super(Variable.class);
+            this.key = key;
+            this.value = value;
+        }
+
+        @Override
+        protected boolean isEqual(Variable other) {
+            return Objects.equals(key, other.key) && Objects.equals(value, other.value);
+        }
+    }
+
     /**
      * The users variables shared by all the scripts.
      */
-    final public Map<String, Object> variables;
+    final public List<Variable> variables;
 
+
+    @JsonInclude(Include.NON_EMPTY)
+    @JsonAutoDetect(setterVisibility = JsonAutoDetect.Visibility.NONE,
+            getterVisibility = JsonAutoDetect.Visibility.NONE,
+            creatorVisibility = JsonAutoDetect.Visibility.NONE,
+            isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+            fieldVisibility = JsonAutoDetect.Visibility.PUBLIC_ONLY)
+    final static public class Filter extends Equalizer<Filter> {
+        @JsonProperty
+        final public String pattern;
+        @JsonProperty
+        final public WildcardFilter.Status status;
+
+        @JsonCreator
+        public Filter(@JsonProperty("pattern") String pattern,
+                      @JsonProperty("status") WildcardFilter.Status status) {
+            super(Filter.class);
+            this.pattern = pattern;
+            this.status = status;
+        }
+
+        @Override
+        protected boolean isEqual(Filter other) {
+            return Objects.equals(pattern, other.pattern) && status == other.status;
+        }
+    }
 
     /**
      * A list of wildcard patterns. An item may be crawled only if it
      * matches any pattern with a FilterStatus sets to 'accept'.
      */
     @JsonProperty("filters")
-    final public Map<String, WildcardFilter.Status> filters;
+    final public List<Filter> filters;
 
     /**
      * The status applied if no filter matched.
@@ -77,15 +123,15 @@ public abstract class CrawlDefinition<
 
     protected CrawlDefinition(final Class<DEFINITION> crawldefinitionClass,
                               final @JsonProperty("crawl_collector_factory") String crawlCollectorFactoryClass,
-                              final @JsonProperty("variables") LinkedHashMap<String, Object> variables,
-                              final @JsonProperty("filters") LinkedHashMap<String, WildcardFilter.Status> filters,
+                              final @JsonProperty("variables") List<Variable> variables,
+                              final @JsonProperty("filters") List<Filter> filters,
                               final @JsonProperty("filter_policy") WildcardFilter.Status filterPolicy,
                               final @JsonProperty("max_depth") Integer maxDepth,
                               final @JsonProperty("crawl_wait_ms") Integer crawlWaitMs) {
         super(crawldefinitionClass);
         this.crawlCollectorFactoryClass = crawlCollectorFactoryClass;
-        this.variables = variables == null ? null : MapUtils.copyOf(variables);
-        this.filters = filters == null ? null : MapUtils.copyOf(filters);
+        this.variables = variables == null ? null : List.copyOf(variables);
+        this.filters = filters == null ? null : List.copyOf(filters);
         this.filterPolicy = filterPolicy;
         this.maxDepth = maxDepth;
         this.crawlWaitMs = crawlWaitMs;
@@ -108,11 +154,11 @@ public abstract class CrawlDefinition<
         return crawlCollectorFactoryClass;
     }
 
-    final public Map<String, Object> getVariables() {
+    final public List<Variable> getVariables() {
         return variables;
     }
 
-    final public Map<String, WildcardFilter.Status> getFilters() {
+    final public List<Filter> getFilters() {
         return filters;
     }
 
@@ -132,8 +178,8 @@ public abstract class CrawlDefinition<
     @Override
     protected boolean isEqual(final DEFINITION c) {
         return Objects.equals(crawlCollectorFactoryClass, c.crawlCollectorFactoryClass)
-                && CollectionsUtils.equals(variables, c.variables)
-                && CollectionsUtils.equals(filters, c.filters)
+                && Objects.deepEquals(variables, c.variables)
+                && Objects.deepEquals(filters, c.filters)
                 && Objects.equals(maxDepth, c.maxDepth)
                 && Objects.equals(crawlWaitMs, c.crawlWaitMs);
     }
@@ -144,9 +190,9 @@ public abstract class CrawlDefinition<
 
         protected String crawlCollectorFactoryClass;
 
-        protected LinkedHashMap<String, Object> variables;
+        protected List<Variable> variables;
 
-        protected LinkedHashMap<String, WildcardFilter.Status> filters;
+        protected List<Filter> filters;
 
         protected WildcardFilter.Status filterPolicy;
 
@@ -158,10 +204,10 @@ public abstract class CrawlDefinition<
         }
 
         protected AbstractBuilder(DEFINITION src) {
-            variables = src.variables == null ? null : new LinkedHashMap<>(src.variables);
+            variables = src.variables == null ? null : List.copyOf(src.variables);
             crawlWaitMs = src.crawlWaitMs;
             maxDepth = src.maxDepth;
-            filters = src.filters == null || src.filters.isEmpty() ? null : new LinkedHashMap<>(src.filters);
+            filters = src.filters == null || src.filters.isEmpty() ? null : List.copyOf(src.filters);
             filterPolicy = src.filterPolicy;
         }
 
@@ -174,8 +220,8 @@ public abstract class CrawlDefinition<
 
         public BUILDER variable(final String name, final String value) {
             if (variables == null)
-                variables = new LinkedHashMap<>();
-            variables.put(name, value);
+                variables = new ArrayList<>();
+            variables.add(new Variable(name, value));
             return me();
         }
 
@@ -183,8 +229,8 @@ public abstract class CrawlDefinition<
             if (StringUtils.isBlank(filterPattern) || filterStatus == null)
                 return me();
             if (filters == null)
-                filters = new LinkedHashMap<>();
-            filters.put(filterPattern, filterStatus);
+                filters = new ArrayList<>();
+            filters.add(new Filter(filterPattern, filterStatus));
             return me();
         }
 

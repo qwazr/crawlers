@@ -26,7 +26,7 @@ import com.qwazr.crawler.common.CrawlDefinition;
 import com.qwazr.crawler.common.WildcardFilter;
 import com.qwazr.utils.ObjectMappers;
 import java.io.IOException;
-import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Objects;
 
 @JsonInclude(Include.NON_EMPTY)
@@ -81,11 +81,11 @@ public class FtpCrawlDefinition extends CrawlDefinition<FtpCrawlDefinition> {
 
     @JsonCreator
     protected FtpCrawlDefinition(final @JsonProperty("max_depth") @JsonAlias("maxDepth") Integer maxDepth,
-                                 final @JsonProperty("filters") LinkedHashMap<String, WildcardFilter.Status> filters,
+                                 final @JsonProperty("filters") List<Filter> filters,
                                  final @JsonProperty("filter_policy") @JsonAlias("filterPolicy") WildcardFilter.Status filterPolicy,
                                  final @JsonProperty("crawl_wait_ms") @JsonAlias("crawlWaitMs") Integer crawlWaitMs,
                                  final @JsonProperty("crawl_collector_factory") @JsonAlias("crawlCollectorFactory") String crawlCollectorFactoryClass,
-                                 final @JsonProperty("variables") LinkedHashMap<String, Object> variables,
+                                 final @JsonProperty("variables") List<Variable> variables,
                                  final @JsonProperty("hostname") String hostname,
                                  final @JsonProperty("port") Integer port,
                                  final @JsonProperty("entry_path") @JsonAlias("entryPath") String entryPath,

@@ -128,11 +128,11 @@ public class WebCrawlDefinition extends CrawlDefinition<WebCrawlDefinition> {
 
     @JsonCreator
     protected WebCrawlDefinition(final @JsonProperty("max_depth") @JsonAlias("maxDepth") Integer maxDepth,
-                                 final @JsonProperty("filters") LinkedHashMap<String, WildcardFilter.Status> filters,
+                                 final @JsonProperty("filters") List<Filter> filters,
                                  final @JsonProperty("filter_policy") @JsonAlias("filterPolicy") WildcardFilter.Status filterPolicy,
                                  final @JsonProperty("crawl_wait_ms") @JsonAlias("crawlWaitMs") Integer crawlWaitMs,
                                  final @JsonProperty("crawl_collector_factory") @JsonAlias("crawlCollectorFactory") String crawlCollectorFactoryClass,
-                                 final @JsonProperty("variables") LinkedHashMap<String, Object> variables,
+                                 final @JsonProperty("variables") List<Variable> variables,
                                  final @JsonProperty("entry_url") @JsonAlias("entryUrl") String entryUrl,
                                  final @JsonProperty("entry_request") @JsonAlias("entryRequest") WebRequestDefinition entryRequest,
                                  final @JsonProperty("urls") Map<String, Integer> urls,
