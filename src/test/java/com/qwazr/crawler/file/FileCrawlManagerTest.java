@@ -85,7 +85,9 @@ public class FileCrawlManagerTest {
                    final int expectedError) throws InterruptedException {
         FileCrawlCollectorFactoryTest.resetCounters();
         final String crawlSession = RandomUtils.alphanumeric(5);
-        FileCrawlSessionStatus crawlStatus = crawlerManager.runSession(crawlSession, fileCrawlDefinitionBuilder.build());
+        FileCrawlSessionStatus upsertStatus = crawlerManager.upsertSession(crawlSession, fileCrawlDefinitionBuilder.build());
+        Assert.assertNotNull(upsertStatus);
+        FileCrawlSessionStatus crawlStatus = crawlerManager.runSession(crawlSession);
         Assert.assertNotNull(crawlStatus);
         while (crawlStatus.endTime == null) {
             Thread.sleep(500);

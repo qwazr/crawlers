@@ -15,8 +15,6 @@
  */
 package com.qwazr.crawler.common;
 
-import com.qwazr.utils.TimeTracker;
-
 public interface CrawlSession<
         DEFINITION extends CrawlDefinition<DEFINITION>,
         STATUS extends CrawlSessionStatus<STATUS>,
@@ -61,11 +59,6 @@ public interface CrawlSession<
      * @return the name of the session
      */
     String getName();
-
-    /**
-     * @return time information about the current crawl session
-     */
-    TimeTracker getTimeTracker();
 
     void close();
 }

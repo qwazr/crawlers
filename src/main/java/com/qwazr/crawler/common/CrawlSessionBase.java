@@ -15,7 +15,6 @@
  **/
 package com.qwazr.crawler.common;
 
-import com.qwazr.utils.TimeTracker;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -36,7 +35,6 @@ public abstract class CrawlSessionBase<
     private final DEFINITION crawlDefinition;
     private final String name;
     private final AtomicBoolean abort;
-    private final TimeTracker timeTracker;
     private final CrawlSessionStatus.AbstractBuilder<STATUS, ?> crawlStatusBuilder;
     private final CrawlCollector<ITEM> crawlCollector;
     private volatile STATUS crawlStatus;
@@ -45,7 +43,6 @@ public abstract class CrawlSessionBase<
 
     protected CrawlSessionBase(final String sessionName,
                                final MANAGER crawlManager,
-                               final TimeTracker timeTracker,
                                final DEFINITION crawlDefinition,
                                final CrawlSessionStatus.AbstractBuilder<STATUS, ?> crawlStatusBuilder,
                                final CrawlCollector<ITEM> crawlCollector) {
@@ -55,7 +52,6 @@ public abstract class CrawlSessionBase<
                 .transactionEnable()
                 .make();
         this.crawlManager = crawlManager;
-        this.timeTracker = timeTracker;
         this.crawlStatusBuilder = crawlStatusBuilder;
         this.crawlDefinition = crawlDefinition;
         this.name = sessionName;
@@ -143,8 +139,9 @@ public abstract class CrawlSessionBase<
         return crawlDefinition;
     }
 
-    public TimeTracker getTimeTracker() {
-        return timeTracker;
+    void start() {
+        crawlStatusBuilder.start();
+        buildStatus();
     }
 
     void done() {

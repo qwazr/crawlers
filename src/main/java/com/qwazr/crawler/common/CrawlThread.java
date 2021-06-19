@@ -62,6 +62,7 @@ public abstract class CrawlThread<
     @Override
     final public void run() {
         try {
+            session.start();
             runner();
         } catch (Exception e) {
             logger.log(Level.SEVERE, e, e::getMessage);

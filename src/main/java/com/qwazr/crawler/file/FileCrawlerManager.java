@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2020 Emmanuel Keller / QWAZR
+ * Copyright 2017-2021 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@ import com.qwazr.cluster.ClusterManager;
 import com.qwazr.crawler.common.CrawlCollector;
 import com.qwazr.crawler.common.CrawlManager;
 import com.qwazr.utils.LoggerUtils;
-import com.qwazr.utils.TimeTracker;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.concurrent.ExecutorService;
@@ -58,11 +57,15 @@ public class FileCrawlerManager extends CrawlManager
     }
 
     @Override
+    protected FileCrawlSessionStatus newInitialStatus() {
+        return FileCrawlSessionStatus.of(myAddress).build();
+    }
+
+    @Override
     protected FileCrawlThread newCrawlThread(final String sessionName, final FileCrawlDefinition crawlDefinition) {
-        final TimeTracker timeTracker = TimeTracker.withDurations();
         final CrawlCollector<FileCrawlItem> crawlCollector = newCrawlCollector(crawlDefinition, FileCrawlCollectorFactory.class);
-        final FileCrawlSessionStatus.Builder crawlStatusBuilder = FileCrawlSessionStatus.of(myAddress, timeTracker);
-        final FileCrawlSession session = new FileCrawlSession(sessionName, this, timeTracker,
+        final FileCrawlSessionStatus.Builder crawlStatusBuilder = FileCrawlSessionStatus.of(myAddress);
+        final FileCrawlSession session = new FileCrawlSession(sessionName, this,
                 crawlDefinition, crawlStatusBuilder, crawlCollector == null ? doNothing : crawlCollector);
         return new FileCrawlThread(this, session, LOGGER);
     }

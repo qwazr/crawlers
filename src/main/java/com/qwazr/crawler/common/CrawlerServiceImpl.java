@@ -95,9 +95,18 @@ public abstract class CrawlerServiceImpl<
     }
 
     @Override
-    public STATUS runSession(final String sessionName, final DEFINITION crawlDefinition) {
+    public STATUS upsertSession(final String sessionName, final DEFINITION crawlDefinition) {
         try {
-            return crawlManager.runSession(sessionName, crawlDefinition);
+            return crawlManager.upsertSession(sessionName, crawlDefinition);
+        } catch (Exception e) {
+            throw ServerException.getJsonException(logger, e);
+        }
+    }
+
+    @Override
+    public STATUS runSession(final String sessionName) {
+        try {
+            return crawlManager.runSession(sessionName);
         } catch (Exception e) {
             throw ServerException.getJsonException(logger, e);
         }

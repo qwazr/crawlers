@@ -21,7 +21,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.utils.Equalizer;
-import com.qwazr.utils.TimeTracker;
 import java.util.Objects;
 
 @JsonInclude(Include.NON_EMPTY)
@@ -37,6 +36,11 @@ public abstract class CrawlSessionStatus<STATUS extends CrawlSessionStatus<STATU
      */
     @JsonProperty("node_address")
     final public String nodeAddress;
+
+    /**
+     * Is the session currently running ?
+     */
+    final public Boolean running;
 
     /**
      * Is the session currently aborting ?
@@ -90,13 +94,11 @@ public abstract class CrawlSessionStatus<STATUS extends CrawlSessionStatus<STATU
     @JsonProperty("end_time")
     final public Long endTime;
 
-    final public TimeTracker.Status timer;
-
     protected CrawlSessionStatus(final Class<STATUS> statusClass,
                                  final @JsonProperty("node_address") String nodeAddress,
+                                 final @JsonProperty("running") Boolean running,
                                  final @JsonProperty("aborting") Boolean aborting,
                                  final @JsonProperty("aborting_reason") String abortingReason,
-                                 final @JsonProperty("timer") TimeTracker.Status timer,
                                  final @JsonProperty("crawled") Integer crawled,
                                  final @JsonProperty("rejected") Integer rejected,
                                  final @JsonProperty("redirect") Integer redirect,
@@ -108,7 +110,7 @@ public abstract class CrawlSessionStatus<STATUS extends CrawlSessionStatus<STATU
                                  final @JsonProperty("current_depth") Integer currentDepth) {
         super(statusClass);
         this.nodeAddress = nodeAddress;
-        this.timer = timer;
+        this.running = running;
         this.aborting = aborting;
         this.abortingReason = abortingReason;
         this.crawled = crawled == null ? 0 : crawled;
@@ -126,7 +128,7 @@ public abstract class CrawlSessionStatus<STATUS extends CrawlSessionStatus<STATU
                                  final AbstractBuilder<STATUS, ?> builder) {
         super(statusClass);
         this.nodeAddress = builder.nodeAddress;
-        this.timer = builder.timeTracker == null ? null : builder.timeTracker.getStatus();
+        this.running = builder.running;
         this.aborting = builder.aborting;
         this.abortingReason = builder.abortingReason;
         this.crawled = builder.crawled;
@@ -222,20 +224,15 @@ public abstract class CrawlSessionStatus<STATUS extends CrawlSessionStatus<STATU
         return endTime;
     }
 
-    @JsonIgnore
-    public TimeTracker.Status getTimer() {
-        return timer;
-    }
-
     @Override
     protected int computeHashCode() {
-        return Objects.hash(nodeAddress, startTime, endTime, currentCrawl, currentDepth);
+        return Objects.hash(nodeAddress, startTime, endTime, currentCrawl, currentDepth, running, aborting);
     }
 
     @Override
     public String toString() {
         return "Addr: " + nodeAddress
-                + " - startTime: " + startTime
+                + " - running: " + running
                 + " - aborting: " + aborting
                 + " - abortingReason: " + abortingReason
                 + " - crawled: " + crawled
@@ -244,22 +241,22 @@ public abstract class CrawlSessionStatus<STATUS extends CrawlSessionStatus<STATU
                 + " - lastError: " + lastError
                 + " - currentCrawl: " + currentCrawl
                 + " - currentDepth: " + currentDepth
-                + " - endTime: " + endTime
-                + " - timer: " + timer;
+                + " - startTime: " + startTime
+                + " - endTime: " + endTime;
     }
 
     @Override
     protected boolean isEqual(final STATUS s) {
         return Objects.equals(nodeAddress, s.nodeAddress)
-                && Objects.equals(startTime, s.startTime)
+                && Objects.equals(running, s.running)
                 && Objects.equals(aborting, s.aborting)
                 && Objects.equals(abortingReason, s.abortingReason)
                 && crawled == s.crawled && rejected == s.rejected && error == s.error
                 && Objects.equals(lastError, s.lastError)
                 && Objects.equals(currentCrawl, s.currentCrawl)
                 && Objects.equals(currentDepth, s.currentDepth)
-                && Objects.equals(endTime, s.endTime)
-                && Objects.equals(timer, s.timer);
+                && Objects.equals(startTime, s.startTime)
+                && Objects.equals(endTime, s.endTime);
     }
 
     public abstract static class AbstractBuilder<
@@ -267,9 +264,8 @@ public abstract class CrawlSessionStatus<STATUS extends CrawlSessionStatus<STATU
             BUILDER extends AbstractBuilder<STATUS, BUILDER>> {
 
         private final String nodeAddress;
-        private final long startTime;
-        private final TimeTracker timeTracker;
 
+        private Boolean running;
         private Boolean aborting;
         private String abortingReason;
         private int crawled;
@@ -279,16 +275,23 @@ public abstract class CrawlSessionStatus<STATUS extends CrawlSessionStatus<STATU
         private String lastError;
         private String currentCrawl;
         private Integer currentDepth;
+        private Long startTime;
         private Long endTime;
 
-        protected AbstractBuilder(final String nodeAddress,
-                                  final TimeTracker timeTracker) {
+        protected AbstractBuilder(final String nodeAddress) {
             this.nodeAddress = nodeAddress;
-            this.startTime = System.currentTimeMillis();
-            this.timeTracker = timeTracker;
+            this.running = false;
         }
 
         protected abstract BUILDER me();
+
+        public BUILDER start() {
+            if (startTime != null)
+                return me();
+            this.running = true;
+            this.startTime = System.currentTimeMillis();
+            return me();
+        }
 
         public BUILDER abort(String abortingReason) {
             if (endTime != null)
@@ -338,6 +341,7 @@ public abstract class CrawlSessionStatus<STATUS extends CrawlSessionStatus<STATU
         public BUILDER done() {
             assert endTime == null;
             this.endTime = System.currentTimeMillis();
+            this.running = false;
             return me();
         }
 

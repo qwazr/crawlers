@@ -19,7 +19,6 @@ import com.qwazr.cluster.ClusterManager;
 import com.qwazr.crawler.common.CrawlCollector;
 import com.qwazr.crawler.common.CrawlManager;
 import com.qwazr.utils.LoggerUtils;
-import com.qwazr.utils.TimeTracker;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.concurrent.ExecutorService;
@@ -52,13 +51,16 @@ public class WebCrawlerManager extends CrawlManager
         return service;
     }
 
+    protected WebCrawlSessionStatus newInitialStatus() {
+        return WebCrawlSessionStatus.of(myAddress).build();
+    }
+
     @Override
     protected WebCrawlThread newCrawlThread(final String sessionName,
                                             final WebCrawlDefinition crawlDefinition) {
-        final TimeTracker timeTracker = TimeTracker.withDurations();
-        final WebCrawlSessionStatus.Builder crawlStatusBuilder = WebCrawlSessionStatus.of(myAddress, timeTracker);
+        final WebCrawlSessionStatus.Builder crawlStatusBuilder = WebCrawlSessionStatus.of(myAddress);
         final CrawlCollector<WebCrawlItem> crawlCollector = newCrawlCollector(crawlDefinition, WebCrawlCollectorFactory.class);
-        final WebCrawlSession session = new WebCrawlSession(sessionName, this, timeTracker,
+        final WebCrawlSession session = new WebCrawlSession(sessionName, this,
                 crawlDefinition, crawlStatusBuilder, crawlCollector == null ? doNothing : crawlCollector);
         return new WebCrawlThread(this, session, crawlDefinition);
     }

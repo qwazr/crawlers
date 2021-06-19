@@ -98,10 +98,17 @@ abstract public class CrawlerSingleClient<
     }
 
     @Override
-    public STATUS runSession(final String sessionName, final DEFINITION crawlDefinition) {
+    public STATUS upsertSession(final String sessionName, final DEFINITION crawlDefinition) {
         return sessionsTarget.path(sessionName)
                 .request(MediaType.APPLICATION_JSON)
-                .post(Entity.json(crawlDefinition), crawlStatusClass);
+                .put(Entity.json(crawlDefinition), crawlStatusClass);
+    }
+
+    @Override
+    public STATUS runSession(final String sessionName) {
+        return sessionsTarget.path(sessionName)
+                .request(MediaType.APPLICATION_JSON)
+                .post(null, crawlStatusClass);
     }
 
 }

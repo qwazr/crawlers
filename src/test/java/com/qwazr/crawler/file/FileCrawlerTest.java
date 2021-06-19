@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2020 Emmanuel Keller / QWAZR
+ * Copyright 2016-2021 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -93,7 +93,9 @@ public class FileCrawlerTest {
     public void test300SimpleCrawl() throws InterruptedException {
         final String sessionName = RandomUtils.alphanumeric(9);
         final FileCrawlDefinition fileCrawl = getNewCrawl().build();
-        final FileCrawlSessionStatus initialStatus = remote.runSession(sessionName, fileCrawl);
+        final FileCrawlSessionStatus upsertStatus = remote.upsertSession(sessionName, fileCrawl);
+        assertThat(upsertStatus, notNullValue());
+        final FileCrawlSessionStatus initialStatus = remote.runSession(sessionName);
         assertThat(initialStatus, notNullValue());
         final FileCrawlDefinition initialDef = remote.getSessionDefinition(sessionName);
         assertThat(initialDef, equalTo(fileCrawl));
@@ -112,7 +114,8 @@ public class FileCrawlerTest {
         final FileCrawlDefinition.Builder crawl = getNewCrawl();
         crawl.variable(RandomUtils.alphanumeric(5), RandomUtils.alphanumeric(6));
         crawl.crawlCollectorFactoryClass(FileCrawlCollectorFactoryTest.class);
-        remote.runSession(sessionName, crawl.build());
+        remote.upsertSession(sessionName, crawl.build());
+        remote.runSession(sessionName);
         CrawlHelpers.crawlWait(sessionName, remote);
 
         Assert.assertEquals(crawl.build(), FileCrawlCollectorFactoryTest.definition.get());

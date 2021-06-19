@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2020 Emmanuel Keller / QWAZR
+ * Copyright 2017-2021 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.crawler.common.CrawlSessionStatus;
-import com.qwazr.utils.TimeTracker;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonAutoDetect(setterVisibility = JsonAutoDetect.Visibility.NONE,
@@ -32,9 +31,9 @@ public class FtpCrawlSessionStatus extends CrawlSessionStatus<FtpCrawlSessionSta
 
     @JsonCreator
     FtpCrawlSessionStatus(final @JsonProperty("node_address") String nodeAddress,
+                          final @JsonProperty("running") Boolean running,
                           final @JsonProperty("aborting") Boolean aborting,
                           final @JsonProperty("aborting_reason") String abortingReason,
-                          final @JsonProperty("timer") TimeTracker.Status timer,
                           final @JsonProperty("crawled") Integer crawled,
                           final @JsonProperty("ignored") Integer ignored,
                           final @JsonProperty("redirect") Integer redirect,
@@ -44,7 +43,7 @@ public class FtpCrawlSessionStatus extends CrawlSessionStatus<FtpCrawlSessionSta
                           final @JsonProperty("start_time") Long startTime,
                           final @JsonProperty("end_time") Long endTime,
                           final @JsonProperty("current_depth") Integer currentDepth) {
-        super(FtpCrawlSessionStatus.class, nodeAddress, aborting, abortingReason, timer,
+        super(FtpCrawlSessionStatus.class, nodeAddress, running, aborting, abortingReason,
                 crawled, ignored, redirect, error, lastError, currentCrawl,
                 startTime, endTime, currentDepth);
     }
@@ -53,14 +52,14 @@ public class FtpCrawlSessionStatus extends CrawlSessionStatus<FtpCrawlSessionSta
         super(FtpCrawlSessionStatus.class, builder);
     }
 
-    public static Builder of(String nodeAddress, TimeTracker timeTracker) {
-        return new Builder(nodeAddress, timeTracker);
+    public static Builder of(String nodeAddress) {
+        return new Builder(nodeAddress);
     }
 
     public static class Builder extends AbstractBuilder<FtpCrawlSessionStatus, Builder> {
 
-        private Builder(String nodeAddress, TimeTracker timeTracker) {
-            super(nodeAddress, timeTracker);
+        private Builder(String nodeAddress) {
+            super(nodeAddress);
         }
 
         @Override

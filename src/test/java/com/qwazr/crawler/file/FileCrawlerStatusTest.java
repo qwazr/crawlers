@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2020 Emmanuel Keller / QWAZR
+ * Copyright 2017-2021 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@ package com.qwazr.crawler.file;
 
 import com.qwazr.utils.ObjectMappers;
 import com.qwazr.utils.RandomUtils;
-import com.qwazr.utils.TimeTracker;
 import java.io.IOException;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -27,12 +26,15 @@ public class FileCrawlerStatusTest {
 
     @Test
     public void serializationTest() throws IOException {
-        final FileCrawlSessionStatus status = FileCrawlSessionStatus.of("test", TimeTracker.withDurations())
+        final FileCrawlSessionStatus status = FileCrawlSessionStatus.of("test")
+                .start()
                 .incRedirect()
                 .incCrawled()
                 .incRejected()
                 .lastError(RandomUtils.alphanumeric(8))
                 .crawl("test", 5)
+                .abort("enough is enough")
+                .done()
                 .build();
         final byte[] bytes = ObjectMappers.SMILE.writeValueAsBytes(status);
         final FileCrawlSessionStatus status2 = ObjectMappers.SMILE.readValue(bytes, FileCrawlSessionStatus.class);

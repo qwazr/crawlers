@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2020 Emmanuel Keller / QWAZR
+ * Copyright 2017-2021 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@ import com.qwazr.crawler.common.CrawlCollector;
 import com.qwazr.crawler.common.CrawlManager;
 import com.qwazr.crawler.file.FileCrawlerManager;
 import com.qwazr.utils.LoggerUtils;
-import com.qwazr.utils.TimeTracker;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.concurrent.ExecutorService;
@@ -60,11 +59,15 @@ public class FtpCrawlerManager extends CrawlManager
     }
 
     @Override
+    protected FtpCrawlSessionStatus newInitialStatus() {
+        return FtpCrawlSessionStatus.of(myAddress).build();
+    }
+
+    @Override
     protected FtpCrawlThread newCrawlThread(String sessionName, FtpCrawlDefinition crawlDefinition) {
-        final TimeTracker timeTracker = TimeTracker.withDurations();
-        final FtpCrawlSessionStatus.Builder crawlStatusBuilder = FtpCrawlSessionStatus.of(myAddress, timeTracker);
+        final FtpCrawlSessionStatus.Builder crawlStatusBuilder = FtpCrawlSessionStatus.of(myAddress);
         final CrawlCollector<FtpCrawlItem> crawlCollector = newCrawlCollector(crawlDefinition, FtpCrawlCollectorFactory.class);
-        final FtpCrawlSession session = new FtpCrawlSession(sessionName, this, timeTracker,
+        final FtpCrawlSession session = new FtpCrawlSession(sessionName, this,
                 crawlDefinition, crawlStatusBuilder, crawlCollector == null ? doNothing : crawlCollector);
         return new FtpCrawlThread(this, session, LOGGER);
     }

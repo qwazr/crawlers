@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2020 Emmanuel Keller / QWAZR
+ * Copyright 2016-2021 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -82,10 +82,9 @@ public abstract class WebCrawlerTestAbstract {
         return webCrawl;
     }
 
-    private CrawlSessionStatus<?> crawlTest(WebCrawlDefinition webCrawl, int crawled, int rejected, int error)
+    private CrawlSessionStatus<?> crawlTest(String sessionName, WebCrawlDefinition webCrawl, int crawled, int rejected, int error)
             throws InterruptedException {
-        final String sessionName = RandomUtils.alphanumeric(10);
-        final WebCrawlSessionStatus initialStatus = service.runSession(sessionName, webCrawl);
+        final WebCrawlSessionStatus initialStatus = service.runSession(sessionName);
         assertThat(initialStatus, notNullValue());
         final WebCrawlDefinition initialDef = service.getSessionDefinition(sessionName);
         assertThat(initialDef, equalTo(webCrawl));
@@ -93,28 +92,55 @@ public abstract class WebCrawlerTestAbstract {
         Assert.assertEquals(crawled, status.crawled);
         Assert.assertEquals(rejected, status.rejected);
         Assert.assertEquals(error, status.error);
+        Assert.assertEquals(status.running, Boolean.FALSE);
+        Assert.assertNotNull(status.startTime);
+        Assert.assertNotNull(status.endTime);
         return status;
+    }
+
+    private String newCrawlSession(WebCrawlDefinition webCrawl) {
+        final String sessionName = RandomUtils.alphanumeric(10);
+        final WebCrawlSessionStatus upsertStatus = service.upsertSession(sessionName, webCrawl);
+        assertThat(upsertStatus, notNullValue());
+        return sessionName;
+    }
+
+    private CrawlSessionStatus<?> crawlTest(WebCrawlDefinition webCrawl, int crawled, int rejected, int error)
+            throws InterruptedException {
+        final String sessionName = newCrawlSession(webCrawl);
+        return crawlTest(sessionName, webCrawl, crawled, rejected, error);
     }
 
     @Test
     @Order(300)
-    public void test300SimpleCrawl() throws InterruptedException {
-        crawlTest(getNewWebCrawl().setEntryUrl(WebAppTestServer.URL).build(), 7, 1, 1);
+    public void test300SimpleCrawlAndRecrawl() throws InterruptedException {
+        final WebCrawlDefinition webCrawlDefinition = getNewWebCrawl().setEntryUrl(WebAppTestServer.URL).build();
+        final String sessionName = newCrawlSession(webCrawlDefinition);
+        //Crawl
+        crawlTest(sessionName, webCrawlDefinition, 7, 1, 1);
+        // Recrawl
+        crawlTest(sessionName, webCrawlDefinition, 7, 1, 1);
     }
 
     @Test
     @Order(350)
     public void test350CrawlGetWebRequest() throws InterruptedException {
-        crawlTest(getNewWebCrawl().setEntryRequest(
-                WebRequestDefinition.of(WebAppTestServer.URL).httpMethod(WebRequestDefinition.HttpMethod.GET).build())
-                .build(), 7, 1, 1);
+        final WebCrawlDefinition webCrawlDefinition = getNewWebCrawl()
+                .setEntryRequest(
+                        WebRequestDefinition
+                                .of(WebAppTestServer.URL)
+                                .httpMethod(WebRequestDefinition.HttpMethod.GET)
+                                .build())
+                .build();
+        crawlTest(webCrawlDefinition, 7, 1, 1);
     }
 
     @Test
     public void test360CrawlPostWebRequest() throws InterruptedException {
-        crawlTest(getNewWebCrawl().setEntryRequest(
+        final WebCrawlDefinition webCrawlDefinition = getNewWebCrawl().setEntryRequest(
                 WebRequestDefinition.of(WebAppTestServer.URL).httpMethod(WebRequestDefinition.HttpMethod.POST).build())
-                .build(), 1, 0, 1);
+                .build();
+        crawlTest(webCrawlDefinition, 1, 0, 1);
     }
 
     @Test
@@ -127,7 +153,8 @@ public abstract class WebCrawlerTestAbstract {
         webCrawl.crawlCollectorFactoryClass(WebCrawlCollectorFactoryTest.class);
 
         webCrawl.userAgent("QWAZR_BOT");
-        service.runSession(sessionName, webCrawl.build());
+        service.upsertSession(sessionName, webCrawl.build());
+        service.runSession(sessionName);
         final CrawlSessionStatus<?> status = CrawlHelpers.crawlWait(sessionName, service);
 
         Assert.assertEquals(7, status.crawled);

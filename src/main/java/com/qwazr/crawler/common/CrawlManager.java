@@ -161,30 +161,34 @@ public abstract class CrawlManager<
         return mapLock.read(() -> readSessionStatus(sessionName));
     }
 
+    private DEFINITION readSessionDefinition(final String sessionName) {
+        final byte[] bytes = crawlDefinitionMap.get(sessionName);
+        try {
+            return bytes == null ? null : ObjectMappers.SMILE.readValue(bytes, definitionClass);
+        } catch (IOException e) {
+            throw new InternalServerErrorException(
+                    "Error while reading the definition of " + sessionName + " : " + e.getMessage(), e);
+        }
+    }
+
     public DEFINITION getSessionDefinition(final String sessionName) {
-        return mapLock.read(() -> {
-            final byte[] bytes = crawlDefinitionMap.get(sessionName);
-            try {
-                return bytes == null ? null : ObjectMappers.SMILE.readValue(bytes, definitionClass);
-            } catch (IOException e) {
-                throw new InternalServerErrorException(
-                        "Error while reading the definition of " + sessionName + " : " + e.getMessage(), e);
-            }
-        });
+        return mapLock.read(() -> readSessionDefinition(sessionName));
+    }
+
+    private void putSessionStatus(final String sessionName, final STATUS status) {
+        try {
+            crawlStatusMap.put(sessionName, ObjectMappers.SMILE.writeValueAsBytes(status));
+        } catch (JsonProcessingException e) {
+            throw new InternalServerErrorException(
+                    "Error while reading writing status of " + sessionName + " : " + e.getMessage(), e);
+        }
     }
 
     void setSessionStatus(final String sessionName, final STATUS status) {
         mapLock.read(() -> {
-            try {
-                crawlStatusMap.put(sessionName, ObjectMappers.SMILE.writeValueAsBytes(status));
-                database.commit();
-            } catch (JsonProcessingException e) {
-                throw new InternalServerErrorException(
-                        "Error while reading writing status of " + sessionName + " : " + e.getMessage(), e);
-            }
+            putSessionStatus(sessionName, status);
         });
     }
-
 
     public void abortSession(final String sessionName, final String abortingReason) {
         mapLock.read(() -> {
@@ -195,6 +199,8 @@ public abstract class CrawlManager<
             crawlThread.abort(abortingReason);
         });
     }
+
+    protected abstract STATUS newInitialStatus();
 
     protected abstract THREAD newCrawlThread(final String sessionName,
                                              final DEFINITION crawlDefinition);
@@ -215,20 +221,36 @@ public abstract class CrawlManager<
         }
     }
 
-    public STATUS runSession(final String sessionName,
-                             final DEFINITION crawlDefinition) {
+    public STATUS upsertSession(final String sessionName,
+                                final DEFINITION crawlDefinition) {
 
+        return mapLock.write(() -> {
+            if (liveCrawlThreads.containsKey(sessionName)) {
+                throw new ServerException(Response.Status.CONFLICT, "You can't update a crawl while it is running: " + sessionName);
+            }
+            try {
+                putSessionStatus(sessionName, newInitialStatus());
+                crawlDefinitionMap.put(sessionName, ObjectMappers.SMILE.writeValueAsBytes(crawlDefinition));
+                database.commit();
+            } catch (JsonProcessingException e) {
+                throw new InternalServerErrorException("Can't read the crawl definition: " + e.getMessage(), e);
+            }
+            logger.info(() -> "Upsert crawl session: " + sessionName);
+            return getSessionStatus(sessionName);
+        });
+    }
+
+    public STATUS runSession(final String sessionName) {
         return mapLock.write(() -> {
             liveCrawlThreads.compute(sessionName, (key, currentCrawl) -> {
                 if (currentCrawl != null)
                     throw new ServerException(Response.Status.CONFLICT, "The session already exists: " + sessionName);
-                try {
-                    crawlDefinitionMap.put(sessionName, ObjectMappers.SMILE.writeValueAsBytes(crawlDefinition));
-                    database.commit();
-                } catch (JsonProcessingException e) {
-                    throw new InternalServerErrorException("Can't read the crawl definition: " + e.getMessage(), e);
+                DEFINITION crawlDefinition = readSessionDefinition(sessionName);
+                if (crawlDefinition == null) {
+                    throw new NotFoundException("There is not crawl definition: " + sessionName);
                 }
-                logger.info(() -> "Create crawl session: " + sessionName);
+                deleteSessionDirectory(sessionName);
+                logger.info(() -> "Start crawl session: " + sessionName);
                 final THREAD newCrawlThread = newCrawlThread(sessionName, crawlDefinition);
                 CompletableFuture.runAsync(newCrawlThread, sessionExecutorService).whenComplete((r, e) -> {
                     liveCrawlThreads.remove(sessionName);
@@ -242,18 +264,22 @@ public abstract class CrawlManager<
         });
     }
 
+    private void deleteSessionDirectory(final String sessionName) {
+        try {
+            Files.deleteIfExists(sessionsDirectory.resolve(sessionName));
+        } catch (IOException e) {
+            throw new InternalServerErrorException("Error while removing session: " + sessionName, e);
+        }
+    }
+
     void removeSession(final String sessionName) {
         mapLock.write(() -> {
             if (liveCrawlThreads.containsKey(sessionName))
-                throw new NotAcceptableException("The session is currently running.");
+                throw new NotAcceptableException("The session is currently running: " + sessionName);
             crawlStatusMap.remove(sessionName);
             crawlDefinitionMap.remove(sessionName);
+            deleteSessionDirectory(sessionName);
             database.commit();
-            try {
-                Files.deleteIfExists(sessionsDirectory.resolve(sessionName));
-            } catch (IOException e) {
-                throw new InternalServerErrorException("Error while removing session: " + sessionName, e);
-            }
         });
     }
 

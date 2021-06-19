@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2020 Emmanuel Keller / QWAZR
+ * Copyright 2015-2021 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -72,9 +73,14 @@ public interface CrawlerServiceInterface<
     @Produces(ServiceInterface.APPLICATION_JSON_UTF8)
     void removeSession(@PathParam("session_name") String sessionName);
 
-    @POST
+    @PUT
     @Path("/sessions/{session_name}")
     @Consumes(ServiceInterface.APPLICATION_JSON_UTF8)
     @Produces(ServiceInterface.APPLICATION_JSON_UTF8)
-    STATUS runSession(@PathParam("session_name") String sessionName, DEFINITION crawlDefinition);
+    STATUS upsertSession(@PathParam("session_name") String sessionName, DEFINITION crawlDefinition);
+
+    @POST
+    @Path("/sessions/{session_name}")
+    @Produces(ServiceInterface.APPLICATION_JSON_UTF8)
+    STATUS runSession(@PathParam("session_name") String sessionName);
 }

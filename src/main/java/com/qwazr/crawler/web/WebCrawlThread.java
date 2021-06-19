@@ -23,7 +23,6 @@ import com.qwazr.server.ServerException;
 import com.qwazr.utils.LoggerUtils;
 import com.qwazr.utils.RegExpUtils;
 import com.qwazr.utils.StringUtils;
-import com.qwazr.utils.TimeTracker;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
@@ -62,14 +61,11 @@ public class WebCrawlThread extends CrawlThread
 
     private final Set<String> acceptedContentType;
 
-    private final TimeTracker timeTracker;
-
     WebCrawlThread(final WebCrawlerManager webCrawlerManager,
                    final WebCrawlSession session,
                    final WebCrawlDefinition crawlDefinition) throws ServerException {
         super(webCrawlerManager, session, LOGGER);
         this.crawlDefinition = crawlDefinition;
-        this.timeTracker = session.getTimeTracker();
         if (crawlDefinition.entryUrl == null && crawlDefinition.entryRequest == null)
             throw new ServerException(Status.NOT_ACCEPTABLE, "Either the entry_url or the entry_request is missing");
         try {
@@ -99,8 +95,6 @@ public class WebCrawlThread extends CrawlThread
                 throw new URISyntaxException(u, "No host found.", -1);
         } catch (URISyntaxException e) {
             throw new ServerException(Status.NOT_ACCEPTABLE, e.getMessage());
-        } finally {
-            timeTracker.next("Initialization");
         }
     }
 
@@ -130,7 +124,6 @@ public class WebCrawlThread extends CrawlThread
                                      final WebRequestDefinition request,
                                      final WebCrawlItemImpl.Builder builder) {
         try {
-            timeTracker.next(null);
 
             final DriverInterface.Body body = driver.body(request);
             builder.statusCode(body.getResponseCode());
@@ -157,8 +150,6 @@ public class WebCrawlThread extends CrawlThread
             LOGGER.log(Level.WARNING, msg, e);
             builder.error(e);
             return null;
-        } finally {
-            timeTracker.next("HTTP");
         }
     }
 
@@ -197,7 +188,6 @@ public class WebCrawlThread extends CrawlThread
         if (documentBody == null)
             return body; // No body ? we are done
 
-        timeTracker.next(null);
         for (final Element element : documentBody.select("a[href]")) {
             final String href = element.attr("href");
             if (com.qwazr.utils.StringUtils.isBlank(href))
@@ -225,7 +215,6 @@ public class WebCrawlThread extends CrawlThread
                         builder.filteredLink(linkUri);
             }
         }
-        timeTracker.next("Links extraction");
         return body;
     }
 
@@ -233,18 +222,14 @@ public class WebCrawlThread extends CrawlThread
             throws IOException, URISyntaxException {
         if (robotsTxtMap == null)
             return null;
-        timeTracker.next(null);
-        try {
-            final URI robotsTxtURI = RobotsTxt.getRobotsURI(uri);
-            RobotsTxt robotsTxt = robotsTxtMap.get(robotsTxtURI);
-            if (robotsTxt == null || robotsTxt.hasExpired(TimeUnit.HOURS, 6)) {
-                robotsTxt = RobotsTxt.download(driver, robotsTxtURI);
-                robotsTxtMap.put(robotsTxtURI, robotsTxt);
-            }
-            return robotsTxt.getStatus(uri, userAgent);
-        } finally {
-            timeTracker.next("Robots.txt check");
+
+        final URI robotsTxtURI = RobotsTxt.getRobotsURI(uri);
+        RobotsTxt robotsTxt = robotsTxtMap.get(robotsTxtURI);
+        if (robotsTxt == null || robotsTxt.hasExpired(TimeUnit.HOURS, 6)) {
+            robotsTxt = RobotsTxt.download(driver, robotsTxtURI);
+            robotsTxtMap.put(robotsTxtURI, robotsTxt);
         }
+        return robotsTxt.getStatus(uri, userAgent);
     }
 
     private void crawlRequest(final DriverInterface driver,
